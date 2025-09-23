@@ -32,14 +32,14 @@ jobs:
     - name: Configure EAS project
       run: |
         cd mobile-app
-        echo -e "y\n" | eas build:configure --platform android
+        eas build:configure --platform android --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
     - name: Build Android APK
       run: |
         cd mobile-app
-        eas build --platform android --non-interactive
+        eas build --platform android --profile preview --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
