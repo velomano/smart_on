@@ -31,16 +31,8 @@ jobs:
         cd apps/web-admin
         npm run build
         
-    - name: Deploy to Vercel
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: apps/web-admin
-        vercel-args: '--prod'
-      env:
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        TUYA_APP_KEY: ${{ secrets.TUYA_APP_KEY }}
-        TUYA_APP_SECRET: ${{ secrets.TUYA_APP_SECRET }}
+    - name: Skip Vercel deployment (temporarily disabled)
+      run: |
+        echo "⚠️ Vercel deployment temporarily disabled"
+        echo "Focusing on Android app development first"
+        echo "Web deployment will be enabled after Vercel project setup"
