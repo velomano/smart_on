@@ -41,7 +41,7 @@ jobs:
     - name: Configure EAS project
       run: |
         cd mobile-app
-        printf "y\n" | eas build:configure --platform android
+        echo -e "y\n" | eas build:configure --platform android
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
