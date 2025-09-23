@@ -29,17 +29,22 @@ jobs:
         cd mobile-app
         npm install -g @expo/cli eas-cli
         
+    - name: Login to EAS
+      run: |
+        cd mobile-app
+        eas login --non-interactive
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        
     - name: Configure EAS project
       run: |
         cd mobile-app
-        eas build:configure --platform android --non-interactive
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        eas build:configure --platform android
         
     - name: Build Android APK
       run: |
         cd mobile-app
-        eas build --platform android --profile preview --non-interactive
+        eas build --platform android --profile preview
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
