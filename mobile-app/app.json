@@ -4,18 +4,13 @@
     "slug": "smart-farm-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.velomano.smartfarm"
     },
     "android": {
       "package": "com.velomano.smartfarm",
@@ -24,13 +19,18 @@
         "backgroundColor": "#FFFFFF"
       }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "plugins": [
+      "expo-dev-client"
+    ],
     "extra": {
       "eas": {
         "projectId": "YOUR-EAS-PROJECT-ID"
-      }
+      },
+      "supabaseUrl": "https://kkrcwdybrsppbsufrrdg.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NDIxOTgsImV4cCI6MjA3NDExODE5OH0.oo-iIviVJ2oaWZldtmkYo1sWgHbxxIIkFUrBrU8rQqY",
+      "tuyaAppKey": "we85jqprtfpm5pkmyr53",
+      "tuyaAppSecret": "12277a78753f4aaa8d3c8e3beff43632",
+      "tuyaRegion": "eu"
     }
   }
 }

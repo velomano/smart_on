@@ -36,15 +36,10 @@ jobs:
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
-    - name: Configure EAS project
+    - name: Build Android APK (Development Build)
       run: |
         cd mobile-app
-        eas build:configure --platform android
-        
-    - name: Build Android APK
-      run: |
-        cd mobile-app
-        eas build --platform android --profile preview
+        eas build --platform android --profile development --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
