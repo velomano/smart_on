@@ -35,15 +35,15 @@ jobs:
         cd mobile-app
         npm ci
         
-    - name: Setup Expo
+    - name: Setup EAS CLI
       run: |
         cd mobile-app
-        npm install -g @expo/cli
+        npm install -g @expo/cli eas-cli
         
     - name: Build Android APK
       run: |
         cd mobile-app
-        npx expo build:android --type apk
+        eas build --platform android --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         

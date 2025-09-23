@@ -41,26 +41,47 @@
 ## 📁 프로젝트 구조
 
 ```
-smart-farm-platform/
+smart-farm-app/
 ├── apps/                      # 애플리케이션
 │   ├── mobile-app/           # React Native 모바일 앱
 │   │   ├── App.tsx           # 메인 앱 컴포넌트
 │   │   ├── screens/          # 화면 컴포넌트
+│   │   │   ├── BedDetailScreen.tsx      # 베드 상세 화면
+│   │   │   ├── BedSettingsScreen.tsx    # 다단 베드 설정
+│   │   │   ├── TeamLoginScreen.tsx      # 팀 로그인
+│   │   │   ├── BedAuthScreen.tsx        # 베드 인증
+│   │   │   ├── TimerSettingsScreen.tsx  # 타이머 설정
+│   │   │   └── DeviceSetupScreen.tsx    # 디바이스 설정
 │   │   ├── lib/              # 유틸리티 라이브러리
-│   │   └── android/          # Android 네이티브 코드
+│   │   │   ├── supabase.ts   # Supabase 클라이언트
+│   │   │   ├── tuya.ts       # Tuya SDK 래퍼
+│   │   │   └── teamAuth.ts   # 팀 인증 관리
+│   │   ├── android/          # Android 네이티브 코드
+│   │   └── package.json      # 모바일 앱 의존성
 │   └── web-admin/            # Next.js 웹 어드민
 │       ├── src/              # 소스 코드
 │       ├── public/           # 정적 파일
-│       └── package.json      # 의존성
+│       └── package.json      # 웹 앱 의존성
 ├── packages/                 # 공유 패키지
 │   ├── shared/              # 공통 타입 및 유틸리티
 │   └── database/            # 데이터베이스 스키마
 │       └── supabase/        # Supabase 설정
+│           ├── config.toml   # Supabase 설정
+│           └── migrations/   # 데이터베이스 마이그레이션
 ├── docs/                    # 프로젝트 문서
 │   └── md/                  # 마크다운 문서
+│       ├── 스마트팜_제어_모니터링_앱_prd_v_0.md  # 기획서
+│       ├── smart_farm_build_docs_v_0.md         # 빌드 가이드
+│       ├── Git_연동_가이드.md                   # Git 가이드
+│       ├── 작업_시작_전_체크리스트.md           # 체크리스트
+│       └── 작업_기록_2025_09_23.md             # 작업 기록
 ├── book/                    # SDK 및 리소스
+│   ├── 6.7.0/              # Tuya SDK v6.7.0
+│   └── *.zip, *.tar.gz     # SDK 압축 파일들
 ├── .github/                 # GitHub Actions
-├── .env.example            # 환경변수 템플릿
+│   └── workflows/           # CI/CD 워크플로우
+│       └── web-deploy.yml   # 웹 앱 자동 배포
+├── env.example             # 환경변수 템플릿
 └── README.md               # 프로젝트 문서
 ```
 
@@ -93,10 +114,37 @@ npm install
 ```
 
 ### 4. 환경변수 설정
+
+#### 4.1 환경변수 파일 생성
 ```bash
-cp .env.example .env
-# .env 파일에 Supabase 및 Tuya 키 설정
+cp env.example .env
 ```
+
+#### 4.2 Supabase 설정
+1. [Supabase 대시보드](https://supabase.com)에서 프로젝트 생성
+2. Settings > API에서 다음 정보 복사:
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
+
+#### 4.3 Tuya IoT 설정
+1. [Tuya IoT Platform](https://iot.tuya.com)에서 앱 생성
+2. Cloud > Development에서 다음 정보 복사:
+```env
+TUYA_APP_KEY=your-app-key
+TUYA_APP_SECRET=your-app-secret
+```
+
+#### 4.4 GitHub Secrets 설정 (배포용)
+GitHub 저장소 > Settings > Secrets and variables > Actions에서 다음 시크릿 추가:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `TUYA_APP_KEY`
+- `TUYA_APP_SECRET`
+- `VERCEL_TOKEN` (Vercel 배포용)
+- `VERCEL_ORG_ID` (Vercel 조직 ID)
+- `VERCEL_PROJECT_ID` (Vercel 프로젝트 ID)
 
 ### 5. 웹 어드민 실행
 ```bash
@@ -170,18 +218,25 @@ npm run ios
 ## 🚀 배포
 
 ### 웹 어드민
-- **Vercel** 또는 **Netlify** 배포
-- **자동 배포** (GitHub Actions)
+- **Vercel** 자동 배포 (GitHub Actions)
+- **브랜치**: `main`, `develop` 푸시 시 자동 배포
+- **환경변수**: Supabase, Tuya 키 자동 주입
 
 ### 모바일 앱
-- **Google Play Store** (Android)
-- **Apple App Store** (iOS)
+- **Google Play Store** (Android) - 준비 중
+- **Apple App Store** (iOS) - 준비 중
 - **Expo Application Services (EAS)** 빌드
 
-### 통합 배포
-- **GitHub Actions** CI/CD 파이프라인
+### CI/CD 파이프라인
+- **GitHub Actions** 워크플로우 설정 완료
 - **자동 빌드 및 테스트**
-- **다중 환경 배포** (dev, staging, production)
+- **Vercel 배포 자동화**
+- **환경변수 보안 관리**
+
+### 현재 배포 상태
+- ✅ **웹 앱**: 완전 작동 (Vercel 배포 준비 완료)
+- 🔧 **Android 앱**: 빌드 문제 해결 중
+- 📋 **iOS 앱**: 개발 대기 중
 
 ## 📝 라이선스
 
@@ -203,9 +258,36 @@ npm run ios
 
 **💡 팁**: 개발 시작 전에 `docs/md/작업_시작_전_체크리스트.md`를 확인하세요!
 
+## 📊 현재 개발 상태
+
+### ✅ 완료된 기능
+- **웹 앱**: 모든 핵심 기능 구현 완료
+- **데이터베이스**: Supabase 스키마 및 RLS 정책 설정
+- **UI/UX**: 다단 베드 관리, 실시간 모니터링, 디바이스 제어
+- **인증 시스템**: 팀 기반 로그인 및 권한 관리
+- **CI/CD**: GitHub Actions 워크플로우 설정
+
+### 🔧 진행 중인 작업
+- **Android 빌드**: Node.js/Java 경로 설정 문제 해결 중
+- **실제 테스트**: Tuya 계정 연동 및 디바이스 제어 테스트
+
+### 📋 다음 단계
+1. **Android 빌드 문제 해결** (우선순위: 높음)
+2. **실제 하드웨어 테스트** (Tuya 디바이스 연동)
+3. **PWA 기능 추가** (오프라인 지원)
+4. **알림 시스템 구현**
+5. **Google Play Store 배포 준비**
+
+## 🚨 알려진 이슈
+
+- **Android 빌드**: Node.js 경로 설정 필요
+- **저장공간**: Android Studio 빌드 시 공간 부족 문제
+- **실제 테스트**: Tuya 계정 및 디바이스 연동 테스트 필요
+
 ## 📚 추가 문서
 
 - [프로젝트 기획서](docs/md/스마트팜_제어_모니터링_앱_prd_v_0.md)
 - [빌드 가이드](docs/md/smart_farm_build_docs_v_0.md)
 - [Git 연동 가이드](docs/md/Git_연동_가이드.md)
 - [작업 기록](docs/md/작업_기록_2025_09_23.md)
+- [작업 시작 전 체크리스트](docs/md/작업_시작_전_체크리스트.md)
