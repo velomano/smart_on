@@ -18,32 +18,28 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: 'mobile-app/package-lock.json'
         
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      
     - name: Install dependencies
       run: |
         cd mobile-app
         npm ci
         
-    - name: Setup Expo
+    - name: Setup EAS CLI
       run: |
         cd mobile-app
-        npm install -g @expo/cli
+        npm install -g @expo/cli eas-cli
+        
+    - name: Configure EAS project
+      run: |
+        cd mobile-app
+        echo -e "y\n" | eas build:configure --platform android
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
     - name: Build Android APK
       run: |
         cd mobile-app
-        npx expo build:android --type apk
+        eas build --platform android --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
