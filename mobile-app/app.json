@@ -3,6 +3,7 @@
     "name": "Smart Farm",
     "slug": "smart-farm-mobile",
     "version": "1.0.0",
+    "entryPoint": "./index.js",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [

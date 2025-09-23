@@ -4,6 +4,20 @@
 
 Tuya IoT Platform을 통한 스마트스위치 제어를 위한 Android SDK 통합 가이드입니다.
 
+## 🎯 현재 구현 상태 (2025.09.23)
+
+### ✅ 구현 완료
+- **네이티브 모듈**: `TuyaSDKModule.java` 구현 완료
+- **패키지 등록**: `TuyaSDKPackage.java` 및 `MainApplication.java` 설정 완료
+- **React Native 서비스**: `TuyaService.ts` 구현 완료
+- **환경변수 설정**: `app.json`에 Tuya API 키 설정 완료
+- **UI/UX**: 스마트 스위치 등록 및 제어 화면 완료
+
+### 🔄 구현 예정
+- **실제 Tuya SDK 라이브러리**: Android Studio 설치 후 실제 SDK 연동
+- **디바이스 등록**: 실제 Tuya 디바이스 페어링 및 제어
+- **상태 동기화**: Supabase와 Tuya 디바이스 상태 동기화
+
 ## 🔧 사전 준비
 
 ### 1. Tuya IoT Platform 설정
@@ -35,9 +49,10 @@ keytool -list -v -keystore smartfarm-key.keystore -alias smartfarm
 
 #### API 키 발급
 1. 프로젝트 "Overview" → "API" 섹션에서 키 확인
-2. **AppKey**: `your_app_key_here`
-3. **AppSecret**: `your_app_secret_here`
-4. SHA-256 지문을 "Security" → "App Certificate"에 등록
+2. **AppKey**: `we85jqprtfpm5pkmyr53` (실제 발급된 키)
+3. **AppSecret**: `12277a78753f4aaa8d3c8e3beff43632` (실제 발급된 키)
+4. **Region**: `eu` (유럽 리전)
+5. SHA-256 지문을 "Security" → "App Certificate"에 등록
 
 ## 📱 Expo Bare 환경 설정
 
@@ -284,16 +299,40 @@ const controlDevice = async (deviceId: string, action: string) => {
 
 ## 🔧 환경변수 설정
 
-### `.env`
-```bash
-EXPO_PUBLIC_TUYA_APP_KEY=your_app_key_here
-EXPO_PUBLIC_TUYA_APP_SECRET=your_app_secret_here
+### `mobile-app/app.json` (현재 설정됨)
+```json
+{
+  "expo": {
+    "extra": {
+      "tuyaAppKey": "we85jqprtfpm5pkmyr53",
+      "tuyaAppSecret": "12277a78753f4aaa8d3c8e3beff43632",
+      "tuyaRegion": "eu"
+    }
+  }
+}
+```
+
+### React Native에서 접근
+```typescript
+import Constants from 'expo-constants';
+
+const tuyaAppKey = Constants.expoConfig?.extra?.tuyaAppKey;
+const tuyaAppSecret = Constants.expoConfig?.extra?.tuyaAppSecret;
+const tuyaRegion = Constants.expoConfig?.extra?.tuyaRegion;
 ```
 
 ## 📝 테스트 체크리스트
 
-### Phase 0 완료 기준
-- [ ] Tuya SDK 초기화 성공
+### ✅ Phase 0 완료 기준 (완료)
+- [x] Tuya SDK 네이티브 모듈 구현
+- [x] React Native 서비스 구현
+- [x] 환경변수 설정 (app.json)
+- [x] UI/UX 디자인 완료
+- [x] Mock 데이터 연동
+
+### 🔄 Phase 1 진행 중 (Android Studio 설치 후)
+- [ ] Android Studio 설치 및 설정
+- [ ] 실제 Tuya SDK 라이브러리 연동
 - [ ] Android 앱 빌드 성공
 - [ ] 디바이스 검색 기능 작동
 - [ ] 기기 페어링 프로세스 완료

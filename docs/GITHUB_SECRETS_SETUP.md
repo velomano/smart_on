@@ -1,5 +1,16 @@
 # 🔐 GitHub Secrets 설정 가이드
 
+## 🎯 현재 상태 (2025.09.23)
+
+### ✅ 설정 완료
+- **환경변수**: 모바일 앱(app.json) 및 웹(.env.local)에 설정 완료
+- **GitHub Actions**: CI/CD 파이프라인 정상 작동
+- **Vercel 배포**: 웹 어드민 자동 배포 완료
+
+### 🔄 추가 설정 필요
+- **EAS Build**: Android APK 빌드를 위한 GitHub Secrets 설정
+- **Vercel**: 더 안정적인 배포를 위한 토큰 설정
+
 ## 📋 필요한 GitHub Secrets
 
 ### 1. Vercel 배포용 Secrets
@@ -36,12 +47,14 @@
 1. [Supabase Dashboard](https://supabase.com/dashboard) 로그인
 2. 프로젝트 선택 → Settings → API
 3. "Project URL" 복사
-4. GitHub Secrets에 등록
+4. **실제 값**: `https://kkrcwdybrsppbsufrrdg.supabase.co`
+5. GitHub Secrets에 등록
 
 #### SUPABASE_ANON_KEY
 1. Supabase Dashboard → Settings → API
 2. "anon public" 키 복사
-3. GitHub Secrets에 등록
+3. **실제 값**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NDIxOTgsImV4cCI6MjA3NDExODE5OH0.oo-iIviVJ2oaWZldtmkYo1sWgHbxxIIkFUrBrU8rQqY`
+4. GitHub Secrets에 등록
 
 ### 4. Tuya IoT Platform용 Secrets
 
@@ -49,12 +62,14 @@
 1. [Tuya IoT Platform](https://iot.tuya.com/) 로그인
 2. 프로젝트 → Overview → API
 3. "AppKey" 복사
-4. GitHub Secrets에 등록
+4. **실제 값**: `we85jqprtfpm5pkmyr53`
+5. GitHub Secrets에 등록
 
 #### TUYA_APP_SECRET
 1. Tuya IoT Platform → 프로젝트 → Overview → API
 2. "AppSecret" 복사
-3. GitHub Secrets에 등록
+3. **실제 값**: `12277a78753f4aaa8d3c8e3beff43632`
+4. GitHub Secrets에 등록
 
 ## 🛠️ GitHub Secrets 등록 방법
 

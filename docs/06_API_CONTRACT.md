@@ -1,12 +1,26 @@
 # 🔗 API 계약서
 
-## 📋 REST API 엔드포인트
+## 📋 현재 구현 상태 (2025.09.23)
+
+### ✅ 구현 완료
+- **Supabase 클라이언트**: 모바일 앱 및 웹 어드민에서 직접 사용
+- **실시간 데이터**: `sensor_readings` 테이블에서 2,890개 레코드 조회
+- **디바이스 관리**: `devices` 테이블에서 7개 디바이스 관리
+- **Mock 데이터**: 개발용 Mock 데이터 제공
+
+### 🔄 구현 예정
+- **REST API 엔드포인트**: Next.js API Routes로 구현 예정
+- **Raspberry Pi 연동**: 센서 데이터 수집 API
+- **Tuya 디바이스 제어**: 실제 Tuya SDK 연동
+
+## 📋 REST API 엔드포인트 (계획)
 
 ### 🌐 기본 정보
-- **Base URL**: `https://smart-on.vercel.app/api`
-- **인증**: Bearer Token (Supabase JWT)
+- **Base URL**: `https://smart-on.vercel.app/api` (구현 예정)
+- **현재**: Supabase 클라이언트 직접 사용
+- **인증**: Supabase JWT Token
 - **Content-Type**: `application/json`
-- **Rate Limiting**: 100 requests/minute per user
+- **Rate Limiting**: Supabase 기본 제한 적용
 
 ## 📊 센서 데이터 수집
 
@@ -23,14 +37,13 @@ X-API-Key: <pi_api_key>  # Raspberry Pi 전용
 **요청 본문:**
 ```json
 {
-  "pi_id": "pi_001",
+  "device_id": "device_001",
   "sensor_data": [
     {
       "sensor_id": "sensor_001",
-      "sensor_type": "temperature",
       "value": 25.5,
       "unit": "°C",
-      "timestamp": "2025-01-24T13:00:00Z",
+      "ts": "2025-09-23T13:00:00Z",
       "metadata": {
         "location": "greenhouse_a",
         "accuracy": 0.1
@@ -39,6 +52,11 @@ X-API-Key: <pi_api_key>  # Raspberry Pi 전용
   ]
 }
 ```
+
+**현재 구현 상태:**
+- ✅ **Supabase 클라이언트**: `getLatestSensorReadings()` 함수로 구현
+- ✅ **실제 데이터**: `sensor_readings` 테이블에서 조회
+- ✅ **Mock 데이터**: 개발용 Mock 데이터 제공
 
 **응답:**
 ```json

@@ -1,0 +1,13 @@
+{
+  "reactNativeVersion": "0.81.4",
+  "project": {
+    "android": {
+      "sourceDir": "C:\\Users\\VELOMANO\\Documents\\50se\\smart_on\\android",
+      "appName": "app",
+      "packageName": "com.velomano.smartfarm",
+      "applicationId": "com.velomano.smartfarm",
+      "mainActivity": ".MainActivity"
+    }
+  },
+  "dependencies": {}
+}

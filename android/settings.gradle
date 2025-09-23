@@ -1,0 +1,25 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    google()
+    mavenCentral()
+  }
+  includeBuild("../node_modules/@react-native/gradle-plugin")
+}
+
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+  repositories {
+    google()
+    mavenCentral()
+    maven { url = uri("$rootDir/../node_modules/react-native/android") }
+    maven { url = uri("$rootDir/../node_modules/expo/modules/android/maven") }
+    maven { url = uri("$rootDir/../node_modules/jsc-android/dist") }
+    // Tuya SDK Maven 저장소
+    maven { url = uri("https://maven.aliyun.com/repository/public") }
+    maven { url = uri("https://maven.aliyun.com/repository/google") }
+  }
+}
+
+rootProject.name = "Smart Farm"
+include(":app")
