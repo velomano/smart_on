@@ -38,10 +38,11 @@ jobs:
         cd mobile-app
         npm install -g @expo/cli eas-cli
         
-    - name: Configure EAS
+    - name: Login to EAS and configure
       run: |
         cd mobile-app
-        echo "y" | eas build:configure --platform android
+        eas login --non-interactive
+        eas build:configure --platform android
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         
