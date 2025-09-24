@@ -27,8 +27,8 @@ export interface Device {
   type: string;
   vendor?: string;
   tuya_device_id?: string;
-  status: any; // JSONB
-  meta: any; // JSONB
+  status: Record<string, unknown>; // JSONB
+  meta: Record<string, unknown>; // JSONB
   created_at: string;
 }
 
@@ -37,7 +37,7 @@ export interface Sensor {
   device_id: string;
   type: string;
   unit?: string;
-  meta?: any; // JSONB
+  meta?: Record<string, unknown>; // JSONB
   created_at: string;
 }
 
@@ -47,7 +47,7 @@ export interface SensorReading {
   value: number;
   unit: string;
   ts: string; // 실제 데이터베이스에서는 'ts' 컬럼 사용
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 // API 함수들
