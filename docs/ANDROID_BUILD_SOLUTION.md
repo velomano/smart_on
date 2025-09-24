@@ -3,11 +3,38 @@
 ## 📋 문제 상황
 React Native 0.81+ (Expo SDK 54) 환경에서 Android 빌드 시 발생한 다양한 오류들을 해결한 과정을 문서화합니다.
 
+## 📁 프로젝트 구조
+```
+C:\SCW\smarton\
+├── mobile-app/          ← React Native 소스코드 (App.tsx, package.json, .env)
+│   └── android/         ← ❌ 삭제됨 (잘못된 설정으로 인해 제거)
+├── android/             ← ✅ Android 네이티브 빌드 (루트에 위치)
+│   ├── app/
+│   ├── build.gradle
+│   └── gradlew.bat
+└── apps/web-admin/      ← 웹 관리자
+```
+
+**⚠️ 중요**: 
+- Android 빌드는 **루트의 `android` 폴더**에서만 실행해야 합니다
+- `mobile-app/android` 폴더는 **잘못된 설정으로 인해 삭제되었습니다**
+- `mobile-app/android` 폴더는 **절대 참조하거나 사용하면 안 됩니다**
+
 ## 🎯 최종 결과
 **BUILD SUCCESSFUL** - APK 파일 생성 완료  
 **IDE 에러 완전 해결** - Java 클래스패스 및 프로젝트 설정 완료
 
 ## 🔧 해결된 문제들
+
+### 0. 잘못된 Android 폴더 참조 문제
+**문제**: `mobile-app/android` 폴더에서 빌드 시도로 인한 오류 발생
+
+**해결방법**:
+- `mobile-app/android` 폴더는 잘못된 설정으로 인해 **완전 삭제**
+- Android 빌드는 **루트의 `android` 폴더**에서만 실행
+- `react-native.config.js`에서 `sourceDir: "../android"`로 루트 android 참조
+
+**⚠️ 중요**: `mobile-app/android` 폴더는 절대 사용하지 마세요!
 
 ### 1. autolinking.json 파일 문제
 **문제**: `autolinkInputFile' specifies file '...autolinking.json' which doesn't exist`
@@ -414,12 +441,13 @@ import App from './App';
 registerRootComponent(App);
 ```
 
-### react-native.config.js (루트)
+### react-native.config.js (mobile-app 폴더에 위치)
 ```javascript
 module.exports = {
   project: {
     android: {
       packageName: "com.velomano.smartfarm",
+      sourceDir: "../android",  // 루트 android 폴더 참조
     },
   },
 };
@@ -428,8 +456,8 @@ module.exports = {
 ## 🚀 빌드 명령어
 
 ```bash
-# Android 디렉토리로 이동
-cd android
+# 루트 android 디렉토리로 이동 (mobile-app/android 아님!)
+cd C:\SCW\smarton\android
 
 # Gradle 데몬 중지
 .\gradlew --stop
@@ -437,9 +465,14 @@ cd android
 # 클린 빌드
 .\gradlew clean
 
+# 디버그 빌드
+.\gradlew assembleDebug
+
 # 릴리즈 빌드
 .\gradlew assembleRelease
 ```
+
+**⚠️ 주의**: `mobile-app/android`가 아닌 **루트의 `android` 폴더**에서 빌드해야 합니다!
 
 ## ⚠️ 주의사항
 
@@ -447,6 +480,10 @@ cd android
 2. **New Architecture**: `newArchEnabled=false`로 설정되어 있습니다.
 3. **Expo Modules**: `useExpoModules()`가 비활성화되어 있어 Expo 모듈을 사용할 수 없습니다.
 4. **패키지명**: 모든 설정에서 `com.velomano.smartfarm` 패키지명을 일관되게 사용해야 합니다.
+5. **❌ mobile-app/android 폴더 사용 금지**: 
+   - `mobile-app/android` 폴더는 잘못된 설정으로 인해 삭제되었습니다
+   - Android 빌드는 반드시 루트의 `android` 폴더에서만 실행해야 합니다
+   - `mobile-app/android` 폴더를 참조하거나 사용하면 빌드 오류가 발생합니다
 
 ## 🎉 성공 지표
 
