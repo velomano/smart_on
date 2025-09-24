@@ -49,10 +49,10 @@ jobs:
         npx react-native config
         
     - name: Build Android APK (Debug)
+      working-directory: mobile-app/android
       run: |
-        cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew clean assembleDebug
       env:
         ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
         ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
@@ -62,4 +62,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: smart-farm-app-debug-apk
-        path: android/app/build/outputs/apk/debug/*.apk
+        path: mobile-app/android/app/build/outputs/apk/debug/*.apk

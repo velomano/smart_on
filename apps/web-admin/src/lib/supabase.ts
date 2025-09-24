@@ -20,6 +20,12 @@ export interface Farm {
   created_at: string;
 }
 
+export interface DeviceMeta {
+  location?: string;
+  pi_id?: string;
+  [key: string]: unknown;
+}
+
 export interface Device {
   id: string;
   farm_id: string;
@@ -28,7 +34,7 @@ export interface Device {
   vendor?: string;
   tuya_device_id?: string;
   status: Record<string, unknown>; // JSONB
-  meta: Record<string, unknown>; // JSONB
+  meta: DeviceMeta; // JSONB
   created_at: string;
 }
 
