@@ -5,6 +5,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch: # 수동 실행 가능
 
 jobs:
   build-android:
@@ -19,32 +20,45 @@ jobs:
       with:
         node-version: '20'
         
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        api-level: 35
+        build-tools: 35.0.0
+        ndk-version: 26.1.10909125
+        
     - name: Install dependencies
       run: |
         cd mobile-app
         npm ci
         
-    - name: Setup EAS CLI
+    - name: Setup React Native CLI
       run: |
         cd mobile-app
-        npm install -g @expo/cli eas-cli
+        npm install -g @react-native-community/cli
         
-    - name: Login to EAS
+    - name: Generate autolinking
       run: |
         cd mobile-app
-        eas login
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        npx react-native config
         
-    - name: Build Android APK (Development Build)
+    - name: Build Android APK (Debug)
       run: |
-        cd mobile-app
-        eas build --platform android --profile development --non-interactive
+        cd android
+        ./gradlew assembleDebug
       env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+        REACT_NATIVE_NODE_PATH: /usr/local/bin/node
         
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: smart-farm-app-apk
-        path: mobile-app/*.apk
+        name: smart-farm-app-debug-apk
+        path: android/app/build/outputs/apk/debug/*.apk
