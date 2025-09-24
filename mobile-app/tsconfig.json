@@ -4,29 +4,20 @@
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
-    "lib": ["dom", "esnext"],
-    "moduleResolution": "node",
+    "lib": [
+      "dom",
+      "esnext"
+    ],
+    "moduleResolution": "bundler",
     "noEmit": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "resolveJsonModule": true
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx"
+    "**/*.tsx"
   ],
   "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js",
-    "jest.config.js"
+    "node_modules"
   ]
 }

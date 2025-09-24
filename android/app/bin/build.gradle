@@ -1,0 +1,70 @@
+plugins {
+  id 'com.android.application'
+  id 'com.facebook.react'
+  id 'org.jetbrains.kotlin.android'
+}
+
+/** ✅ Expo autolinking — 루트 node_modules를 확실히 가리킴 */
+apply from: rootProject.file("../node_modules/expo/scripts/autolinking.gradle")
+
+/** ⚠️ useExpoModules() 일시적으로 비활성화 */
+// useExpoModules()
+
+android {
+  namespace "com.velomano.smartfarm"
+  compileSdkVersion 34
+
+  defaultConfig {
+    applicationId "com.velomano.smartfarm"
+    minSdkVersion 24
+    targetSdkVersion 34
+    versionCode 1
+    versionName "1.0"
+  }
+
+  signingConfigs {
+    release {
+      if (project.hasProperty('RELEASE_STORE_FILE')) {
+        storeFile file(RELEASE_STORE_FILE)
+        storePassword RELEASE_STORE_PASSWORD
+        keyAlias RELEASE_KEY_ALIAS
+        keyPassword RELEASE_KEY_PASSWORD
+      }
+    }
+  }
+
+  buildTypes {
+    release {
+      signingConfig signingConfigs.release
+      minifyEnabled false
+      shrinkResources false
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+  }
+
+  // 소스셋 명시 (Kotlin 폴더 경고 해결)
+  sourceSets {
+    main.java.srcDirs = ['src/main/java']
+    main.kotlin.srcDirs = ['src/main/kotlin']
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlinOptions {
+    jvmTarget = '17'
+  }
+}
+
+dependencies {
+  implementation "com.facebook.react:react-android"
+  implementation "androidx.appcompat:appcompat:1.6.1"
+  implementation "com.google.android.material:material:1.10.0"
+  
+  // Tuya SDK 의존성 (일시적으로 주석 처리)
+  implementation fileTree(include: ['*.aar'], dir: 'libs')
+  // implementation 'com.alibaba:fastjson:1.1.67.android'
+  // implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.14.9'
+  // implementation 'com.thingclips.smart:thingsmart:6.4.0'
+}

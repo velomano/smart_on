@@ -18,6 +18,8 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: 'apps/web-admin/package-lock.json'
         
     - name: Install dependencies
       run: |
@@ -29,64 +31,8 @@ jobs:
         cd apps/web-admin
         npm run build
         
-    - name: Verify Vercel secrets
+    - name: Skip Vercel deployment (temporarily disabled)
       run: |
-        echo "Checking Vercel configuration..."
-        if [ -z "$VERCEL_TOKEN" ]; then
-          echo "⚠️ VERCEL_TOKEN is not set - skipping Vercel deployment"
-          echo "VERCEL_DEPLOY=false" >> $GITHUB_ENV
-        else
-          echo "✅ VERCEL_TOKEN is configured"
-          echo "VERCEL_DEPLOY=true" >> $GITHUB_ENV
-        fi
-        
-        if [ -z "$VERCEL_ORG_ID" ]; then
-          echo "⚠️ VERCEL_ORG_ID is not set"
-        else
-          echo "✅ VERCEL_ORG_ID is configured"
-        fi
-        
-        if [ -z "$VERCEL_PROJECT_ID" ]; then
-          echo "⚠️ VERCEL_PROJECT_ID is not set"
-        else
-          echo "✅ VERCEL_PROJECT_ID is configured"
-        fi
-      env:
-        VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN || '' }}
-        VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || '' }}
-        VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || '' }}
-        
-    - name: Set environment variables for Vercel
-      if: env.VERCEL_DEPLOY == 'true'
-      run: |
-        echo "Setting environment variables for Vercel deployment..."
-        echo "SUPABASE_URL=$SUPABASE_URL" >> $GITHUB_ENV
-        echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> $GITHUB_ENV
-        echo "TUYA_APP_KEY=$TUYA_APP_KEY" >> $GITHUB_ENV
-        echo "TUYA_APP_SECRET=$TUYA_APP_SECRET" >> $GITHUB_ENV
-      env:
-        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-        SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        TUYA_APP_KEY: ${{ secrets.TUYA_APP_KEY }}
-        TUYA_APP_SECRET: ${{ secrets.TUYA_APP_SECRET }}
-        
-    - name: Deploy to Vercel
-      if: env.VERCEL_DEPLOY == 'true'
-      uses: amondnet/vercel-action@v25
-      with:
-        vercel-token: ${{ secrets.VERCEL_TOKEN }}
-        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        vercel-args: '--prod'
-        working-directory: './apps/web-admin'
-      env:
-        SUPABASE_URL: ${{ env.SUPABASE_URL }}
-        SUPABASE_ANON_KEY: ${{ env.SUPABASE_ANON_KEY }}
-        TUYA_APP_KEY: ${{ env.TUYA_APP_KEY }}
-        TUYA_APP_SECRET: ${{ env.TUYA_APP_SECRET }}
-        
-    - name: Skip Vercel deployment
-      if: env.VERCEL_DEPLOY == 'false'
-      run: |
-        echo "⚠️ Skipping Vercel deployment - secrets not configured"
-        echo "Please add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID to GitHub Secrets"
+        echo "⚠️ Vercel deployment temporarily disabled"
+        echo "Focusing on Android app development first"
+        echo "Web deployment will be enabled after Vercel project setup"

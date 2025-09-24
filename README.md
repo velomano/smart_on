@@ -6,14 +6,14 @@
 
 스마트팜에서 작물을 재배하는 팀들이 원격으로 베드를 제어하고 모니터링할 수 있는 **통합 플랫폼**입니다.
 
-### 주요 기능
-- **다단 베드 관리** - 1-4단 베드별 작물 및 재배방식 설정
-- **실시간 모니터링** - 온도, 습도, 조도, CO2, EC, pH 센서 데이터
-- **디바이스 제어** - Tuya 스마트 스위치를 통한 조명, 팬, 펌프 제어
-- **타이머 설정** - 주간 스케줄링으로 자동 제어
-- **팀 관리** - 팀별 계정 및 권한 관리
-- **모바일 앱** - React Native + Expo 크로스 플랫폼
-- **웹 어드민** - Next.js 기반 관리자 대시보드
+### 🎯 주요 기능
+- **🌱 스마트 스위치 등록** - Tuya 스마트 스위치 초기 연동 (모바일 앱)
+- **🏠 농장 관리** - 다중 농장 및 베드 관리 시스템
+- **📊 실시간 모니터링** - 온도, 습도, 조도, EC, pH 센서 데이터 시각화
+- **🔌 디바이스 제어** - Tuya 스마트 스위치를 통한 조명, 팬, 펌프 제어
+- **📱 모바일 앱** - React Native + Expo 크로스 플랫폼 (스위치 등록용)
+- **🌐 웹 어드민** - Next.js 기반 관리자/사용자 대시보드
+- **🎨 현대적 UI/UX** - Glassmorphism 디자인 테마 적용
 
 ## 🚀 기술 스택
 
@@ -41,48 +41,43 @@
 ## 📁 프로젝트 구조
 
 ```
-smart-farm-app/
+smart_on/
 ├── apps/                      # 애플리케이션
-│   ├── mobile-app/           # React Native 모바일 앱
+│   ├── mobile-app/           # React Native 모바일 앱 (스위치 등록용)
 │   │   ├── App.tsx           # 메인 앱 컴포넌트
-│   │   ├── screens/          # 화면 컴포넌트
-│   │   │   ├── BedDetailScreen.tsx      # 베드 상세 화면
-│   │   │   ├── BedSettingsScreen.tsx    # 다단 베드 설정
-│   │   │   ├── TeamLoginScreen.tsx      # 팀 로그인
-│   │   │   ├── BedAuthScreen.tsx        # 베드 인증
-│   │   │   ├── TimerSettingsScreen.tsx  # 타이머 설정
-│   │   │   └── DeviceSetupScreen.tsx    # 디바이스 설정
-│   │   ├── lib/              # 유틸리티 라이브러리
-│   │   │   ├── supabase.ts   # Supabase 클라이언트
-│   │   │   ├── tuya.ts       # Tuya SDK 래퍼
-│   │   │   └── teamAuth.ts   # 팀 인증 관리
+│   │   ├── src/              # 소스 코드
+│   │   │   └── services/     # Supabase & Tuya 서비스
 │   │   ├── android/          # Android 네이티브 코드
-│   │   └── package.json      # 모바일 앱 의존성
-│   └── web-admin/            # Next.js 웹 어드민
+│   │   │   └── app/src/main/java/com/velomano/smartfarm/
+│   │   │       ├── TuyaSDKModule.java      # Tuya SDK 네이티브 모듈
+│   │   │       ├── TuyaSDKPackage.java     # 모듈 패키지
+│   │   │       └── MainApplication.java    # 메인 애플리케이션
+│   │   ├── app.json          # Expo 설정 (환경변수 포함)
+│   │   └── package.json      # 의존성
+│   └── web-admin/            # Next.js 웹 어드민 (관리자/사용자용)
 │       ├── src/              # 소스 코드
-│       ├── public/           # 정적 파일
-│       └── package.json      # 웹 앱 의존성
+│       │   ├── app/          # Next.js 13+ App Router
+│       │   └── lib/          # Supabase 클라이언트
+│       ├── .env.local        # 환경변수 (로컬)
+│       └── package.json      # 의존성
 ├── packages/                 # 공유 패키지
-│   ├── shared/              # 공통 타입 및 유틸리티
 │   └── database/            # 데이터베이스 스키마
 │       └── supabase/        # Supabase 설정
-│           ├── config.toml   # Supabase 설정
-│           └── migrations/   # 데이터베이스 마이그레이션
 ├── docs/                    # 프로젝트 문서
-│   └── md/                  # 마크다운 문서
-│       ├── 스마트팜_제어_모니터링_앱_prd_v_0.md  # 기획서
-│       ├── smart_farm_build_docs_v_0.md         # 빌드 가이드
-│       ├── Git_연동_가이드.md                   # Git 가이드
-│       ├── 작업_시작_전_체크리스트.md           # 체크리스트
-│       └── 작업_기록_2025_09_23.md             # 작업 기록
-├── book/                    # SDK 및 리소스
-│   ├── 6.7.0/              # Tuya SDK v6.7.0
-│   └── *.zip, *.tar.gz     # SDK 압축 파일들
+│   ├── 00_README.md         # 문서 인덱스
+│   ├── 01_ENV.md            # 환경변수 가이드
+│   ├── 02_DB_SCHEMA.sql     # 데이터베이스 스키마
+│   ├── 03_RLS_POLICIES.sql  # 보안 정책
+│   ├── 06_API_CONTRACT.md   # API 계약
+│   ├── 07_TUYA_SDK.md       # Tuya SDK 가이드
+│   ├── 12_ACCEPTANCE_CHECKS.md # 수용성 체크
+│   ├── EXISTING_DB_STRUCTURE.md # 기존 DB 구조 분석
+│   └── UI_DESIGN_SYSTEM.md  # UI 디자인 시스템
+├── book/                    # Tuya SDK 및 리소스
 ├── .github/                 # GitHub Actions
-│   └── workflows/           # CI/CD 워크플로우
-│       └── web-deploy.yml   # 웹 앱 자동 배포
-├── env.example             # 환경변수 템플릿
-└── README.md               # 프로젝트 문서
+│   └── workflows/           # CI/CD 파이프라인
+├── env.example              # 환경변수 템플릿
+└── README.md                # 프로젝트 문서
 ```
 
 ## 🛠️ 설치 및 실행
@@ -115,36 +110,27 @@ npm install
 
 ### 4. 환경변수 설정
 
-#### 4.1 환경변수 파일 생성
+#### 모바일 앱 (app.json에 설정됨)
 ```bash
-cp env.example .env
+# mobile-app/app.json의 extra 필드에 이미 설정되어 있음
+{
+  "extra": {
+    "supabaseUrl": "https://kkrcwdybrsppbsufrrdg.supabase.co",
+    "supabaseAnonKey": "your-anon-key",
+    "tuyaAppKey": "your-tuya-app-key",
+    "tuyaAppSecret": "your-tuya-app-secret",
+    "tuyaRegion": "eu"
+  }
+}
 ```
 
-#### 4.2 Supabase 설정
-1. [Supabase 대시보드](https://supabase.com)에서 프로젝트 생성
-2. Settings > API에서 다음 정보 복사:
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
+#### 웹 어드민
+```bash
+cd apps/web-admin
+# .env.local 파일 생성 (이미 생성됨)
+NEXT_PUBLIC_SUPABASE_URL=https://kkrcwdybrsppbsufrrdg.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
-
-#### 4.3 Tuya IoT 설정
-1. [Tuya IoT Platform](https://iot.tuya.com)에서 앱 생성
-2. Cloud > Development에서 다음 정보 복사:
-```env
-TUYA_APP_KEY=your-app-key
-TUYA_APP_SECRET=your-app-secret
-```
-
-#### 4.4 GitHub Secrets 설정 (배포용)
-GitHub 저장소 > Settings > Secrets and variables > Actions에서 다음 시크릿 추가:
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `TUYA_APP_KEY`
-- `TUYA_APP_SECRET`
-- `VERCEL_TOKEN` (Vercel 배포용)
-- `VERCEL_ORG_ID` (Vercel 조직 ID)
-- `VERCEL_PROJECT_ID` (Vercel 프로젝트 ID)
 
 ### 5. 웹 어드민 실행
 ```bash
@@ -154,22 +140,32 @@ npm run dev
 
 ### 6. 모바일 앱 실행
 
-#### 웹 버전
+#### 웹 버전 (개발용)
 ```bash
 cd apps/mobile-app
-npm run web
+npm start
+# 브라우저에서 'w' 키를 눌러 웹 버전 실행
 ```
 
-#### Android
+#### Android (실제 디바이스 테스트용)
 ```bash
 cd apps/mobile-app
 npm run android
+# Android Studio 설치 필요
 ```
 
-#### iOS
+#### iOS (macOS만)
 ```bash
 cd apps/mobile-app
 npm run ios
+# Xcode 설치 필요
+```
+
+### 7. Tuya SDK 네이티브 모듈 빌드 (Android)
+```bash
+cd apps/mobile-app
+npx expo run:android
+# 또는 Android Studio에서 직접 빌드
 ```
 
 ## 🔧 개발 가이드
@@ -197,16 +193,28 @@ npm run ios
 
 ## 📊 데이터베이스 스키마
 
-### 주요 테이블
+### 🗄️ 실제 테이블 구조 (Supabase)
 - `tenants` - 팀/조직 정보
-- `farms` - 농장 정보
-- `beds` - 베드 정보
-- `devices` - 디바이스 정보
-- `sensors` - 센서 정보
-- `sensor_readings` - 센서 데이터
+- `farms` - 농장 정보 (1개 농장: '메인 팜')
+- `beds` - 베드 정보 (6개 베드)
+- `devices` - 디바이스 정보 (7개: 3개 센서 게이트웨이 + 4개 Tuya 디바이스)
+- `sensors` - 센서 정보 (10개: 온도, 습도, EC, pH, 조도, 수온)
+- `sensor_readings` - 센서 데이터 (2,890개 레코드)
 - `commands` - 제어 명령
 - `rules` - 자동화 규칙
 - `alerts` - 알림 정보
+- `users` - 사용자 정보
+- `memberships` - 멤버십 정보
+
+### 🔗 테이블 관계
+```
+tenants (1) → farms (1) → devices (7) → sensors (10) → sensor_readings (2,890)
+```
+
+### 📱 모바일 앱 연동
+- **스위치 등록**: Tuya 디바이스 초기 설정 및 등록
+- **디바이스 제어**: `devices` 테이블의 `status` JSONB 필드로 상태 관리
+- **센서 모니터링**: `sensor_readings` 테이블에서 실시간 데이터 조회
 
 ## 🔐 보안
 
@@ -218,25 +226,18 @@ npm run ios
 ## 🚀 배포
 
 ### 웹 어드민
-- **Vercel** 자동 배포 (GitHub Actions)
-- **브랜치**: `main`, `develop` 푸시 시 자동 배포
-- **환경변수**: Supabase, Tuya 키 자동 주입
+- **Vercel** 또는 **Netlify** 배포
+- **자동 배포** (GitHub Actions)
 
 ### 모바일 앱
-- **Google Play Store** (Android) - 준비 중
-- **Apple App Store** (iOS) - 준비 중
+- **Google Play Store** (Android)
+- **Apple App Store** (iOS)
 - **Expo Application Services (EAS)** 빌드
 
-### CI/CD 파이프라인
-- **GitHub Actions** 워크플로우 설정 완료
+### 통합 배포
+- **GitHub Actions** CI/CD 파이프라인
 - **자동 빌드 및 테스트**
-- **Vercel 배포 자동화**
-- **환경변수 보안 관리**
-
-### 현재 배포 상태
-- ✅ **웹 앱**: 완전 작동 (Vercel 배포 준비 완료)
-- 🔧 **Android 앱**: 빌드 문제 해결 중
-- 📋 **iOS 앱**: 개발 대기 중
+- **다중 환경 배포** (dev, staging, production)
 
 ## 📝 라이선스
 
@@ -258,36 +259,15 @@ npm run ios
 
 **💡 팁**: 개발 시작 전에 `docs/md/작업_시작_전_체크리스트.md`를 확인하세요!
 
-## 📊 현재 개발 상태
-
-### ✅ 완료된 기능
-- **웹 앱**: 모든 핵심 기능 구현 완료
-- **데이터베이스**: Supabase 스키마 및 RLS 정책 설정
-- **UI/UX**: 다단 베드 관리, 실시간 모니터링, 디바이스 제어
-- **인증 시스템**: 팀 기반 로그인 및 권한 관리
-- **CI/CD**: GitHub Actions 워크플로우 설정
-
-### 🔧 진행 중인 작업
-- **Android 빌드**: Node.js/Java 경로 설정 문제 해결 중
-- **실제 테스트**: Tuya 계정 연동 및 디바이스 제어 테스트
-
-### 📋 다음 단계
-1. **Android 빌드 문제 해결** (우선순위: 높음)
-2. **실제 하드웨어 테스트** (Tuya 디바이스 연동)
-3. **PWA 기능 추가** (오프라인 지원)
-4. **알림 시스템 구현**
-5. **Google Play Store 배포 준비**
-
-## 🚨 알려진 이슈
-
-- **Android 빌드**: Node.js 경로 설정 필요
-- **저장공간**: Android Studio 빌드 시 공간 부족 문제
-- **실제 테스트**: Tuya 계정 및 디바이스 연동 테스트 필요
-
 ## 📚 추가 문서
 
-- [프로젝트 기획서](docs/md/스마트팜_제어_모니터링_앱_prd_v_0.md)
-- [빌드 가이드](docs/md/smart_farm_build_docs_v_0.md)
-- [Git 연동 가이드](docs/md/Git_연동_가이드.md)
-- [작업 기록](docs/md/작업_기록_2025_09_23.md)
-- [작업 시작 전 체크리스트](docs/md/작업_시작_전_체크리스트.md)
+- [📋 문서 인덱스](docs/00_README.md)
+- [🔧 환경변수 가이드](docs/01_ENV.md)
+- [🗄️ 데이터베이스 스키마](docs/02_DB_SCHEMA.sql)
+- [🔐 보안 정책](docs/03_RLS_POLICIES.sql)
+- [📡 API 계약](docs/06_API_CONTRACT.md)
+- [🔌 Tuya SDK 가이드](docs/07_TUYA_SDK.md)
+- [✅ 수용성 체크](docs/12_ACCEPTANCE_CHECKS.md)
+- [🗃️ 기존 DB 구조 분석](docs/EXISTING_DB_STRUCTURE.md)
+- [🎨 UI 디자인 시스템](docs/UI_DESIGN_SYSTEM.md)
+- [📱 프로젝트 기획서](book/스마트팜_제어_모니터링_앱_prd_v_0.md)
