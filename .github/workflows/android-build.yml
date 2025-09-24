@@ -1,65 +1,72 @@
-name: Build Android APK
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch: # 수동 실행 가능
 
 jobs:
-  build-android:
+  web-admin:
     runs-on: ubuntu-latest
-    
+    defaults:
+      run:
+        working-directory: apps/web-admin
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        
-    - name: Setup Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        api-level: 35
-        build-tools: 35.0.0
-        ndk-version: 26.1.10909125
-        
-    - name: Install dependencies
-      run: |
-        cd mobile-app
-        npm ci
-        
-    - name: Setup React Native CLI
-      run: |
-        cd mobile-app
-        npm install -g @react-native-community/cli
-        
-    - name: Generate autolinking
-      run: |
-        cd mobile-app
-        npx react-native config
-        
-    - name: Build Android APK (Debug)
-      working-directory: android
-      run: |
-        chmod +x gradlew
-        ./gradlew clean assembleDebug
-      env:
-        ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-        ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
-        REACT_NATIVE_NODE_PATH: /usr/local/bin/node
-        
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: smart-farm-app-debug-apk
-        path: android/app/build/outputs/apk/debug/*.apk
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            apps/web-admin/pnpm-lock.yaml
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (Next.js)
+        run: pnpm build
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android          # ← 루트/android 로 고정
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android packages
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "platform-tools" "cmdline-tools;latest" >/dev/null
+
+      - name: Ensure gradlew exists
+        run: |
+          ls -la .
+          test -f gradlew || (echo "❌ gradlew missing. Commit wrapper files in android/ !" && exit 1)
+          chmod +x gradlew
+
+      - name: Build Debug APK
+        run: |
+          ./gradlew clean assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-farm-app-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
