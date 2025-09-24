@@ -2,7 +2,7 @@ module.exports = {
   project: {
     android: {
       packageName: 'com.velomano.smartfarm',
-      sourceDir: '../android',
+      sourceDir: './android',
       appName: 'app',
     },
   },

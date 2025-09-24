@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native/types/index.d.ts b/node_modules/react-native/types/index.d.ts
+index 5177707..6fb8b26 100644
+--- a/node_modules/react-native/types/index.d.ts
++++ b/node_modules/react-native/types/index.d.ts
+@@ -150,7 +150,7 @@ export * from '../Libraries/vendor/core/ErrorUtils';
+ export {
+   EmitterSubscription,
+   EventSubscription,
+-} from '../Libraries/vendor/emitter/EventEmitter';
++} from '../Libraries/EventEmitter/EventEmitter';
+ 
+ export * from './public/DeprecatedPropertiesAlias';
+ export * from './public/Insets';

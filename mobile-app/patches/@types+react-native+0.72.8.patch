@@ -1,0 +1,13 @@
+diff --git a/node_modules/@types/react-native/index.d.ts b/node_modules/@types/react-native/index.d.ts
+index 3b20e34..b03204c 100644
+--- a/node_modules/@types/react-native/index.d.ts
++++ b/node_modules/@types/react-native/index.d.ts
+@@ -91,7 +91,7 @@ export * from "./Libraries/Utilities/Dimensions";
+ export * from "./Libraries/Utilities/PixelRatio";
+ export * from "./Libraries/Utilities/Platform";
+ export * from "./Libraries/vendor/core/ErrorUtils";
+-export { EmitterSubscription, EventSubscription } from "./Libraries/vendor/emitter/EventEmitter";
++export { EmitterSubscription, EventSubscription } from "./Libraries/EventEmitter/EventEmitter";
+ export * from "./Libraries/Vibration/Vibration";
+ export * from "./Libraries/YellowBox/YellowBoxDeprecated";
+ 

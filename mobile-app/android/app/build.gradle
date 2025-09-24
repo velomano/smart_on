@@ -1,0 +1,75 @@
+plugins {
+  id 'com.android.application'
+  id 'org.jetbrains.kotlin.android'
+}
+
+// RN 0.69~0.70 방식으로 JSC 사용 (안정성 우선)
+project.ext.react = [
+  enableHermes: false,
+  entryFile: "index.js"
+]
+
+android {
+  namespace "com.velomano.smartfarm"
+  compileSdkVersion 34
+
+  defaultConfig {
+    applicationId "com.velomano.smartfarm"
+    minSdkVersion 24
+    targetSdkVersion 34
+    versionCode 1
+    versionName "1.0"
+
+    // ndk abiFilters 제거 - reactNativeArchitectures로 관리
+  }
+
+  signingConfigs {
+    release {
+      if (project.hasProperty('RELEASE_STORE_FILE')) {
+        storeFile file(RELEASE_STORE_FILE)
+        storePassword RELEASE_STORE_PASSWORD
+        keyAlias RELEASE_KEY_ALIAS
+        keyPassword RELEASE_KEY_PASSWORD
+      }
+    }
+  }
+
+  buildTypes {
+    release {
+      signingConfig signingConfigs.release
+      minifyEnabled false
+      shrinkResources false
+      proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+    }
+  }
+
+  sourceSets {
+    main.java.srcDirs = ['src/main/java']
+    main.kotlin.srcDirs = ['src/main/kotlin']
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
+  }
+  kotlinOptions { jvmTarget = '17' }
+}
+
+dependencies {
+  implementation "com.facebook.react:react-android:0.72.15"
+  implementation "androidx.appcompat:appcompat:1.6.1"
+  implementation "com.google.android.material:material:1.10.0"
+
+  // Emoji2 (자동 초기화)
+  implementation "androidx.emoji2:emoji2:1.5.0"
+  implementation "androidx.emoji2:emoji2-views:1.5.0"
+  implementation "androidx.emoji2:emoji2-views-helper:1.5.0"
+  implementation "androidx.emoji2:emoji2-bundled:1.5.0"
+
+  // JSC 사용
+  implementation("org.webkit:android-jsc:+")
+
+  implementation fileTree(dir: 'libs', include: ['*.aar'])
+  // Tuya SDK는 추후 버전에 맞춰 해제
+  // implementation 'com.thingclips.smart:thingsmart:6.4.0'
+}

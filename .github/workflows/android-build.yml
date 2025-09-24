@@ -34,6 +34,15 @@ jobs:
       - name: Build (Next.js)
         run: pnpm build
 
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: apps/web-admin
+          scope: ${{ secrets.VERCEL_SCOPE }}
+
   android:
     runs-on: ubuntu-latest
     defaults:

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert, FlatList } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, FlatList, StatusBar } from 'react-native';
 import TuyaService from './src/services/TuyaService';
 import SupabaseService, { Device } from './src/services/SupabaseService';
 
@@ -17,10 +15,10 @@ export default function App() {
 
   const initializeApp = async () => {
     try {
-      // 투야 SDK 초기화 (app.json extra에서 가져오기)
-      const appKey = Constants.expoConfig?.extra?.tuyaAppKey || '';
-      const secretKey = Constants.expoConfig?.extra?.tuyaAppSecret || '';
-      const region = Constants.expoConfig?.extra?.tuyaRegion || 'us';
+      // 투야 SDK 초기화 (직접 값 사용)
+      const appKey = 'we85jqprtfpm5pkmyr53';
+      const secretKey = '12277a78753f4aaa8d3c8e3beff43632';
+      const region = 'eu';
 
       if (appKey && secretKey) {
         const success = await TuyaService.initializeSDK(appKey, secretKey, region);
@@ -248,7 +246,7 @@ export default function App() {
         />
       </View>
 
-      <StatusBar style="auto" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
     </View>
   );
 }

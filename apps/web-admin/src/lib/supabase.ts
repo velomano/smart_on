@@ -147,7 +147,7 @@ export const getDevices = async (farmId?: string): Promise<Device[]> => {
           bed_id: 'bed-1',
           type: 'sensor_gateway',
           vendor: 'custom',
-          tuya_device_id: null,
+          tuya_device_id: undefined,
           status: { online: true, on: false },
           meta: { pi_id: 'pi-001', location: '조1-베드1' },
           created_at: new Date().toISOString()
@@ -196,7 +196,7 @@ export const getDevices = async (farmId?: string): Promise<Device[]> => {
         bed_id: 'bed-1',
         type: 'sensor_gateway',
         vendor: 'custom',
-        tuya_device_id: null,
+        tuya_device_id: undefined,
         status: { online: true, on: false },
         meta: { pi_id: 'pi-001', location: '조1-베드1' },
         created_at: new Date().toISOString()
@@ -223,7 +223,7 @@ export const getDevices = async (farmId?: string): Promise<Device[]> => {
         bed_id: 'bed-1',
         type: 'sensor_gateway',
         vendor: 'custom',
-        tuya_device_id: null,
+        tuya_device_id: undefined,
         status: { online: true, on: false },
         meta: { pi_id: 'pi-001', location: '조1-베드1' },
         created_at: new Date().toISOString()
