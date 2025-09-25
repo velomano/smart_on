@@ -33,10 +33,9 @@ export default function TeamManagementPage() {
     try {
       const usersResult = await getApprovedUsers();
       const allUsers = usersResult.users || [];
-      // 자신의 농장에 속한 팀원들만 필터링 (농장장 자신 제외)
+      // 자신의 농장에 속한 모든 멤버들 필터링 (농장장 자신 포함)
       const myTeamMembers = allUsers.filter(member => 
-        member.team_id === user?.team_id && 
-        member.id !== user?.id // 자신만 제외
+        member.team_id === user?.team_id
       );
       setTeamMembers(myTeamMembers as AuthUser[]);
       console.log('농장장 팀원 관리 - 현재 사용자:', user);

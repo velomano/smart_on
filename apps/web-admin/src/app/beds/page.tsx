@@ -519,52 +519,52 @@ function BedsManagementContent() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
                   베드 이름 *
                 </label>
                 <input
                   type="text"
                   value={newBedData.name}
                   onChange={(e) => setNewBedData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                   placeholder="예: 베드1, A구역"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
                   작물 이름 *
                 </label>
                 <input
                   type="text"
                   value={newBedData.cropName}
                   onChange={(e) => setNewBedData(prev => ({ ...prev, cropName: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                   placeholder="예: 토마토, 상추, 딸기"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
                   재배 방식
                 </label>
                 <select
                   value={newBedData.growingMethod}
                   onChange={(e) => setNewBedData(prev => ({ ...prev, growingMethod: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
                 >
-                  <option value="담액식">담액식</option>
-                  <option value="NFT식">NFT식</option>
-                  <option value="분무식">분무식</option>
-                  <option value="점적식">점적식</option>
-                  <option value="기타">기타</option>
+                  <option value="담액식" className="text-gray-900">담액식</option>
+                  <option value="NFT식" className="text-gray-900">NFT식</option>
+                  <option value="분무식" className="text-gray-900">분무식</option>
+                  <option value="점적식" className="text-gray-900">점적식</option>
+                  <option value="기타" className="text-gray-900">기타</option>
                 </select>
               </div>
 
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => setShowAddBedModal(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                 >
                   취소
                 </button>

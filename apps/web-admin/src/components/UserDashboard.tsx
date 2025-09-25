@@ -85,7 +85,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         // 사용자 역할에 따른 권한 확인
         const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
         const canManageTeamMembers = user.role === 'team_leader' || user.role === 'team_member';
-        const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member' || user.email === 'sky3rain7@gmail.com';
+        const canManageFarms = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
         // const canViewData = true; // 모든 사용자는 데이터 조회 가능
 
 
@@ -325,13 +325,17 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                       <div className="flex items-center space-x-2">
                         {canManageFarms && (
                           <button
-                            onClick={() => router.push(`/beds?farm=${farm.id}`)}
+                            onClick={() => {
+                              // 농장장인 경우 자기 농장으로, 관리자인 경우 해당 농장으로 이동
+                              const targetFarmId = user.role === 'team_leader' ? user.team_id : farm.id;
+                              router.push(`/beds?farm=${targetFarmId}`);
+                            }}
                             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
                           >
                             농장 관리
                           </button>
                         )}
-                    </div>
+                      </div>
                   </div>
 
                   {/* 농장에 속한 베드들 */}
