@@ -17,6 +17,7 @@ export default function BedsManagementPage() {
   const [selectedFarmTab, setSelectedFarmTab] = useState<string>('all');
   const [showAddFarmModal, setShowAddFarmModal] = useState(false);
   const [showAddBedModal, setShowAddBedModal] = useState(false);
+  const [targetFarm, setTargetFarm] = useState<Farm | null>(null);
   const [newFarmData, setNewFarmData] = useState({
     name: '',
     description: '',
@@ -366,10 +367,13 @@ export default function BedsManagementPage() {
                   </div>
 
                   {/* 새 베드 추가 버튼 - 관리자와 농장장만 표시 */}
-                  {selectedFarmTab === farm.id && user && user.role !== 'team_member' && (
+                  {user && user.role !== 'team_member' && (
                     <div className="flex justify-center mt-6">
                       <button 
-                        onClick={() => setShowAddBedModal(true)}
+                        onClick={() => {
+                          setTargetFarm(farm);
+                          setShowAddBedModal(true);
+                        }}
                         className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                       >
                         + 새 베드 추가
