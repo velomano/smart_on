@@ -2,26 +2,25 @@
 
 ## 📋 프로젝트 소개
 
-스마트팜 IoT 제어 및 모니터링 시스템으로, Tuya 스마트스위치를 활용한 단계별 확장 아키텍처를 구현합니다.
+아두이노 + 라즈베리 파이 조합으로 구성된 스마트팜의 센서 데이터 수집, 분석, 제어를 위한 통합 시스템입니다.
 
 ## 🎯 핵심 목표
 
-- **Phase 0**: Tuya 스마트스위치 직접 제어 (Android APK)
-- **Phase 1**: Raspberry Pi ↔ REST API 센서 데이터 수집
-- **Phase 2**: MQTT 브로커를 통한 대규모 확장
+- **Phase 1**: JSON 기반 웹어드민 + Mock 데이터 시뮬레이션
+- **Phase 2**: 라즈베리 파이 + MQTT 연동
+- **Phase 3**: 아두이노 하드웨어 연동 (릴레이 모듈 제어)
 
 ## 🏗️ 아키텍처 개요
 
 ```
-Phase 0 (현재):
-Android APK → Tuya SDK → Smart Switch
+Phase 1 (현재):
+웹어드민 ←→ Supabase ←→ Mock 데이터 시뮬레이션
 
-Phase 1 (센서 연결):
-Arduino → Raspberry Pi → REST API → Supabase
-Web Admin → Supabase → REST API → Raspberry Pi → Arduino
+Phase 2 (MQTT 연동):
+웹어드민 ←→ Supabase ←→ MQTT 브로커 ←→ 라즈베리 파이
 
-Phase 2 (확장):
-REST + MQTT 브로커 병행 구조
+Phase 3 (하드웨어 연동):
+웹어드민 ←→ Supabase ←→ MQTT ←→ 라즈베리 파이 ←→ 아두이노 ←→ 릴레이 모듈
 ```
 
 ## 🔧 기술 스택
@@ -30,8 +29,8 @@ REST + MQTT 브로커 병행 구조
 |------|------|
 | **Frontend** | Next.js 14, Expo Bare, Tailwind, shadcn/ui |
 | **Backend** | Supabase (Postgres + Auth + RLS + Edge Functions) |
-| **IoT** | Raspberry Pi (FastAPI), Arduino (센서 허브) |
-| **Devices** | Tuya SDK (Android 패키지명 등록 필요) |
+| **IoT** | Raspberry Pi (MQTT 브로커), Arduino (센서 수집 + 릴레이 제어) |
+| **Devices** | 릴레이 모듈 (조명, 팬, 펌프 제어) |
 | **CI/CD** | GitHub Actions, Vercel, EAS Build |
 
 ## 📊 현재 상태 (2025.01.15)
@@ -50,42 +49,35 @@ REST + MQTT 브로커 병행 구조
 - ✅ **UI/UX**: 현대적인 Glassmorphism 디자인 테마 적용
 - ✅ **환경변수**: 모바일 앱(app.json) 및 웹(.env.local) 설정 완료
 - ✅ **Vercel 배포**: https://web-admin-fsi2tolta-smart-ons-projects.vercel.app
-- 🚀 **다음 단계**: Tuya SDK 실제 테스트 (디바이스 스캔 및 제어)
+- 🚀 **다음 단계**: JSON 기반 Mock 데이터 시뮬레이션 구현
 
 ## 🚀 구현 단계
 
-### ✅ Phase 0: Tuya 스마트스위치 제어 (완료)
-1. ✅ Expo Bare 환경 준비 (prebuild)
-2. ✅ Tuya SDK 네이티브 모듈 구현 (Java)
-3. ✅ Android 빌드 성공 (BUILD SUCCESSFUL)
-4. ✅ IDE 에러 해결 (Java 클래스패스 설정)
-5. ✅ Gradle 8.13 + JDK 17 환경 구성
-6. 🚀 **다음**: Tuya SDK 실제 테스트 (디바이스 스캔 및 제어)
-
-### ✅ Phase 1: 웹 어드민 대시보드 (완료)
-1. ✅ Next.js 기반 웹 어드민 구현
+### ✅ Phase 0: 웹어드민 기반 구축 (완료)
+1. ✅ Next.js 기반 웹어드민 구현
 2. ✅ Supabase 데이터베이스 연동
-3. ✅ Glassmorphism UI/UX 디자인
-4. ✅ 실시간 센서 데이터 시각화
-5. ✅ 사용자 권한 시스템 (시스템 관리자, 농장장, 팀원)
-6. ✅ 농장 및 베드 관리 시스템
-7. ✅ 팀원 관리 시스템
-8. ✅ Mock 인증 시스템 (개발/테스트용)
+3. ✅ 사용자 권한 시스템 구현
+4. ✅ 농장 및 베드 관리 시스템
+5. ✅ Mock 인증 시스템
+6. ✅ Vercel 배포 완료
 
-### 🚀 Phase 2: Tuya SDK 실제 연동 (다음 단계)
-1. ✅ Android 빌드 환경 완료
-2. ✅ Tuya SDK 네이티브 모듈 구현 완료
-3. 🚀 **다음**: 실제 디바이스 스캔 및 제어 테스트
+### 🚀 Phase 1: JSON 기반 Mock 데이터 시뮬레이션 (진행중)
+1. 🔄 Mock 센서 데이터 시뮬레이션 구현
+2. 🔄 Mock 액추에이터 제어 시뮬레이션 구현
+3. 🔄 MQTT 통신 구조 설계
+4. 🔄 JSON 데이터 형식 표준화
 
-### 📋 Phase 3: 센서 데이터 수집 (예정)
-1. REST API 라우트 추가
-2. Raspberry Pi Python 스크립트 작성
-3. 센서 데이터 업로드/제어 명령 처리
+### 📋 Phase 2: 라즈베리 파이 + MQTT 연동 (예정)
+1. 라즈베리 파이에 MQTT 브로커 설치
+2. 센서 데이터 수집 시뮬레이션
+3. 제어 명령 처리 시뮬레이션
+4. 웹어드민과 MQTT 연동
 
-### 📋 Phase 4: MQTT 확장 (예정)
-1. Mosquitto 브로커 설치
-2. REST ↔ MQTT 브리지 구현
-3. 대규모 센서 데이터 처리
+### 📋 Phase 3: 아두이노 하드웨어 연동 (예정)
+1. 실제 센서 연결
+2. 릴레이 모듈로 액추에이터 제어
+3. 실시간 데이터 수집 및 제어
+4. 완전한 하드웨어 연동 완료
 
 ## 📁 프로젝트 구조
 

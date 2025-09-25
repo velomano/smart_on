@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettings } from '../lib/mockAuth';
 import { Farm, Device, Sensor, SensorReading } from '../lib/supabase';
+import { mockSystem } from '../lib/mockSystem';
 import AppHeader from './AppHeader';
 
 interface UserDashboardProps {
@@ -24,11 +25,33 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     showAllBedsInBedManagement: false
   });
   const [bedDashboardSettings, setBedDashboardSettings] = useState<Record<string, boolean>>({});
+  const [mockSensorData, setMockSensorData] = useState<any[]>([]);
+  const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
+  const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
   
   // 팀 데이터 로드
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Mock 시스템 초기화 및 시작
+        mockSystem.initialize();
+        mockSystem.start();
+
+        // Mock 데이터 업데이트를 위한 주기적 폴링
+        const updateMockData = () => {
+          const sensorData = mockSystem.getBedSensorData('bed_001'); // 예시: 첫 번째 베드
+          const actuatorData = mockSystem.getBedActuators('bed_001');
+          setMockSensorData(sensorData);
+          setMockActuatorData(actuatorData);
+        };
+
+        // 초기 데이터 로드
+        updateMockData();
+
+        // 5초마다 Mock 데이터 업데이트
+        const interval = setInterval(updateMockData, 5000);
+        setMockDataInterval(interval);
+
         const [teamsResult, usersResult] = await Promise.all([
           getTeams(),
           getApprovedUsers()
@@ -63,6 +86,14 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       }
     };
     loadData();
+
+    // 컴포넌트 언마운트 시 Mock 시스템 정리
+    return () => {
+      mockSystem.stop();
+      if (mockDataInterval) {
+        clearInterval(mockDataInterval);
+      }
+    };
   }, [user.id]);
   
   // 통계 계산
@@ -335,7 +366,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             농장 관리
                           </button>
                         )}
-                      </div>
+                    </div>
                   </div>
 
                   {/* 농장에 속한 베드들 */}
@@ -391,28 +422,36 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 </span>
                               </div>
 
-                              {/* 제어 상태 - Tuya 스마트 스위치 상태 */}
+                              {/* 제어 상태 - Mock 액추에이터 상태 */}
                               <div className="mb-3">
                                 <div className="flex items-center space-x-4 text-xs">
                                   <div className="flex items-center space-x-1">
                                     <span>💡</span>
                                     <span className="text-gray-600">램프1</span>
-                                    <span className="font-bold text-gray-400">--</span>
+                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'lamp1')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {mockActuatorData.find(a => a.deviceId === 'lamp1')?.status === 'on' ? 'ON' : 'OFF'}
+                                    </span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <span>💡</span>
                                     <span className="text-gray-600">램프2</span>
-                                    <span className="font-bold text-gray-400">--</span>
+                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'lamp2')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {mockActuatorData.find(a => a.deviceId === 'lamp2')?.status === 'on' ? 'ON' : 'OFF'}
+                                    </span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <span>💧</span>
                                     <span className="text-gray-600">펌프</span>
-                                    <span className="font-bold text-gray-400">--</span>
+                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'pump')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {mockActuatorData.find(a => a.deviceId === 'pump')?.status === 'on' ? 'ON' : 'OFF'}
+                                    </span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <span>🌀</span>
                                     <span className="text-gray-600">팬</span>
-                                    <span className="font-bold text-gray-400">--</span>
+                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'fan')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {mockActuatorData.find(a => a.deviceId === 'fan')?.status === 'on' ? 'ON' : 'OFF'}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -426,6 +465,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-sm font-bold text-red-600">
                                     {(() => {
+                                      // Mock 데이터 우선 사용
+                                      const mockTemp = mockSensorData.find(s => s.type === 'temperature');
+                                      if (mockTemp) {
+                                        return `${mockTemp.value}°C`;
+                                      }
+                                      
+                                      // 기존 데이터 폴백
                                       const tempSensor = deviceSensors.find(s => s.type === 'temperature');
                                       const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
                                       return reading ? `${reading.value}°C` : '--°C';
@@ -440,6 +486,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-sm font-bold text-blue-600">
                                     {(() => {
+                                      // Mock 데이터 우선 사용
+                                      const mockHumidity = mockSensorData.find(s => s.type === 'humidity');
+                                      if (mockHumidity) {
+                                        return `${mockHumidity.value}%`;
+                                      }
+                                      
+                                      // 기존 데이터 폴백
                                       const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
                                       const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
                                       return reading ? `${reading.value}%` : '--%';
@@ -454,6 +507,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-sm font-bold text-green-600">
                                     {(() => {
+                                      // Mock 데이터 우선 사용
+                                      const mockEC = mockSensorData.find(s => s.type === 'ec');
+                                      if (mockEC) {
+                                        return `${mockEC.value}`;
+                                      }
+                                      
+                                      // 기존 데이터 폴백
                                       const ecSensor = deviceSensors.find(s => s.type === 'ec');
                                       const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
                                       return reading ? `${reading.value}` : '--';
@@ -468,6 +528,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-sm font-bold text-purple-600">
                                     {(() => {
+                                      // Mock 데이터 우선 사용
+                                      const mockPH = mockSensorData.find(s => s.type === 'ph');
+                                      if (mockPH) {
+                                        return `${mockPH.value}`;
+                                      }
+                                      
+                                      // 기존 데이터 폴백
                                       const phSensor = deviceSensors.find(s => s.type === 'ph');
                                       const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
                                       return reading ? `${reading.value}` : '--';
