@@ -537,7 +537,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         </div>
                         <div>
                           <div className="font-bold text-gray-900">
-                            {farm?.name} - {device?.meta?.location}
+                            {farm?.name} - {String(device?.meta?.location || '')}
                           </div>
                           <div className="text-sm text-gray-600">
                             {sensor?.type} 센서 측정
