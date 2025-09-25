@@ -332,8 +332,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             <div className="flex items-center space-x-1">
                               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                               <span className="text-xs text-gray-500">활성</span>
-                            </div>
-                          </div>
+                      </div>
+                    </div>
                         </div>
                       </div>
                       {/* 농장별 관리 버튼들 */}
@@ -346,8 +346,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             농장 관리
                           </button>
                         )}
-                      </div>
                     </div>
+                  </div>
 
                   {/* 농장에 속한 베드들 */}
                   <div className="space-y-4">

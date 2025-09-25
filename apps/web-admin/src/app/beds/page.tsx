@@ -324,7 +324,7 @@ export default function BedsManagementPage() {
                                 </div>
                                 <div>
                                   <span className="font-bold text-gray-900 text-sm">
-                                    {(device.meta?.location || '센서 게이트웨이').replace(/^농장\d+-/, '')}
+                                    {String(device.meta?.location || '센서 게이트웨이').replace(/^농장\d+-/, '')}
                                   </span>
                                   <div className="text-xs text-gray-500">📊 센서 {deviceSensors.length}개</div>
                                 </div>
