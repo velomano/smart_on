@@ -1,0 +1,15 @@
+{
+  "name": "@smart-on/nutrients-engine",
+  "version": "1.0.0",
+  "description": "Nutrient solution calculation engine",
+  "main": "index.ts",
+  "types": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -118,6 +118,18 @@ export default function AppHeader({
                 </button>
               )}
               <button
+                onClick={() => router.push('/nutrients/plan')}
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2.5 rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                🌱 양액계산
+              </button>
+              <button
+                onClick={() => router.push('/market')}
+                className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-4 py-2.5 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                📊 시세정보
+              </button>
+              <button
                 onClick={async () => {
                   const { signOut } = await import('../lib/mockAuth');
                   await signOut();

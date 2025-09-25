@@ -28,6 +28,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   const [mockSensorData, setMockSensorData] = useState<any[]>([]);
   const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
   const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
+  const [localActuatorStates, setLocalActuatorStates] = useState<Record<string, boolean>>({});
   
   // 팀 데이터 로드
   useEffect(() => {
@@ -43,6 +44,17 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           const actuatorData = mockSystem.getBedActuators('bed_001');
           setMockSensorData(sensorData);
           setMockActuatorData(actuatorData);
+          
+          // 로컬 액추에이터 상태가 없을 때만 Mock 데이터로 초기화
+          setLocalActuatorStates(prev => {
+            const newStates = { ...prev };
+            actuatorData.forEach((actuator: any) => {
+              if (prev[actuator.deviceId] === undefined) {
+                newStates[actuator.deviceId] = actuator.status === 'on';
+              }
+            });
+            return newStates;
+          });
         };
 
         // 초기 데이터 로드
@@ -98,9 +110,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   
   // 통계 계산
   const totalFarms = farms.length;
-  const totalBeds = 6; // 절대값으로 고정
+  const totalBeds = farms.length; // 농장 수를 전체 베드 수로 사용 (각 농장당 1개 베드)
   const activeBeds = devices.filter(d => d.type === 'sensor_gateway' && d.status?.online).length;
-  const bedActivationRate = Math.round((activeBeds / totalBeds) * 100);
+  const bedActivationRate = totalBeds > 0 ? Math.round((activeBeds / totalBeds) * 100) : 0;
   
   const activeTeams = teams.length; // 실제 활성화된 조의 수
   const activeMembers = approvedUsers.filter(user => 
@@ -381,7 +393,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
                       {/* 베드 목록 */}
                       <div className="space-y-4">
-                        {farm.visibleDevices.map((device) => {
+                        {farm.visibleDevices.map((device: Device) => {
                           const deviceSensors = sensors.filter(s => s.device_id === device.id);
 
                           return (
@@ -428,29 +440,29 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   <div className="flex items-center space-x-1">
                                     <span>💡</span>
                                     <span className="text-gray-600">램프1</span>
-                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'lamp1')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
-                                      {mockActuatorData.find(a => a.deviceId === 'lamp1')?.status === 'on' ? 'ON' : 'OFF'}
+                                    <span className={`font-bold ${localActuatorStates['lamp1'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {localActuatorStates['lamp1'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <span>💡</span>
                                     <span className="text-gray-600">램프2</span>
-                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'lamp2')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
-                                      {mockActuatorData.find(a => a.deviceId === 'lamp2')?.status === 'on' ? 'ON' : 'OFF'}
+                                    <span className={`font-bold ${localActuatorStates['lamp2'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {localActuatorStates['lamp2'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <span>💧</span>
                                     <span className="text-gray-600">펌프</span>
-                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'pump')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
-                                      {mockActuatorData.find(a => a.deviceId === 'pump')?.status === 'on' ? 'ON' : 'OFF'}
+                                    <span className={`font-bold ${localActuatorStates['pump'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {localActuatorStates['pump'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
                                   <div className="flex items-center space-x-1">
                                     <span>🌀</span>
                                     <span className="text-gray-600">팬</span>
-                                    <span className={`font-bold ${mockActuatorData.find(a => a.deviceId === 'fan')?.status === 'on' ? 'text-green-600' : 'text-gray-400'}`}>
-                                      {mockActuatorData.find(a => a.deviceId === 'fan')?.status === 'on' ? 'ON' : 'OFF'}
+                                    <span className={`font-bold ${localActuatorStates['fan'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                      {localActuatorStates['fan'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
                                 </div>

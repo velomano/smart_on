@@ -1,12 +1,14 @@
 # 🔗 API 계약서
 
-## 📋 현재 구현 상태 (2025.09.23)
+## 📋 현재 구현 상태 (2025.01.24)
 
 ### ✅ 구현 완료
 - **Supabase 클라이언트**: 모바일 앱 및 웹 어드민에서 직접 사용
 - **실시간 데이터**: `sensor_readings` 테이블에서 2,890개 레코드 조회
 - **디바이스 관리**: `devices` 테이블에서 7개 디바이스 관리
 - **Mock 데이터**: 개발용 Mock 데이터 제공
+- **🌱 양액계산 API**: `/api/nutrients/plan` - 작물별 최적 배양액 계산
+- **📊 시세정보 API**: `/api/market-prices` - KAMIS 농산물 시세 조회
 
 ### 🔄 구현 예정
 - **REST API 엔드포인트**: Next.js API Routes로 구현 예정
@@ -317,3 +319,101 @@ GET /api/sensors/data?sensor_id=sensor_001&start_time=2025-01-24T00:00:00Z&aggre
 ### 센서 ID 형식
 - 형식: `sensor_[숫자]`
 - 예시: `sensor_001`, `sensor_002`
+
+## 🌱 양액계산 API (구현 완료)
+
+### POST /api/nutrients/plan
+작물별 최적 배양액 제조 계산을 수행합니다.
+
+**요청 본문:**
+```json
+{
+  "cropNameOrKey": "상추",
+  "stage": "vegetative",
+  "targetVolumeL": 100,
+  "waterProfileName": "RO_Default"
+}
+```
+
+**응답:**
+```json
+{
+  "success": true,
+  "cropKey": "lettuce",
+  "stage": "vegetative",
+  "target": {
+    "volumeL": 100,
+    "EC": 1.6,
+    "pH": 6
+  },
+  "lines": [
+    {
+      "salt": "Calcium nitrate tetrahydrate",
+      "grams": 52.183,
+      "tank": "A"
+    },
+    {
+      "salt": "Potassium nitrate", 
+      "grams": 41.927,
+      "tank": "B"
+    }
+  ],
+  "adjustments": [],
+  "qc": {
+    "ec_est": 0.6,
+    "ph_est": 6.5,
+    "warnings": [
+      "Ca 잔여 요구량 61 ppm: CaCl2 등 보조염 추가 검토 필요"
+    ]
+  }
+}
+```
+
+## 📊 시세정보 API (구현 완료)
+
+### GET /api/market-prices
+KAMIS 농산물 시세 정보를 조회합니다.
+
+**쿼리 파라미터:**
+- `item_name`: 농산물명 (선택)
+- `item_code`: 품목코드 (선택)
+
+**응답:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "item_name": "쌀/20kg",
+      "item_code": "111",
+      "unit": "20kg",
+      "dpr": 61000,
+      "price": "61,000원/20kg"
+    }
+  ]
+}
+```
+
+### POST /api/market-prices/trend
+농산물 가격 추이를 조회합니다.
+
+**요청 본문:**
+```json
+{
+  "item_code": "111",
+  "period": "monthly"
+}
+```
+
+**응답:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "date": "2025-01-01",
+      "price": 58000
+    }
+  ]
+}
+```

@@ -50,7 +50,11 @@ export default function WebAdminDashboard() {
             if (savedDevices) {
               setDevices(JSON.parse(savedDevices));
             } else {
-              setDevices(teamsResult.devices as Device[]);
+              // localStorage에 데이터가 없으면 Mock 데이터 사용하고 저장
+              const mockDevices = teamsResult.devices as Device[];
+              setDevices(mockDevices);
+              localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
+              console.log('대시보드 - Mock 베드 데이터를 localStorage에 저장:', mockDevices);
             }
           } else {
             setDevices(teamsResult.devices as Device[]);

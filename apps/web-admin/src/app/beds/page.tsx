@@ -4,7 +4,13 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/mockAuth';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
+import { mockSystem } from '../../lib/mockSystem';
 import AppHeader from '../../components/AppHeader';
+import ActuatorControlModal from '../../components/ActuatorControlModal';
+import ScheduleModal from '../../components/ScheduleModal';
+import DualTimeModal from '../../components/DualTimeModal';
+import SensorChart from '../../components/SensorChart';
+import SensorCard from '../../components/SensorCard';
 
 function BedsManagementContent() {
   const router = useRouter();
@@ -15,7 +21,22 @@ function BedsManagementContent() {
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [sensorReadings, setSensorReadings] = useState<SensorReading[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedFarmTab, setSelectedFarmTab] = useState<string>('all');
+  const [selectedFarmTab, setSelectedFarmTab] = useState<string>('');
+  const [mockSensorData, setMockSensorData] = useState<any[]>([]);
+  const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
+  const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
+  const [localActuatorStates, setLocalActuatorStates] = useState<Record<string, boolean>>({});
+  const [actuatorSchedules, setActuatorSchedules] = useState<Record<string, any>>({});
+  const [actuatorDualTimes, setActuatorDualTimes] = useState<Record<string, any>>({});
+  const [selectedActuator, setSelectedActuator] = useState<{
+    deviceId: string;
+    name: string;
+    status: boolean;
+  } | null>(null);
+  const [showActuatorModal, setShowActuatorModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showDualTimeModal, setShowDualTimeModal] = useState(false);
+  const [sensorChartData, setSensorChartData] = useState<any[]>([]);
   const [showAddFarmModal, setShowAddFarmModal] = useState(false);
   const [showAddBedModal, setShowAddBedModal] = useState(false);
   const [targetFarm, setTargetFarm] = useState<Farm | null>(null);
@@ -34,6 +55,101 @@ function BedsManagementContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Mock 시스템 초기화 및 시작
+        mockSystem.initialize();
+        mockSystem.start();
+
+        // Mock 데이터 업데이트를 위한 주기적 폴링
+        const updateMockData = () => {
+          const sensorData = mockSystem.getBedSensorData('bed_001'); // 예시: 첫 번째 베드
+          const actuatorData = mockSystem.getBedActuators('bed_001');
+          setMockSensorData(sensorData);
+          setMockActuatorData(actuatorData);
+          
+          // 액추에이터 상태는 초기에만 설정하고 이후에는 덮어쓰지 않음
+          setLocalActuatorStates(prev => {
+            // 이미 설정된 상태가 있으면 유지
+            if (Object.keys(prev).length > 0) {
+              return prev;
+            }
+            
+            // 초기 설정만 수행
+            const newStates = { ...prev };
+            actuatorData.forEach((actuator: any) => {
+              newStates[actuator.deviceId] = actuator.status === 'on';
+            });
+            return newStates;
+          });
+        };
+
+        // 초기 데이터 로드
+        updateMockData();
+
+        // 24시간 차트 데이터 초기화
+        const initialChartData = generateChartData();
+        console.log('📊 초기 차트 데이터 생성:', initialChartData.length, '개 데이터 포인트');
+        setSensorChartData(initialChartData);
+
+        // 5분마다 Mock 데이터 업데이트 (실제 농장 환경에 적합)
+        const interval = setInterval(() => {
+          updateMockData();
+          
+          // 차트 데이터도 업데이트 (새로운 데이터 포인트 추가)
+          setSensorChartData(prevData => {
+            const newData = [...prevData];
+            
+            // 288개 데이터 포인트 유지 (5분마다 업데이트, 24시간 데이터)
+            if (newData.length >= 288) {
+              newData.shift(); // 가장 오래된 데이터 제거
+            }
+            
+            // 새로운 현재 시간 데이터 추가
+            const now = new Date();
+            const hour = now.getHours();
+            const minute = now.getMinutes();
+            const second = now.getSeconds();
+            
+            // 시간대별 패턴을 고려한 Mock 데이터 생성
+            const baseTemp = 20 + Math.sin((hour - 6) * Math.PI / 12) * 8; // 6시 최저, 18시 최고
+            const baseHumidity = 60 + Math.sin((hour - 12) * Math.PI / 12) * 20; // 12시 최저
+            const baseEC = 1.5 + Math.sin((hour - 6) * Math.PI / 12) * 0.5;
+            const basePH = 6.0 + Math.sin((hour - 12) * Math.PI / 12) * 0.8;
+            
+            // 더 큰 변동 추가 (센서별로 다른 변동폭)
+            const getVariation = (sensorType: string) => {
+              switch(sensorType) {
+                case 'temperature': return () => (Math.random() - 0.5) * 3; // 온도: ±1.5°C 변동
+                case 'humidity': return () => (Math.random() - 0.5) * 4; // 습도: ±2% 변동
+                case 'ec': return () => (Math.random() - 0.5) * 0.3; // EC: ±0.15 변동
+                case 'ph': return () => (Math.random() - 0.5) * 0.4; // pH: ±0.2 변동
+                default: return () => (Math.random() - 0.5) * 2;
+              }
+            };
+            
+            const timeVariation = (minute * 60 + second) / 3600 * 0.5; // 시간에 따른 변화 증가
+            const waveVariation = Math.sin(second * Math.PI / 30) * 1.0; // 30초 주기 파동 증가
+            const randomSpike = Math.random() < 0.1 ? (Math.random() - 0.5) * 2 : 0; // 10% 확률로 급격한 변화
+            
+            // 센서별 변동 적용
+            const tempVariation = getVariation('temperature');
+            const humidityVariation = getVariation('humidity');
+            const ecVariation = getVariation('ec');
+            const phVariation = getVariation('ph');
+            
+            newData.push({
+              time: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+              fullTime: now.toISOString(),
+              temperature: Math.round((baseTemp + tempVariation() + timeVariation + waveVariation + randomSpike) * 10) / 10,
+              humidity: Math.round((baseHumidity + humidityVariation() + timeVariation + waveVariation + randomSpike) * 10) / 10,
+              ec: Math.round((baseEC + ecVariation() + timeVariation * 0.1 + waveVariation * 0.1 + randomSpike * 0.1) * 10) / 10,
+              ph: Math.round((basePH + phVariation() + timeVariation * 0.1 + waveVariation * 0.1 + randomSpike * 0.1) * 10) / 10
+            });
+            
+            return newData;
+          });
+        }, 300000); // 5분 = 300,000ms
+        setMockDataInterval(interval);
+
         // 먼저 현재 로그인된 사용자 확인
         const currentUser = await getCurrentUser();
         if (!currentUser || !currentUser.is_approved) {
@@ -55,7 +171,11 @@ function BedsManagementContent() {
           if (savedDevices) {
             setDevices(JSON.parse(savedDevices));
           } else {
-            setDevices(teamsResult.devices as Device[]);
+            // localStorage에 데이터가 없으면 Mock 데이터 사용하고 저장
+            const mockDevices = teamsResult.devices as Device[];
+            setDevices(mockDevices);
+            localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
+            console.log('Mock 베드 데이터를 localStorage에 저장:', mockDevices);
           }
         } else {
           setDevices(teamsResult.devices as Device[]);
@@ -80,7 +200,26 @@ function BedsManagementContent() {
     };
 
     loadData();
+
+    // 컴포넌트 언마운트 시 Mock 시스템 정리
+    return () => {
+      mockSystem.stop();
+      if (mockDataInterval) {
+        clearInterval(mockDataInterval);
+      }
+    };
   }, [router]);
+
+  // 농장 데이터 로드 후 초기 탭 설정
+  useEffect(() => {
+    if (farms.length > 0 && !selectedFarmTab) {
+      if (user && user.role === 'system_admin') {
+        setSelectedFarmTab('all');
+      } else {
+        setSelectedFarmTab(farms[0].id);
+      }
+    }
+  }, [farms, user, selectedFarmTab]);
 
   // URL 파라미터 처리 (대시보드에서 특정 농장으로 이동)
   useEffect(() => {
@@ -106,6 +245,165 @@ function BedsManagementContent() {
   };
 
   const filteredDevices = getFilteredDevices();
+
+  // 액추에이터 제어 함수
+  const toggleActuator = (deviceId: string) => {
+    const newState = !localActuatorStates[deviceId];
+    
+    setLocalActuatorStates(prev => {
+      const newStates = {
+        ...prev,
+        [deviceId]: newState
+      };
+      
+      // localStorage에 저장
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('actuator_states', JSON.stringify(newStates));
+        console.log('💾 액추에이터 상태 저장:', newStates);
+      }
+      
+      return newStates;
+    });
+    
+    // Mock 시스템에 제어 명령 전송 (실제로는 MQTT로 전송)
+    const command = {
+      device_id: deviceId,
+      farm_id: 'farm_001',
+      bed_id: 'bed_001',
+      action: newState ? 'turn_on' : 'turn_off',
+      command_id: `cmd_${Date.now()}`
+    };
+    
+    // Mock 시스템에 명령 전달
+    try {
+      mockSystem.handleControlCommand('control/farm_001/bed_001/' + deviceId, command);
+      console.log(`✅ 액추에이터 제어 성공: ${deviceId} -> ${newState ? 'ON' : 'OFF'}`);
+    } catch (error) {
+      console.error(`❌ 액추에이터 제어 실패: ${deviceId}`, error);
+    }
+  };
+
+  // 수동 제어 모달 열기
+  const openActuatorModal = (deviceId: string, name: string) => {
+    setSelectedActuator({
+      deviceId,
+      name,
+      status: localActuatorStates[deviceId] || false
+    });
+    setShowActuatorModal(true);
+  };
+
+  // 스케줄링 모달 열기
+  const openScheduleModal = (deviceId: string, name: string) => {
+    setSelectedActuator({
+      deviceId,
+      name,
+      status: localActuatorStates[deviceId] || false
+    });
+    setShowScheduleModal(true);
+  };
+
+  // 듀얼타임 모달 열기
+  const openDualTimeModal = (deviceId: string, name: string) => {
+    setSelectedActuator({
+      deviceId,
+      name,
+      status: localActuatorStates[deviceId] || false
+    });
+    setShowDualTimeModal(true);
+  };
+
+  // 액추에이터 상태 변경
+  const handleActuatorStatusChange = (deviceId: string, status: boolean) => {
+    setLocalActuatorStates(prev => ({
+      ...prev,
+      [deviceId]: status
+    }));
+    
+    // Mock 시스템에 제어 명령 전송
+    const command = {
+      device_id: deviceId,
+      farm_id: 'farm_001',
+      bed_id: 'bed_001',
+      action: status ? 'turn_on' : 'turn_off',
+      command_id: `cmd_${Date.now()}`
+    };
+    
+    try {
+      mockSystem.handleControlCommand('control/farm_001/bed_001/' + deviceId, command);
+      console.log(`✅ 액추에이터 상태 변경: ${deviceId} -> ${status ? 'ON' : 'OFF'}`);
+    } catch (error) {
+      console.error(`❌ 액추에이터 상태 변경 실패: ${deviceId}`, error);
+    }
+  };
+
+  // 스케줄링 설정 저장
+  const handleScheduleChange = (deviceId: string, schedule: any) => {
+    setActuatorSchedules(prev => ({
+      ...prev,
+      [deviceId]: schedule
+    }));
+    console.log(`📅 스케줄링 설정 저장: ${deviceId}`, schedule);
+  };
+
+  // 듀얼타임 설정 저장
+  const handleDualTimeChange = (deviceId: string, dualTime: any) => {
+    setActuatorDualTimes(prev => ({
+      ...prev,
+      [deviceId]: dualTime
+    }));
+    console.log(`🔄 듀얼타임 설정 저장: ${deviceId}`, dualTime);
+  };
+
+  // 288개 데이터 포인트 생성 (24시간, 5분 간격)
+  const generateChartData = () => {
+    const now = new Date();
+    const data = [];
+    
+    for (let i = 287; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 5 * 60 * 1000); // 5분 간격
+      const hour = time.getHours();
+      const minute = time.getMinutes();
+      const second = time.getSeconds();
+      
+      // 시간대별 패턴을 고려한 Mock 데이터 생성
+      const baseTemp = 20 + Math.sin((hour - 6) * Math.PI / 12) * 8; // 6시 최저, 18시 최고
+      const baseHumidity = 60 + Math.sin((hour - 12) * Math.PI / 12) * 20; // 12시 최저
+      const baseEC = 1.5 + Math.sin((hour - 6) * Math.PI / 12) * 0.5;
+      const basePH = 6.0 + Math.sin((hour - 12) * Math.PI / 12) * 0.8;
+      
+      // 센서별 변동 추가
+      const getVariation = (sensorType: string) => {
+        switch(sensorType) {
+          case 'temperature': return () => (Math.random() - 0.5) * 3; // 온도: ±1.5°C 변동
+          case 'humidity': return () => (Math.random() - 0.5) * 4; // 습도: ±2% 변동
+          case 'ec': return () => (Math.random() - 0.5) * 0.3; // EC: ±0.15 변동
+          case 'ph': return () => (Math.random() - 0.5) * 0.4; // pH: ±0.2 변동
+          default: return () => (Math.random() - 0.5) * 2;
+        }
+      };
+      
+      const timeVariation = (minute * 60 + second) / 3600 * 0.5;
+      const waveVariation = Math.sin(second * Math.PI / 30) * 1.0;
+      const randomSpike = Math.random() < 0.1 ? (Math.random() - 0.5) * 2 : 0;
+      
+      const tempVariation = getVariation('temperature');
+      const humidityVariation = getVariation('humidity');
+      const ecVariation = getVariation('ec');
+      const phVariation = getVariation('ph');
+      
+      data.push({
+        time: time.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+        fullTime: time.toISOString(),
+        temperature: Math.round((baseTemp + tempVariation() + timeVariation + waveVariation + randomSpike) * 10) / 10,
+        humidity: Math.round((baseHumidity + humidityVariation() + timeVariation + waveVariation + randomSpike) * 10) / 10,
+        ec: Math.round((baseEC + ecVariation() + timeVariation * 0.1 + waveVariation * 0.1 + randomSpike * 0.1) * 10) / 10,
+        ph: Math.round((basePH + phVariation() + timeVariation * 0.1 + waveVariation * 0.1 + randomSpike * 0.1) * 10) / 10
+      });
+    }
+    
+    return data;
+  };
 
   // 새 농장 추가
   const handleAddFarm = () => {
@@ -221,8 +519,8 @@ function BedsManagementContent() {
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              {/* 관리자가 아닌 경우에만 전체 농장 탭 표시 */}
-              {(!user || user.role === 'system_admin') && (
+              {/* 시스템 관리자인 경우에만 전체 농장 탭 표시 */}
+              {user && user.role === 'system_admin' && (
                 <button
                   onClick={() => setSelectedFarmTab('all')}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
@@ -263,13 +561,24 @@ function BedsManagementContent() {
           {/* 농장별 베드 목록 */}
           <div className="space-y-6">
             {(() => {
-              // 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시
-              const farmId = searchParams.get('farm');
-              const farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id && !farmId
-                ? farms.filter(farm => farm.id === user.team_id)
-                : farmId 
-                  ? farms.filter(farm => farm.id === farmId)
-                  : farms;
+              // 선택된 탭에 따라 농장 필터링
+              let farmsToShow = farms;
+              
+              if (selectedFarmTab === 'all') {
+                // 전체 농장 표시
+                farmsToShow = farms;
+              } else if (selectedFarmTab) {
+                // 특정 농장만 표시
+                farmsToShow = farms.filter(farm => farm.id === selectedFarmTab);
+              } else {
+                // 기본값: 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시
+                const farmId = searchParams.get('farm');
+                farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id && !farmId
+                  ? farms.filter(farm => farm.id === user.team_id)
+                  : farmId 
+                    ? farms.filter(farm => farm.id === farmId)
+                    : farms;
+              }
               
               const farmGroups = farmsToShow.map(farm => {
                 const farmDevices = filteredDevices.filter(device => device.farm_id === farm.id);
@@ -388,122 +697,210 @@ function BedsManagementContent() {
                               </span>
                             </div>
 
+                            {/* 센서 데이터 */}
+                            <div className="mb-6">
+                              <h6 className="text-sm font-semibold text-gray-700 mb-4">📊 센서 데이터</h6>
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <SensorCard
+                                  type="temperature"
+                                  value={(() => {
+                                    const mockTemp = mockSensorData.find(s => s.type === 'temperature');
+                                    if (mockTemp) return mockTemp.value;
+                                    const tempSensor = deviceSensors.find(s => s.type === 'temperature');
+                                    const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                                    return reading ? reading.value : 0;
+                                  })()}
+                                  unit="°C"
+                                  icon="🌡️"
+                                  color="#ef4444"
+                                  chartData={sensorChartData}
+                                  title="온도"
+                                />
+                                
+                                <SensorCard
+                                  type="humidity"
+                                  value={(() => {
+                                    const mockHumidity = mockSensorData.find(s => s.type === 'humidity');
+                                    if (mockHumidity) return mockHumidity.value;
+                                    const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
+                                    const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                                    return reading ? reading.value : 0;
+                                  })()}
+                                  unit="%"
+                                  icon="💧"
+                                  color="#3b82f6"
+                                  chartData={sensorChartData}
+                                  title="습도"
+                                />
+                                
+                                <SensorCard
+                                  type="ec"
+                                  value={(() => {
+                                    const mockEC = mockSensorData.find(s => s.type === 'ec');
+                                    if (mockEC) return mockEC.value;
+                                    const ecSensor = deviceSensors.find(s => s.type === 'ec');
+                                    const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
+                                    return reading ? reading.value : 0;
+                                  })()}
+                                  unit="mS/cm"
+                                  icon="⚡"
+                                  color="#10b981"
+                                  chartData={sensorChartData}
+                                  title="EC"
+                                />
+                                
+                                <SensorCard
+                                  type="ph"
+                                  value={(() => {
+                                    const mockPH = mockSensorData.find(s => s.type === 'ph');
+                                    if (mockPH) return mockPH.value;
+                                    const phSensor = deviceSensors.find(s => s.type === 'ph');
+                                    const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
+                                    return reading ? reading.value : 0;
+                                  })()}
+                                  unit="pH"
+                                  icon="🧪"
+                                  color="#8b5cf6"
+                                  chartData={sensorChartData}
+                                  title="pH"
+                                />
+                              </div>
+                            </div>
+
                             {/* 제어 상태 - Tuya 스마트 스위치 제어 */}
                             <div className="mb-4">
                               <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 Tuya 스마트 스위치 제어</h6>
                               <div className="grid grid-cols-2 gap-3">
-                                <div className="flex items-center justify-between bg-yellow-50 rounded-lg p-3 border border-yellow-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">💡</span>
-                                    <span className="text-sm font-medium text-gray-700">램프1</span>
+                                <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-lg">💡</span>
+                                      <span className="text-sm font-medium text-gray-700">램프1</span>
+                                    </div>
+                                    <button 
+                                      onClick={() => toggleActuator('lamp1')}
+                                      className={`text-sm px-3 py-1 rounded-lg font-bold transition-all duration-200 ${
+                                        localActuatorStates['lamp1'] 
+                                          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {localActuatorStates['lamp1'] ? 'ON' : 'OFF'}
+                                    </button>
                                   </div>
-                                  <button 
-                                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
-                                    onClick={() => alert('램프1 제어 기능은 추후 구현 예정입니다.')}
-                                  >
-                                    켜기
-                                  </button>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => openScheduleModal('lamp1', '램프1')}
+                                      className="flex-1 bg-blue-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                    >
+                                      📅 스케줄링 설정
+                                    </button>
+                                    <button
+                                      onClick={() => openDualTimeModal('lamp1', '램프1')}
+                                      className="flex-1 bg-purple-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-600 transition-colors font-medium"
+                                    >
+                                      🔄 듀얼타임 설정
+                                    </button>
+                                  </div>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-orange-50 rounded-lg p-3 border border-orange-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">💡</span>
-                                    <span className="text-sm font-medium text-gray-700">램프2</span>
+                                <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-lg">💡</span>
+                                      <span className="text-sm font-medium text-gray-700">램프2</span>
+                                    </div>
+                                    <button 
+                                      onClick={() => toggleActuator('lamp2')}
+                                      className={`text-sm px-3 py-1 rounded-lg font-bold transition-all duration-200 ${
+                                        localActuatorStates['lamp2'] 
+                                          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {localActuatorStates['lamp2'] ? 'ON' : 'OFF'}
+                                    </button>
                                   </div>
-                                  <button 
-                                    className="bg-gradient-to-r from-orange-400 to-orange-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-orange-500 hover:to-orange-600 transition-all duration-200"
-                                    onClick={() => alert('램프2 제어 기능은 추후 구현 예정입니다.')}
-                                  >
-                                    켜기
-                                  </button>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => openScheduleModal('lamp2', '램프2')}
+                                      className="flex-1 bg-blue-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                    >
+                                      📅 스케줄링 설정
+                                    </button>
+                                    <button
+                                      onClick={() => openDualTimeModal('lamp2', '램프2')}
+                                      className="flex-1 bg-purple-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-600 transition-colors font-medium"
+                                    >
+                                      🔄 듀얼타임 설정
+                                    </button>
+                                  </div>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 border border-blue-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">💧</span>
-                                    <span className="text-sm font-medium text-gray-700">펌프</span>
+                                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-lg">💧</span>
+                                      <span className="text-sm font-medium text-gray-700">펌프</span>
+                                    </div>
+                                    <button 
+                                      onClick={() => toggleActuator('pump')}
+                                      className={`text-sm px-3 py-1 rounded-lg font-bold transition-all duration-200 ${
+                                        localActuatorStates['pump'] 
+                                          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {localActuatorStates['pump'] ? 'ON' : 'OFF'}
+                                    </button>
                                   </div>
-                                  <button 
-                                    className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-blue-500 hover:to-blue-600 transition-all duration-200"
-                                    onClick={() => alert('펌프 제어 기능은 추후 구현 예정입니다.')}
-                                  >
-                                    켜기
-                                  </button>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => openScheduleModal('pump', '펌프')}
+                                      className="flex-1 bg-blue-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                    >
+                                      📅 스케줄링 설정
+                                    </button>
+                                    <button
+                                      onClick={() => openDualTimeModal('pump', '펌프')}
+                                      className="flex-1 bg-purple-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-600 transition-colors font-medium"
+                                    >
+                                      🔄 듀얼타임 설정
+                                    </button>
+                                  </div>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 border border-green-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">🌀</span>
-                                    <span className="text-sm font-medium text-gray-700">팬</span>
+                                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-lg">🌀</span>
+                                      <span className="text-sm font-medium text-gray-700">팬</span>
+                                    </div>
+                                    <button 
+                                      onClick={() => toggleActuator('fan')}
+                                      className={`text-sm px-3 py-1 rounded-lg font-bold transition-all duration-200 ${
+                                        localActuatorStates['fan'] 
+                                          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                                      }`}
+                                    >
+                                      {localActuatorStates['fan'] ? 'ON' : 'OFF'}
+                                    </button>
                                   </div>
-                                  <button 
-                                    className="bg-gradient-to-r from-green-400 to-green-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-green-500 hover:to-green-600 transition-all duration-200"
-                                    onClick={() => alert('팬 제어 기능은 추후 구현 예정입니다.')}
-                                  >
-                                    켜기
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* 센서 데이터 */}
-                            <div className="mb-4">
-                              <h6 className="text-sm font-semibold text-gray-700 mb-3">📊 센서 데이터</h6>
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-3 border border-red-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">🌡️</span>
-                                    <span className="text-sm font-medium text-gray-700">온도</span>
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => openScheduleModal('fan', '팬')}
+                                      className="flex-1 bg-blue-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                    >
+                                      📅 스케줄링 설정
+                                    </button>
+                                    <button
+                                      onClick={() => openDualTimeModal('fan', '팬')}
+                                      className="flex-1 bg-purple-500 text-white text-xs py-2 px-3 rounded-lg hover:bg-purple-600 transition-colors font-medium"
+                                    >
+                                      🔄 듀얼타임 설정
+                                    </button>
                                   </div>
-                                  <span className="text-lg font-bold text-red-600">
-                                    {(() => {
-                                      const tempSensor = deviceSensors.find(s => s.type === 'temperature');
-                                      const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
-                                      return reading ? `${reading.value}°C` : '--°C';
-                                    })()}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 border border-blue-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">💧</span>
-                                    <span className="text-sm font-medium text-gray-700">습도</span>
-                                  </div>
-                                  <span className="text-lg font-bold text-blue-600">
-                                    {(() => {
-                                      const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
-                                      const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
-                                      return reading ? `${reading.value}%` : '--%';
-                                    })()}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 border border-green-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">⚡</span>
-                                    <span className="text-sm font-medium text-gray-700">EC</span>
-                                  </div>
-                                  <span className="text-lg font-bold text-green-600">
-                                    {(() => {
-                                      const ecSensor = deviceSensors.find(s => s.type === 'ec');
-                                      const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
-                                      return reading ? `${reading.value}` : '--';
-                                    })()}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">🧪</span>
-                                    <span className="text-sm font-medium text-gray-700">pH</span>
-                                  </div>
-                                  <span className="text-lg font-bold text-purple-600">
-                                    {(() => {
-                                      const phSensor = deviceSensors.find(s => s.type === 'ph');
-                                      const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
-                                      return reading ? `${reading.value}` : '--';
-                                    })()}
-                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -704,6 +1101,52 @@ function BedsManagementContent() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 액추에이터 제어 모달 */}
+      {/* 수동 제어 모달 */}
+      {selectedActuator && (
+        <ActuatorControlModal
+          isOpen={showActuatorModal}
+          onClose={() => {
+            setShowActuatorModal(false);
+            setSelectedActuator(null);
+          }}
+          actuatorName={selectedActuator.name}
+          deviceId={selectedActuator.deviceId}
+          currentStatus={selectedActuator.status}
+          onStatusChange={handleActuatorStatusChange}
+        />
+      )}
+
+      {/* 스케줄링 모달 */}
+      {selectedActuator && (
+        <ScheduleModal
+          isOpen={showScheduleModal}
+          onClose={() => {
+            setShowScheduleModal(false);
+            setSelectedActuator(null);
+          }}
+          actuatorName={selectedActuator.name}
+          deviceId={selectedActuator.deviceId}
+          currentSchedule={actuatorSchedules[selectedActuator.deviceId]}
+          onScheduleChange={handleScheduleChange}
+        />
+      )}
+
+      {/* 듀얼타임 모달 */}
+      {selectedActuator && (
+        <DualTimeModal
+          isOpen={showDualTimeModal}
+          onClose={() => {
+            setShowDualTimeModal(false);
+            setSelectedActuator(null);
+          }}
+          actuatorName={selectedActuator.name}
+          deviceId={selectedActuator.deviceId}
+          currentDualTime={actuatorDualTimes[selectedActuator.deviceId]}
+          onDualTimeChange={handleDualTimeChange}
+        />
       )}
     </div>
   );
