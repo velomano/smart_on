@@ -2,10 +2,9 @@
   "name": "web-admin",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "npm@10.0.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
     "deploy": "vercel --prod",

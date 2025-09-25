@@ -9,10 +9,10 @@ import AppHeader from './AppHeader';
 
 interface UserDashboardProps {
   user: AuthUser;
-  farms: Farm[];
-  devices: Device[];
-  sensors: Sensor[];
-  sensorReadings: SensorReading[];
+  farms: any[];
+  devices: any[];
+  sensors: any[];
+  sensorReadings: any[];
 }
 
 export default function UserDashboard({ user, farms, devices, sensors, sensorReadings }: UserDashboardProps) {
@@ -116,8 +116,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         // 사용자 역할에 따른 권한 확인
         const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
         const canManageTeamMembers = user.role === 'team_leader' || user.role === 'team_member';
-        const canManageFarms = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
-        // const canViewData = true; // 모든 사용자는 데이터 조회 가능
+        const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com';
+        const canViewData = true; // 모든 사용자는 데이터 조회 가능
 
 
   return (
