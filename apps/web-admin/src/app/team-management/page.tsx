@@ -67,7 +67,7 @@ export default function TeamManagementPage() {
       name: member.name || '',
       email: member.email,
       role: member.role as 'team_member' | 'team_leader',
-      is_active: member.is_active
+      is_active: member.is_active ?? true
     });
   };
 
