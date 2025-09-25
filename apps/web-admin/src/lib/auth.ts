@@ -23,112 +23,66 @@ export interface SignInData {
   password: string;
 }
 
+// Mock 인증 함수들 (순환 참조 방지)
+const mockUsers = [
+  { id: 'mock-test-001', email: 'test1@test.com', name: '시스템 관리자', role: 'system_admin', team_id: null, team_name: null, is_active: true },
+  { id: 'mock-test-002', email: 'test2@test.com', name: '1농장장', role: 'team_leader', team_id: 'team-001', team_name: '1농장', is_active: true },
+  { id: 'mock-test-003', email: 'test3@test.com', name: '2농장장', role: 'team_leader', team_id: 'team-002', team_name: '2농장', is_active: true },
+  { id: 'mock-test-004', email: 'test4@test.com', name: '3농장장', role: 'team_leader', team_id: 'team-003', team_name: '3농장', is_active: true },
+  { id: 'mock-test-005', email: 'test5@test.com', name: '1농장 팀원', role: 'team_member', team_id: 'team-001', team_name: '1농장', is_active: true },
+  { id: 'mock-test-006', email: 'test6@test.com', name: '2농장 팀원', role: 'team_member', team_id: 'team-002', team_name: '2농장', is_active: true },
+  { id: 'mock-test-007', email: 'test7@test.com', name: '3농장 팀원', role: 'team_member', team_id: 'team-003', team_name: '3농장', is_active: true },
+];
+
+const mockPasswords = {
+  'test1@test.com': 'password',
+  'test2@test.com': 'password',
+  'test3@test.com': 'password',
+  'test4@test.com': 'password',
+  'test5@test.com': 'password',
+  'test6@test.com': 'password',
+  'test7@test.com': 'password',
+};
+
 // 회원가입
 export const signUp = async (data: SignUpData) => {
-  try {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: {
-          name: data.name,
-          company: data.company,
-          phone: data.phone,
-        }
-      }
-    });
-
-    if (authError) {
-      throw authError;
-    }
-
-    // 사용자 정보를 users 테이블에 저장 (승인 대기 상태)
-    if (authData.user) {
-      const { error: userError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
-          email: data.email,
-          name: data.name,
-          is_approved: false, // 관리자 승인 필요
-          created_at: new Date().toISOString()
-        });
-
-      if (userError) {
-        console.error('Error creating user profile:', userError);
-        throw new Error('사용자 프로필 생성에 실패했습니다.');
-      }
-    }
-
-    return { success: true, user: authData.user };
-  } catch (error) {
-    console.error('Sign up error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
+  return { success: false, error: 'Mock 환경에서는 회원가입이 비활성화되어 있습니다.' };
 };
 
 // 로그인
 export const signIn = async (data: SignInData) => {
-  try {
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    });
-
-    if (authError) {
-      throw authError;
-    }
-
-    return { success: true, user: authData.user };
-  } catch (error) {
-    console.error('Sign in error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  const user = mockUsers.find(u => u.email === data.email);
+  const password = mockPasswords[data.email as keyof typeof mockPasswords];
+  
+  if (!user || password !== data.password) {
+    return { success: false, error: 'Invalid login credentials' };
   }
+  
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('mock_current_user', JSON.stringify(user));
+  }
+  
+  return { success: true, user };
 };
 
 // 로그아웃
 export const signOut = async () => {
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    return { success: true };
-  } catch (error) {
-    console.error('Sign out error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('mock_current_user');
   }
+  return { success: true };
 };
 
 // 현재 사용자 정보 가져오기
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
+  if (typeof window === 'undefined') return null;
+  
+  const stored = localStorage.getItem('mock_current_user');
+  if (!stored) return null;
+  
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error || !user) {
-      return null;
-    }
-
-    // 사용자 상세 정보 가져오기
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*, memberships(role, tenant_id)')
-      .eq('id', user.id)
-      .single();
-
-    if (userError) {
-      console.error('Error fetching user data:', userError);
-      return null;
-    }
-
-    return {
-      id: user.id,
-      email: user.email || '',
-      name: userData.name,
-      role: userData.memberships?.[0]?.role as 'admin' | 'operator' | 'viewer',
-      tenant_id: userData.memberships?.[0]?.tenant_id,
-      is_approved: userData.is_approved
-    };
-  } catch (error) {
-    console.error('Get current user error:', error);
+    return JSON.parse(stored);
+  } catch {
     return null;
   }
 };

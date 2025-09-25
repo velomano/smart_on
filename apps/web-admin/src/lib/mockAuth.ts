@@ -4,7 +4,7 @@
 
 // 환경 설정 - 배포 환경에서도 Mock 인증 사용
 const isDevelopment = process.env.NODE_ENV === 'development';
-const useMockAuth = true; // 항상 Mock 인증 사용
+const useMockAuth = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export interface AuthUser {
   id: string;
@@ -255,28 +255,17 @@ const getAuthFunctions = () => {
       deleteUser: mockDeleteUser
     };
   } else {
-    // 실제 Supabase Auth 함수들 import
-    const { 
-      signIn: realSignIn, 
-      signUp: realSignUp, 
-      signOut: realSignOut,
-      getCurrentUser: realGetCurrentUser,
-      getPendingUsers: realGetPendingUsers,
-      approveUser: realApproveUser,
-      rejectUser: realRejectUser,
-      getTenants: realGetTenants
-    } = require('./auth');
-    
+    // Mock 인증만 사용 (Supabase 연결 시에도)
     return {
-      signIn: realSignIn,
-      signUp: realSignUp,
-      signOut: realSignOut,
-      getCurrentUser: realGetCurrentUser,
-      getPendingUsers: realGetPendingUsers,
-      approveUser: realApproveUser,
-      rejectUser: realRejectUser,
-      getTenants: realGetTenants,
-      getTeams: mockGetTeams, // 조 관련은 Mock 유지
+      signIn: mockSignIn,
+      signUp: mockSignUp,
+      signOut: mockSignOut,
+      getCurrentUser: mockGetCurrentUser,
+      getPendingUsers: mockGetPendingUsers,
+      approveUser: mockApproveUser,
+      rejectUser: mockRejectUser,
+      getTenants: mockGetTenants,
+      getTeams: mockGetTeams,
       getApprovedUsers: mockGetApprovedUsers,
       updateUser: mockUpdateUser,
       deleteUser: mockDeleteUser

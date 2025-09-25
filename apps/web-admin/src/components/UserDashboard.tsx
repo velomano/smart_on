@@ -85,7 +85,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         // 사용자 역할에 따른 권한 확인
         const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
         const canManageTeamMembers = user.role === 'team_leader' || user.role === 'team_member';
-        const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com';
+        const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member' || user.email === 'sky3rain7@gmail.com';
         // const canViewData = true; // 모든 사용자는 데이터 조회 가능
 
 
@@ -237,16 +237,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                           userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
                         }`}
                       />
-                    </button>
-                  </div>
-                )}
-                {canManageFarms && (
-                  <button 
-                    onClick={() => router.push('/beds')}
-                    className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
-                  >
-                    농장 관리
                   </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -281,7 +273,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     ...farm,
                     visibleDevices
                   };
-                }).filter(farm => farm.visibleDevices.length > 0); // 베드가 있는 농장만 표시
+                }); // 모든 농장 표시 (베드가 없어도 농장은 표시)
 
                 // 활성화된 베드가 없는 경우 처리
                 if (filteredFarms.length === 0) {
@@ -302,14 +294,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               : '농장 관리에서 베드를 활성화하거나 새 베드를 추가해보세요')
                           : '농장 관리에서 베드를 활성화하거나 새 베드를 추가해보세요'}
                       </p>
-                      {canManageFarms && (
-                        <button 
-                          onClick={() => router.push('/beds')}
-                          className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200"
-                        >
-                          농장 관리하기
-                        </button>
-                      )}
                     </div>
                   );
                 }
@@ -336,11 +320,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     </div>
                         </div>
                       </div>
+                      
                       {/* 농장별 관리 버튼들 */}
                       <div className="flex items-center space-x-2">
                         {canManageFarms && (
                           <button
-                            onClick={() => router.push('/beds')}
+                            onClick={() => router.push(`/beds?farm=${farm.id}`)}
                             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
                           >
                             농장 관리
@@ -484,17 +469,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 </div>
                   </div>
 
-                  {/* 농장 관리 버튼 */}
-                  <div className="flex justify-end items-center">
-                  {canManageFarms && (
-                      <button
-                        onClick={() => router.push('/beds')}
-                        className="text-blue-600 hover:text-blue-800 font-semibold text-xs"
-                      >
-                        농장 관리 →
-                    </button>
-                  )}
-                </div>
                 </div>
                 ));
               })()}

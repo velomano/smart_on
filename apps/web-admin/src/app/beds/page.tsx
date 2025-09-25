@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/mockAuth';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
 import AppHeader from '../../components/AppHeader';
 
 export default function BedsManagementPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -47,12 +48,25 @@ export default function BedsManagementPage() {
         ]);
 
         setFarms(teamsResult.teams as Farm[]);
-        setDevices(teamsResult.devices as Device[]);
+        
+        // 로컬 스토리지에서 베드 데이터 불러오기
+        if (typeof window !== 'undefined') {
+          const savedDevices = localStorage.getItem('mock_devices');
+          if (savedDevices) {
+            setDevices(JSON.parse(savedDevices));
+          } else {
+            setDevices(teamsResult.devices as Device[]);
+          }
+        } else {
+          setDevices(teamsResult.devices as Device[]);
+        }
+        
         setSensors(teamsResult.sensors as Sensor[]);
         setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
         
-        // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정
-        if (currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member') && currentUser.team_id) {
+        // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
+        const farmId = searchParams.get('farm');
+        if (!farmId && currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member') && currentUser.team_id) {
           setSelectedFarmTab(currentUser.team_id);
         }
         
@@ -67,6 +81,14 @@ export default function BedsManagementPage() {
 
     loadData();
   }, [router]);
+
+  // URL 파라미터 처리 (대시보드에서 특정 농장으로 이동)
+  useEffect(() => {
+    const farmId = searchParams.get('farm');
+    if (farmId && farms.length > 0) {
+      setSelectedFarmTab(farmId);
+    }
+  }, [searchParams, farms]);
 
   // 필터링된 디바이스
   const getFilteredDevices = () => {
@@ -133,6 +155,13 @@ export default function BedsManagementPage() {
     };
 
     setDevices(prev => [...prev, newBed]);
+    
+    // 로컬 스토리지에 저장
+    if (typeof window !== 'undefined') {
+      const updatedDevices = [...devices, newBed];
+      localStorage.setItem('mock_devices', JSON.stringify(updatedDevices));
+    }
+    
     setNewBedData({ name: '', cropName: '', growingMethod: '담액식' });
     setShowAddBedModal(false);
     alert(`새 베드가 ${targetFarm?.name || '농장'}에 추가되었습니다!`);
@@ -207,9 +236,12 @@ export default function BedsManagementPage() {
               )}
               {/* 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시 */}
               {(() => {
-                const farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id
+                const farmId = searchParams.get('farm');
+                const farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id && !farmId
                   ? farms.filter(farm => farm.id === user.team_id)
-                  : farms;
+                  : farmId 
+                    ? farms.filter(farm => farm.id === farmId)
+                    : farms;
                 
                 return farmsToShow.map(farm => (
                   <button
@@ -232,9 +264,12 @@ export default function BedsManagementPage() {
           <div className="space-y-6">
             {(() => {
               // 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시
-              const farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id
+              const farmId = searchParams.get('farm');
+              const farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id && !farmId
                 ? farms.filter(farm => farm.id === user.team_id)
-                : farms;
+                : farmId 
+                  ? farms.filter(farm => farm.id === farmId)
+                  : farms;
               
               const farmGroups = farmsToShow.map(farm => {
                 const farmDevices = filteredDevices.filter(device => device.farm_id === farm.id);

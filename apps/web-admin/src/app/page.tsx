@@ -43,7 +43,19 @@ export default function WebAdminDashboard() {
 
         if (teamsResult.success) {
           setFarms(teamsResult.teams as Farm[]);
-          setDevices(teamsResult.devices as Device[]);
+          
+          // 로컬 스토리지에서 베드 데이터 불러오기
+          if (typeof window !== 'undefined') {
+            const savedDevices = localStorage.getItem('mock_devices');
+            if (savedDevices) {
+              setDevices(JSON.parse(savedDevices));
+            } else {
+              setDevices(teamsResult.devices as Device[]);
+            }
+          } else {
+            setDevices(teamsResult.devices as Device[]);
+          }
+          
           setSensors(teamsResult.sensors as Sensor[]);
           setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
         }
