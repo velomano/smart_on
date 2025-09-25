@@ -64,13 +64,13 @@ export default function TeamPage() {
         
         if (user?.role === 'system_admin') {
           // 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
-          members = allUsers.filter(member => member.id !== user?.id);
+          members = allUsers.filter(member => member.id !== user?.id) as AuthUser[];
         } else if (user?.team_id) {
           // 농장장/팀원은 자신의 농장 멤버들만 볼 수 있음 (자신 포함)
           members = allUsers.filter(member => 
             member.team_id === user.team_id && 
             member.role !== 'system_admin' // 시스템 관리자는 제외
-          );
+          ) as AuthUser[];
         }
         
         console.log('필터링된 멤버들:', members);
