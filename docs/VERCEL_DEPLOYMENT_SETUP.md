@@ -50,7 +50,22 @@ Vercel 프로젝트에서 Environment Variables 설정:
 3. Vercel에서 배포 상태 확인
 4. 배포된 URL로 접속 테스트
 
-## 5. 도메인 설정 (선택사항)
+## 5. 현재 배포 상태
+
+### ✅ 배포 완료
+- **URL**: https://web-admin-fsi2tolta-smart-ons-projects.vercel.app
+- **상태**: 정상 작동 중
+- **Mock 인증**: 활성화 (개발/테스트용)
+- **최근 업데이트**: 2025.01.15
+
+### 🧪 테스트 계정
+- **시스템 관리자**: test1@test.com / password
+- **1농장장**: test2@test.com / password
+- **2농장장**: test4@test.com / password
+- **3농장장**: test6@test.com / password
+- **팀원들**: test3@test.com, test5@test.com, test7@test.com / password
+
+## 6. 도메인 설정 (선택사항)
 
 1. Vercel 프로젝트 > Settings > Domains
 2. 커스텀 도메인 추가

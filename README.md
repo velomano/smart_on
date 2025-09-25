@@ -8,9 +8,10 @@
 
 ### 🎯 주요 기능
 - **🌱 스마트 스위치 등록** - Tuya 스마트 스위치 초기 연동 (모바일 앱)
-- **🏠 농장 관리** - 다중 농장 및 베드 관리 시스템
+- **🏠 농장 관리** - 다중 농장 및 베드 관리 시스템 (농장장/팀원 권한 분리)
 - **📊 실시간 모니터링** - 온도, 습도, 조도, EC, pH 센서 데이터 시각화
 - **🔌 디바이스 제어** - Tuya 스마트 스위치를 통한 조명, 팬, 펌프 제어
+- **👥 사용자 관리** - 시스템 관리자, 농장장, 팀원 역할 기반 권한 관리
 - **📱 모바일 앱** - React Native + Expo 크로스 플랫폼 (스위치 등록용)
 - **🌐 웹 어드민** - Next.js 기반 관리자/사용자 대시보드
 - **🎨 현대적 UI/UX** - Glassmorphism 디자인 테마 적용
@@ -195,21 +196,26 @@ npx expo run:android
 
 ### 🗄️ 실제 테이블 구조 (Supabase)
 - `tenants` - 팀/조직 정보
-- `farms` - 농장 정보 (1개 농장: '메인 팜')
-- `beds` - 베드 정보 (6개 베드)
-- `devices` - 디바이스 정보 (7개: 3개 센서 게이트웨이 + 4개 Tuya 디바이스)
-- `sensors` - 센서 정보 (10개: 온도, 습도, EC, pH, 조도, 수온)
-- `sensor_readings` - 센서 데이터 (2,890개 레코드)
+- `farms` - 농장 정보 (3개 농장: 1농장, 2농장, 3농장)
+- `beds` - 베드 정보 (6개 베드, 각 농장별 2개씩)
+- `devices` - 디바이스 정보 (센서 게이트웨이 + Tuya 디바이스)
+- `sensors` - 센서 정보 (온도, 습도, EC, pH, 조도, 수온)
+- `sensor_readings` - 센서 데이터 (실시간 모니터링)
 - `commands` - 제어 명령
 - `rules` - 자동화 규칙
 - `alerts` - 알림 정보
-- `users` - 사용자 정보
+- `users` - 사용자 정보 (시스템 관리자, 농장장, 팀원)
 - `memberships` - 멤버십 정보
 
 ### 🔗 테이블 관계
 ```
-tenants (1) → farms (1) → devices (7) → sensors (10) → sensor_readings (2,890)
+tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N)
 ```
+
+### 👥 사용자 권한 체계
+- **시스템 관리자**: 모든 농장 및 사용자 관리 권한
+- **농장장**: 자신의 농장 및 팀원 관리 권한
+- **팀원**: 자신의 농장 정보 조회 권한
 
 ### 📱 모바일 앱 연동
 - **스위치 등록**: Tuya 디바이스 초기 설정 및 등록
@@ -226,8 +232,9 @@ tenants (1) → farms (1) → devices (7) → sensors (10) → sensor_readings (
 ## 🚀 배포
 
 ### 웹 어드민
-- **Vercel** 또는 **Netlify** 배포
+- **Vercel** 배포: https://web-admin-fsi2tolta-smart-ons-projects.vercel.app
 - **자동 배포** (GitHub Actions)
+- **Mock 인증** 시스템 (개발/테스트용)
 
 ### 모바일 앱
 - **Google Play Store** (Android)
@@ -238,6 +245,13 @@ tenants (1) → farms (1) → devices (7) → sensors (10) → sensor_readings (
 - **GitHub Actions** CI/CD 파이프라인
 - **자동 빌드 및 테스트**
 - **다중 환경 배포** (dev, staging, production)
+
+### 🧪 테스트 계정
+- **시스템 관리자**: test1@test.com / password
+- **1농장장**: test2@test.com / password
+- **2농장장**: test4@test.com / password
+- **3농장장**: test6@test.com / password
+- **팀원들**: test3@test.com, test5@test.com, test7@test.com / password
 
 ## 📝 라이선스
 
