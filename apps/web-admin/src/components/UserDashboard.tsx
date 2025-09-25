@@ -369,6 +369,15 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                       {String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')}
                                     </span>
                                     <div className="text-xs text-gray-500">📊 센서 {deviceSensors.length}개</div>
+                                    {/* 작물명과 재배 방식 표시 */}
+                                    <div className="mt-1 flex items-center space-x-2">
+                                      <span className="text-xs text-green-600 font-medium">
+                                        🌱 {(device.meta as any)?.crop_name || '미설정'}
+                                      </span>
+                                      <span className="text-xs text-blue-600 font-medium">
+                                        🔧 {(device.meta as any)?.growing_method || '미설정'}
+                                      </span>
+                                    </div>
                               </div>
                             </div>
                                 <span
