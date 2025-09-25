@@ -2,9 +2,9 @@
 // 개발 환경: 미리 생성된 테스트 계정 사용
 // 운영 환경: Supabase Auth + 승인 시스템 사용
 
-// 환경 설정
+// 환경 설정 - 배포 환경에서도 Mock 인증 사용
 const isDevelopment = process.env.NODE_ENV === 'development';
-const useMockAuth = isDevelopment || process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true';
+const useMockAuth = true; // 항상 Mock 인증 사용
 
 export interface AuthUser {
   id: string;
