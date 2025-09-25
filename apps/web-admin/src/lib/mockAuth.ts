@@ -289,6 +289,16 @@ const mockSignIn = async (data: SignInData) => {
   // 실제 환경에서는 네트워크 지연을 시뮬레이션
   await new Promise(resolve => setTimeout(resolve, 500));
 
+  // 배포 환경에서 Mock 데이터 초기화 확인
+  if (typeof window !== 'undefined') {
+    const storedUsers = localStorage.getItem('mock_users');
+    if (!storedUsers) {
+      // Mock 데이터가 없으면 초기화
+      localStorage.setItem('mock_users', JSON.stringify(mockUsers));
+      localStorage.setItem('mock_passwords', JSON.stringify(mockPasswords));
+    }
+  }
+
   // 현재 사용자 데이터 다시 로드
   mockUsers = loadUsersFromStorage();
   
