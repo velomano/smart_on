@@ -38,7 +38,7 @@ export default function TeamManagementPage() {
         member.team_id === user?.team_id && 
         member.id !== user?.id // 자신만 제외
       );
-      setTeamMembers(myTeamMembers);
+      setTeamMembers(myTeamMembers as AuthUser[]);
       console.log('농장장 팀원 관리 - 현재 사용자:', user);
       console.log('농장장 팀원 관리 - 팀원 목록:', myTeamMembers);
     } catch (error) {
