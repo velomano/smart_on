@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthUser } from '../lib/mockAuth';
+import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettings } from '../lib/mockAuth';
 import { Farm, Device, Sensor, SensorReading } from '../lib/supabase';
+import AppHeader from './AppHeader';
 
 interface UserDashboardProps {
   user: AuthUser;
@@ -15,15 +16,71 @@ interface UserDashboardProps {
 
 export default function UserDashboard({ user, farms, devices, sensors, sensorReadings }: UserDashboardProps) {
   const router = useRouter();
+  const [teams, setTeams] = useState<any[]>([]);
+  const [approvedUsers, setApprovedUsers] = useState<AuthUser[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [userSettings, setUserSettings] = useState({
+    showOnlyMyFarm: false, // 디폴트는 모든 농장 표시
+    showAllBedsInBedManagement: false
+  });
+  const [bedDashboardSettings, setBedDashboardSettings] = useState<Record<string, boolean>>({});
+  
+  // 팀 데이터 로드
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [teamsResult, usersResult] = await Promise.all([
+          getTeams(),
+          getApprovedUsers()
+        ]);
+        
+        if (teamsResult.success) {
+          setTeams(teamsResult.teams);
+        }
+        
+        if (usersResult.success) {
+          setApprovedUsers(usersResult.users as AuthUser[]);
+        }
+        
+        // 사용자 설정 로드
+        const settings = getUserSettings(user.id);
+        setUserSettings(settings);
+        
+        // 베드 대시보드 설정 로드
+        if (typeof window !== 'undefined') {
+          const savedBedSettings = localStorage.getItem('bed_dashboard_settings');
+          if (savedBedSettings) {
+            const parsedSettings = JSON.parse(savedBedSettings);
+            setBedDashboardSettings(parsedSettings);
+            console.log('대시보드에서 베드 설정 로드됨:', parsedSettings);
+          }
+          
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setTeamsLoading(false);
+      }
+    };
+    loadData();
+  }, [user.id]);
   
   // 통계 계산
   const totalFarms = farms.length;
-  const totalBeds = devices.filter(d => d.type === 'sensor_gateway').length;
-  const totalTeams = Math.ceil(totalBeds / 2);
-  const averageTemp = sensorReadings
-    .filter(r => r.unit === '°C')
-    .slice(0, 10)
-    .reduce((sum, r) => sum + r.value, 0) / Math.max(sensorReadings.filter(r => r.unit === '°C').length, 1) || 0;
+  const totalBeds = 6; // 절대값으로 고정
+  const activeBeds = devices.filter(d => d.type === 'sensor_gateway' && d.status?.online).length;
+  const bedActivationRate = Math.round((activeBeds / totalBeds) * 100);
+  
+  const activeTeams = teams.length; // 실제 활성화된 조의 수
+  const activeMembers = approvedUsers.filter(user => 
+    user.is_active && user.is_approved && 
+    (user.role === 'team_leader' || user.role === 'team_member')
+  ).length; // 실제 활성화된 팀원 수
+  
+  // 평균 조당 인원 계산
+  const averageMembersPerTeam = activeTeams > 0 ? Math.round(activeMembers / activeTeams) : 0;
+  const tempReadings = sensorReadings.filter(r => r.unit === '°C').slice(0, 10);
+  const averageTemp = tempReadings.reduce((sum, r) => sum + r.value, 0) / Math.max(tempReadings.length, 1);
 
         // 사용자 역할에 따른 권한 확인
         const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
@@ -31,72 +88,20 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com';
         // const canViewData = true; // 모든 사용자는 데이터 조회 가능
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-2xl">🌱</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                  Smart Farm
-                </h1>
-                <p className="text-sm text-gray-500 font-medium">
-                  {user.role === 'system_admin' ? 
+      <AppHeader
+        user={user}
+        title="Smart Farm"
+        subtitle={user.role === 'system_admin' ? 
                     (user.email === 'sky3rain7@gmail.com' ? '최종 관리자 대시보드' : '시스템 관리자 대시보드') : 
                    user.role === 'team_leader' ? `${user.team_name} 조장 대시보드` : 
-                   `${user.team_name} 조원 대시보드`}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-6">
-              <div className="hidden md:flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-gray-600 font-medium">시스템 정상</span>
-                </div>
-                <div className="text-gray-400">|</div>
-                <span className="text-gray-600">
-                  {user.name} ({user.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
-                   user.role === 'system_admin' ? '시스템 관리자' : 
-                   user.role === 'team_leader' ? '조장' : '조원'})
-                </span>
-              </div>
-              <div className="flex items-center space-x-3">
-                {canManageUsers && (
-                  <button
-                    onClick={() => router.push('/admin')}
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2.5 rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    사용자 관리
-                  </button>
-                )}
-                {canManageTeamMembers && !canManageUsers && (
-                  <button
-                    onClick={() => router.push('/team')}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2.5 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    {user.role === 'team_leader' ? '조원 관리' : '조원 보기'}
-                  </button>
-                )}
-                <button
-                  onClick={async () => {
-                    const { signOut } = await import('../lib/mockAuth');
-                    await signOut();
-                  }}
-                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  로그아웃
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+                   `${user.team_name} 팀원 대시보드`}
+        isDashboard={true}
+        onDashboardRefresh={() => window.location.reload()}
+      />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -111,14 +116,19 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   </div>
                   <div className="ml-4">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      총 농장 수
+                      농장 수
                     </dt>
                     <dd className="text-3xl font-black text-gray-900">{totalFarms}</dd>
+                    <div className="text-sm text-gray-500 mt-1">
+                      활성화된 조: {teamsLoading ? '...' : activeTeams}개
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-blue-500 font-bold">+{Math.floor(totalFarms * 1.2)}</div>
-                  <div className="text-xs text-gray-500">목표</div>
+                  <div className="text-2xl text-blue-500 font-bold">
+                    {teamsLoading ? '...' : activeMembers}
+                  </div>
+                  <div className="text-xs text-gray-500">총 팀원 수</div>
                 </div>
               </div>
             </div>
@@ -133,14 +143,14 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   </div>
                   <div className="ml-4">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      총 베드 수
+                      베드 활성률
                     </dt>
-                    <dd className="text-3xl font-black text-gray-900">{totalBeds}</dd>
+                    <dd className="text-3xl font-black text-gray-900">{bedActivationRate}%</dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-green-500 font-bold">{Math.round((totalBeds / 100) * 100)}%</div>
-                  <div className="text-xs text-gray-500">활성률</div>
+                  <div className="text-2xl text-green-500 font-bold">{activeBeds}/{totalBeds}</div>
+                  <div className="text-xs text-gray-500">활성/전체</div>
                 </div>
               </div>
             </div>
@@ -155,14 +165,18 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   </div>
                   <div className="ml-4">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      활성 팀 수
+                      활성화 팀원 수
                     </dt>
-                    <dd className="text-3xl font-black text-gray-900">{totalTeams}</dd>
+                    <dd className="text-3xl font-black text-gray-900">
+                      {teamsLoading ? '...' : activeMembers}
+                    </dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-purple-500 font-bold">{totalTeams * 3}</div>
-                  <div className="text-xs text-gray-500">총 인원</div>
+                  <div className="text-2xl text-purple-500 font-bold">
+                    {teamsLoading ? '...' : activeTeams}
+                  </div>
+                  <div className="text-xs text-gray-500">총 농장 수</div>
                 </div>
               </div>
             </div>
@@ -202,87 +216,288 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 <p className="text-gray-600">전체 농장과 디바이스 상태를 한눈에 확인하세요</p>
               </div>
               <div className="flex items-center space-x-4">
+                {/* 농장장/팀원용 설정 토글 */}
+                {(user.role === 'team_leader' || user.role === 'team_member') && (
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      자기 농장만 보기
+                    </label>
+                    <button
+                      onClick={() => {
+                        const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
+                        setUserSettings(newSettings);
+                        updateUserSettings(user.id, newSettings);
+                      }}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                        userSettings.showOnlyMyFarm ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                          userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
                 {canManageFarms && (
-                  <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
-                    + 새 농장
+                  <button 
+                    onClick={() => router.push('/beds')}
+                    className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                  >
+                    농장 관리
                   </button>
                 )}
               </div>
             </div>
             <div className="space-y-6">
-              {farms.map((farm) => (
+              {(() => {
+                // 농장 필터링 및 베드 계산
+                const filteredFarms = farms.filter(farm => {
+                  // 농장장/팀원인 경우 설정에 따라 필터링
+                  if (user.role === 'team_leader' || user.role === 'team_member') {
+                    if (userSettings.showOnlyMyFarm) {
+                      // 자기 농장만 표시
+                      return farm.id === user.team_id;
+                    }
+                    // 설정이 꺼져있으면 모든 농장 표시
+                  }
+                  return true;
+                }).map(farm => {
+                  // 농장의 베드들 중 대시보드에 노출되는 것들만 필터링
+                  const farmDevices = devices.filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway');
+                  const visibleDevices = farmDevices.filter(device => {
+                    // 베드별 대시보드 노출 설정 확인
+                    const showOnDashboard = bedDashboardSettings[device.id] !== false; // 기본값은 true
+                    
+                    // 관리자는 모든 베드 표시, 팀원은 설정에 따라
+                    if (user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com') {
+                      return showOnDashboard; // 관리자는 베드별 설정에 따라 표시
+                    }
+                    return showOnDashboard; // 팀원도 베드별 설정에 따라 표시
+                  });
+                  
+                  return {
+                    ...farm,
+                    visibleDevices
+                  };
+                }).filter(farm => farm.visibleDevices.length > 0); // 베드가 있는 농장만 표시
+
+                // 활성화된 베드가 없는 경우 처리
+                if (filteredFarms.length === 0) {
+                  return (
+                    <div className="text-center py-16">
+                      <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <span className="text-4xl">🌱</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        {filteredFarms.length === 0 
+                          ? (userSettings.showOnlyMyFarm ? '자기 농장에 베드가 없습니다' : '표시할 베드가 없습니다')
+                          : '활성화된 베드가 없습니다'}
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        {user.role === 'team_leader' || user.role === 'team_member'
+                          ? (userSettings.showOnlyMyFarm 
+                              ? '자기 농장에 베드를 추가하거나 "자기 농장만 보기"를 끄면 모든 농장을 볼 수 있습니다'
+                              : '농장 관리에서 베드를 활성화하거나 새 베드를 추가해보세요')
+                          : '농장 관리에서 베드를 활성화하거나 새 베드를 추가해보세요'}
+                      </p>
+                      {canManageFarms && (
+                        <button 
+                          onClick={() => router.push('/beds')}
+                          className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200"
+                        >
+                          농장 관리하기
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+
+                return filteredFarms.map((farm) => (
                 <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center justify-between mb-4">
+                    {/* 농장 헤더 */}
+                    <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-2xl">🏠</span>
+                        <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+                          <span className="text-3xl">🏠</span>
                       </div>
                       <div>
-                        <h4 className="text-xl font-bold text-gray-900">{farm.name}</h4>
-                        <p className="text-gray-600 font-medium">📍 {farm.location}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-gray-900">
-                          {devices.filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway').length}
+                          <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
+                          <p className="text-gray-600 font-medium text-lg">🏷️ 농장 ID: {farm.id}</p>
+                          <div className="mt-2 flex items-center space-x-4">
+                            <span className="text-sm text-blue-600 font-semibold">
+                              📊 총 {farm.visibleDevices.length}개 베드
+                            </span>
+                            <div className="flex items-center space-x-1">
+                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                              <span className="text-xs text-gray-500">활성</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500 font-medium">디바이스</div>
                       </div>
-                      <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                      {/* 농장별 관리 버튼들 */}
+                      <div className="flex items-center space-x-2">
+                        {canManageFarms && (
+                          <button
+                            onClick={() => router.push('/beds')}
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                          >
+                            농장 관리
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {devices
-                      .filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway')
-                      .map((device) => (
-                        <div key={device.id} className="bg-white/80 backdrop-blur-sm border border-white/40 rounded-xl p-4 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1">
+
+                  {/* 농장에 속한 베드들 */}
+                  <div className="space-y-4">
+                    <h5 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                      <span className="text-xl mr-2">🌱</span>
+                      {farm.name}의 베드 현황
+                    </h5>
+
+                    {/* 농장별 베드 요약 정보 */}
+                    <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
+
+                      {/* 베드 목록 */}
+                      <div className="space-y-4">
+                        {farm.visibleDevices.map((device) => {
+                          const deviceSensors = sensors.filter(s => s.device_id === device.id);
+
+                          return (
+                            <div
+                              key={device.id}
+                              className="bg-gray-50 rounded-lg p-4 border-l-4 border-l-green-400"
+                            >
+                              {/* 베드 헤더 */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                <span className="text-lg">📡</span>
+                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
+                                    <span className="text-sm">📡</span>
                               </div>
                               <div>
-                                <span className="font-bold text-gray-900">{device.meta?.location || '센서 게이트웨이'}</span>
+                                    <span className="font-bold text-gray-900 text-sm">
+                                      {String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')}
+                                    </span>
+                                    <div className="text-xs text-gray-500">📊 센서 {deviceSensors.length}개</div>
                               </div>
                             </div>
-                            <span className={`text-xs px-3 py-1.5 rounded-full font-bold ${
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-full font-bold ${
                               device.status?.online 
-                                ? 'bg-green-100 text-green-700 border border-green-200' 
-                                : 'bg-red-100 text-red-700 border border-red-200'
-                            }`}>
-                              {device.status?.online ? '🟢 온라인' : '🔴 오프라인'}
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-red-100 text-red-700'
+                                  }`}
+                                >
+                                  {device.status?.online ? '🟢' : '🔴'}
+                                </span>
+                              </div>
+
+                              {/* 제어 상태 - 간단한 표시만 */}
+                              <div className="mb-3">
+                                <div className="flex items-center space-x-4 text-xs">
+                                  <div className="flex items-center space-x-1">
+                                    <span>💡</span>
+                                    <span className="text-gray-600">램프</span>
+                                    <span className="font-bold text-gray-400">--</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span>💧</span>
+                                    <span className="text-gray-600">펌프</span>
+                                    <span className="font-bold text-gray-400">--</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span>🌀</span>
+                                    <span className="text-gray-600">팬</span>
+                                    <span className="font-bold text-gray-400">--</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span>⏰</span>
+                                    <span className="text-gray-600">스케줄</span>
+                                    <span className="font-bold text-gray-400">--</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* 센서 데이터 */}
+                              <div className="grid grid-cols-4 gap-2">
+                                <div className="flex items-center justify-between bg-red-50 rounded p-2">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-sm">🌡️</span>
+                                    <span className="text-xs text-gray-600">온도</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-red-600">
+                                    {(() => {
+                                      const tempSensor = deviceSensors.find(s => s.type === 'temperature');
+                                      const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                                      return reading ? `${reading.value}°C` : '--°C';
+                                    })()}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-blue-50 rounded p-2">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-sm">💧</span>
+                                    <span className="text-xs text-gray-600">습도</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-blue-600">
+                                    {(() => {
+                                      const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
+                                      const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                                      return reading ? `${reading.value}%` : '--%';
+                                    })()}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-green-50 rounded p-2">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-sm">⚡</span>
+                                    <span className="text-xs text-gray-600">EC</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-green-600">
+                                    {(() => {
+                                      const ecSensor = deviceSensors.find(s => s.type === 'ec');
+                                      const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
+                                      return reading ? `${reading.value}` : '--';
+                                    })()}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-600 font-medium">
-                              📊 센서 {sensors.filter(s => s.device_id === device.id).length}개
+
+                                <div className="flex items-center justify-between bg-purple-50 rounded p-2">
+                                  <div className="flex items-center space-x-1">
+                                    <span className="text-sm">🧪</span>
+                                    <span className="text-xs text-gray-600">pH</span>
+                                  </div>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {(() => {
+                                      const phSensor = deviceSensors.find(s => s.type === 'ph');
+                                      const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
+                                      return reading ? `${reading.value}` : '--';
+                                    })()}
                             </span>
-                            {canManageFarms && (
-                              <button className="text-blue-600 hover:text-blue-800 font-semibold">
-                                설정 →
-                              </button>
-                            )}
+                                </div>
                           </div>
                         </div>
-                      ))}
+                          );
+                        })}
                   </div>
                 </div>
-              ))}
-              {farms.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">🏡</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">등록된 농장이 없습니다</h3>
-                  <p className="text-gray-600 mb-6">첫 번째 농장을 등록해보세요</p>
+
+                  {/* 농장 관리 버튼 */}
+                  <div className="flex justify-end items-center">
                   {canManageFarms && (
-                    <button className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200">
-                      + 농장 등록하기
+                      <button
+                        onClick={() => router.push('/beds')}
+                        className="text-blue-600 hover:text-blue-800 font-semibold text-xs"
+                      >
+                        농장 관리 →
                     </button>
                   )}
                 </div>
-              )}
+                </div>
+                ));
+              })()}
             </div>
           </div>
         </div>
@@ -359,6 +574,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
         </div>
       </main>
+
     </div>
   );
 }
+

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getPendingUsers, getApprovedUsers, getTenants, getTeams, approveUser, rejectUser, updateUser, deleteUser, AuthUser } from '../../lib/mockAuth';
+import { getCurrentUser, getPendingUsers, getApprovedUsers, getTenants, getTeams, approveUser, rejectUser, updateUser, deleteUser, resetMockUsers, AuthUser } from '../../lib/mockAuth';
+import AppHeader from '../../components/AppHeader';
 
 interface PendingUser {
   id: string;
@@ -40,7 +41,7 @@ interface Team {
 }
 
 export default function AdminPage() {
-  const [, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<ApprovedUser[]>([]);
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -50,7 +51,7 @@ export default function AdminPage() {
   const [selectedTenant, setSelectedTenant] = useState<Record<string, string>>({});
   const [selectedRole, setSelectedRole] = useState<Record<string, string>>({});
   const [selectedTeam, setSelectedTeam] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'teams'>('pending');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<{
@@ -87,7 +88,7 @@ export default function AdminPage() {
   useEffect(() => {
     const checkAuth = async () => {
       const currentUser = await getCurrentUser();
-      if (!currentUser || !currentUser.is_approved || (currentUser.role !== 'system_admin' && currentUser.email !== 'sky3rain7@gmail.com')) {
+      if (!currentUser || !currentUser.is_approved || (currentUser.role !== 'system_admin' && currentUser.role !== 'team_leader' && currentUser.email !== 'sky3rain7@gmail.com')) {
         router.push('/login');
         return;
       }
@@ -111,6 +112,7 @@ export default function AdminPage() {
       }
 
       if (approvedResult.success) {
+        console.log('로드된 승인된 사용자들:', approvedResult.users);
         setApprovedUsers(approvedResult.users);
       }
 
@@ -128,6 +130,58 @@ export default function AdminPage() {
     }
   };
 
+  // 농장 통계 계산
+  const getTeamStats = () => {
+    console.log('농장 통계 계산 - approvedUsers:', approvedUsers);
+    console.log('농장 통계 계산 - teams:', teams);
+    console.log('현재 로그인된 사용자:', user);
+    
+    // 농장장이 로그인한 경우 자기 농장만 필터링
+    let filteredTeams = teams;
+    let filteredUsers = approvedUsers;
+    
+    if (user && user.role === 'team_leader' && user.team_id) {
+      filteredTeams = teams.filter(team => team.id === user.team_id);
+      filteredUsers = approvedUsers.filter(user => user.team_id === user.team_id);
+      console.log('농장장 필터링 적용 - 농장:', filteredTeams, '사용자:', filteredUsers);
+    }
+    
+    const teamStats = filteredTeams.map(team => {
+      const teamMembers = filteredUsers.filter(user => user.team_id === team.id);
+      console.log(`${team.name} (${team.id}) 멤버들:`, teamMembers);
+      
+      const leaders = teamMembers.filter(user => user.role === 'team_leader');
+      const members = teamMembers.filter(user => user.role === 'team_member');
+      const activeMembers = teamMembers.filter(user => user.is_active !== false);
+      const inactiveMembers = teamMembers.filter(user => user.is_active === false);
+
+      return {
+        ...team,
+        totalMembers: teamMembers.length,
+        leaders: leaders.length,
+        members: members.length,
+        activeMembers: activeMembers.length,
+        inactiveMembers: inactiveMembers.length,
+        teamMembers: teamMembers
+      };
+    });
+
+    const totalUsers = filteredUsers.length;
+    const totalTeams = filteredTeams.length;
+    const totalLeaders = filteredUsers.filter(user => user.role === 'team_leader').length;
+    const totalMembers = filteredUsers.filter(user => user.role === 'team_member').length;
+    const unassignedUsers = filteredUsers.filter(user => !user.team_id || user.role === 'system_admin').length;
+
+    return {
+      teamStats,
+      totalUsers,
+      totalTeams,
+      totalLeaders,
+      totalMembers,
+      unassignedUsers
+    };
+  };
+
   const handleApprove = async (userId: string) => {
     setActionLoading(userId);
     try {
@@ -141,7 +195,7 @@ export default function AdminPage() {
       }
 
       if (role !== 'system_admin' && !teamId) {
-        alert('조를 선택해주세요.');
+        alert('농장을 선택해주세요.');
         return;
       }
 
@@ -442,40 +496,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-2xl">👑</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                  관리자 페이지
-                </h1>
-                <p className="text-sm text-gray-500 font-medium">사용자 승인 관리</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/')}
-                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                대시보드
-              </button>
-              <button
-                onClick={async () => {
-                  const { signOut } = await import('../../lib/mockAuth');
-                  await signOut();
-                }}
-                className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                로그아웃
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {user && (
+        <AppHeader
+          user={user}
+          title="관리자 페이지"
+          subtitle="사용자 승인 관리"
+        />
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -502,6 +529,16 @@ export default function AdminPage() {
                 }`}
               >
                 승인된 사용자 ({approvedUsers.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('teams')}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                  activeTab === 'teams'
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg'
+                    : 'bg-white/50 text-gray-600 hover:bg-white/70'
+                }`}
+              >
+                농장 현황 ({teams.length})
               </button>
             </div>
 
@@ -555,7 +592,7 @@ export default function AdminPage() {
                                 <p className="text-sm text-gray-500">📞 {pendingUser.phone}</p>
                               )}
                               {pendingUser.preferred_team && (
-                                <p className="text-sm text-blue-600 font-medium">🎯 선호 조: {pendingUser.preferred_team}</p>
+                                <p className="text-sm text-blue-600 font-medium">🎯 선호 농장: {pendingUser.preferred_team}</p>
                               )}
                             </div>
                           </div>
@@ -591,9 +628,9 @@ export default function AdminPage() {
 
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                              조 선택
+                              농장 선택
                               {selectedRole[pendingUser.id] === 'system_admin' && (
-                                <span className="text-xs text-gray-500 ml-1">(시스템 관리자는 조 선택 불필요)</span>
+                                <span className="text-xs text-gray-500 ml-1">(시스템 관리자는 농장 선택 불필요)</span>
                               )}
                             </label>
                             <select
@@ -607,7 +644,7 @@ export default function AdminPage() {
                                 selectedRole[pendingUser.id] === 'system_admin' ? 'bg-gray-100 cursor-not-allowed' : ''
                               }`}
                             >
-                              <option value="">조를 선택하세요</option>
+                              <option value="">농장을 선택하세요</option>
                               {teams.map(team => (
                                 <option key={team.id} value={team.id}>
                                   {team.name}
@@ -640,8 +677,8 @@ export default function AdminPage() {
                             >
                               <option value="">권한을 선택하세요</option>
                               <option value="system_admin">시스템 관리자</option>
-                              <option value="team_leader">조장</option>
-                              <option value="team_member">조원</option>
+                              <option value="team_leader">농장장</option>
+                              <option value="team_member">팀원</option>
                             </select>
                           </div>
                         </div>
@@ -833,7 +870,7 @@ export default function AdminPage() {
                                   onChange={(e) => setBulkEditData(prev => ({ ...prev, role: e.target.value }))}
                                   className="mr-2"
                                 />
-                                <span className="text-sm text-blue-600">조장</span>
+                                <span className="text-sm text-blue-600">농장장</span>
                               </label>
                               <label className="flex items-center cursor-pointer">
                                 <input
@@ -844,15 +881,15 @@ export default function AdminPage() {
                                   onChange={(e) => setBulkEditData(prev => ({ ...prev, role: e.target.value }))}
                                   className="mr-2"
                                 />
-                                <span className="text-sm text-green-600">조원</span>
+                                <span className="text-sm text-green-600">팀원</span>
                               </label>
                             </div>
                           </div>
 
-                          {/* 조 일괄 편집 */}
+                          {/* 농장 일괄 편집 */}
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
-                              조 변경
+                              농장 변경
                             </label>
                             <div className="space-y-2">
                               <label className="flex items-center cursor-pointer">
@@ -875,7 +912,7 @@ export default function AdminPage() {
                                   onChange={(e) => setBulkEditData(prev => ({ ...prev, team_id: e.target.value }))}
                                   className="mr-2"
                                 />
-                                <span className="text-sm text-gray-600">조 배정 없음</span>
+                                <span className="text-sm text-gray-600">농장 배정 없음</span>
                               </label>
                               {teams.map(team => (
                                 <label key={team.id} className="flex items-center cursor-pointer">
@@ -1131,7 +1168,7 @@ export default function AdminPage() {
                                   onClick={() => setEditFormData(prev => ({ ...prev, role: 'team_leader' }))}
                                 >
                                   <div className="flex items-center">
-                                    <span className="text-sm font-semibold text-blue-600">조장</span>
+                                    <span className="text-sm font-semibold text-blue-600">농장장</span>
                                     {(editFormData.role || 'team_member') === 'team_leader' && (
                                       <span className="ml-2 text-xs text-blue-500">✓</span>
                                     )}
@@ -1146,7 +1183,7 @@ export default function AdminPage() {
                                   onClick={() => setEditFormData(prev => ({ ...prev, role: 'team_member' }))}
                                 >
                                   <div className="flex items-center">
-                                    <span className="text-sm font-semibold text-green-600">조원</span>
+                                    <span className="text-sm font-semibold text-green-600">팀원</span>
                                     {(editFormData.role || 'team_member') === 'team_member' && (
                                       <span className="ml-2 text-xs text-green-500">✓</span>
                                     )}
@@ -1160,7 +1197,7 @@ export default function AdminPage() {
                                   (approvedUser.role || 'team_member') === 'team_leader' ? 'text-blue-600' : 'text-green-600'
                                 }`}>
                      {(approvedUser.role || 'team_member') === 'system_admin' ? '시스템 관리자' :
-                      (approvedUser.role || 'team_member') === 'team_leader' ? '조장' : '조원'}
+                      (approvedUser.role || 'team_member') === 'team_leader' ? '농장장' : '팀원'}
                                 </span>
                                 <span className="ml-2 text-gray-400">→</span>
                               </div>
@@ -1192,7 +1229,7 @@ export default function AdminPage() {
                             }}
                           >
                             <div className="flex items-center justify-between mb-3">
-                              <span className="text-sm font-semibold text-gray-700">배정된 조</span>
+                              <span className="text-sm font-semibold text-gray-700">배정된 농장</span>
                               {editingUser === approvedUser.id && editFormData.editingField === 'team' && (
                                 <span className="text-xs text-blue-600 font-medium">편집 중</span>
                               )}
@@ -1208,7 +1245,7 @@ export default function AdminPage() {
                                   onClick={() => setEditFormData(prev => ({ ...prev, team_id: '' }))}
                                 >
                                   <div className="flex items-center">
-                                    <span className="text-sm font-semibold text-gray-600">조 배정 없음</span>
+                                    <span className="text-sm font-semibold text-gray-600">농장 배정 없음</span>
                                     {editFormData.team_id === '' && (
                                       <span className="ml-2 text-xs text-gray-500">✓</span>
                                     )}
@@ -1236,7 +1273,7 @@ export default function AdminPage() {
                             ) : (
                               <div className="flex items-center">
                                 <span className="font-bold text-lg text-gray-700">
-                                  {approvedUser.team_name || '조 배정 없음'}
+                                  {approvedUser.team_name || '농장 배정 없음'}
                                 </span>
                                 <span className="ml-2 text-gray-400">→</span>
                               </div>
@@ -1327,7 +1364,7 @@ export default function AdminPage() {
                             <p className="text-sm text-blue-700">
                               <strong>편집 모드:</strong> {
                                 editFormData.editingField === 'role' ? '권한을' : 
-                                editFormData.editingField === 'team' ? '조를' : 
+                                editFormData.editingField === 'team' ? '농장을' : 
                                 '상태를'
                               } 선택한 후 우측의 "저장" 버튼을 클릭하세요.
                             </p>
@@ -1337,6 +1374,225 @@ export default function AdminPage() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'teams' && (
+              <div>
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">
+                      🏠 농장 현황 대시보드
+                    </h3>
+                    <p className="text-gray-600">전체 농장 현황과 각 농장의 멤버 구성을 한눈에 확인하세요</p>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={loadData}
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                    >
+                      새로고침
+                    </button>
+                  </div>
+                </div>
+
+                {/* 전체 통계 카드 */}
+                {(() => {
+                  const stats = getTeamStats();
+                  return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                      <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 shadow-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-blue-100 text-sm font-semibold">총 농장 수</p>
+                            <p className="text-3xl font-black">{stats.totalTeams}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <span className="text-2xl">🏠</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-2xl p-6 shadow-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-green-100 text-sm font-semibold">총 사용자</p>
+                            <p className="text-3xl font-black">{stats.totalUsers}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <span className="text-2xl">👤</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl p-6 shadow-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-purple-100 text-sm font-semibold">농장장 수</p>
+                            <p className="text-3xl font-black">{stats.totalLeaders}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <span className="text-2xl">👨‍💼</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl p-6 shadow-xl">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-orange-100 text-sm font-semibold">팀원 수</p>
+                            <p className="text-3xl font-black">{stats.totalMembers}</p>
+                          </div>
+                          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <span className="text-2xl">👤</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 농장별 상세 현황 */}
+                <div className="space-y-6">
+                  {(() => {
+                    const stats = getTeamStats();
+                    return stats.teamStats.map((team) => (
+                      <div key={team.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                              <span className="text-3xl">🏠</span>
+                            </div>
+                            <div>
+                              <h4 className="text-2xl font-black text-gray-900">{team.name}</h4>
+                              <p className="text-gray-600 font-medium">농장 ID: {team.id}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-3xl font-black text-gray-900">{team.totalMembers}</div>
+                            <div className="text-sm text-gray-500 font-medium">총 멤버</div>
+                          </div>
+                        </div>
+
+                        {/* 농장 통계 */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                            <div className="text-2xl font-black text-blue-600">{team.leaders}</div>
+                            <div className="text-sm text-blue-600 font-medium">농장장</div>
+                          </div>
+                          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                            <div className="text-2xl font-black text-green-600">{team.members}</div>
+                            <div className="text-sm text-green-600 font-medium">팀원</div>
+                          </div>
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                            <div className="text-2xl font-black text-emerald-600">{team.activeMembers}</div>
+                            <div className="text-sm text-emerald-600 font-medium">활성</div>
+                          </div>
+                          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                            <div className="text-2xl font-black text-red-600">{team.inactiveMembers}</div>
+                            <div className="text-sm text-red-600 font-medium">비활성</div>
+                          </div>
+                        </div>
+
+                        {/* 농장 멤버 목록 */}
+                        {team.teamMembers.length > 0 ? (
+                          <div className="space-y-3">
+                            <h5 className="text-lg font-bold text-gray-900 mb-3">농장 멤버 목록</h5>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {team.teamMembers.map((member) => (
+                                <div key={member.id} className="bg-white/70 backdrop-blur-sm border border-white/40 rounded-xl p-4 hover:shadow-lg transition-all duration-200">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center">
+                                      <span className="text-lg">
+                                        {member.role === 'team_leader' ? '👨‍💼' : '👤'}
+                                      </span>
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="font-bold text-gray-900">{member.name || '이름 없음'}</div>
+                                      <div className="text-sm text-gray-600">{member.email}</div>
+                                      <div className="flex items-center space-x-2 mt-1">
+                                        <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                                          member.role === 'team_leader' 
+                                            ? 'bg-blue-100 text-blue-700' 
+                                            : 'bg-green-100 text-green-700'
+                                        }`}>
+                                          {member.role === 'team_leader' ? '농장장' : '팀원'}
+                                        </span>
+                                        <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                                          member.is_active !== false 
+                                            ? 'bg-green-100 text-green-700' 
+                                            : 'bg-red-100 text-red-700'
+                                        }`}>
+                                          {member.is_active !== false ? '활성' : '비활성'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8">
+                            <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                              <span className="text-2xl">🏠</span>
+                            </div>
+                            <h5 className="text-lg font-bold text-gray-900 mb-2">농장 멤버가 없습니다</h5>
+                            <p className="text-gray-600">아직 {team.name}에 배정된 멤버가 없습니다.</p>
+                          </div>
+                        )}
+                      </div>
+                    ));
+                  })()}
+
+                  {/* 미배정 사용자 */}
+                  {(() => {
+                    const stats = getTeamStats();
+                    if (stats.unassignedUsers > 0) {
+                      const unassignedUsers = approvedUsers.filter(user => !user.team_id || user.role === 'system_admin');
+                      return (
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 backdrop-blur-sm border border-yellow-200 rounded-2xl p-6 shadow-xl">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <span className="text-2xl">⚠️</span>
+                              </div>
+                              <div>
+                                <h4 className="text-xl font-bold text-gray-900">미배정 사용자</h4>
+                                <p className="text-gray-600">농장에 배정되지 않은 사용자들</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-2xl font-black text-gray-900">{stats.unassignedUsers}</div>
+                              <div className="text-sm text-gray-500 font-medium">명</div>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {unassignedUsers.map((user) => (
+                              <div key={user.id} className="bg-white/70 backdrop-blur-sm border border-white/40 rounded-xl p-4">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center">
+                                    <span className="text-lg">
+                                      {user.role === 'system_admin' ? '👑' : '👤'}
+                                    </span>
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="font-bold text-gray-900">{user.name || '이름 없음'}</div>
+                                    <div className="text-sm text-gray-600">{user.email}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {user.role === 'system_admin' ? '시스템 관리자' : '농장 배정 없음'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
               </div>
             )}
           </div>

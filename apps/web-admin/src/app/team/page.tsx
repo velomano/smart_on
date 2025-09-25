@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../lib/mockAuth';
+import AppHeader from '../../components/AppHeader';
 
 interface TeamMember extends AuthUser {
   team_name?: string;
@@ -39,20 +40,41 @@ export default function TeamPage() {
         return;
       }
       setUser(currentUser);
-      loadTeamMembers();
     };
     checkAuth();
   }, [router]);
+
+  useEffect(() => {
+    if (user) {
+      loadTeamMembers();
+    }
+  }, [user]);
 
   const loadTeamMembers = async () => {
     try {
       const result = await getApprovedUsers();
       if (result.success) {
         const allUsers = result.users;
-        // 현재 사용자의 조 멤버들만 필터링
-        const members = allUsers.filter(member => 
-          member.team_id === user?.team_id && member.id !== user?.id
-        );
+        
+        // 현재 사용자의 농장 멤버들만 필터링
+        let members: AuthUser[] = [];
+        
+        console.log('현재 사용자:', user);
+        console.log('전체 사용자:', allUsers);
+        
+        if (user?.role === 'system_admin') {
+          // 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
+          members = allUsers.filter(member => member.id !== user?.id);
+        } else if (user?.team_id) {
+          // 농장장/팀원은 자신의 농장 멤버들만 볼 수 있음 (자신 포함)
+          members = allUsers.filter(member => 
+            member.team_id === user.team_id && 
+            member.role !== 'system_admin' // 시스템 관리자는 제외
+          );
+        }
+        
+        console.log('필터링된 멤버들:', members);
+        
         setTeamMembers(members as TeamMember[]);
       }
     } catch {
@@ -90,7 +112,7 @@ export default function TeamPage() {
           )
         );
         setEditingUser(null);
-        alert('조원 정보가 업데이트되었습니다.');
+        alert('팀원 정보가 업데이트되었습니다.');
       } else {
         alert('업데이트에 실패했습니다.');
       }
@@ -125,42 +147,66 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-2xl">👥</span>
+      {user && (
+        <AppHeader
+          user={user}
+          title={user.role === 'system_admin' ? '전체 사용자 관리' : 
+                 user.team_name ? `${user.team_name} 팀원 관리` : '팀원 관리'}
+          subtitle={user.role === 'system_admin' ? '시스템 관리자 권한으로 모든 사용자를 관리합니다' :
+                   user.role === 'team_leader' ? '농장장 권한으로 팀원을 관리합니다' : 
+                   '팀원 정보를 확인합니다'}
+        />
+      )}
+
+      {/* User Info Card */}
+      {user && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">
+                    {user.role === 'system_admin' ? '👑' : 
+                     user.role === 'team_leader' ? '👨‍💼' : '👤'}
+                  </span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
+                  <p className="text-gray-600 font-medium">{user.email}</p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      {user.role === 'system_admin' ? '시스템 관리자' :
+                       user.role === 'team_leader' ? '농장장' : '팀원'}
+                    </span>
+                    {user.team_name && (
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        {user.team_name}
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.is_active ? '활성' : '비활성'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-                  {user?.team_name || '조원'} 관리
-                </h1>
-                <p className="text-sm text-gray-500 font-medium">
-                  {user?.role === 'team_leader' ? '조장 권한으로 조원을 관리합니다' : '조원 정보를 확인합니다'}
+              <div className="text-right">
+                <p className="text-sm text-gray-500">마지막 로그인</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {new Date().toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/')}
-                className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2.5 rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                대시보드
-              </button>
-              <button
-                onClick={async () => {
-                  const { signOut } = await import('../../lib/mockAuth');
-                  await signOut();
-                }}
-                className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2.5 rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                로그아웃
-              </button>
-            </div>
           </div>
         </div>
-      </header>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -169,10 +215,12 @@ export default function TeamPage() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h3 className="text-2xl font-black text-gray-900 mb-2">
-                  👥 조원 목록
+                  👥 {user?.role === 'system_admin' ? '전체 사용자 목록' : '팀원 목록'}
                 </h3>
                 <p className="text-gray-600">
-                  {user?.team_name || '조'}의 멤버들을 관리합니다
+                  {user?.role === 'system_admin' ? '모든 사용자를 관리합니다' :
+                   user?.team_name ? `${user.team_name}의 멤버들을 관리합니다` : 
+                   '농장의 멤버들을 관리합니다'}
                 </p>
               </div>
               <div className="text-sm text-gray-500">
@@ -228,7 +276,7 @@ export default function TeamPage() {
                     <div className="flex items-center space-x-3">
                       <div className="text-right">
                         <div className="text-sm text-gray-500 font-medium">
-                          {(member.role || 'team_member') === 'team_leader' ? '조장' : '조원'}
+                          {(member.role || 'team_member') === 'team_leader' ? '농장장' : '팀원'}
                         </div>
                         <div className={`text-xs px-2 py-1 rounded-full ${
                           (member.is_active ?? true) 
@@ -310,8 +358,13 @@ export default function TeamPage() {
                   <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <span className="text-4xl">👥</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">조원이 없습니다</h3>
-                  <p className="text-gray-600">아직 {user?.team_name || '조'}에 다른 멤버가 없습니다.</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {user?.role === 'system_admin' ? '사용자가 없습니다' : '팀원이 없습니다'}
+                  </h3>
+                  <p className="text-gray-600">
+                    {user?.role === 'system_admin' ? '아직 등록된 사용자가 없습니다.' :
+                     `아직 ${user?.team_name || '농장'}에 다른 멤버가 없습니다.`}
+                  </p>
                 </div>
               )}
             </div>
