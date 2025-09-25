@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/mockAuth';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
 import AppHeader from '../../components/AppHeader';
 
-export default function BedsManagementPage() {
+function BedsManagementContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -580,5 +580,13 @@ export default function BedsManagementPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BedsManagementPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <BedsManagementContent />
+    </Suspense>
   );
 }
