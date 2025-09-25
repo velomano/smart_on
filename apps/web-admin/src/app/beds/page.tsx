@@ -354,38 +354,164 @@ function BedsManagementContent() {
                         const deviceSensors = sensors.filter(s => s.device_id === device.id);
           
                         return (
-                          <div key={device.id} className="bg-gray-50 rounded-lg p-4 border-l-4 border-l-green-400 hover:shadow-md transition-all duration-200">
-                            <div className="flex items-center justify-between mb-3">
+                          <div key={device.id} className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
+                            {/* 베드 헤더 */}
+                            <div className="flex items-center justify-between mb-4">
                               <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                  <span className="text-sm">📡</span>
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
+                                  <span className="text-lg">📡</span>
                                 </div>
                                 <div>
-                                  <span className="font-bold text-gray-900 text-sm">
+                                  <span className="font-bold text-gray-900 text-lg">
                                     {String(device.meta?.location || '센서 게이트웨이').replace(/^농장\d+-/, '')}
                                   </span>
-                                  <div className="text-xs text-gray-500">📊 센서 {deviceSensors.length}개</div>
+                                  <div className="text-sm text-gray-500">📊 센서 {deviceSensors.length}개</div>
+                                  {/* 작물명과 재배 방식 표시 */}
+                                  <div className="mt-1 flex items-center space-x-3">
+                                    <span className="text-sm text-green-600 font-medium">
+                                      🌱 {(device.meta as any)?.crop_name || '미설정'}
+                                    </span>
+                                    <span className="text-sm text-blue-600 font-medium">
+                                      🔧 {(device.meta as any)?.growing_method || '미설정'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                               <span
-                                className={`text-xs px-2 py-1 rounded-full font-bold ${
+                                className={`text-sm px-3 py-1 rounded-full font-bold ${
                                   device.status?.online
                                     ? 'bg-green-100 text-green-700'
                                     : 'bg-red-100 text-red-700'
                                 }`}
                               >
-                                {device.status?.online ? '🟢' : '🔴'}
+                                {device.status?.online ? '🟢 온라인' : '🔴 오프라인'}
                               </span>
                             </div>
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <span className="text-xs text-gray-500">
-                                  작물: {(device.meta as any)?.crop_name || '미설정'}
-                                </span>
-                                <span className="text-xs text-gray-500">
-                                  방식: {(device.meta as any)?.growing_method || '미설정'}
-                                </span>
+
+                            {/* 제어 상태 - 스위치 제어 */}
+                            <div className="mb-4">
+                              <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 디바이스 제어</h6>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center justify-between bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">💡</span>
+                                    <span className="text-sm font-medium text-gray-700">램프</span>
+                                  </div>
+                                  <button 
+                                    className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                                    onClick={() => alert('램프 제어 기능은 추후 구현 예정입니다.')}
+                                  >
+                                    켜기
+                                  </button>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 border border-blue-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">💧</span>
+                                    <span className="text-sm font-medium text-gray-700">펌프</span>
+                                  </div>
+                                  <button 
+                                    className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-blue-500 hover:to-blue-600 transition-all duration-200"
+                                    onClick={() => alert('펌프 제어 기능은 추후 구현 예정입니다.')}
+                                  >
+                                    켜기
+                                  </button>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 border border-green-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">🌀</span>
+                                    <span className="text-sm font-medium text-gray-700">팬</span>
+                                  </div>
+                                  <button 
+                                    className="bg-gradient-to-r from-green-400 to-green-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-green-500 hover:to-green-600 transition-all duration-200"
+                                    onClick={() => alert('팬 제어 기능은 추후 구현 예정입니다.')}
+                                  >
+                                    켜기
+                                  </button>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">⏰</span>
+                                    <span className="text-sm font-medium text-gray-700">스케줄</span>
+                                  </div>
+                                  <button 
+                                    className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-purple-500 hover:to-purple-600 transition-all duration-200"
+                                    onClick={() => alert('스케줄 제어 기능은 추후 구현 예정입니다.')}
+                                  >
+                                    설정
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 센서 데이터 */}
+                            <div className="mb-4">
+                              <h6 className="text-sm font-semibold text-gray-700 mb-3">📊 센서 데이터</h6>
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-3 border border-red-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">🌡️</span>
+                                    <span className="text-sm font-medium text-gray-700">온도</span>
+                                  </div>
+                                  <span className="text-lg font-bold text-red-600">
+                                    {(() => {
+                                      const tempSensor = deviceSensors.find(s => s.type === 'temperature');
+                                      const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                                      return reading ? `${reading.value}°C` : '--°C';
+                                    })()}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 border border-blue-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">💧</span>
+                                    <span className="text-sm font-medium text-gray-700">습도</span>
+                                  </div>
+                                  <span className="text-lg font-bold text-blue-600">
+                                    {(() => {
+                                      const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
+                                      const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                                      return reading ? `${reading.value}%` : '--%';
+                                    })()}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 border border-green-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">⚡</span>
+                                    <span className="text-sm font-medium text-gray-700">EC</span>
+                                  </div>
+                                  <span className="text-lg font-bold text-green-600">
+                                    {(() => {
+                                      const ecSensor = deviceSensors.find(s => s.type === 'ec');
+                                      const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
+                                      return reading ? `${reading.value}` : '--';
+                                    })()}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">🧪</span>
+                                    <span className="text-sm font-medium text-gray-700">pH</span>
+                                  </div>
+                                  <span className="text-lg font-bold text-purple-600">
+                                    {(() => {
+                                      const phSensor = deviceSensors.find(s => s.type === 'ph');
+                                      const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
+                                      return reading ? `${reading.value}` : '--';
+                                    })()}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 액션 버튼들 */}
+                            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                              <div className="text-xs text-gray-500">
+                                마지막 업데이트: {new Date().toLocaleTimeString()}
                               </div>
                               {/* 관리자와 농장장만 편집 버튼 표시 */}
                               {user && user.role !== 'team_member' && (
@@ -395,7 +521,7 @@ function BedsManagementContent() {
                                       // 편집 기능 구현
                                       alert('베드 편집 기능은 추후 구현 예정입니다.');
                                     }}
-                                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                                   >
                                     편집
                                   </button>
