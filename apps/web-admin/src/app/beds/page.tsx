@@ -114,12 +114,14 @@ export default function BedsManagementPage() {
       return;
     }
 
-    const targetFarmId = selectedFarmTab !== 'all' ? selectedFarmTab : (farms[0]?.id || '1');
-    const targetFarm = farms.find(f => f.id === targetFarmId);
+    if (!targetFarm) {
+      alert('농장을 선택해주세요.');
+      return;
+    }
 
     const newBed: Device = {
       id: `bed-${Date.now()}`,
-      farm_id: targetFarmId,
+      farm_id: targetFarm.id,
       type: 'sensor_gateway',
       status: { online: true },
       meta: {
@@ -353,7 +355,13 @@ export default function BedsManagementPage() {
                               {/* 관리자와 농장장만 편집 버튼 표시 */}
                               {user && user.role !== 'team_member' && (
                                 <div className="flex items-center space-x-2">
-                                  <button className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
+                                  <button 
+                                    onClick={() => {
+                                      // 편집 기능 구현
+                                      alert('베드 편집 기능은 추후 구현 예정입니다.');
+                                    }}
+                                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                  >
                                     편집
                                   </button>
                                 </div>
