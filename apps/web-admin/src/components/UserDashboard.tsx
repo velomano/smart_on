@@ -391,12 +391,17 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 </span>
                               </div>
 
-                              {/* 제어 상태 - 간단한 표시만 */}
+                              {/* 제어 상태 - Tuya 스마트 스위치 상태 */}
                               <div className="mb-3">
                                 <div className="flex items-center space-x-4 text-xs">
                                   <div className="flex items-center space-x-1">
                                     <span>💡</span>
-                                    <span className="text-gray-600">램프</span>
+                                    <span className="text-gray-600">램프1</span>
+                                    <span className="font-bold text-gray-400">--</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <span>💡</span>
+                                    <span className="text-gray-600">램프2</span>
                                     <span className="font-bold text-gray-400">--</span>
                                   </div>
                                   <div className="flex items-center space-x-1">
@@ -407,11 +412,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   <div className="flex items-center space-x-1">
                                     <span>🌀</span>
                                     <span className="text-gray-600">팬</span>
-                                    <span className="font-bold text-gray-400">--</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1">
-                                    <span>⏰</span>
-                                    <span className="text-gray-600">스케줄</span>
                                     <span className="font-bold text-gray-400">--</span>
                                   </div>
                                 </div>

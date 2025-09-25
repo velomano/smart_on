@@ -388,18 +388,31 @@ function BedsManagementContent() {
                               </span>
                             </div>
 
-                            {/* 제어 상태 - 스위치 제어 */}
+                            {/* 제어 상태 - Tuya 스마트 스위치 제어 */}
                             <div className="mb-4">
-                              <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 디바이스 제어</h6>
+                              <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 Tuya 스마트 스위치 제어</h6>
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="flex items-center justify-between bg-yellow-50 rounded-lg p-3 border border-yellow-200">
                                   <div className="flex items-center space-x-2">
                                     <span className="text-lg">💡</span>
-                                    <span className="text-sm font-medium text-gray-700">램프</span>
+                                    <span className="text-sm font-medium text-gray-700">램프1</span>
                                   </div>
                                   <button 
                                     className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
-                                    onClick={() => alert('램프 제어 기능은 추후 구현 예정입니다.')}
+                                    onClick={() => alert('램프1 제어 기능은 추후 구현 예정입니다.')}
+                                  >
+                                    켜기
+                                  </button>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-orange-50 rounded-lg p-3 border border-orange-200">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-lg">💡</span>
+                                    <span className="text-sm font-medium text-gray-700">램프2</span>
+                                  </div>
+                                  <button 
+                                    className="bg-gradient-to-r from-orange-400 to-orange-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-orange-500 hover:to-orange-600 transition-all duration-200"
+                                    onClick={() => alert('램프2 제어 기능은 추후 구현 예정입니다.')}
                                   >
                                     켜기
                                   </button>
@@ -428,19 +441,6 @@ function BedsManagementContent() {
                                     onClick={() => alert('팬 제어 기능은 추후 구현 예정입니다.')}
                                   >
                                     켜기
-                                  </button>
-                                </div>
-
-                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-lg">⏰</span>
-                                    <span className="text-sm font-medium text-gray-700">스케줄</span>
-                                  </div>
-                                  <button 
-                                    className="bg-gradient-to-r from-purple-400 to-purple-500 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-purple-500 hover:to-purple-600 transition-all duration-200"
-                                    onClick={() => alert('스케줄 제어 기능은 추후 구현 예정입니다.')}
-                                  >
-                                    설정
                                   </button>
                                 </div>
                               </div>
