@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFarms, getDevices, getSensors, getLatestSensorReadings, Farm, Device, Sensor, SensorReading } from '../lib/supabase';
-import { getCurrentUser, AuthUser } from '../lib/mockAuth';
+import { getCurrentUser, AuthUser, getTeams } from '../lib/mockAuth';
 import UserDashboard from '../components/UserDashboard';
 
 export default function WebAdminDashboard() {
@@ -34,17 +34,19 @@ export default function WebAdminDashboard() {
 
     const loadData = async () => {
       try {
-        const [farmsData, devicesData, sensorsData, readingsData] = await Promise.all([
-          getFarms(),
+        const [teamsResult, devicesData, sensorsData, readingsData] = await Promise.all([
+          getTeams(),
           getDevices(),
           getSensors(),
           getLatestSensorReadings()
         ]);
 
-        setFarms(farmsData);
-        setDevices(devicesData);
-        setSensors(sensorsData);
-        setSensorReadings(readingsData);
+        if (teamsResult.success) {
+          setFarms(teamsResult.teams as Farm[]);
+          setDevices(teamsResult.devices as Device[]);
+          setSensors(teamsResult.sensors as Sensor[]);
+          setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
