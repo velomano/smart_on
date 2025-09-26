@@ -125,19 +125,62 @@ if (typeof window !== 'undefined') {
   };
 }
 
-// 센서 데이터 검증 및 알림 전송 - 완전 차단 (임시 유지)
+// 텔레그램 알림 전송 함수
+async function sendNotificationToTelegram(
+  alertType: string,
+  location: string,
+  value: any,
+  unit: string,
+  timestamp: string | Date,
+  chatId: string
+): Promise<void> {
+  try {
+    const message = `🚨 ${alertType} 알림
+위치: ${location}
+값: ${value}${unit}
+시간: ${new Date(timestamp).toLocaleString()}`;
+
+    const response = await fetch('/api/notifications/telegram', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message,
+        chatId
+      }),
+    });
+
+    const result = await response.json();
+    
+    if (!result.ok) {
+      console.error('텔레그램 알림 전송 실패:', result.error);
+    }
+  } catch (error) {
+    console.error('텔레그램 API 호출 에러:', error);
+  }
+}
+
+// 센서 데이터 검증 및 알림 전송 - 다시 활성화
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
-  // PERMANENTLY DISABLED: MQTT 연동 전까지 모든 알림 기능 완전 차단
-  console.log('🔒✅ 알림 완전 차단됨 (MQTT 연동 전까지 모든 알림 철저히 비활성화):', sensorData.type, sensorData.location);
-  // 전혀 아무 작업을 하지 않으며 즉시 리턴
-  return; // 함수 실행 종료
+  try {
+    const chatId = await getCurrentUserTelegramChatId();
+    await sendNotificationToTelegram(sensorData.type, sensorData.location, sensorData.value, sensorData.unit, sensorData.timestamp, chatId);
+  } catch (error) {
+    console.error('센서 데이터 알림 전송 실패:', error);
+  }
 }
 
 // 시스템 상태 검증 및 알림 전송
 export async function checkSystemStatusAndNotify(systemStatus: SystemStatus): Promise<void> {
-  // COMPLETELY DISABLED: 모든 알림 완전 차단
-  console.log('🔒 시스템 상태 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', systemStatus.online);
-  return;
+  try {
+    const chatId = await getCurrentUserTelegramChatId();
+    if (!systemStatus.online) {
+      await sendNotificationToTelegram('시스템 상태', '농장 관리', '시스템이 오프라인 상태입니다.', '', new Date().toISOString(), chatId);
+    }
+  } catch (error) {
+    console.error('시스템 상태 알림 전송 실패:', error);
+  }
 }
 
 // 제어 시스템 오류 알림
@@ -147,9 +190,12 @@ export async function notifyControlError(
   location: string,
   error: string
 ): Promise<void> {
-  // COMPLETELY DISABLED: 모든 알림 완전 차단
-  console.log('🔒 제어 시스템 오류 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', deviceType, deviceId);
-  return;
+  try {
+    const chatId = await getCurrentUserTelegramChatId();
+    await sendNotificationToTelegram('제어 시스템 오류', location, `${deviceType} 오류: ${error}`, '', new Date().toISOString(), chatId);
+  } catch (error) {
+    console.error('제어 시스템 오류 알림 전송 실패:', error);
+  }
 }
 
 // 사용자 액션 알림 (예: 레시피 저장)
@@ -157,9 +203,12 @@ export async function notifyUserAction(
   action: 'nutrient_recipe_saved',
   variables: Record<string, string | number>
 ): Promise<void> {
-  // COMPLETELY DISABLED: 모든 알림 완전 차단
-  console.log('🔒 사용자 액션 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', action);
-  return;
+  try {
+    const chatId = await getCurrentUserTelegramChatId();
+    await sendNotificationToTelegram('사용자 액션', '농장 관리', `레시피가 저장되었습니다: ${JSON.stringify(variables)}`, '', new Date().toISOString(), chatId);
+  } catch (error) {
+    console.error('사용자 액션 알림 전송 실패:', error);
+  }
 }
 
 // 일일 리포트 생성 및 전송
@@ -170,9 +219,18 @@ export async function sendDailyReport(reportData: {
   avgEC: number;
   location: string;
 }): Promise<void> {
-  // COMPLETELY DISABLED: 모든 알림 완전 차단
-  console.log('🔒 일일 리포트 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', reportData.location);
-  return;
+  try {
+    const chatId = await getCurrentUserTelegramChatId();
+    const reportText = `일일 리포트 (${reportData.date})
+위치: ${reportData.location}
+평균 온도: ${reportData.avgTemp}°C
+평균 습도: ${reportData.avgHumidity}%
+평균 EC: ${reportData.avgEC}`;
+    
+    await sendNotificationToTelegram('일일 리포트', reportData.location, reportText, '', new Date().toISOString(), chatId);
+  } catch (error) {
+    console.error('일일 리포트 알림 전송 실패:', error);
+  }
 }
 
 // 알림 서비스 초기화 (센서 데이터 모니터링 시작)
