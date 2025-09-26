@@ -2,16 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    // MQTT 연동 전까지 모든 텔레그램 API 완전 차단
-    console.log('🔒 텔레그램 API 완전 차단됨 (MQTT 연동 전까지 모든 텔레그램 전송 비활성화)');
-    return NextResponse.json({ 
-      ok: false, 
-      error: 'MQTT 연동 전까지 모든 텔레그램 알림이 완전히 차단되었습니다.',
-      message: '텔레그램 메시지 전송이 비활성화되었습니다. (MQTT 서버 연동 대기 중)'
-    }, { status: 200 });
-    
-    // 아래 코드는 실행되지 않음 (주석으로 처리됨)
-    /*
     const { message, chatId, userId } = await req.json();
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -27,8 +17,6 @@ export async function POST(req: NextRequest) {
       }, { status: 200 });
     }
 
-    */
-    /*
     // 사용할 채팅 ID 결정
     let targetChatId = chatId || defaultChatId;
 
@@ -83,7 +71,6 @@ export async function POST(req: NextRequest) {
       message: '텔레그램 알림이 성공적으로 전송되었습니다.',
       telegramResult
     });
-    */
 
   } catch (error) {
     console.error('텔레그램 알림 API 에러:', error);
