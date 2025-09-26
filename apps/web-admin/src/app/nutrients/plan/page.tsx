@@ -84,7 +84,11 @@ export default function NutrientPlanPage() {
 
   // 레시피 저장
   async function saveRecipe() {
-    if (!res || !recipeName.trim()) return;
+    console.log('saveRecipe 호출됨:', { res: !!res, recipeName: recipeName.trim() });
+    if (!res || !recipeName.trim()) {
+      console.log('저장 조건 미충족:', { res: !!res, recipeName: recipeName.trim() });
+      return;
+    }
     
     setSaving(true);
     try {
