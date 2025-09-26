@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
           error: '텔레그램 채팅 ID가 설정되지 않았습니다.',
           hint: '사용자가 알림 설정에서 채팅 ID를 입력하거나, 관리자가 Vercel에서 환경변수 TELEGRAM_CHAT_ID를 설정하세요.',
           instructions: [
-            '1. 알림 설정 페이지에서 "텔레그램 채팅 ID" 필드에 숫자 ID 입력 (예: 6827239951)',
+            '1. 마이페이지에서 "텔레그램 채팅 ID" 필드에 숫자 ID 입력',
             '2. 또는 Vercel 환경변수에 TELEGRAM_CHAT_ID 추가',
             '3. @userinfobot에게 메시지를 보내면 본인의 채팅 ID를 확인할 수 있습니다'
           ]
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 텔레그램 채팅 ID 유효성 체크 (더 관대하게)
-    const dummyIds = ['default_id', '123456789', 'no-telegram-set']; // test1_default_id 제거
+    const dummyIds = ['default_id', '123456789', 'no-telegram-set'];
     
     if (dummyIds.includes(targetChatId)) {
       console.log('테스트용 채팅 ID:', targetChatId);
@@ -155,14 +155,15 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // test1_default_id는 허용하되 실제 텔레그램 알림 테스트 모드로 처리
+    // 하드코딩된 테스트 ID들은 정상적인 절차를 따르도록 처리
     if (targetChatId === 'test1_default_id') {
-      console.log('🚨 test1 계정 텔레그램 테스트 모드 활성화');
+      console.log('❌ 하드코딩된 테스트 ID는 지원하지 않습니다');
       
-      // test1 계정은 기본 텔레그램 채팅 ID 실행 (환경변수 또는 기본 설정값 사용)
-      const realChatId = process.env.TELEGRAM_CHAT_ID || '6827239951';
-      targetChatId = realChatId; // 실제 채팅 ID로 교체
-      console.log('🔧 test1 실제 텔레그램 채팅 ID 사용:', realChatId);
+      return NextResponse.json({ 
+        ok: false, 
+        error: '유효하지 않은 채팅 ID입니다. 실제 채팅 ID를 입력해주세요.',
+        hint: '텔레그램에서 @userinfobot에게 메시지를 보내면 본인의 채팅 ID를 확인할 수 있습니다.'
+      }, { status: 400 });
     }
     
     // 실제 텔레그램 채팅 ID 형식 검증

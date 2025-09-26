@@ -109,6 +109,7 @@ export default function AdminPage() {
       ]);
 
       if (pendingResult.success && pendingResult.users) {
+        console.log('관리자 페이지 - 승인 대기 사용자 원본 데이터:', pendingResult.users);
         // AuthUser 타입을 PendingUser 타입으로 변환
         const pendingUsers: PendingUser[] = pendingResult.users.map(user => ({
           id: user.id,
@@ -117,9 +118,12 @@ export default function AdminPage() {
           company: (user as any).company,
           phone: (user as any).phone,
           preferred_team: user.preferred_team,
-          created_at: user.created_at
+          created_at: user.created_at || new Date().toISOString()
         }));
+        console.log('관리자 페이지 - 변환된 승인 대기 사용자:', pendingUsers);
         setPendingUsers(pendingUsers);
+      } else {
+        console.log('관리자 페이지 - 승인 대기 사용자 로드 실패:', pendingResult);
       }
 
       if (approvedResult.success && approvedResult.users) {
@@ -605,6 +609,11 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {(() => {
+                  console.log('렌더링 시점 - pendingUsers.length:', pendingUsers.length);
+                  console.log('렌더링 시점 - pendingUsers:', pendingUsers);
+                  return null;
+                })()}
                 {pendingUsers.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
@@ -612,10 +621,18 @@ export default function AdminPage() {
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">승인 대기 중인 사용자가 없습니다</h3>
                     <p className="text-gray-600 mb-6">모든 사용자가 승인되었습니다.</p>
+                    <p className="text-sm text-gray-500">디버그: pendingUsers.length = {pendingUsers.length}</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {pendingUsers.map((pendingUser) => (
+                    <div className="bg-yellow-100 border border-yellow-300 rounded-lg p-3 mb-4">
+                      <p className="text-sm text-yellow-800">
+                        디버그: 승인 대기 사용자 {pendingUsers.length}명 발견됨
+                      </p>
+                    </div>
+                    {pendingUsers.map((pendingUser) => {
+                      console.log('렌더링 중인 사용자:', pendingUser);
+                      return (
                       <div key={pendingUser.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-4">
@@ -745,7 +762,8 @@ export default function AdminPage() {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

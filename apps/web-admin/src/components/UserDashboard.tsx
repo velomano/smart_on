@@ -228,9 +228,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 } else {
                   const testChatId = localStorage.getItem('test1_telegram_chat_id');
                   if (!testChatId || testChatId === 'no-telegram-set' || testChatId === '123456789') {
-                    const defaultTest1Id = '6827239951'; // test1 계정용 기본 텔레그램 채팅 ID
-                    localStorage.setItem('test1_telegram_chat_id', defaultTest1Id);
-                    console.log('🔧 test1 계정용 기본 텔레그램 채팅 ID 저장됨:', defaultTest1Id);
+                    // 하드코딩된 기본값 제거 - 사용자가 직접 설정하도록 유도
+                    console.log('🔧 test1 계정: 텔레그램 채팅 ID가 설정되지 않음. 마이페이지에서 설정하세요.');
                   }
                 }
               }

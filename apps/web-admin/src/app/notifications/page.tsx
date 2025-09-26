@@ -4,6 +4,7 @@ import AppHeader from '@/components/AppHeader';
 import { notificationTemplates } from '@/lib/notificationTemplates';
 import { getCurrentUser } from '@/lib/mockAuth';
 import { AuthUser } from '@/lib/mockAuth';
+import { UserService } from '@/lib/userService';
 
 export default function NotificationsPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -40,35 +41,100 @@ export default function NotificationsPage() {
     checkAuth();
   }, []);
 
-  // 알림 설정 로드
+  // 알림 설정 로드 (Supabase 연동)
   useEffect(() => {
-    const savedSettings = localStorage.getItem('notificationSettings');
-    let loadedSettings = savedSettings ? JSON.parse(savedSettings) : {};
+    const loadNotificationSettings = async () => {
+      let loadedSettings: any = {};
 
-    if (user?.email === 'test1@test.com') {
-      console.log('test1 계정 텔레그램 설정 강제 활성화됨');
-      loadedSettings.telegramEnabled = true;
-      loadedSettings.telegramChatId = 'test1_default_id';
-      Object.keys(loadedSettings.notifications || {}).forEach(key => {
-        loadedSettings.notifications[key] = true;
-      });
-    }
+      // Supabase에서 사용자 설정 가져오기 (우선 사용)
+      try {
+        const supabaseAuth = await UserService.getCurrentSupabaseUser();
+        if (supabaseAuth?.id) {
+          const userSettingsData = await UserService.getUserSettings(supabaseAuth.id);
+          if (userSettingsData) {
+            if (userSettingsData.telegram_chat_id) {
+              loadedSettings.telegramChatId = userSettingsData.telegram_chat_id;
+            }
+            if (userSettingsData.notification_preferences?.telegram_notification !== undefined) {
+              loadedSettings.telegramEnabled = userSettingsData.notification_preferences.telegram_notification;
+            }
+            console.log('Supabase에서 알림 설정 로드 완료:', loadedSettings);
+          }
+        }
+      } catch (error) {
+        console.warn('Supabase 설정 로드 실패, localStorage 백업 사용:', error);
+        // Supabase 실패 시 localStorage 백업
+        const userSettings = localStorage.getItem('userSettings');
+        if (userSettings) {
+          const userSettingsParsed = JSON.parse(userSettings);
+          if (userSettingsParsed.telegramChatId) {
+            loadedSettings.telegramChatId = userSettingsParsed.telegramChatId;
+          }
+          if (userSettingsParsed.notificationEnabled !== undefined) {
+            loadedSettings.telegramEnabled = userSettingsParsed.notificationEnabled;
+          }
+        }
+      }
 
-    setSettings(prev => ({ ...prev, ...loadedSettings }));
+      setSettings(prev => ({ ...prev, ...loadedSettings }));
 
-    const defaultNotifications = Object.keys(notificationTemplates).reduce((acc, key) => {
-      acc[key] = true;
-      return acc;
-    }, {} as Record<string, boolean>);
+      const defaultNotifications = Object.keys(notificationTemplates).reduce((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
 
-    setSettings(prev => ({
-      ...prev,
-      notifications: { ...defaultNotifications, ...prev.notifications }
-    }));
+      setSettings(prev => ({
+        ...prev,
+        notifications: { ...defaultNotifications, ...prev.notifications }
+      }));
+    };
+
+    loadNotificationSettings();
   }, [user]);
 
-  const saveSettings = () => {
-    localStorage.setItem('notificationSettings', JSON.stringify(settings));
+  // 마이페이지에서 텔레그램 ID가 변경될 때 실시간 반영
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      const userSettings = localStorage.getItem('userSettings');
+      if (userSettings) {
+        const userSettingsParsed = JSON.parse(userSettings);
+        if (userSettingsParsed.telegramChatId && userSettingsParsed.telegramChatId !== settings.telegramChatId) {
+          setSettings(prev => ({
+            ...prev,
+            telegramChatId: userSettingsParsed.telegramChatId,
+            telegramEnabled: userSettingsParsed.notificationEnabled !== undefined ? userSettingsParsed.notificationEnabled : prev.telegramEnabled
+          }));
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => window.removeEventListener('storage', handleStorageUpdate);
+  }, [settings.telegramChatId]);
+
+  const saveSettings = async () => {
+    try {
+      // Supabase에 설정 저장
+      const supabaseAuth = await UserService.getCurrentSupabaseUser();
+      if (supabaseAuth?.id) {
+        await UserService.updateUserSetting(supabaseAuth.id, 'telegram_chat_id', settings.telegramChatId);
+        await UserService.updateUserSetting(supabaseAuth.id, 'notification_preferences', {
+          telegram_notification: settings.telegramEnabled
+        });
+        console.log('Supabase에 알림 설정 저장 완료');
+      }
+    } catch (error) {
+      console.warn('Supabase 저장 실패, localStorage 백업 사용:', error);
+      // Supabase 실패 시 localStorage 백업
+      localStorage.setItem('notificationSettings', JSON.stringify(settings));
+      
+      const userSettings = localStorage.getItem('userSettings');
+      const userSettingsObj = userSettings ? JSON.parse(userSettings) : {};
+      userSettingsObj.telegramChatId = settings.telegramChatId;
+      userSettingsObj.notificationEnabled = settings.telegramEnabled;
+      localStorage.setItem('userSettings', JSON.stringify(userSettingsObj));
+    }
+    
     alert('알림 설정이 저장되었습니다!');
   };
 
@@ -244,40 +310,37 @@ export default function NotificationsPage() {
 
             <div className="px-8 py-8">
               <div className="max-w-4xl mx-auto">
-                {/* 사용방법 안내 */}
+                {/* 마이페이지 안내 (텔레그램 설정 위주) */}
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200 mb-6">
-                  <h2 className="text-xl font-semibold text-blue-900 mb-4">📱 텔레그램 알림 설정 방법</h2>
+                  <h2 className="text-xl font-semibold text-blue-900 mb-4">📱 텔레그램 알림 설정 안내</h2>
                   <div className="space-y-4 text-blue-800">
                     <div className="bg-white rounded-lg p-4 border border-blue-100">
-                      <h3 className="font-semibold text-blue-900 mb-2">1️⃣ 봇과 대화 시작</h3>
-                      <p className="text-sm">
-                        텔레그램에서 <span className="font-mono bg-blue-100 px-2 py-1 rounded">@mart_farm_alert_bot</span>{' '}
-                        검색 후 대화를 시작하세요.
-                      </p>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-4 border border-blue-100">
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-semibold text-blue-900">2️⃣ 채팅 ID 확인</h3>
-                        <button
-                          onClick={checkBotInfo}
-                          disabled={botInfoLoading}
-                          className="px-6 py-3 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                      <h3 className="font-semibold text-blue-900 mb-2">💙 텔레그램 채팅 ID 설정</h3>
+                      <p className="text-sm">텔레그램 채팅 ID는 <strong>마이페이지</strong>에서 설정하는 것이 권장됩니다.</p>
+                      <div className="mt-2">
+                        <a 
+                          href="/my-page" 
+                          className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                          {botInfoLoading ? '🤖 확인 중...' : '🤖 채팅 ID 자동 확인'}
-                        </button>
+                          마이페이지에서 설정하기 →
+                        </a>
                       </div>
-                      <p className="text-sm">@userinfobot에게 메시지를 보내면 채팅 ID를 확인할 수 있습니다.</p>
                     </div>
 
                     <div className="bg-white rounded-lg p-4 border border-blue-100">
-                      <h3 className="font-semibold text-blue-900 mb-2">3️⃣ 알림 설정</h3>
-                      <p className="text-sm">아래에서 텔레그램 알림을 활성화하고 채팅 ID를 입력한 후 설정을 저장하세요.</p>
+                      <h3 className="font-semibold text-blue-900 mb-2">📋 마이페이지 설정 방법</h3>
+                      <p className="text-sm">마이페이지 → 텔레그램 알림 설정에서 ID 입력하고 백업하면 여기서 자동으로 이용 가능합니다.</p>
                     </div>
 
                     <div className="bg-white rounded-lg p-4 border border-blue-100">
-                      <h3 className="font-semibold text-blue-900 mb-2">4️⃣ 테스트</h3>
-                      <p className="text-sm">테스트 버튼을 눌러서 알림이 정상적으로 오는지 확인하세요.</p>
+                      <h3 className="font-semibold text-blue-900 mb-2">🔔 여기서는 알림 활성화</h3>
+                      <p className="text-sm">마이페이지에서 ID 설정 후 여기서 텔레그램 알림을 최종 활성화하고 테스트해보세요.</p>
+                    </div>
+
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-sm text-yellow-800 font-medium">
+                        💡 팁: 대부분의 텔레그램 설정은 마이페이지에서 관리하면 편리합니다!
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -306,43 +369,21 @@ export default function NotificationsPage() {
                         type="text"
                         value={settings.telegramChatId}
                         onChange={e => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
-                        placeholder="예: 123456789 또는 @username"
+                        placeholder="텔레그램 채팅 ID를 입력하세요"
                         className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                       />
 
-                      <p className="text-sm text-gray-600 mt-1">
-                        💡 채팅 ID 다시 받기 방법:
-                      </p>
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
-                        <p className="text-sm text-blue-800 font-medium mb-2">🔥 새로운 채팅 ID 받는 방법:</p>
-                        <ol className="text-xs text-blue-700 space-y-1 ml-3">
-                          <li>1. 텔레그램 앱을 완전히 종료하고 다시 실행</li>
-                          <li>2. @userinfobot 검색</li>
-                          <li>3. "시작" 또는 "/start" 전송</li>
-                          <li>4. 봇이 보내는 숫자를 복사해서 여기에 입력</li>
-                          <li>5. 혹시 안되면 본인의 햄버거 메뉴(설정) → 개인정보설정 → 전화번호 보기에서 확인 가능</li>
-                        </ol>
-                        <p className="text-xs text-red-600 mt-2 font-medium">
-                          ⚠️ 번호가 음수인 경우: 앞에 '-' 제거하고 숫자만 입력하세요
+                        <p className="text-sm text-blue-800 font-medium mb-2">💡 마이페이지에서 텔레그램 ID 관리 권장</p>
+                        <p className="text-xs text-blue-700 mb-2">
+                          텔레그램 채팅 ID는 <a href="/my-page" className="text-blue-700 underline">마이페이지</a>에서 상세한 안내와 함께 설정하세요.
                         </p>
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-2 mt-2">
-                          <p className="text-xs text-red-700 font-medium">
-                            🚨 봇이 차단되어 있다면: 텔레그램에서 봇을 찾아 차단 해제하고 "/start"를 보내주세요!
-                          </p>
-                        </div>
-                      </div>
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
-                        <p className="text-sm text-yellow-800 font-medium mb-2">🔍 채팅 ID: 6827239951 - 정상 확인됨</p>
-                        <p className="text-xs text-yellow-700 mb-2">필수 확인 단계:</p>
-                        <ol className="text-xs text-yellow-700 ml-3 space-y-1">
-                          <li>1. 텔레그램에서 <strong>실제 봇과 1:1 대화</strong>를 시작하셨나요?</li>
-                          <li>2. 그 봇에게 <strong>"hi"</strong> 또는 <strong>"/start"</strong> 메시지를 보냈나요?</li>
-                          <li>3. 봇이 당신의 메시지를 읽을 수 있는 상태인가요?</li>
-                          <li>4. Vercel에서 <strong>TELEGRAM_BOT_TOKEN</strong>이 올바르게 설정되었나요?</li>
-                        </ol>
-                        <p className="text-xs text-red-700 font-medium mt-2">
-                          ⚠️ 봇을 처음 만든 것이라면 채팅방에서 직접 그 봇을 찾아서 대화를 시작해야 합니다!
-                        </p>
+                        <a 
+                          href="/my-page" 
+                          className="inline-block px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                        >
+                          마이페이지에서 설정하기 →
+                        </a>
                       </div>
                     </div>
 
@@ -358,11 +399,11 @@ export default function NotificationsPage() {
                         </button>
                         <button
                           onClick={sendTestNotification}
-                          disabled={testing || settings.telegramChatId !== '6827239951'}
+                          disabled={testing || !settings.telegramChatId}
                           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                          title="정확한 채팅 ID 6827239951로 테스트"
+                          title="텔레그램 알림 테스트"
                         >
-                          {testing ? '🧪 테스트 중...' : '🧪 400 오류 진단'}
+                          {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
                         </button>
                       </div>
                       <div className="text-xs text-gray-500">📋 채팅방에서 봇과 먼저 대화를 시작하셨나요?</div>
