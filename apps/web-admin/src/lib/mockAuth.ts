@@ -363,8 +363,8 @@ const mockSignUp = async (data: SignUpData) => {
 
   try {
     // Supabase에 실제 사용자 데이터 저장
-    const { createClient } = await import('./supabase');
-    const supabase = createClient();
+    const { getSupabaseClient } = await import('./supabase');
+    const supabase = getSupabaseClient();
     
     // 이미 존재하는 이메일인지 확인
     const { data: existingUser, error: checkError } = await supabase
@@ -480,8 +480,8 @@ const mockGetPendingUsers = async () => {
   
   try {
     // Supabase에서 직접 승인 대기 사용자 조회
-    const { createClient } = await import('./supabase');
-    const supabase = createClient();
+    const { getSupabaseClient } = await import('./supabase');
+    const supabase = getSupabaseClient();
     
     const { data: pendingUsers, error } = await supabase
       .from('users')
@@ -521,8 +521,8 @@ const mockApproveUser = async (userId: string, role: 'system_admin' | 'team_lead
 
   try {
     // Supabase에서 사용자 승인 상태 업데이트
-    const { createClient } = await import('./supabase');
-    const supabase = createClient();
+    const { getSupabaseClient } = await import('./supabase');
+    const supabase = getSupabaseClient();
     
     const { error: updateError } = await supabase
       .from('users')
