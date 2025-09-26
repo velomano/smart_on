@@ -153,11 +153,17 @@ const loadUsersFromStorage = (): AuthUser[] => {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
         // 기존 사용자 데이터에 is_active와 is_approved 속성 추가
-        const loadedUsers = parsed.map(user => ({
-          ...user,
-          is_active: user.is_active !== undefined ? user.is_active : true,
-          is_approved: user.is_approved !== undefined ? user.is_approved : true
-        }));
+        const loadedUsers = parsed.map(user => {
+          // 기존 사용자가 아니고 새로 등록된 사용자인지 확인
+          const isDefaultUser = defaultUsers.some(defaultUser => defaultUser.email === user.email);
+          return {
+            ...user,
+            is_active: user.is_active !== undefined ? user.is_active : true,
+            is_approved: user.is_approved !== undefined 
+              ? user.is_approved 
+              : isDefaultUser // 기본 사용자들만 승인됨, 새 사용자는 대기 상태
+          };
+        });
         console.log('로컬 스토리지에서 로드된 사용자들:', loadedUsers);
         console.log('승인 대기 사용자 수:', loadedUsers.filter(u => !u.is_approved).length);
         return loadedUsers;
@@ -181,6 +187,7 @@ const saveUsersToStorage = (users: AuthUser[]) => {
     const passwords = JSON.parse(localStorage.getItem('mock_passwords') || '{}');
     localStorage.setItem('mock_passwords', JSON.stringify(passwords));
     console.log('사용자 데이터 저장완료:', users.length, '명');
+    console.log('승인 대기 사용자 수:', users.filter(u => !u.is_approved).length);
     } catch (error) {
     console.error('Error saving users to storage:', error);
   }
@@ -374,10 +381,13 @@ const mockSignUp = async (data: SignUpData) => {
     is_active: true
   };
 
-  // 사용자 추가 및 영구 저장
+  // 사용자 추가 및 영구 출력
   mockUsers.push(newUser);
   mockPasswords[data.email] = data.password;
+  console.log('새 사용자 등록 완료:', newUser);
+  console.log('현재 전체 사용자 수:', mockUsers.length);
   saveUsersToStorage(mockUsers);
+  console.log('사용자 데이터가 localStorage에 저장되었습니다');
 
   return { success: true, user: newUser };
 };
