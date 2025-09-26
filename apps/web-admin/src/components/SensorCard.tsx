@@ -39,24 +39,18 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const range = maxVal - minVal || 1;
     
     const coords = values.map((value, index) => ({
-      x: 20 + (index / 23) * 300,
-      y: 20 + ((maxVal - value) / range) * 80,
+      x: 20 + (index / 23) * 340,
+      y: 40 + ((maxVal - value) / range) * 40,
       value
     }));
     
     const path = coords.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join('');
     
     return (
-      <div className="w-full h-32 bg-white border">
-        <svg viewBox="0 0 340 100" className="w-full h-full">
-          <defs>
-            <pattern id="grid" width="30" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 30 0 L 0 0 0 20" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
-            </pattern>
-          </defs>
-          
-          {/* 그리드 */}
-          <rect width="320" height="80" fill="url(#grid)" x="20" y="10"/>
+      <div className="w-full h-32 bg-gray-50 rounded-lg overflow-hidden">
+        <svg viewBox="0 0 400 100" className="w-full h-full">
+          {/* 배경 그리드 없이 깔끔하게 */}
+          <rect width="360" height="60" fill="#fafafa" x="20" y="20"/>
           
           {/* 데이터 포인트들 */}
           {coords.map(({ x, y, value }, index) => (
@@ -73,16 +67,16 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
           {/* 선 연결 */}
           <path d={path} stroke={color} strokeWidth="3" fill="none"/>
           
-          {/* 시간 라벨 */}
-          <text x="20" y="95" fontSize="10" fill="gray">0시</text>
-          <text x="90" y="95" fontSize="10" fill="gray">6시</text>
-          <text x="160" y="95" fontSize="10" fill="gray">12시</text>
-          <text x="230" y="95" fontSize="10" fill="gray">18시</text>
-          <text x="300" y="95" fontSize="10" fill="gray">24시</text>
+          {/* 시간 라벨 - 박스 안에 수 놓 맨 */}
+          <text x="20" y="85" fontSize="10" fill="gray">0시</text>
+          <text x="90" y="85" fontSize="10" fill="gray">6시</text>
+          <text x="160" y="85" fontSize="10" fill="gray">12시</text>
+          <text x="230" y="85" fontSize="10" fill="gray">18시</text>
+          <text x="300" y="85" fontSize="10" fill="gray">24시</text>
           
-          {/* 값 라벨 */}
-          <text x="2" y="15" fontSize="9" fill="gray">{maxVal.toFixed(1)}</text>
-          <text x="2" y="55" fontSize="9" fill="gray">{minVal.toFixed(1)}</text>
+          {/* 값 라벨 - 박스 내부에 */}
+          <text x="10" y="25" fontSize="9" fill="gray">{maxVal.toFixed(1)}</text>
+          <text x="10" y="75" fontSize="9" fill="gray">{minVal.toFixed(1)}</text>
         </svg>
         
         {/* 호버 툴팁 */}
@@ -90,7 +84,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
           <div className="absolute bg-black text-white px-2 py-1 rounded text-xs"
                style={{
                  left: `${coords[hoveredPoint].x}px`,
-                 bottom: '100%',
+                 top: '-20px',
                  transform: 'translateX(-50%)'
                }}>
             {formatValue(coords[hoveredPoint].value)}{unit}
