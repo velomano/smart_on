@@ -109,7 +109,17 @@ export default function AdminPage() {
       ]);
 
       if (pendingResult.success && pendingResult.users) {
-        setPendingUsers(pendingResult.users);
+        // AuthUser 타입을 PendingUser 타입으로 변환
+        const pendingUsers: PendingUser[] = pendingResult.users.map(user => ({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          company: (user as any).company,
+          phone: (user as any).phone,
+          preferred_team: user.preferred_team,
+          created_at: user.created_at
+        }));
+        setPendingUsers(pendingUsers);
       }
 
       if (approvedResult.success && approvedResult.users) {

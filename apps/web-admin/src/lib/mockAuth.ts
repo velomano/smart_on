@@ -500,7 +500,7 @@ const mockGetPendingUsers = async () => {
       email: user.email,
       name: user.name,
       role: 'team_member', // 기본 역할
-      preferred_team: null,
+      preferred_team: undefined,
       is_approved: false,
       is_active: true,
       created_at: user.created_at
