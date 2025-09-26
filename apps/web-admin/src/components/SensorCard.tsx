@@ -39,37 +39,13 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const range = maxValue - minValue || 1;
     const padding = range * 0.1; // 10% 여유
     
-    // 매끄러운 곡선 그래프 경로 생성
-    const createSmoothPath = (points: Array<{x: number, y: number}>) => {
+    // 직선 그래프 생성 (단순하게!)
+    const createLinePath = (points: Array<{x: number, y: number}>) => {
       if (points.length < 2) return '';
-      if (points.length === 2) {
-        return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`;
-      }
       
-      let path = `M${points[0].x},${points[0].y}`;
-      
-      for (let i = 1; i < points.length; i++) {
-        const current = points[i];
-        const prev = points[i - 1];
-        
-        if (i === points.length - 1) {
-          // 마지막 점은 직선
-          path += ` L${current.x},${current.y}`;
-        } else {
-          const next = points[i + 1];
-          const tension = 0.4; // 곡선 부드러움 조절
-          
-          // 부드러운 곡선으로 연결하는 베지어 제어점
-          const cp1x = prev.x + (current.x - prev.x) * tension;
-          const cp1y = prev.y;
-          const cp2x = current.x - (next.x - current.x) * tension;
-          const cp2y = current.y;
-          
-          path += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${current.x},${current.y}`;
-        }
-      }
-      
-      return path;
+      return points.map((point, index) => 
+        index === 0 ? `M${point.x},${point.y}` : `L${point.x},${point.y}`
+      ).join(' ');
     };
     
     // 좌표 계산 (가로축=시간, 세로축=값)
@@ -84,7 +60,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const maxVal = Math.max(...values).toFixed(1);
     const minVal = Math.min(...values).toFixed(1);
     
-    const smoothPath = createSmoothPath(coords);
+    const linePath = createLinePath(coords);
     
     // 툴팁 상태는 컴포넌트 레벨에서 관리됨
     
@@ -105,32 +81,18 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
             </linearGradient>
           </defs>
           
-          {/* 부드러운 곡선 그래프 */}
+          {/* 깔끔한 직선 그래프 */}
           <path
-            d={smoothPath}
+            d={linePath}
             fill="none"
             stroke={color}
-            strokeWidth="2.5"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           
-          {/* 가로축 그리드 라인 (시간의 흐름) */}
-          {coords.map(({ x }, index) => (
-            <line 
-              key={`grid-${index}`}
-              x1={x} 
-              y1="0" 
-              x2={x} 
-              y2="100" 
-              stroke="#e5e7eb" 
-              strokeWidth="0.5" 
-              opacity="0.3"
-            />
-          ))}
-          
-          {/* 심플한 데이터 포인트 */}
-          {coords.map(({ x, y, value: pointValue }, index) => (
+          {/* 데이터 포인트 (좌표에 단순 표시) */}
+          {coords.map(({ x, y }, index) => (
             <g key={index}>
               {/* 호버 영역 */}
               <circle
@@ -141,32 +103,21 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
                 onMouseEnter={() => setHoveredPoint(index)}
                 onMouseLeave={() => setHoveredPoint(null)}
               />
-              {/* 실제 포인트 (심플한 원) */}
+              {/* 간단한 포인트 */}
               <circle
                 cx={x}
                 cy={y}
-                r={hoveredPoint === index ? "3" : "2"}
-                fill={hoveredPoint === index ? "white" : color}
-                stroke={color}
-                strokeWidth="1"
+                r="2"
+                fill={color}
               />
           </g>
         ))}
           </svg>
           
-          {/* 좌우축 레이블 (시간과 값) */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 pt-1">
-            <span>과거</span>
-            <span className="text-center text-gray-500">시간</span>
-            <span>현재</span>
-          </div>
-          
-          {/* 세로축 값 표시 (좌상단) */}
-          <div className="absolute left-1 top-1 flex flex-col text-xs text-gray-400">
-            <div className="text-center bg-white/80 px-1 rounded">{maxVal}</div>
-          </div>
-          <div className="absolute left-1 bottom-1 flex flex-col text-xs text-gray-400">
-            <div className="text-center bg-white/80 px-1 rounded">{minVal}</div>
+          {/* 간단한 시간축 라벨 */}
+          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400">
+            <span>←</span>
+            <span>→</span>
           </div>
         </div>
         
