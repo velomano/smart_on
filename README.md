@@ -236,9 +236,10 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 ## 🚀 배포
 
 ### 웹 어드민
-- **Vercel** 배포: https://web-admin-fsi2tolta-smart-ons-projects.vercel.app
+- **Vercel** 배포: https://web-admin-snowy.vercel.app
 - **자동 배포** (GitHub Actions)
-- **Mock 인증** 시스템 (개발/테스트용)
+- **Supabase Auth** 연동 (실제 사용자 인증)
+- **사용자 승인 시스템** (관리자 승인 후 접근)
 
 ### 🎨 최근 UI/UX 개선사항
 - **TeraHub 브랜딩**: 프로젝트명 변경 및 로고 통일 디자인 적용
@@ -246,6 +247,9 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 - **페이지 타이틀 통합**: 시세정보/양액계산/알림설정 페이지 헤더 디자인 통일
 - **반응형 UI**: 모든 페이지 간 일관된 레이아웃과 스타일링
 - **제어 인터페이스 개선**: "Tuya" 브랜드명 제거하여 일반화된 용어 사용
+- **마이페이지 추가**: 개인정보 관리, 비밀번호 변경, 텔레그램 설정 통합
+- **사용자 관리 개선**: Supabase 연동으로 실제 데이터베이스 기반 사용자 관리
+- **승인 시스템**: 관리자 승인 후 사용자 접근 가능한 워크플로우 구현
 
 ### 모바일 앱
 - **Google Play Store** (Android)
@@ -263,6 +267,13 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 - **2농장장**: test4@test.com / password
 - **3농장장**: test6@test.com / password
 - **팀원들**: test3@test.com, test5@test.com, test7@test.com / password
+
+### 👤 사용자 관리 시스템
+- **회원가입**: 이메일 기반 회원가입 (Supabase Auth 연동)
+- **승인 시스템**: 관리자가 신규 사용자 승인 후 접근 가능
+- **역할 기반 권한**: 시스템 관리자, 농장장, 팀원 역할별 접근 제어
+- **마이페이지**: 개인정보 수정, 비밀번호 변경, 텔레그램 알림 설정
+- **Supabase 연동**: 실제 데이터베이스 기반 사용자 관리 (localStorage 백업)
 
 ### 🌱 양액계산 서비스
 - **지원 작물**: 상추, 토마토, 오이, 딸기 (4종)
@@ -282,6 +293,8 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 - **다중 플랫폼 알림**: 텔레그램 + 대시보드 경고 동시 표시
 - **베드별 경고 시스템**: 특정 베드 센서 이상 시 해당 베드 카드 자동 깜빡임
 - **중복 알림 방지**: 동일 알림은 설정 간격 후 재발송 (기본 30분)
+- **개인화된 알림**: 사용자별 텔레그램 채팅 ID 설정 및 관리
+- **마이페이지 연동**: 텔레그램 ID 설정을 마이페이지에서 관리
 - **접근**: 웹 어드민 → "알림 설정" 메뉴
 
 ## 📝 라이선스
