@@ -39,49 +39,44 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const range = maxValue - minValue || 1;
     const padding = range * 0.1; // 10% 여유
     
-    // 스무스 곡선을 위한 베지어 곡선 생성
-    const createSmoothPath = (points: Array<{x: number, y: number}>) => {
+    // 심플한 직선 그래프 경로 생성
+    const createSimplePath = (points: Array<{x: number, y: number}>) => {
       if (points.length < 2) return '';
       
       let path = `M${points[0].x},${points[0].y}`;
       
       for (let i = 1; i < points.length; i++) {
-        if (i === points.length - 1) {
-          // 마지막 점은 직접 연결
-          path += ` L${points[i].x},${points[i].y}`;
-        } else {
-          // 베지어 곡선으로 부드럽게 연결
-          const current = points[i];
-          const next = points[i + 1];
-          const controlX1 = current.x + (next.x - current.x) * 0.3;
-          const controlX2 = next.x - (next.x - current.x) * 0.3;
-          
-          path += ` C${controlX1},${current.y} ${controlX2},${next.y} ${next.x},${next.y}`;
-        }
+        // 단순히 직선으로 연결
+        path += ` L${points[i].x},${points[i].y}`;
       }
       return path;
     };
     
-    // 좌표 계산 (반응형)
+    // 좌표 계산 (가로축=시간, 세로축=값)
     const coords = values.map((value, index) => {
-      const x = (index / (values.length - 1)) * 100;
+      const x = (index / (values.length - 1)) * 100; // 시간축 (왼쪽=과거, 오른쪽=현재)
       const normalizedValue = (value - minValue + padding) / (range + padding * 2);
-      const y = (1 - normalizedValue) * 100;
+      const y = (1 - normalizedValue) * 100; // 값축 (위쪽=높은값, 아래쪽=낮은값)
       return { x, y, value };
     });
     
-    const smoothPath = createSmoothPath(coords);
+    // 최소/최대값 가져오기 (표시용)
+    const maxVal = Math.max(...values).toFixed(1);
+    const minVal = Math.min(...values).toFixed(1);
+    
+    const simplePath = createSimplePath(coords);
     
     // 툴팁 상태는 컴포넌트 레벨에서 관리됨
     
     return (
       <div className="w-full h-full flex items-center relative">
-        <svg 
-          viewBox="0 0 100 100" 
-          className="w-full h-full cursor-pointer"
-          preserveAspectRatio="none"
-          onMouseLeave={() => setHoveredPoint(null)}
-        >
+        <div className="w-full h-full relative">
+          <svg 
+            viewBox="0 0 100 100" 
+            className="w-full h-full cursor-pointer"
+            preserveAspectRatio="none"
+            onMouseLeave={() => setHoveredPoint(null)}
+          >
           {/* 그라데이션 배경 영역 */}
           <defs>
             <linearGradient id={`gradient-${type}`} x1="0%" y1="0%" x2="0%" y2="100%">
@@ -90,40 +85,70 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
             </linearGradient>
           </defs>
           
-          {/* 선 그래프 경로 */}
+          {/* 심플한 직선 그래프 */}
           <path
-            d={smoothPath}
+            d={simplePath}
             fill="none"
             stroke={color}
-            strokeWidth="2.5"
+            strokeWidth="2"
             strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeLinejoin="miter"
           />
           
-          {/* 데이터 포인트 */}
+          {/* 가로축 그리드 라인 (시간의 흐름) */}
+          {coords.map(({ x }, index) => (
+            <line 
+              key={`grid-${index}`}
+              x1={x} 
+              y1="0" 
+              x2={x} 
+              y2="100" 
+              stroke="#e5e7eb" 
+              strokeWidth="0.5" 
+              opacity="0.3"
+            />
+          ))}
+          
+          {/* 심플한 데이터 포인트 */}
           {coords.map(({ x, y, value: pointValue }, index) => (
             <g key={index}>
-              {/* 호버 영역 (보이지 않는 큰 원) */}
+              {/* 호버 영역 */}
               <circle
                 cx={x}
                 cy={y}
-                r="8"
+                r="6"
                 fill="transparent"
                 onMouseEnter={() => setHoveredPoint(index)}
                 onMouseLeave={() => setHoveredPoint(null)}
               />
-              {/* 실제 표시 원 */}
+              {/* 실제 포인트 (심플한 원) */}
               <circle
                 cx={x}
                 cy={y}
-                r={hoveredPoint === index ? "3.5" : "2.5"}
+                r={hoveredPoint === index ? "3" : "2"}
                 fill={hoveredPoint === index ? "white" : color}
-                stroke={hoveredPoint === index ? color : 'none'}
-                strokeWidth={hoveredPoint === index ? "2" : "0"}
+                stroke={color}
+                strokeWidth="1"
               />
-            </g>
-          ))}
-        </svg>
+          </g>
+        ))}
+          </svg>
+          
+          {/* 좌우축 레이블 (시간과 값) */}
+          <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-400 pt-1">
+            <span>과거</span>
+            <span className="text-center text-gray-500">시간</span>
+            <span>현재</span>
+          </div>
+          
+          {/* 세로축 값 표시 (좌상단) */}
+          <div className="absolute left-1 top-1 flex flex-col text-xs text-gray-400">
+            <div className="text-center bg-white/80 px-1 rounded">{maxVal}</div>
+          </div>
+          <div className="absolute left-1 bottom-1 flex flex-col text-xs text-gray-400">
+            <div className="text-center bg-white/80 px-1 rounded">{minVal}</div>
+          </div>
+        </div>
         
         {/* 호버 툴팁 */}
         {hoveredPoint !== null && coords[hoveredPoint] && (
@@ -174,7 +199,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
         </div>
       </div>
 
-      {/* 심플한 미니 바 차트 */}
+      {/* 심플한 선 그래프 (시간-값 축) */}
       <div className="h-12 bg-gray-50 rounded-lg p-1 mb-3">
         {createSimpleChart()}
       </div>
