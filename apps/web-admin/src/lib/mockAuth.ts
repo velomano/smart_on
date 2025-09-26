@@ -361,35 +361,62 @@ const mockSignIn = async (data: SignInData) => {
 const mockSignUp = async (data: SignUpData) => {
   await new Promise(resolve => setTimeout(resolve, 500));
 
-  // 현재 사용자 데이터 다시 로드
-  mockUsers = loadUsersFromStorage();
+  try {
+    // Supabase에 실제 사용자 데이터 저장
+    const { createClient } = await import('./supabase');
+    const supabase = createClient();
+    
+    // 이미 존재하는 이메일인지 확인
+    const { data: existingUser, error: checkError } = await supabase
+      .from('users')
+      .select('email')
+      .eq('email', data.email)
+      .single();
+    
+    if (existingUser && !checkError) {
+      return { success: false, error: '이미 존재하는 이메일입니다.' };
+    }
 
-  // 이미 존재하는 이메일인지 확인
-  const existingUser = mockUsers.find(u => u.email === data.email);
-  if (existingUser) {
-    return { success: false, error: '이미 존재하는 이메일입니다.' };
+    // 새 사용자를 Supabase에 저장 (승인 대기 상태)
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert({
+        id: crypto.randomUUID(),
+        email: data.email,
+        name: data.name,
+        is_approved: false,
+        phone: data.phone || null,
+        company: data.company || null
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('Supabase 사용자 저장 실패:', insertError);
+      return { success: false, error: '사용자 등록에 실패했습니다.' };
+    }
+
+    // 로컬 mock 시스템과도 동기화
+    const authUser: AuthUser = {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+      role: 'team_member',
+      preferred_team: data.preferred_team,
+      is_approved: false,
+      is_active: true
+    };
+
+    mockPasswords[data.email] = data.password;
+
+    console.log('새 사용자 Supabase에 저장 완료:', authUser);
+
+    return { success: true, user: authUser };
+
+  } catch (error) {
+    console.error('회원가입 오류:', error);
+    return { success: false, error: '회원가입 중 오류가 발생했습니다.' };
   }
-
-  // 새 사용자 생성 (승인 대기 상태)
-  const newUser: AuthUser = {
-    id: `mock-user-${Date.now()}`,
-    email: data.email,
-    name: data.name,
-    role: 'team_member', // 기본적으로 팀원으로 설정
-    preferred_team: data.preferred_team,
-    is_approved: false,
-    is_active: true
-  };
-
-  // 사용자 추가 및 영구 출력
-  mockUsers.push(newUser);
-  mockPasswords[data.email] = data.password;
-  console.log('새 사용자 등록 완료:', newUser);
-  console.log('현재 전체 사용자 수:', mockUsers.length);
-  saveUsersToStorage(mockUsers);
-  console.log('사용자 데이터가 localStorage에 저장되었습니다');
-
-  return { success: true, user: newUser };
 };
 
 // Mock 로그아웃
@@ -451,57 +478,72 @@ const mockGetCurrentUser = async (): Promise<AuthUser | null> => {
 const mockGetPendingUsers = async () => {
   await new Promise(resolve => setTimeout(resolve, 200));
   
-  // 현재 사용자 데이터 다시 로드
-  mockUsers = loadUsersFromStorage();
-  console.log('승인 대기 사용자 조회:', {
-    totalUsers: mockUsers.length,
-    processedUsers: mockUsers.map(u => ({ 
-      email: u.email, 
-      is_approved: u.is_approved,
-      created_at: u.created_at 
-    }))
-  });
-  
-  const pendingUsers = mockUsers.filter(u => !u.is_approved).map(user => ({
-    ...user,
-    created_at: user.created_at || new Date().toISOString()
-  }));
-  
-  console.log('처리된 승인 대기 사용자 수:', pendingUsers.length);
-  return { success: true, users: pendingUsers };
+  try {
+    // Supabase에서 직접 승인 대기 사용자 조회
+    const { createClient } = await import('./supabase');
+    const supabase = createClient();
+    
+    const { data: pendingUsers, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('is_approved', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase에서 승인 대기 사용자 조회 실패:', error);
+      return { success: false, error: '사용자 목록 조회에 실패했습니다.' };
+    }
+
+    // AuthUser 타입으로 변환
+    const users = pendingUsers.map(user => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: 'team_member', // 기본 역할
+      preferred_team: null,
+      is_approved: false,
+      is_active: true,
+      created_at: user.created_at
+    }));
+
+    console.log('Supabase에서 조회된 승인 대기 사용자 수:', users.length);
+    return { success: true, users };
+    
+  } catch (error) {
+    console.error('승인 대기 사용자 조회 오류:', error);
+    return { success: false, error: '사용자 목록 조회 중 오류가 발생했습니다.' };
+  }
 };
 
 // Mock 사용자 승인 (관리자용)
 const mockApproveUser = async (userId: string, role: 'system_admin' | 'team_leader' | 'team_member', tenantId?: string, teamId?: string) => {
   await new Promise(resolve => setTimeout(resolve, 300));
 
-  // 현재 사용자 데이터 다시 로드
-  mockUsers = loadUsersFromStorage();
-  
-  const user = mockUsers.find(u => u.id === userId);
-  if (user) {
-    user.is_approved = true;
-    user.role = role;
-    user.is_active = true;
-    if (tenantId) {
-      user.tenant_id = tenantId;
-    }
-    if (teamId) {
-      user.team_id = teamId;
-      // 조 이름 설정
-      const teamNames: { [key: string]: string } = {
-        'team-001': '1조',
-        'team-002': '2조',
-        'team-003': '3조'
-      };
-      user.team_name = teamNames[teamId] || teamId;
-    }
+  try {
+    // Supabase에서 사용자 승인 상태 업데이트
+    const { createClient } = await import('./supabase');
+    const supabase = createClient();
     
-    // 변경사항 영구 저장
-    saveUsersToStorage(mockUsers);
-  }
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        is_approved: true,
+        approved_at: new Date().toISOString()
+      })
+      .eq('id', userId);
 
-  return { success: true };
+    if (updateError) {
+      console.error('Supabase 사용자 승인 실패:', updateError);
+      return { success: false, error: '사용자 승인에 실패했습니다.' };
+    }
+
+    console.log('사용자 승인 완료:', userId);
+    return { success: true };
+    
+  } catch (error) {
+    console.error('사용자 승인 오류:', error);
+    return { success: false, error: '사용자 승인 중 오류가 발생했습니다.' };
+  }
 };
 
 // Mock 사용자 거부 (관리자용)

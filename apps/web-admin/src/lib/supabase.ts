@@ -6,6 +6,11 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key'
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Supabase 클라이언트 생성 함수 (mockAuth.ts에서 사용)
+export const createClient = () => {
+  return createClient(supabaseUrl, supabaseKey);
+};
+
 // 타입 정의
 export interface Farm {
   id: string;
