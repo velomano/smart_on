@@ -43,9 +43,19 @@ export default function NotificationsPage() {
   // 알림 설정 로드
   useEffect(() => {
     const savedSettings = localStorage.getItem('notificationSettings');
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings));
+    let loadedSettings = savedSettings ? JSON.parse(savedSettings) : {};
+
+    // test1 계정인 경우 기본 텔레그램 설정 적용
+    if (user?.email === 'test1@test.com') {
+      const defaultTest1Id = '6827239951';
+      loadedSettings = {
+        ...loadedSettings,
+        telegramEnabled: true,
+        telegramChatId: loadedSettings.telegramChatId || process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID || localStorage.getItem('defaultTelegramChatId') || defaultTest1Id
+      };
     }
+
+    setSettings(prev => ({ ...prev, ...loadedSettings }));
 
     // 기본 알림 설정 (모든 알림 활성화)
     const defaultNotifications = Object.keys(notificationTemplates).reduce((acc, key) => {
@@ -57,7 +67,7 @@ export default function NotificationsPage() {
       ...prev,
       notifications: { ...defaultNotifications, ...prev.notifications }
     }));
-  }, []);
+  }, [user]);
 
   // 설정 저장
   const saveSettings = () => {
@@ -101,7 +111,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // 센서 알림 테스트
+  // 센서 알림 테스트 (2농장 2베드 연동 + 대시보드 알림)
   const testSensorAlert = async (sensorType: string, value: number, location: string) => {
     setTesting(true);
     setTestResult('');
@@ -115,24 +125,44 @@ export default function NotificationsPage() {
         water: { min: 20, max: 90 }
       };
 
-      const response = await fetch('/api/notifications/test-sensor', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // 2농장 2베드 베드ID로 설정 (bed_004)
+      const testLocation = '2농장-베드2';
+      const testDeviceId = 'bed_004';
+
+      // 대시보드 알림도 함께 추가하기 위해 notificationService를 직접 호출
+      const { checkSensorDataAndNotify } = await import('@/lib/notificationService');
+      const { dashboardAlertManager } = await import('@/lib/dashboardAlerts');
+      
+      // 샌서 데이터 생성 (2농장 2베드 연동)
+      const sensorData = {
+        id: `test_${sensorType}_${Date.now()}`,
+        type: sensorType as 'temperature' | 'humidity' | 'ec' | 'ph' | 'water',
+        value: value,
+        location: testLocation,
+        timestamp: new Date(),
+        thresholds: thresholds[sensorType as keyof typeof thresholds],
+        deviceId: testDeviceId
+      };
+
+      // 알림 전송 (텔레그램 + 대시보드 모두)
+      await checkSensorDataAndNotify(sensorData);
+
+      // 추가적으로 대시보드 경고도 직접 추가
+      try {
+        dashboardAlertManager.checkSensorDataAndAlert(
           sensorType,
           value,
-          location,
-          thresholds: thresholds[sensorType as keyof typeof thresholds]
-        })
-      });
-      
-      const data = await response.json();
-      
-      if (data.ok) {
-        setTestResult(`✅ ${sensorType} 센서 알림 테스트가 성공적으로 전송되었습니다!\n값: ${value}, 위치: ${location}`);
-      } else {
-        setTestResult(`❌ 센서 알림 테스트 실패: ${data.error}`);
+          testLocation,
+          `test_${sensorType}_${Date.now()}`,
+          testDeviceId,
+          thresholds
+        );
+      } catch (alertError) {
+        console.error('대시보드 알림 추가 실패:', alertError);
       }
+
+      setTestResult(`✅ ${sensorType} 센서 알림 테스트가 성공적으로 전송되었습니다!\n값: ${value}, 위치: ${testLocation}\n📱 텔레그램 알림 + 🚨 대시보드 알림 연동 완료!`);
+      
     } catch (error) {
       setTestResult(`❌ 오류 발생: ${error}`);
     } finally {
@@ -207,16 +237,23 @@ export default function NotificationsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   텔레그램 채팅 ID
+                  {user?.email === 'test1@test.com' && (
+                    <span className="text-xs ml-2 text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                      (새로 입력하면 교체됨)
+                    </span>
+                  )}
                 </label>
                 <input
                   type="text"
                   value={settings.telegramChatId}
                   onChange={(e) => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
-                  placeholder="예: 123456789 또는 @username"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
+                  placeholder={user?.email === 'test1@test.com' ? '새 텔레그램 ID 입력시 교체 (기본값: 6827239951)' : '예: 123456789 또는 @username'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                 />
                 <p className="text-sm text-gray-600 mt-1">
-                  💡 채팅 ID는 @userinfobot에게 메시지를 보내면 확인할 수 있습니다.
+                  {user?.email === 'test1@test.com' 
+                    ? '💡 기본값: 6827239951. 새 ID 입력시 해당 채팅으로 알림 전송됩니다.' 
+                    : '💡 채팅 ID는 @userinfobot에게 메시지를 보내면 확인할 수 있습니다.'}
                 </p>
               </div>
 

@@ -18,6 +18,7 @@ export class MockSensor {
 
   update() {
     this.currentValue = this.generateValue()
+    
     this.lastUpdate = new Date()
     return {
       type: this.type,
@@ -41,8 +42,8 @@ export class MockSensor {
 export class MockSensorFactory {
   static createSensors() {
     return [
-      new MockSensor('temperature', 20, 30, '°C'),
-      new MockSensor('humidity', 40, 80, '%'),
+      new MockSensor('temperature', 35, 45, '°C'), // 경고를 위해 온도 범위를 높임 (임계값: max 35°C)
+      new MockSensor('humidity', 82, 95, '%'), // 습도도 경고를 위해 높임 (임계값: max 80%)
       new MockSensor('ec', 1.0, 2.5, 'mS/cm'),
       new MockSensor('ph', 5.5, 7.0, 'pH'),
       new MockSensor('light', 0, 1000, 'lux'),

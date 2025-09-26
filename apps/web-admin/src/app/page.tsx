@@ -73,19 +73,7 @@ export default function WebAdminDashboard() {
     loadData();
   }, [user]);
 
-  // 사용자 역할에 따른 대시보드 렌더링
-  if (user) {
-    return (
-      <UserDashboard
-        user={user}
-        farms={farms}
-        devices={devices}
-        sensors={sensors}
-        sensorReadings={sensorReadings}
-      />
-    );
-  }
-
+  // 로그인/권한 체크 완료
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -95,6 +83,10 @@ export default function WebAdminDashboard() {
         </div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   if (loading) {
@@ -108,5 +100,13 @@ export default function WebAdminDashboard() {
     );
   }
 
-  return null;
+  return (
+    <UserDashboard
+      user={user}
+      farms={farms}
+      devices={devices}
+      sensors={sensors}
+      sensorReadings={sensorReadings}
+    />
+  );
 }

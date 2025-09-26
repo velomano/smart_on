@@ -17,17 +17,16 @@ export default function LoginPage() {
     preferred_team: ''
   });
   const router = useRouter();
+  
+  // 새로운 세션 매니저 사용
+  const { isAuthenticated, loading: authLoading } = useAuthSession();
 
   useEffect(() => {
     // 이미 로그인된 사용자는 대시보드로 리다이렉트
-    const checkAuth = async () => {
-      const user = await getCurrentUser();
-      if (user && user.is_approved) {
-        router.push('/');
-      }
-    };
-    checkAuth();
-  }, [router]);
+    if (isAuthenticated) {
+      router.push('/');
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -50,6 +50,14 @@ export const notificationTemplates: Record<string, NotificationTemplate> = {
     category: 'sensor'
   },
 
+  sensor_low_humidity: {
+    id: 'sensor_low_humidity',
+    title: '🌵 저습도 경고',
+    message: '<b>저습도 경고</b>\n\n📍 위치: {location}\n🌵 현재 습도: {current}%\n⚠️ 임계값: {threshold}%\n⏰ 시간: {timestamp}',
+    priority: 'medium',
+    category: 'sensor'
+  },
+
   sensor_low_ec: {
     id: 'sensor_low_ec',
     title: '🔋 저EC 경고',

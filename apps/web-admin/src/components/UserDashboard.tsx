@@ -6,6 +6,10 @@ import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettin
 import { Farm, Device, Sensor, SensorReading } from '../lib/supabase';
 import { mockSystem } from '../lib/mockSystem';
 import AppHeader from './AppHeader';
+import NotificationButton from './NotificationButton';
+import { dashboardAlertManager } from '../lib/dashboardAlerts';
+import { checkSensorDataAndNotify } from '../lib/notificationService';
+import { DashboardAlert } from '../lib/dashboardAlerts';
 
 interface UserDashboardProps {
   user: AuthUser;
@@ -29,6 +33,128 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
   const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
   const [localActuatorStates, setLocalActuatorStates] = useState<Record<string, boolean>>({});
+  const [bedAlerts, setBedAlerts] = useState<Record<string, DashboardAlert[]>>({});
+
+  // 대시보드 알림 구독 및 상태 업데이트
+  useEffect(() => {
+    const unsubscribeAlerts = dashboardAlertManager.subscribe((alerts) => {
+      const alertsByDevice: Record<string, DashboardAlert[]> = {};
+      alerts.forEach(alert => {
+        if (alert.deviceId) {
+          if (!alertsByDevice[alert.deviceId]) {
+            alertsByDevice[alert.deviceId] = [];
+          }
+          alertsByDevice[alert.deviceId].push(alert);
+        }
+      });
+      setBedAlerts(alertsByDevice);
+    });
+
+    return () => {
+      unsubscribeAlerts();
+    };
+  }, []);
+  
+  // 베드별 경고 체크 함수
+  const getBedAlerts = (deviceId: string): DashboardAlert[] => {
+    const allAlerts = dashboardAlertManager.getAlerts();
+    
+    // Device ID 매칭을 위한 변환 함수
+    const getBedFormattedId = (deviceId: string) => {
+      if (deviceId === 'device-1') return 'bed_001';
+      else if (deviceId === 'device-2') return 'bed_002';
+      else if (deviceId === 'device-3') return 'bed_003';
+      else if (deviceId === 'device-4') return 'bed_004';
+      else if (deviceId === 'device-5') return 'bed_005';
+      else if (deviceId === 'device-6') return 'bed_006';
+      return deviceId; // 그대로 사용
+    };
+    
+    const bedFormattedId = getBedFormattedId(deviceId);
+    return allAlerts.filter(alert => 
+      (alert.deviceId === deviceId || alert.deviceId === bedFormattedId) && !alert.isRead
+    );
+  };
+
+  const getRecentAlertForBed = (deviceId: string): DashboardAlert | null => {
+    const alerts = getBedAlerts(deviceId);
+    return alerts.length > 0 ? alerts[0] : null;
+  };
+
+
+  const getBedStatusIcon = (deviceId: string): string => {
+    const recentAlert = getRecentAlertForBed(deviceId);
+    if (recentAlert) {
+      switch (recentAlert.level) {
+        case 'critical': return '🛑';
+        case 'high': return '⚠️';
+        case 'medium': return '🔶';
+        case 'low': return '💡';
+        default: return '📊';
+      }
+    }
+    return '📊';
+  };
+
+  const getBedStatusColor = (deviceId: string): string => {
+    const recentAlert = getRecentAlertForBed(deviceId);
+    if (recentAlert) {
+      switch (recentAlert.level) {
+        case 'critical': return 'bg-red-500 text-white border-red-600 shadow-lg shadow-red-300 ring-2 ring-red-400';
+        case 'high': return 'bg-orange-500 text-white border-orange-600 shadow-lg shadow-orange-300 ring-2 ring-orange-400';
+        case 'medium': return 'bg-yellow-500 text-yellow-900 border-yellow-600 shadow-md shadow-yellow-300 ring-1 ring-yellow-400';
+        case 'low': return 'bg-blue-500 text-white border-blue-600 shadow-md shadow-blue-300 ring-1 ring-blue-400';
+        default: return 'bg-red-500 text-white border-red-600 shadow-lg shadow-red-300 ring-2 ring-red-400';
+      }
+    }
+    return 'bg-gray-100 text-gray-800 border-gray-300';
+  };
+  
+  // 센서 데이터 모니터링 기능 추가
+  useEffect(() => {
+    const monitorSensorData = () => {
+      sensorReadings.forEach(reading => {
+        const sensor = sensors.find(s => s.id === reading.sensor_id);
+        if (!sensor) return;
+        
+        const device = devices.find(d => d.id === sensor.device_id);
+        const farm = farms.find(f => f.id === device?.farm_id);
+        const location = `${farm?.name || '알 수 없음'}-${String(device?.meta?.location || '베드')}`;
+        
+        // 센서 타입별 임계값 정의
+        const thresholds = {
+          temperature: { min: 10, max: 35 },
+          humidity: { min: 30, max: 80 },
+          ec: { min: 0.8, max: 3.5 },
+          ph: { min: 5.5, max: 6.5 },
+          water: { min: 20, max: 90 }
+        };
+        
+        // 센서 데이터 검증 및 알림
+        checkSensorDataAndNotify({
+          id: sensor.id,
+          type: sensor.type as 'temperature' | 'humidity' | 'ec' | 'ph' | 'water',
+          value: reading.value,
+          location: location,
+          timestamp: new Date(reading.ts),
+          thresholds: thresholds[sensor.type as keyof typeof thresholds],
+          deviceId: device?.id  // deviceId 추가
+        }).catch(error => {
+          console.error('센서 데이터 모니터링 에러:', error);
+        });
+      });
+    };
+
+    // 30초마다 센서 데이터 체크 (실시간 모니터링)
+    const sensorMonitorInterval = setInterval(monitorSensorData, 30000);
+    
+    // 초기 모니터링 실행
+    monitorSensorData();
+
+    return () => {
+      clearInterval(sensorMonitorInterval);
+    };
+  }, [sensorReadings, sensors, devices, farms]);
   
   // 팀 데이터 로드
   useEffect(() => {
@@ -55,10 +181,99 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             });
             return newStates;
           });
+          
+          // Mock 센서 데이터 직접 모니터링 (alarm test)
+          checkMockSensorData();
+        };
+
+        // Mock 센서 데이터 알림 체크 함수 추가 (2농장 1베드만 테스트)
+        const checkMockSensorData = async () => {
+          console.log('🔔 경고 알림 테스트 시작!');
+          
+          // test1 계정을 위한 텔레그램 ID 강제 저장
+          try {
+            const currentUserData = localStorage.getItem('mock_user');
+            if (currentUserData) {
+              const currentUser = JSON.parse(currentUserData);
+              if (currentUser.email === 'test1@test.com') {
+                // test1 계정용 텔레그램 ID 확인 및 초기화
+                const currentSettings = localStorage.getItem('notificationSettings');
+                const userDefinedId = currentSettings ? JSON.parse(currentSettings).telegramChatId : '';
+                
+                // 사용자가 입력한 ID가 있으면 사용, 없으면 기본값 사용
+                if (userDefinedId && userDefinedId.trim() !== '') {
+                  localStorage.setItem('test1_telegram_chat_id', userDefinedId);
+                  console.log('🔧 test1 계정: 사용자 입력 텔레그램 채팅 ID 사용:', userDefinedId);
+                } else {
+                  const testChatId = localStorage.getItem('test1_telegram_chat_id');
+                  if (!testChatId || testChatId === 'no-telegram-set' || testChatId === '123456789') {
+                    const defaultTest1Id = '6827239951'; // test1 계정용 기본 텔레그램 채팅 ID
+                    localStorage.setItem('test1_telegram_chat_id', defaultTest1Id);
+                    console.log('🔧 test1 계정용 기본 텔레그램 채팅 ID 저장됨:', defaultTest1Id);
+                  }
+                }
+              }
+            }
+          } catch (error) {
+            console.error('텔레그램 ID 저장 실패:', error);
+          }
+          
+          // 2농장 1베드만 체크 (bed_003)
+          const testBedId = 'bed_003';
+          const bedSensorData = mockSystem.getBedSensorData(testBedId);
+          
+          console.log('센서 데이터 확인:', bedSensorData);
+          
+          // 각 센서 데이터에 대해 경고 체크 (습도만 저습도 상태로 모니터링)
+          for (const sensor of bedSensorData) {
+            // 습도 센서만 체크하고, 테스트 목적으로 값 강제 수정
+            if (sensor.type === 'humidity') {
+              console.log('💧 습도 센서 데이터:', sensor);
+              
+              const farmId = 'farm_002';   // 2농장
+              
+              const farm = farms.find(f => f.id === farmId) || {
+                id: farmId,
+                name: '2농장',
+                location: '테스트 농장 위치'
+              };
+              
+              const location = `${farm.name}-베드1`;
+              console.log('📍 경고 위치:', location);
+              
+              // 습도 임계값 설정
+              const humidityThreshold = { min: 30, max: 80 };
+              
+              // 테스트용으로 습도 값을 낮게 조정 
+              const testHumidityValue = Math.random() * 15 + 5;  // 5-20% (임계값 30% 이하)
+              console.log('💧 테스트 습도 값:', testHumidityValue);
+              
+              try {
+                await checkSensorDataAndNotify({
+                  id: `${testBedId}_${sensor.type}`,
+                  type: 'humidity',
+                  value: testHumidityValue,
+                  location: location,
+                  timestamp: new Date(sensor.lastUpdate),
+                  thresholds: humidityThreshold,
+                  deviceId: testBedId
+                });
+                console.log('✅ 경고 전송 완료!');
+              } catch (error) {
+                console.error('Mock 습도 센서 모니터링 에러:', error);
+              }
+            }
+          }
         };
 
         // 초기 데이터 로드
         updateMockData();
+        
+        // 즉시 경고 알림 테스트 실행
+        setTimeout(() => {
+          console.log('🚨 즉시 경고 테스트 실행');
+          checkMockSensorData();
+        }, 1000);
 
         // 5초마다 Mock 데이터 업데이트
         const interval = setInterval(updateMockData, 5000);
@@ -248,6 +463,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
         </div>
 
+
+
         {/* Farm Overview */}
         <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden">
           <div className="px-8 py-8">
@@ -392,14 +609,73 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
 
                       {/* 베드 목록 */}
-                      <div className="space-y-4">
-                        {farm.visibleDevices.map((device: Device) => {
+                      <div className="space-y-6">
+                        {farm.visibleDevices.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <p>현재 표시할 베드가 없습니다.</p>
+                          </div>
+                        ) : (
+                          farm.visibleDevices.map((device: Device, deviceIndex: number) => {
                           const deviceSensors = sensors.filter(s => s.device_id === device.id);
+                            
+                            // 전체 알림 로그와 비교 
+                            const allAlerts = dashboardAlertManager.getAlerts();
+                            const bedAlerts = getBedAlerts(device.id);
+                            
+                            
 
                           return (
                             <div
                               key={device.id}
-                              className="bg-gray-50 rounded-lg p-4 border-l-4 border-l-green-400"
+                              className={`my-2 bg-gray-50 rounded-lg p-4 border-l-4 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 ${
+                                (() => {
+                                  const hasDirectAlerts = getBedAlerts(device.id).length > 0;
+                                  
+                                  // Device ID 변환: device-X -> bed_00X 형식으로 변환
+                                  let bedIdToCheck = '';
+                                  if (device.id === 'device-1') bedIdToCheck = 'bed_001';
+                                  else if (device.id === 'device-2') bedIdToCheck = 'bed_002';
+                                  else if (device.id === 'device-3') bedIdToCheck = 'bed_003';
+                                  else if (device.id === 'device-4') bedIdToCheck = 'bed_004';
+                                  else if (device.id === 'device-5') bedIdToCheck = 'bed_005';
+                                  else if (device.id === 'device-6') bedIdToCheck = 'bed_006';
+                                  else bedIdToCheck = device.id;
+                                  
+                                  const deviceHasMbmsAlert = allAlerts.some(alert => 
+                                    (alert.deviceId === device.id || alert.deviceId === bedIdToCheck) && !alert.isRead
+                                  );
+                                  const shouldBlink = hasDirectAlerts || deviceHasMbmsAlert;
+                                  
+                                  // 더 엄격한 조건 진단
+                                  const alertsForThisBed = allAlerts.filter(a => 
+                                    (a.deviceId === device.id || a.deviceId === bedIdToCheck) && !a.isRead
+                                  );
+                                  
+                                  
+                                  // 실제 알림이 있는 베드만 정확히 깜빡이기
+                                  if (shouldBlink && alertsForThisBed.length > 0) {
+                                    const recentAlert = getRecentAlertForBed(device.id) || 
+                                                      allAlerts.find(a => (a.deviceId === device.id || a.deviceId === bedIdToCheck) && !a.isRead);
+                                    
+                                    // 더 눈에 띄는 깜빡임 효과 적용
+                                    if (recentAlert) {
+                                      switch (recentAlert.level) {
+                                        case 'critical': return 'border-l-red-600 animate-bounce shadow-2xl shadow-red-300 ring-4 ring-red-200 bg-red-50';
+                                        case 'high': return 'border-l-orange-500 animate-bounce shadow-xl shadow-orange-300 ring-2 ring-orange-200 bg-orange-50';
+                                        case 'medium': return 'border-l-yellow-500 animate-bounce shadow-lg shadow-yellow-300 ring-1 ring-yellow-200 bg-yellow-50';
+                                        case 'low': return 'border-l-blue-500 animate-pulse shadow-lg shadow-blue-300 ring-1 ring-blue-200 bg-blue-50';
+                                        default: return 'border-l-red-600 animate-bounce shadow-2xl shadow-red-300 ring-4 ring-red-200 bg-red-50';
+                                      }
+                                    }
+                                    
+                                    // 기본 경고 깜빡이기 (더 강한 효과)
+                                    return 'border-l-red-600 animate-bounce shadow-2xl shadow-red-300 ring-4 ring-red-200 bg-red-50';
+                                  }
+                                  return 'border-l-green-400';
+                                })()
+                              }`}
+                              data-device-id={device.id}
+                              data-device-index={deviceIndex}
                             >
                               {/* 베드 헤더 */}
                           <div className="flex items-center justify-between mb-3">
@@ -423,15 +699,22 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                     </div>
                               </div>
                             </div>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded-full font-bold ${
-                              device.status?.online 
-                                      ? 'bg-green-100 text-green-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }`}
-                                >
-                                  {device.status?.online ? '🟢' : '🔴'}
-                                </span>
+                                <div className="flex items-center space-x-2">
+                                  {/* 베드 경고 상태 표시 */}
+                                  {(() => {
+                                    const hasAlerts = getBedAlerts(device.id).length > 0;
+                                    const recentAlert = getRecentAlertForBed(device.id);
+                                    if (hasAlerts && recentAlert) {
+                                      return (
+                                        <div className={`flex items-center space-x-1 px-3 py-2 rounded-full text-xs font-bold ${getBedStatusColor(device.id)} animate-bounce shadow-lg`}>
+                                          <span className="animate-pulse">{getBedStatusIcon(device.id)}</span>
+                                          <span className="truncate max-w-[100px]">{recentAlert.title}</span>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
                               </div>
 
                               {/* 제어 상태 - Mock 액추에이터 상태 */}
@@ -557,7 +840,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
                         </div>
                           );
-                        })}
+                          })
+                        )}
                   </div>
                 </div>
                   </div>

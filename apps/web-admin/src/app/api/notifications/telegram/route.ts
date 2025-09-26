@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, chatId } = await req.json();
+    const { message, chatId, userId } = await req.json();
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const defaultChatId = process.env.TELEGRAM_CHAT_ID;
@@ -14,11 +14,26 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    const targetChatId = chatId || defaultChatId;
+    // 사용할 채팅 ID 결정
+    let targetChatId = chatId || defaultChatId;
+
     if (!targetChatId) {
       return NextResponse.json({ 
         ok: false, 
         error: '텔레그램 채팅 ID가 설정되지 않았습니다.' 
+      }, { status: 500 });
+    }
+
+    // 텔레그램 채팅 ID 유효성 체크 (더 관대하게)
+    const dummyIds = ['test1_default_id', 'default_id', '123456789', 'no-telegram-set'];
+    
+    if (dummyIds.includes(targetChatId) || 
+        !targetChatId.match(/^-?\d+$|^@\w+/) ||
+        targetChatId.length < 4) {
+      console.log('테스트용 또는 유효하지 않은 채팅 ID:', targetChatId);
+      return NextResponse.json({ 
+        ok: false, 
+        error: `유효하지 않은 텔레그램 채팅 ID: ${targetChatId}` 
       }, { status: 500 });
     }
 

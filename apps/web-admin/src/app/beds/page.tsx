@@ -690,15 +690,6 @@ function BedsManagementContent() {
                                   </div>
                                 </div>
                               </div>
-                              <span
-                                className={`text-sm px-3 py-1 rounded-full font-bold ${
-                                  device.status?.online
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-red-100 text-red-700'
-                                }`}
-                              >
-                                {device.status?.online ? '🟢 온라인' : '🔴 오프라인'}
-                              </span>
                             </div>
 
                             {/* 센서 데이터 */}
