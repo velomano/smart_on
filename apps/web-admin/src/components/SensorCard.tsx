@@ -39,13 +39,13 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const range = maxValue - minValue || 1;
     const padding = range * 0.1; // 10% 여유
     
-    // 직선 그래프 생성 (단순하게!)
-    const createLinePath = (points: Array<{x: number, y: number}>) => {
+    // 완전 직선! 그냥 스트레이트 라인
+    const createStraightLine = (points: Array<{x: number, y: number}>) => {
       if (points.length < 2) return '';
       
-      return points.map((point, index) => 
-        index === 0 ? `M${point.x},${point.y}` : `L${point.x},${point.y}`
-      ).join(' ');
+      const first = points[0];
+      const last = points[points.length - 1];
+      return `M${first.x},${first.y} L${last.x},${last.y}`;
     };
     
     // 좌표 계산 (가로축=시간, 세로축=값)
@@ -60,7 +60,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const maxVal = Math.max(...values).toFixed(1);
     const minVal = Math.min(...values).toFixed(1);
     
-    const linePath = createLinePath(coords);
+    const straightLine = createStraightLine(coords);
     
     // 툴팁 상태는 컴포넌트 레벨에서 관리됨
     
@@ -81,37 +81,15 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
             </linearGradient>
           </defs>
           
-          {/* 깔끔한 직선 그래프 */}
+          {/* 완전 직선! */}
           <path
-            d={linePath}
+            d={straightLine}
             fill="none"
             stroke={color}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            strokeWidth="3"
           />
           
-          {/* 데이터 포인트 (좌표에 단순 표시) */}
-          {coords.map(({ x, y }, index) => (
-            <g key={index}>
-              {/* 호버 영역 */}
-              <circle
-                cx={x}
-                cy={y}
-                r="6"
-                fill="transparent"
-                onMouseEnter={() => setHoveredPoint(index)}
-                onMouseLeave={() => setHoveredPoint(null)}
-              />
-              {/* 간단한 포인트 */}
-              <circle
-                cx={x}
-                cy={y}
-                r="2"
-                fill={color}
-              />
-          </g>
-        ))}
+          {/* 끝! */}
           </svg>
           
           {/* 간단한 시간축 라벨 */}
