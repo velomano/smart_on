@@ -152,233 +152,24 @@ async function getCurrentUserTelegramChatId(): Promise<string> {
   return fallbackChatId;
 }
 
-// 알림 전송 기록 저장 (중복 방지용)
+// 알림 전송 기록 저장 (중복 방지용) - 더 강화된 검증
 const sentNotifications = new Map<string, number>();
+const notificationInProgress = new Set<string>(); // 처리 중인 알림 추적
 
 // 개발자 도구에서 중복 방지 메모리 클리어 (테스트용)
 if (typeof window !== 'undefined') {
   (window as any).clearNotificationCooldown = () => {
     sentNotifications.clear();
+    notificationInProgress.clear();
     console.log('텔레그램 알림 중복 방지 메모리 초기화됨');
   };
 }
 
-// 센서 데이터 검증 및 알림 전송
+// 센서 데이터 검증 및 알림 전송 - 완전 차단 (임시 유지)
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
-  const settings = loadNotificationSettings();
-  
-  console.log('알림 설정 상태:', settings);
-  
-  if (!settings.telegramEnabled) {
-    console.log('텔레그램 알림이 비활성화되어 있습니다.');
-    return;
-  }
-
-  const { type, value, location, thresholds, timestamp } = sensorData;
-  const notificationKey = `${type}_notification`;
-
-  console.log('센서 데이터 확인:', { type, value, thresholds, location });
-  console.log('알림 키:', notificationKey);
-  console.log('알림 설정 확인:', (settings.notifications as any)?.[notificationKey]);
-  
-  // 알림이 비활성화된 경우
-  const isNotificationEnabled = (settings.notifications as Record<string, any>)?.[notificationKey];
-  if (!isNotificationEnabled) {
-    console.log(`알림이 비활성화되어 있습니다: ${notificationKey}`);
-    return;
-  }
-
-  // 현재 사용자의 텔레그램 채팅 ID 가져오기
-  const currentUserChatId = await getCurrentUserTelegramChatId();
-  console.log('현재 사용자 텔레그램 채팅 ID:', currentUserChatId, '길이:', currentUserChatId?.length);
-  
-  if (!currentUserChatId) {
-    console.log('텔레그램 채팅 ID를 찾을 수 없습니다.');
-    // 텔레그램 알림 없이 대시보드 알림만 진행
-    console.log('텔레그램 채팅 ID가 없어서 대시보드 알림만 진행합니다.');
-    try {
-      dashboardAlertManager.checkSensorDataAndAlert(
-        type,
-        value,
-        location,
-        sensorData.id,
-        sensorData.deviceId
-      );
-      console.log('대시보드 경고 알림 추가됨 (텔레그램 ID 없음)', { type, value, location, deviceId: sensorData.deviceId });
-    } catch (error) {
-      console.error('대시보드 알림 추가 실패:', error);
-    }
-    return;
-  }
-
-  // 텔레그램 채팅 ID 유효성 체크 - 실제 유효한 ID인지 확인
-  const isValidTelegramId = (chatId: string): boolean => {
-    // 더미/테스트 ID들 필터링 (보수적으로 필터링 - 실제 ID를 빼먹으면 안되기 때문)
-    const dummyIds = ['test1_default_id', 'test1_chat', 'no-telegram-set'];
-    
-    if (dummyIds.includes(chatId) || chatId === '123456789') {
-      return false;
-    }
-    
-    // 실제 텔레그램 ID 형식 검증 - 조금 더 관대하게 
-    const validPattern = /^-?\d+$|^@\w+$/;
-    const isValid = validPattern.test(chatId) && chatId.length > 3; // 최소 길이 확인
-    
-    console.log('텔레그램 ID 유효성 체크:', { chatId, isValid, length: chatId.length });
-    return isValid;
-  };
-
-  if (!isValidTelegramId(currentUserChatId)) {
-    console.log('유효하지 않은 텔레그램 채팅 ID이므로 대시보드 알림만 진행합니다.');
-    try {
-      dashboardAlertManager.checkSensorDataAndAlert(
-        type,
-        value,
-        location,
-        sensorData.id,
-        sensorData.deviceId
-      );
-      console.log('대시보드 경고 알림 추가됨 (유효하지 않은 텔레그램 ID)', { type, value, location, deviceId: sensorData.deviceId });
-    } catch (error) {
-      console.error('대시보드 알림 추가 실패:', error);
-    }
-    return;
-  }
-
-  let shouldNotify = false;
-  let templateId = '';
-  let variables: Record<string, string | number> = {
-    location,
-    current: value,
-    timestamp: timestamp.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-  };
-
-  // 센서 타입별 임계값 검사
-  switch (type) {
-    case 'temperature':
-      if (thresholds?.max && value > thresholds.max) {
-        shouldNotify = true;
-        templateId = 'sensor_high_temp';
-        variables.threshold = thresholds.max;
-      } else if (thresholds?.min && value < thresholds.min) {
-        shouldNotify = true;
-        templateId = 'sensor_low_temp';
-        variables.threshold = thresholds.min;
-      }
-      break;
-
-    case 'humidity':
-      console.log('습도 검사:', { value, 'thresholds.min': thresholds?.min, 'thresholds.max': thresholds?.max });
-      if (thresholds?.max && value > thresholds.max) {
-        shouldNotify = true;
-        templateId = 'sensor_high_humidity';
-        variables.threshold = thresholds.max;
-        console.log('고습도 알림시에도 발생');
-      } else if (thresholds?.min && value < thresholds.min) {
-        shouldNotify = true;
-        templateId = 'sensor_low_humidity';
-        variables.threshold = thresholds.min;
-        console.log('저습도 알림시도도 발생!'); 
-      }
-      break;
-
-    case 'ec':
-      if (thresholds?.min && value < thresholds.min) {
-        shouldNotify = true;
-        templateId = 'sensor_low_ec';
-        variables.threshold = thresholds.min;
-      }
-      break;
-
-    case 'ph':
-      if (thresholds?.min && thresholds?.max) {
-        if (value < thresholds.min || value > thresholds.max) {
-          shouldNotify = true;
-          templateId = 'sensor_ph_abnormal';
-          variables.min = thresholds.min;
-          variables.max = thresholds.max;
-        }
-      }
-      break;
-
-    case 'water':
-      if (thresholds?.min && value < thresholds.min) {
-        shouldNotify = true;
-        templateId = 'sensor_low_water';
-        variables.threshold = thresholds.min;
-      } else if (thresholds?.max && value > thresholds.max) {
-        shouldNotify = true;
-        templateId = 'sensor_high_water';
-        variables.threshold = thresholds.max;
-      }
-      break;
-  }
-
-  console.log('알림 전송 여부 및 템플릿:', { shouldNotify, templateId });
-  
-  // 텔레그램 알림 전송 시도 (유효한 채팅 ID일 때만)
-  if (shouldNotify && templateId && currentUserChatId) {
-    console.log('알림 조건 충족됨, 대시보드 알림 먼저 추가');
-    
-    // 우선 대시보드 알림 추가
-    try {
-      dashboardAlertManager.checkSensorDataAndAlert(
-        type,
-        value,
-        location,
-        sensorData.id,
-        sensorData.deviceId
-      );
-      console.log('대시보드 경고 알림 추가됨', { type, value, location, deviceId: sensorData.deviceId });
-    } catch (error) {
-      console.error('대시보드 알림 추가 실패:', error);
-    }
-    
-    // 텔레그램 알림 전송 시도
-    try {
-      console.log('텔레그램 전송 시도:', { templateId, chatId: currentUserChatId });
-      
-      // 중복 방지 키 생성 (타입_위치_템플릿명)
-      const notificationKey_dup = `${type}_${location}_${templateId}`;
-      const currentTime = Date.now();
-      const lastSentTime = sentNotifications.get(notificationKey_dup) || 0;
-      
-      // 이전 전송이 30분 이내면 중복 방지 (테스트를 위해 단축)
-      const cooldownMinutes = 5; // 30분에서 5분으로 단축
-      if (currentTime - lastSentTime < cooldownMinutes * 60 * 1000) {
-        console.log('텔레그램 알림 중복 전송 방지:', notificationKey_dup, `쉬는 시간: ${cooldownMinutes}분`);
-      } else {
-        const result = await sendNotification(templateId, variables, currentUserChatId);
-        if (result.ok) {
-          console.log(`텔레그램 알림 전송 성공: ${templateId}`, variables);
-          // 전송 성공 시 기록 저장
-          sentNotifications.set(notificationKey_dup, currentTime);
-        } else {
-          console.warn('텔레그램 알림 전송 실패:', result.error);
-          console.log('텔레그램 전송 실패했지만 대시보드 알림은 이미 추가됨');
-          // 텔레그램 전송이 실패해도 대시보드 알림은 작동하므로 중복 전송 기록은 설정
-          sentNotifications.set(notificationKey_dup, currentTime);
-        }
-      }
-    } catch (error) {
-      console.error('텔레그램 알림 전송 중 오류:', error);
-      console.log('텔레그램 알림 전송 실패했지만 대시보드 알림은 이미 추가됨');
-    }
-  } else if (shouldNotify && templateId) {
-    // 대시보드 알림만 추가 (텔레그램 채팅 ID 없음)
-    try {
-      dashboardAlertManager.checkSensorDataAndAlert(
-        type,
-        value,
-        location,
-        sensorData.id,
-        sensorData.deviceId
-      );
-      console.log('대시보드 경고 알림만 추가됨 (텔레그램 ID 없음)', { type, value, location, deviceId: sensorData.deviceId });
-    } catch (error) {
-      console.error('대시보드 알림 추가 실패:', error);
-    }
-  }
+  // COMPLETELY DISABLED: MQTT 서버 통신 중단 및 전역 알림 완전 차단
+  console.log('🔒 알림 완전 차단됨 (모든 알림 비활성화):', sensorData.type, sensorData.location);
+  return;
 }
 
 // 시스템 상태 검증 및 알림 전송

@@ -110,9 +110,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     return 'bg-gray-100 text-gray-800 border-gray-300';
   };
   
-  // 센서 데이터 모니터링 기능 추가
+  // 센서 데이터 모니터링 기능 추가 - 임시 차단 (MQTT 연결 전)
   useEffect(() => {
     const monitorSensorData = () => {
+      console.log('🚫 센서 모니터링이 차단됨 (MQTT 서버 연결 전)');
+      return;
+      
       sensorReadings.forEach(reading => {
         const sensor = sensors.find(s => s.id === reading.sensor_id);
         if (!sensor) return;
@@ -145,14 +148,14 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       });
     };
 
-    // 30초마다 센서 데이터 체크 (실시간 모니터링)
-    const sensorMonitorInterval = setInterval(monitorSensorData, 30000);
+    // 30초마다 센서 데이터 체크 (실시간 모니터링) - 임시 차단
+    // const sensorMonitorInterval = setInterval(monitorSensorData, 30000);
     
-    // 초기 모니터링 실행
-    monitorSensorData();
+    // 초기 모니터링 실행 - 임시 차단
+    // monitorSensorData();
 
     return () => {
-      clearInterval(sensorMonitorInterval);
+      // clearInterval(sensorMonitorInterval);
     };
   }, [sensorReadings, sensors, devices, farms]);
   
@@ -188,8 +191,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           // checkMockSensorData(); // 센서 모니터링 비활성화
         };
 
-        // Mock 센서 데이터 알림 체크 함수 추가 (2농장 1베드만 테스트)
+        // Mock 센서 데이터 알림 체크 함수 - 완전 차단 (MQTT 연동 전까지)
         const checkMockSensorData = async () => {
+          console.log('🚫 모든 센서 알림이 완전히 차단됨 (MQTT 연동 대기)');
+          return;
+          
+          // 완전 비활성화된 코드 - 테스트 목적으로 남겨둠
+          /*
           console.log('🔔 경고 알림 테스트 시작!');
           
           // test1 계정을 위한 텔레그램 ID 강제 저장
@@ -266,16 +274,17 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
               }
             }
           }
+          */
         };
 
         // 초기 데이터 로드
         updateMockData();
         
-        // 즉시 경고 알림 테스트 실행
-        setTimeout(() => {
-          console.log('🚨 즉시 경고 테스트 실행');
-          checkMockSensorData();
-        }, 1000);
+        // 즉시 경고 알림 테스트 실행 - 임시 차단 (MQTT 연동 전까지)
+        // setTimeout(() => {
+        //   console.log('🚨 즉시 경고 테스트 실행');
+        //   checkMockSensorData();
+        // }, 1000);
 
         // Mock 데이터 주기적 업데이트 중지 (MQTT 연동 전까지)
         // const interval = setInterval(updateMockData, 30000);
@@ -369,7 +378,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       <main className="max-w-7xl mx-auto pt-6 pb-6 sm:px-6 lg:px-8 relative z-10">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -396,7 +405,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -418,7 +427,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -444,7 +453,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -470,40 +479,42 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
 
         {/* Farm Overview */}
-        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden">
+        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
           <div className="px-8 py-8">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">
-                  🏡 농장 현황
-                </h3>
-                <p className="text-gray-600">전체 농장과 디바이스 상태를 한눈에 확인하세요</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                {/* 농장장/팀원용 설정 토글 */}
-                {(user.role === 'team_leader' || user.role === 'team_member') && (
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      자기 농장만 보기
-                    </label>
-                    <button
-                      onClick={() => {
-                        const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
-                        setUserSettings(newSettings);
-                        updateUserSettings(user.id, newSettings);
-                      }}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                        userSettings.showOnlyMyFarm ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                          userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
+            {/* 농장현황 타이틀 분리 영역 */}
+            <div className="mb-8">
+              <h2 className="text-4xl lg:text-3xl font-bold text-gray-900 mb-2 flex items-center">
+                <span className="text-5xl lg:text-4xl mr-4">🌱</span>
+                농장현황
+              </h2>
+              <p className="text-xl lg:text-lg text-gray-600">관리 중인 농장과 베드 현황을 확인하세요</p>
+              <div className="flex items-center justify-between mt-6">
+                <div className="flex items-center space-x-4">
+                  {/* 농장장/팀원용 설정 토글 */}
+                  {(user.role === 'team_leader' || user.role === 'team_member') && (
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        자기 농장만 보기
+                      </label>
+                      <button
+                        onClick={() => {
+                          const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
+                          setUserSettings(newSettings);
+                          updateUserSettings(user.id, newSettings);
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                          userSettings.showOnlyMyFarm ? 'bg-blue-600' : 'bg-gray-200'
                         }`}
-                      />
-                  </button>
-                  </div>
-                )}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                            userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <div className="space-y-6">
@@ -563,7 +574,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 }
 
                 return filteredFarms.map((farm) => (
-                <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                     {/* 농장 헤더 */}
                     <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center space-x-4">
@@ -602,102 +613,53 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     </div>
                   </div>
 
-                  {/* 농장에 속한 베드들 */}
+                  {/* 농장에 속한 베드들 - 개별 카드로 변환하고 공간 없이 꽉채우기 */}
                   <div className="space-y-4">
-                    <h5 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
-                      <span className="text-xl mr-2">🌱</span>
+                    <h5 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                      <span className="text-2xl mr-3">🌱</span>
                       {farm.name}의 베드 현황
                     </h5>
 
-                    {/* 농장별 베드 요약 정보 */}
-                    <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
-
-                      {/* 베드 목록 */}
-                      <div className="space-y-6">
-                        {farm.visibleDevices.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">
-                            <p>현재 표시할 베드가 없습니다.</p>
-                          </div>
-                        ) : (
-                          farm.visibleDevices.map((device: Device, deviceIndex: number) => {
-                          const deviceSensors = sensors.filter(s => s.device_id === device.id);
-                            
-                            // 전체 알림 로그와 비교 
-                            const allAlerts = dashboardAlertManager.getAlerts();
-                            const bedAlerts = getBedAlerts(device.id);
+                    {/* 베드 카드들을 개별로 배치 - 공간 없이 꽉채우기 */}
+                    <div className="grid grid-cols-1 gap-1">
+                      {farm.visibleDevices.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                          <p>현재 표시할 베드가 없습니다.</p>
+                        </div>
+                      ) : (
+                        farm.visibleDevices.map((device: Device, deviceIndex: number) => {
+                        const deviceSensors = sensors.filter(s => s.device_id === device.id);
+                        
+                          // 전체 알림 로그와 비교 
+                          const allAlerts = dashboardAlertManager.getAlerts();
+                          const bedAlerts = getBedAlerts(device.id);
                             
                             
 
                           return (
                             <div
                               key={device.id}
-                              className={`my-2 bg-gray-50 rounded-lg p-4 border-l-4 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 ${
-                                (() => {
-                                  const hasDirectAlerts = getBedAlerts(device.id).length > 0;
-                                  
-                                  // Device ID 변환: device-X -> bed_00X 형식으로 변환
-                                  let bedIdToCheck = '';
-                                  if (device.id === 'device-1') bedIdToCheck = 'bed_001';
-                                  else if (device.id === 'device-2') bedIdToCheck = 'bed_002';
-                                  else if (device.id === 'device-3') bedIdToCheck = 'bed_003';
-                                  else if (device.id === 'device-4') bedIdToCheck = 'bed_004';
-                                  else if (device.id === 'device-5') bedIdToCheck = 'bed_005';
-                                  else if (device.id === 'device-6') bedIdToCheck = 'bed_006';
-                                  else bedIdToCheck = device.id;
-                                  
-                                  const deviceHasMbmsAlert = allAlerts.some(alert => 
-                                    (alert.deviceId === device.id || alert.deviceId === bedIdToCheck) && !alert.isRead
-                                  );
-                                  const shouldBlink = hasDirectAlerts || deviceHasMbmsAlert;
-                                  
-                                  // 더 엄격한 조건 진단
-                                  const alertsForThisBed = allAlerts.filter(a => 
-                                    (a.deviceId === device.id || a.deviceId === bedIdToCheck) && !a.isRead
-                                  );
-                                  
-                                  
-                                  // 실제 알림이 있는 베드만 정확히 깜빡이기
-                                  if (shouldBlink && alertsForThisBed.length > 0) {
-                                    const recentAlert = getRecentAlertForBed(device.id) || 
-                                                      allAlerts.find(a => (a.deviceId === device.id || a.deviceId === bedIdToCheck) && !a.isRead);
-                                    
-                                    // 더 눈에 띄는 깜빡임 효과 적용
-                                    if (recentAlert) {
-                                      switch (recentAlert.level) {
-                                        case 'critical': return 'border-l-red-600 animate-bounce shadow-2xl shadow-red-300 ring-4 ring-red-200 bg-red-50';
-                                        case 'high': return 'border-l-orange-500 animate-bounce shadow-xl shadow-orange-300 ring-2 ring-orange-200 bg-orange-50';
-                                        case 'medium': return 'border-l-yellow-500 animate-bounce shadow-lg shadow-yellow-300 ring-1 ring-yellow-200 bg-yellow-50';
-                                        case 'low': return 'border-l-blue-500 animate-pulse shadow-lg shadow-blue-300 ring-1 ring-blue-200 bg-blue-50';
-                                        default: return 'border-l-red-600 animate-bounce shadow-2xl shadow-red-300 ring-4 ring-red-200 bg-red-50';
-                                      }
-                                    }
-                                    
-                                    // 기본 경고 깜빡이기 (더 강한 효과)
-                                    return 'border-l-red-600 animate-bounce shadow-2xl shadow-red-300 ring-4 ring-red-200 bg-red-50';
-                                  }
-                                  return 'border-l-green-400';
-                                })()
-                              }`}
+                              className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200"
                               data-device-id={device.id}
                               data-device-index={deviceIndex}
                             >
-                              {/* 베드 헤더 */}
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                    <span className="text-sm">📡</span>
+                              <div className="p-6">
+                              <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-4">
+                                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
+                                    <span className="text-xl">📡</span>
                               </div>
                               <div>
-                                    <span className="font-bold text-gray-900 text-sm">
+                                    <span className="font-bold text-gray-900 text-lg">
                                       {String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')}
                                     </span>
-                                    <div className="text-xs text-gray-500">📊 센서 {deviceSensors.length}개</div>
+                                    <div className="text-sm text-gray-500">📊 센서 {deviceSensors.length}개</div>
                                     {/* 작물명과 재배 방식 표시 */}
-                                    <div className="mt-1 flex items-center space-x-2">
-                                      <span className="text-xs text-green-600 font-medium">
+                                    <div className="mt-2 flex items-center space-x-3">
+                                      <span className="text-sm text-green-600 font-medium">
                                         🌱 {(device.meta as any)?.crop_name || '미설정'}
                                       </span>
-                                      <span className="text-xs text-blue-600 font-medium">
+                                      <span className="text-sm text-blue-600 font-medium">
                                         🔧 {(device.meta as any)?.growing_method || '미설정'}
                                       </span>
                                     </div>
@@ -721,48 +683,48 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 </div>
                               </div>
 
-                              {/* 제어 상태 - Mock 액추에이터 상태 */}
-                              <div className="mb-3">
-                                <div className="flex items-center space-x-4 text-xs">
-                                  <div className="flex items-center space-x-1">
-                                    <span>💡</span>
-                                    <span className="text-gray-600">램프1</span>
-                                    <span className={`font-bold ${localActuatorStates['lamp1'] ? 'text-green-600' : 'text-gray-400'}`}>
+                              {/* 제어 상태 - 크기 증대 */}
+                              <div className="mb-6">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                    <span className="text-lg">💡</span>
+                                    <span className="text-gray-600 font-medium">램프1</span>
+                                    <span className={`font-bold text-right ${localActuatorStates['lamp1'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['lamp1'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-1">
-                                    <span>💡</span>
-                                    <span className="text-gray-600">램프2</span>
-                                    <span className={`font-bold ${localActuatorStates['lamp2'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                    <span className="text-lg">💡</span>
+                                    <span className="text-gray-600 font-medium">램프2</span>
+                                    <span className={`font-bold text-right ${localActuatorStates['lamp2'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['lamp2'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-1">
-                                    <span>💧</span>
-                                    <span className="text-gray-600">펌프</span>
-                                    <span className={`font-bold ${localActuatorStates['pump'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                    <span className="text-lg">💧</span>
+                                    <span className="text-gray-600 font-medium">펌프</span>
+                                    <span className={`font-bold text-right ${localActuatorStates['pump'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['pump'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-1">
-                                    <span>🌀</span>
-                                    <span className="text-gray-600">팬</span>
-                                    <span className={`font-bold ${localActuatorStates['fan'] ? 'text-green-600' : 'text-gray-400'}`}>
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                    <span className="text-lg">🌀</span>
+                                    <span className="text-gray-600 font-medium">팬</span>
+                                    <span className={`font-bold text-right ${localActuatorStates['fan'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['fan'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
                                 </div>
                               </div>
 
-                              {/* 센서 데이터 */}
-                              <div className="grid grid-cols-4 gap-2">
-                                <div className="flex items-center justify-between bg-red-50 rounded p-2">
-                                  <div className="flex items-center space-x-1">
-                                    <span className="text-sm">🌡️</span>
-                                    <span className="text-xs text-gray-600">온도</span>
+                              {/* 센서 데이터 - 대폭 증대 */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-6 shadow-md border border-red-300">
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-3xl">🌡️</span>
+                                    <span className="text-lg text-gray-700 font-bold">온도</span>
                                   </div>
-                                  <span className="text-sm font-bold text-red-600">
+                                  <span className="text-3xl font-black text-red-600">
                                     {(() => {
                                       // Mock 데이터 우선 사용
                                       const mockTemp = mockSensorData.find(s => s.type === 'temperature');
@@ -778,12 +740,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-blue-50 rounded p-2">
-                                  <div className="flex items-center space-x-1">
-                                    <span className="text-sm">💧</span>
-                                    <span className="text-xs text-gray-600">습도</span>
+                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-6 shadow-md border border-blue-300">
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-3xl">💧</span>
+                                    <span className="text-lg text-gray-700 font-bold">습도</span>
                                   </div>
-                                  <span className="text-sm font-bold text-blue-600">
+                                  <span className="text-3xl font-black text-blue-600">
                                     {(() => {
                                       // Mock 데이터 우선 사용
                                       const mockHumidity = mockSensorData.find(s => s.type === 'humidity');
@@ -799,12 +761,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-green-50 rounded p-2">
-                                  <div className="flex items-center space-x-1">
-                                    <span className="text-sm">⚡</span>
-                                    <span className="text-xs text-gray-600">EC</span>
+                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-6 shadow-md border border-green-300">
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-3xl">⚡</span>
+                                    <span className="text-lg text-gray-700 font-bold">EC</span>
                                   </div>
-                                  <span className="text-sm font-bold text-green-600">
+                                  <span className="text-3xl font-black text-green-600">
                                     {(() => {
                                       // Mock 데이터 우선 사용
                                       const mockEC = mockSensorData.find(s => s.type === 'ec');
@@ -820,12 +782,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             </span>
                           </div>
 
-                                <div className="flex items-center justify-between bg-purple-50 rounded p-2">
-                                  <div className="flex items-center space-x-1">
-                                    <span className="text-sm">🧪</span>
-                                    <span className="text-xs text-gray-600">pH</span>
+                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-6 shadow-md border border-purple-300">
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-3xl">🧪</span>
+                                    <span className="text-lg text-gray-700 font-bold">pH</span>
                                   </div>
-                                  <span className="text-sm font-bold text-purple-600">
+                                  <span className="text-3xl font-black text-purple-600">
                                     {(() => {
                                       // Mock 데이터 우선 사용
                                       const mockPH = mockSensorData.find(s => s.type === 'ph');
@@ -840,14 +802,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                     })()}
                             </span>
                                 </div>
-                          </div>
-
-                        </div>
+                              </div>
+                              </div>
+                            </div>
                           );
                           })
                         )}
-                  </div>
-                </div>
+                    </div>
                   </div>
 
                 </div>
@@ -858,7 +819,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8 bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden">
+        <div className="mt-8 bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
           <div className="px-8 py-8">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -884,7 +845,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 const farm = farms.find(f => f.id === device?.farm_id);
                 
                 return (
-                  <div key={reading.id} className="bg-white/80 backdrop-blur-sm border border-white/40 rounded-xl p-4 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
+                  <div key={reading.id} className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
