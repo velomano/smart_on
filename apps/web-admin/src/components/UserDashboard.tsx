@@ -601,9 +601,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         {canManageFarms && (
                           <button
                             onClick={() => {
-                              // 농장장인 경우 자기 농장으로, 관리자인 경우 해당 농장으로 이동
-                              const targetFarmId = user.role === 'team_leader' ? user.team_id : farm.id;
-                              router.push(`/beds?farm=${targetFarmId}`);
+                              // 클릭된 농장의 ID를 직접 사용 (항상 해당 농장 관리로 이동)
+                              router.push(`/beds?farm=${farm.id}`);
                             }}
                             className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
                           >
