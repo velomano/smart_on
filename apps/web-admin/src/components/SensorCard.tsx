@@ -60,44 +60,44 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     }
     
     return (
-      <div className="w-full h-full relative bg-gray-50 rounded-lg">
-        <svg viewBox="0 0 400 120" className="w-full h-full">
+      <div className="w-full h-full relative bg-gray-50 rounded-lg" style={{ height: '200px' }}>
+        <svg viewBox="0 0 400 120" className="w-full h-full" style={{transform: 'scale(2.5)', transformOrigin: 'center'}}>
           {/* 24시간 시간축 그리드 + 라벨 */}
           {timeLabels.map(({ x, label }) => (
             <g key={label}>
               <line 
                 x1={x} y1="10" x2={x} y2="90" 
-                stroke="#d1d5db" strokeWidth="1" 
+                stroke="#d1d5db" strokeWidth="2" 
               />
-              <text x={x} y="105" textAnchor="middle" fontSize="10" fill="#6b7280">
+              <text x={x} y="105" textAnchor="middle" fontSize="15" fill="#6b7280">
                 {label}
               </text>
             </g>
           ))}
           
           {/* 세로축 값 표시 */}
-          <text x="8" y="15" fontSize="10" fill="#6b7280">{maxValue.toFixed(1)}</text>
-          <text x="8" y="60" fontSize="10" fill="#6b7280">{((maxValue + minValue) / 2).toFixed(1)}</text>
-          <text x="8" y="105" fontSize="10" fill="#6b7280">{minValue.toFixed(1)}</text>
+          <text x="8" y="15" fontSize="15" fill="#6b7280">{maxValue.toFixed(1)}</text>
+          <text x="8" y="60" fontSize="15" fill="#6b7280">{((maxValue + minValue) / 2).toFixed(1)}</text>
+          <text x="8" y="105" fontSize="15" fill="#6b7280">{minValue.toFixed(1)}</text>
           
           {/* 데이터 포인트들 + 호버 */}
           {coords.map(({ x, y, value, time }, index) => (
             <g key={index}>
               {/* 호버 영역 (큰 원) */}
               <circle
-                cx={x} cy={y} r="8"
+                cx={x} cy={y} r="12"
                 fill="transparent"
                 onMouseEnter={() => setHoveredPoint(index)}
                 onMouseLeave={() => setHoveredPoint(null)}
                 style={{ cursor: 'pointer' }}
               />
               {/* 데이터 포인트 */}
-              <circle cx={x} cy={y} r="3" fill={color} stroke="white" strokeWidth="1" />
+              <circle cx={x} cy={y} r="6" fill={color} stroke="white" strokeWidth="2" />
             </g>
           ))}
           
           {/* 선으로 연결 */}
-          <path d={pathData} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
+          <path d={pathData} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" />
         </svg>
         
         {/* 호버 툴팁 */}
