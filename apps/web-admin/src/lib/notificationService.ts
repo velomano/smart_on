@@ -66,23 +66,9 @@ function loadNotificationSettings() {
     };
   }
   
-  // test1@test.com 계정은 강제로 알림 활성화
-  if (typeof window !== 'undefined') {
-    const currentUserData = localStorage.getItem('mock_user');
-    if (currentUserData) {
-      const currentUser = JSON.parse(currentUserData);
-      if (currentUser.email === 'test1@test.com') {
-        telegramEnabled = true;
-        notifications = {
-          temperature_notification: true,
-          humidity_notification: true,
-          ec_notification: true,
-          ph_notification: true,
-          water_notification: true
-        };
-      }
-    }
-  }
+  // test1@test.com 계정도 일반 사용자와 동일하게 처리 (강제 활성화 제거)
+  // 모든 알림은 사용자 설정에 따름 - 텔레그램 알림을 받고 싶으면 알림 설정에서 명시적으로 활성화
+  console.log('🔒 test1 계정도 강제 알림 활성화 해제됨');
   
   return {
     telegramEnabled,
@@ -103,36 +89,10 @@ async function getCurrentUserTelegramChatId(): Promise<string> {
     if (currentUserData) {
       const currentUser = JSON.parse(currentUserData);
       
-      // test1@test.com 계정 처리
+      // test1 계정도 일반 사용자와 동일하게 처리 (하드코딩된 ID 제거)
       if (currentUser.email === 'test1@test.com') {
-        // 1. 사용자가 설정한 텔레그램 ID가 있는지 확인 (notificationSettings에서)
-        const settings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
-        const userDefinedChatId = settings.telegramChatId;
-        
-        // 사용자가 새로운 ID를 입력했거나 빈 값이 아닌 경우
-        if (userDefinedChatId && userDefinedChatId.trim() !== '' && userDefinedChatId.match(/^-?\d+$|^@\w+$/)) {
-          console.log('test1 계정: 사용자 입력 텔레그램 ID 사용:', userDefinedChatId);
-          // 사용자 설정 ID를 test1 전용 저장에도 백업
-          localStorage.setItem('test1_telegram_chat_id', userDefinedChatId);
-          return userDefinedChatId;
-        }
-        
-        // 2. 사용자 입력이 없으면 기본값 사용
-        let defaultChatId = localStorage.getItem('test1_telegram_chat_id');
-        
-        // 저장된 ID가 없거나 잘못된 값이면 기본값 사용
-        if (!defaultChatId || 
-            defaultChatId === 'no-telegram-set' || 
-            defaultChatId === 'test1_default_id' || 
-            defaultChatId === '123456789') {
-          const test1DefaultId = '6827239951';  // test1 계정용 기본 텔레그램 채팅 ID
-          localStorage.setItem('test1_telegram_chat_id', test1DefaultId);
-          console.log('test1 계정: 기본 텔레그램 ID 사용:', test1DefaultId);
-          return test1DefaultId;
-        }
-        
-        console.log('test1 계정 기존 텔레그램 ID 설정:', defaultChatId);
-        return defaultChatId;
+        // test1 계정의 특별한 처리를 모두 제거 - 일반 사용자와 동일하게 처리
+        console.log('test1 계정 일반 사용자 취급됨');
       }
       
       // 다른 사용자는 설정할 수 있는 텔레그램 채팅 ID 사용
@@ -167,9 +127,10 @@ if (typeof window !== 'undefined') {
 
 // 센서 데이터 검증 및 알림 전송 - 완전 차단 (임시 유지)
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
-  // COMPLETELY DISABLED: MQTT 서버 통신 중단 및 전역 알림 완전 차단
-  console.log('🔒 알림 완전 차단됨 (모든 알림 비활성화):', sensorData.type, sensorData.location);
-  return;
+  // PERMANENTLY DISABLED: MQTT 연동 전까지 모든 알림 기능 완전 차단
+  console.log('🔒✅ 알림 완전 차단됨 (MQTT 연동 전까지 모든 알림 철저히 비활성화):', sensorData.type, sensorData.location);
+  // 전혀 아무 작업을 하지 않으며 즉시 리턴
+  return; // 함수 실행 종료
 }
 
 // 시스템 상태 검증 및 알림 전송

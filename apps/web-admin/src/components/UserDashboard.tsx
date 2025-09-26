@@ -8,7 +8,15 @@ import { mockSystem } from '../lib/mockSystem';
 import AppHeader from './AppHeader';
 import NotificationButton from './NotificationButton';
 import { dashboardAlertManager } from '../lib/dashboardAlerts';
-import { checkSensorDataAndNotify } from '../lib/notificationService';
+//import { checkSensorDataAndNotify } from '../lib/notificationService';
+const ALERTS_DISABLED_MESSAGE = "🔒 ALERTS COMPLETELY DISABLED";
+
+// Hard-coded stub to replace checkSensorDataAndNotify to ensure complete disable of alerts
+async function checkSensorDataAndNotify(sensorData: any) {
+  console.log('🔒 PERMANENT DISABLED - checkSensorDataAndNotify stub called:', sensorData. type, sensorData.location);
+  // Return immediately without any actions whatsoever
+  return;
+}
 import { DashboardAlert } from '../lib/dashboardAlerts';
 
 interface UserDashboardProps {
@@ -345,14 +353,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   const activeBeds = devices.filter(d => d.type === 'sensor_gateway' && d.status?.online).length;
   const bedActivationRate = totalBeds > 0 ? Math.round((activeBeds / totalBeds) * 100) : 0;
   
-  const activeTeams = teams.length; // 실제 활성화된 조의 수
   const activeMembers = approvedUsers.filter(user => 
     user.is_active && user.is_approved && 
     (user.role === 'team_leader' || user.role === 'team_member')
   ).length; // 실제 활성화된 팀원 수
-  
-  // 평균 조당 인원 계산
-  const averageMembersPerTeam = activeTeams > 0 ? Math.round(activeMembers / activeTeams) : 0;
   const tempReadings = sensorReadings.filter(r => r.unit === '°C').slice(0, 10);
   const averageTemp = tempReadings.reduce((sum, r) => sum + r.value, 0) / Math.max(tempReadings.length, 1);
 
@@ -378,28 +382,25 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto pt-6 pb-6 sm:px-6 lg:px-8 relative z-10">
+      <main className="max-w-7xl mx-auto pt-2 pb-6 sm:px-6 lg:px-8 relative z-10">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
           <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
+            <div className="p-4 h-24 flex items-center">
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-3xl">🏠</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-xl">🏠</span>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                       농장 수
                     </dt>
-                    <dd className="text-3xl font-black text-gray-900">{totalFarms}</dd>
-                    <div className="text-sm text-gray-500 mt-1">
-                      활성화된 조: {teamsLoading ? '...' : activeTeams}개
-                    </div>
+                    <dd className="text-2xl font-black text-gray-900">{totalFarms}</dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-blue-500 font-bold">
+                  <div className="text-lg text-blue-500 font-bold">
                     {teamsLoading ? '...' : activeMembers}
                   </div>
                   <div className="text-xs text-gray-500">총 팀원 수</div>
@@ -409,21 +410,21 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
+            <div className="p-4 h-24 flex items-center">
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-3xl">🌱</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-xl">🌱</span>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                       베드 활성률
                     </dt>
-                    <dd className="text-3xl font-black text-gray-900">{bedActivationRate}%</dd>
+                    <dd className="text-2xl font-black text-gray-900">{bedActivationRate}%</dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-green-500 font-bold">{activeBeds}/{totalBeds}</div>
+                  <div className="text-lg text-green-500 font-bold">{activeBeds}/{totalBeds}</div>
                   <div className="text-xs text-gray-500">활성/전체</div>
                 </div>
               </div>
@@ -431,24 +432,24 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
+            <div className="p-4 h-24 flex items-center">
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-3xl">👥</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-xl">👥</span>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                       활성화 팀원 수
                     </dt>
-                    <dd className="text-3xl font-black text-gray-900">
+                    <dd className="text-2xl font-black text-gray-900">
                       {teamsLoading ? '...' : activeMembers}
                     </dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-purple-500 font-bold">
-                    {teamsLoading ? '...' : activeTeams}
+                  <div className="text-lg text-purple-500 font-bold">
+                    {teamsLoading ? '...' : totalFarms}
                   </div>
                   <div className="text-xs text-gray-500">총 농장 수</div>
                 </div>
@@ -457,21 +458,21 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
+            <div className="p-4 h-24 flex items-center">
+              <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-3xl">🌡️</span>
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-xl">🌡️</span>
                   </div>
-                  <div className="ml-4">
+                  <div className="ml-3">
                     <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
                       평균 온도
                     </dt>
-                    <dd className="text-3xl font-black text-gray-900">{averageTemp.toFixed(1)}°C</dd>
+                    <dd className="text-2xl font-black text-gray-900">{averageTemp.toFixed(1)}°C</dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl text-orange-500 font-bold">적정</div>
+                  <div className="text-lg text-orange-500 font-bold">적정</div>
                   <div className="text-xs text-gray-500">상태</div>
                 </div>
               </div>
@@ -483,41 +484,42 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
         {/* Farm Overview */}
         <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
-          <div className="px-8 py-8">
-            {/* 농장현황 타이틀 분리 영역 */}
-            <div className="mb-8">
-              <h2 className="text-4xl lg:text-3xl font-bold text-gray-900 mb-2 flex items-center">
-                <span className="text-5xl lg:text-4xl mr-4">🌱</span>
-                농장현황
-              </h2>
-              <p className="text-xl lg:text-lg text-gray-600">관리 중인 농장과 베드 현황을 확인하세요</p>
-              <div className="flex items-center justify-between mt-6">
-                <div className="flex items-center space-x-4">
-                  {/* 농장장/팀원용 설정 토글 */}
-                  {(user.role === 'team_leader' || user.role === 'team_member') && (
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-gray-700">
-                        자기 농장만 보기
-                      </label>
-                      <button
-                        onClick={() => {
-                          const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
-                          setUserSettings(newSettings);
-                          updateUserSettings(user.id, newSettings);
-                        }}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                          userSettings.showOnlyMyFarm ? 'bg-blue-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                            userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  )}
+          <div className="px-8 py-6">
+            {/* 농장현황 타이틀과 토글 스위치를 나란히 배치 */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-4xl lg:text-3xl font-bold text-gray-900 mb-1 flex items-center">
+                    <span className="text-5xl lg:text-4xl mr-4">🌱</span>
+                    농장현황
+                  </h2>
+                  <p className="text-xl lg:text-lg text-gray-600">관리 중인 농장과 베드 현황을 확인하세요</p>
                 </div>
+                
+                {/* 토글 스위치를 우측 끝에 배치 */}
+                {(user.role === 'team_leader' || user.role === 'team_member') && (
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      자기 농장만 보기
+                    </label>
+                    <button
+                      onClick={() => {
+                        const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
+                        setUserSettings(newSettings);
+                        updateUserSettings(user.id, newSettings);
+                      }}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
+                        userSettings.showOnlyMyFarm ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                          userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="space-y-6">
@@ -580,22 +582,24 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                     {/* 농장 헤더 */}
                     <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4">
                         <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
                           <span className="text-3xl">🏠</span>
-                      </div>
-                      <div>
-                          <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
-                          <p className="text-gray-600 font-medium text-lg">🏷️ 농장 ID: {farm.id}</p>
-                          <div className="mt-2 flex items-center space-x-4">
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
+                            <span className="text-gray-600 font-medium text-lg">🏷️ {farm.id}</span>
+                          </div>
+                          <div className="flex items-center space-x-4">
                             <span className="text-sm text-blue-600 font-semibold">
                               📊 총 {farm.visibleDevices.length}개 베드
                             </span>
                             <div className="flex items-center space-x-1">
                               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                               <span className="text-xs text-gray-500">활성</span>
-                      </div>
-                    </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       

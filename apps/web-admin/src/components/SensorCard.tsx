@@ -231,7 +231,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
 
             {/* 모달 내용 - 확대된 그래프 */}
             <div className="p-6">
-              <div className="h-96 bg-gray-50 rounded-lg p-4 relative">
+              <div className="h-96 bg-gray-50 rounded-lg p-4 relative" onClick={(e) => e.stopPropagation()}>
                 {createExpandedChart()}
                 
                 {/* 확대 모달 전용 호버 툴팁 */}
@@ -253,12 +253,30 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
                     const hourStr = Math.floor(hour).toString().padStart(2, '0');
                     const minuteStr = Math.floor((hour % 1) * 60).toString().padStart(2, '0');
                     
+                    // 정보창이 그래프 영역 밖으로 나가지 않도록 위치 조정
+                    const tooltipX = coords[hoveredPoint].x + 20;
+                    const tooltipY = coords[hoveredPoint].y + 20;
+                    const graphWidth = 700;
+                    const graphHeight = 250;
+                    
+                    let adjustedX = tooltipX;
+                    let adjustedY = tooltipY;
+                    
+                    // 우측 경계 확인 및 조정
+                    if (tooltipX > graphWidth - 100) {
+                      adjustedX = coords[hoveredPoint].x - 120; // 좌측으로 이동
+                    }
+                    
+                    // 하단 경계 확인 및 조정
+                    if (tooltipY > graphHeight - 50) {
+                      adjustedY = coords[hoveredPoint].y - 60; // 위로 이동
+                    }
+                    
                     return (
                       <div className="absolute bg-gray-900 text-white px-3 py-2 rounded-lg text-sm z-20 pointer-events-none"
                            style={{
-                             left: `${coords[hoveredPoint].x}px`,
-                             top: `${coords[hoveredPoint].y - 30}px`,
-                             transform: 'translateX(-50%)'
+                             left: `${adjustedX}px`,
+                             top: `${adjustedY}px`
                            }}>
                         <div className="text-center">
                           <div className="font-semibold">{formatValue(coords[hoveredPoint].value)}{unit}</div>

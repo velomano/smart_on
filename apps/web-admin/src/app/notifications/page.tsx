@@ -45,15 +45,11 @@ export default function NotificationsPage() {
     const savedSettings = localStorage.getItem('notificationSettings');
     let loadedSettings = savedSettings ? JSON.parse(savedSettings) : {};
 
-    // test1 계정인 경우 기본 텔레그램 설정 적용
-    if (user?.email === 'test1@test.com') {
-      const defaultTest1Id = '6827239951';
-      loadedSettings = {
-        ...loadedSettings,
-        telegramEnabled: true,
-        telegramChatId: loadedSettings.telegramChatId || process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID || localStorage.getItem('defaultTelegramChatId') || defaultTest1Id
-      };
-    }
+    // test1 계정도 일반 사용자와 동일하게 처리 (강제 설정 제거)  
+    // 사용자가 원할 때만 알림 활성화 가능
+    console.log('🔒 test1 계정 강제 텔레그램 설정 제거됨');
+    
+    // 모든 사용자는 자신이 원하는 때에만 알림을 활성화할 수 있음
 
     setSettings(prev => ({ ...prev, ...loadedSettings }));
 
@@ -111,12 +107,20 @@ export default function NotificationsPage() {
     }
   };
 
-  // 센서 알림 테스트 (2농장 2베드 연동 + 대시보드 알림)
+  // 센서 알림 테스트 - 알림 설정 페이지에서는 정상 작동
   const testSensorAlert = async (sensorType: string, value: number, location: string) => {
     setTesting(true);
     setTestResult('');
     
     try {
+      console.log('🔔 센서 알림 테스트 시작 (알림 설정 페이지 테스트 기능)');
+      
+      // 알림 설정 페이지에서는 테스트 기능이 작동하도록
+      if (!settings.telegramChatId) {
+        alert('텔레그램 채팅 ID를 입력해주세요.');
+        return;
+      }
+
       const thresholds = {
         temperature: { min: 15, max: 30 },
         ec: { min: 1.0, max: 3.0 },
@@ -125,44 +129,48 @@ export default function NotificationsPage() {
         water: { min: 20, max: 90 }
       };
 
-      // 2농장 2베드 베드ID로 설정 (bed_004)
-      const testLocation = '2농장-베드2';
-      const testDeviceId = 'bed_004';
-
-      // MQTT 연동 전까지 모든 알림 차단
-      console.log('🔒 테스트 센서 알림 차단됨 (MQTT 연동 전까지 알림 비활성화)');
-      
-      const { dashboardAlertManager } = await import('@/lib/dashboardAlerts');
-      
-      // 샌서 데이터 생성은 테스트 목적으로는 유지하되 알림은 차단
-      const sensorData = {
-        id: `test_${sensorType}_${Date.now()}`,
-        type: sensorType as 'temperature' | 'humidity' | 'ec' | 'ph' | 'water',
-        value: value,
-        location: testLocation,
-        timestamp: new Date(),
-        thresholds: thresholds[sensorType as keyof typeof thresholds],
-        deviceId: testDeviceId
-      };
-
-      // 모든 센서 알림 차단
-      console.log('🔒 센서 테스트 알림이 완전히 차단됨 (MQTT 연동 대기 상태)');
-
-      // 추가적으로 대시보드 경고도 직접 추가
+      // 1. 대시보드 알림 먼저 추가
       try {
+        const { dashboardAlertManager } = await import('@/lib/dashboardAlerts');
+        const thresholds = {
+          temperature: { min: 15, max: 30 },
+          ec: { min: 1.0, max: 3.0 },
+          ph: { min: 5.5, max: 6.5 },
+          humidity: { min: 40, max: 80 },
+          water: { min: 20, max: 90 }
+        };
+        
         dashboardAlertManager.checkSensorDataAndAlert(
           sensorType,
           value,
-          testLocation,
+          location || '조1-베드1',
           `test_${sensorType}_${Date.now()}`,
-          testDeviceId,
-          thresholds
+          'bed_test_001',
+          { [sensorType]: thresholds[sensorType as keyof typeof thresholds] }
         );
-      } catch (alertError) {
-        console.error('대시보드 알림 추가 실패:', alertError);
+        
+        console.log(`✅ ${sensorType} 센서 대시보드 알림 추가 완료`);
+      } catch (dashboardError) {
+        console.error('대시보드 알림 추가 실패:', dashboardError);
       }
 
-      setTestResult(`✅ ${sensorType} 센서 알림 테스트가 성공적으로 전송되었습니다!\n값: ${value}, 위치: ${testLocation}\n📱 텔레그램 알림 + 🚨 대시보드 알림 연동 완료!`);
+      // 2. 텔레그램 알림 전송
+      const response = await fetch('/api/notifications/telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `🧪 <b>${sensorType} 센서 알림 테스트</b>\n\n🎯 ${sensorType} 센서 테스트 값: ${value}\n📍 위치: ${location || '조1-베드1'}\n⏰ 시간: ${new Date().toLocaleString('ko-KR')}`,
+          chatId: settings.telegramChatId
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.ok) {
+        setTestResult(`✅ ${sensorType} 센서 테스트 알림이 성공적으로 전송되었습니다!\n📱 텔레그램 알림 + 🚨 대시보드 알림\n값: ${value}, 위치: ${location || '조1-베드1'}`);
+      } else {
+        setTestResult(`❌ 센서 테스트 실패: ${result.error}\n(대시보드 알림은 추가됨)`);
+      }
       
     } catch (error) {
       setTestResult(`❌ 오류 발생: ${error}`);
@@ -171,21 +179,24 @@ export default function NotificationsPage() {
     }
   };
 
-  // 봇 정보 확인
+  // 채팅 ID 확인 (userinfobot 연동)
   const checkBotInfo = async () => {
     setBotInfoLoading(true);
     try {
-      const response = await fetch('/api/notifications/telegram');
-      const result = await response.json();
-      
-      if (result.ok) {
-        setBotInfo(result.botInfo);
-        setShowBotInfoModal(true);
-      } else {
-        alert(`봇 정보 확인 실패: ${result.error}`);
-      }
+      // 간단하게 모달만 열기 - 실제 ID 탐지 기능 제거
+      setBotInfo({
+        botName: 'User Info Bot',
+        username: '@userinfobot',
+        description: '텔레그램에서 @userinfobot과 대화를 시작하면 채팅 ID를 확인할 수 있습니다.'
+      });
+      setShowBotInfoModal(true);
     } catch (error) {
-      alert(`봇 정보 확인 실패: ${error}`);
+      setBotInfo({
+        botName: 'User Info Bot',
+        username: '@userinfobot',
+        description: '텔레그램에서 @userinfobot과 대화를 시작하면 채팅 ID를 확인할 수 있습니다.'
+      });
+      setShowBotInfoModal(true);
     } finally {
       setBotInfoLoading(false);
     }
@@ -217,6 +228,41 @@ export default function NotificationsPage() {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">🔔 알림 설정</h1>
 
+          {/* 사용방법 안내 */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200 mb-6">
+            <h2 className="text-xl font-semibold text-blue-900 mb-4">📱 텔레그램 알림 설정 방법</h2>
+            <div className="space-y-4 text-blue-800">
+              <div className="bg-white rounded-lg p-4 border border-blue-100">
+                <h3 className="font-semibold text-blue-900 mb-2">1️⃣ 봇과 대화 시작</h3>
+                <p className="text-sm">텔레그램에서 <span className="font-mono bg-blue-100 px-2 py-1 rounded">@mart_farm_alert_bot</span> 검색 후 대화를 시작하세요.</p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-blue-100">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-semibold text-blue-900">2️⃣ 채팅 ID 확인</h3>
+                  <button
+                    onClick={checkBotInfo}
+                    disabled={botInfoLoading}
+                    className="px-6 py-3 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  >
+                    {botInfoLoading ? '🤖 확인 중...' : '🤖 채팅 ID 자동 확인'}
+                  </button>
+                </div>
+                <p className="text-sm">@userinfobot에게 메시지를 보내면 채팅 ID를 확인할 수 있습니다.</p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-blue-100">
+                <h3 className="font-semibold text-blue-900 mb-2">3️⃣ 알림 설정</h3>
+                <p className="text-sm">아래에서 텔레그램 알림을 활성화하고 채팅 ID를 입력한 후 설정을 저장하세요.</p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 border border-blue-100">
+                <h3 className="font-semibold text-blue-900 mb-2">4️⃣ 테스트</h3>
+                <p className="text-sm">테스트 버튼을 눌러서 알림이 정상적으로 오는지 확인하세요.</p>
+              </div>
+            </div>
+          </div>
+
           {/* 텔레그램 설정 */}
           <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">📱 텔레그램 설정</h2>
@@ -238,41 +284,33 @@ export default function NotificationsPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
                   텔레그램 채팅 ID
-                  {user?.email === 'test1@test.com' && (
-                    <span className="text-xs ml-2 text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                      (새로 입력하면 교체됨)
-                    </span>
-                  )}
                 </label>
                 <input
                   type="text"
                   value={settings.telegramChatId}
                   onChange={(e) => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
-                  placeholder={user?.email === 'test1@test.com' ? '새 텔레그램 ID 입력시 교체 (기본값: 6827239951)' : '예: 123456789 또는 @username'}
+                  placeholder="예: 123456789 또는 @username"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                 />
                 <p className="text-sm text-gray-600 mt-1">
-                  {user?.email === 'test1@test.com' 
-                    ? '💡 기본값: 6827239951. 새 ID 입력시 해당 채팅으로 알림 전송됩니다.' 
-                    : '💡 채팅 ID는 @userinfobot에게 메시지를 보내면 확인할 수 있습니다.'}
+                  💡 채팅 ID는 @userinfobot에게 메시지를 보내면 확인할 수 있습니다.
                 </p>
               </div>
 
-              <div className="flex space-x-3">
-                <button
-                  onClick={checkBotInfo}
-                  disabled={botInfoLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {botInfoLoading ? '🤖 확인 중...' : '🤖 봇 정보 확인'}
-                </button>
-                
+              <div className="flex justify-between items-center">
                 <button
                   onClick={sendTestNotification}
                   disabled={testing || !settings.telegramChatId}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
                   {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
+                </button>
+                
+                <button
+                  onClick={saveSettings}
+                  className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
+                >
+                  💾 설정 저장
                 </button>
               </div>
 
@@ -378,88 +416,46 @@ export default function NotificationsPage() {
             </div>
           </div>
 
-          {/* 설정 저장 */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <div className="flex justify-end">
-              <button
-                onClick={saveSettings}
-                className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
-              >
-                💾 설정 저장
-              </button>
-            </div>
-          </div>
-
-          {/* 사용방법 안내 */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200">
-            <h2 className="text-xl font-semibold text-blue-900 mb-4">📱 텔레그램 알림 설정 방법</h2>
-            <div className="space-y-4 text-blue-800">
-              <div className="bg-white rounded-lg p-4 border border-blue-100">
-                <h3 className="font-semibold text-blue-900 mb-2">1️⃣ 봇과 대화 시작</h3>
-                <p className="text-sm">텔레그램에서 <span className="font-mono bg-blue-100 px-2 py-1 rounded">@mart_farm_alert_bot</span> 검색 후 대화를 시작하세요.</p>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-blue-100">
-                <h3 className="font-semibold text-blue-900 mb-2">2️⃣ 채팅 ID 확인</h3>
-                <p className="text-sm">@userinfobot에게 메시지를 보내면 채팅 ID를 확인할 수 있습니다.</p>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-blue-100">
-                <h3 className="font-semibold text-blue-900 mb-2">3️⃣ 알림 설정</h3>
-                <p className="text-sm">위에서 텔레그램 알림을 활성화하고 채팅 ID를 입력한 후 설정을 저장하세요.</p>
-              </div>
-              
-              <div className="bg-white rounded-lg p-4 border border-blue-100">
-                <h3 className="font-semibold text-blue-900 mb-2">4️⃣ 테스트</h3>
-                <p className="text-sm">테스트 버튼을 눌러서 알림이 정상적으로 오는지 확인하세요.</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* 봇 정보 모달 */}
+      {/* 채팅 ID 확인 모달 */}
       {showBotInfoModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
             <div className="text-center">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🤖</span>
+                <span className="text-2xl">🆔</span>
               </div>
               
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">봇 정보</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">채팅 ID 확인</h2>
+              <p className="text-gray-600 mb-6">텔레그램에서 @userinfobot과 대화하여 본인의 채팅 ID를 확인해주세요.</p>
               
-              {botInfo && (
-                <div className="space-y-3 text-left">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-600">봇 이름</span>
-                    </div>
-                    <p className="text-lg font-semibold text-gray-900">{botInfo.first_name}</p>
+              <div className="space-y-4 text-left mb-6">
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center mb-2">
+                    <span className="text-blue-600 mr-2">💬</span>
+                    <span className="text-sm font-medium text-blue-800">Step 1: @userinfobot 찾기</span>
                   </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-600">사용자명</span>
-                    </div>
-                    <p className="text-lg font-semibold text-blue-600">@{botInfo.username}</p>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-600">봇 ID</span>
-                    </div>
-                    <p className="text-lg font-semibold text-gray-900">{botInfo.id}</p>
-                  </div>
-                  
-                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                    <div className="flex items-center">
-                      <span className="text-green-600 mr-2">✅</span>
-                      <span className="text-sm font-medium text-green-800">봇이 정상적으로 작동합니다</span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-blue-700">텔레그램에서 "@userinfobot"을 검색하여 대화를 시작하세요.</p>
                 </div>
-              )}
+                
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center mb-2">
+                    <span className="text-blue-600 mr-2">📤</span>
+                    <span className="text-sm font-medium text-blue-800">Step 2: 메시지 전송</span>
+                  </div>
+                  <p className="text-sm text-blue-700">아무 메시지나 보내면 봇이 당신의 채팅 ID를 알려줍니다.</p>
+                </div>
+                
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center mb-2">
+                    <span className="text-blue-600 mr-2">📋</span>
+                    <span className="text-sm font-medium text-blue-800">Step 3: ID 복사</span>
+                  </div>
+                  <p className="text-sm text-blue-700">받은 채팅 ID를 복사하여 위의 입력창에 붙여넣으세요.</p>
+                </div>
+              </div>
               
               <div className="mt-6 flex space-x-3">
                 <button
@@ -470,12 +466,12 @@ export default function NotificationsPage() {
                 </button>
                 <button
                   onClick={() => {
-                    window.open(`https://t.me/${botInfo?.username}`, '_blank');
+                    window.open(`https://t.me/userinfobot`, '_blank');
                     setShowBotInfoModal(false);
                   }}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  봇과 대화하기
+                  @userinfobot 열기
                 </button>
               </div>
             </div>
