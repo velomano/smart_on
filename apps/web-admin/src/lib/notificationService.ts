@@ -9,6 +9,7 @@ export interface SensorData {
   value: number;
   location: string;
   timestamp: Date;
+  unit?: string;  // 센서 데이터 단위 추가
   thresholds?: {
     min?: number;
     max?: number;
@@ -186,7 +187,7 @@ async function sendNotificationToTelegram(
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
   try {
     const chatId = await getCurrentUserTelegramChatId();
-    await sendNotificationToTelegram(sensorData.type, sensorData.location, sensorData.value, sensorData.unit, sensorData.timestamp, chatId);
+    await sendNotificationToTelegram(sensorData.type, sensorData.location, sensorData.value, sensorData.unit || '', sensorData.timestamp, chatId);
   } catch (error) {
     console.error('센서 데이터 알림 전송 실패:', error);
   }
