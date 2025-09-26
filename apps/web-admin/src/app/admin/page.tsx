@@ -108,11 +108,11 @@ export default function AdminPage() {
         getTeams()
       ]);
 
-      if (pendingResult.success) {
+      if (pendingResult.success && pendingResult.users) {
         setPendingUsers(pendingResult.users);
       }
 
-      if (approvedResult.success) {
+      if (approvedResult.success && approvedResult.users) {
         console.log('로드된 승인된 사용자들:', approvedResult.users);
         setApprovedUsers(approvedResult.users);
       }
