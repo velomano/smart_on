@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
 
     console.log('텔레그램 API 호출됨:', {
       hasBotToken: !!botToken,
+      botTokenPrefix: botToken ? botToken.substring(0, 10) : '없음',
       hasDefaultChatId: !!defaultChatId,
       chatId,
       userId
@@ -20,6 +21,17 @@ export async function POST(req: NextRequest) {
         ok: false, 
         error: '텔레그램 봇 토큰이 설정되지 않았습니다.', 
         message: 'TELEGRAM_BOT_TOKEN 환경변수가 설정되지 않았습니다.'
+      }, { status: 400 });
+    }
+    
+    // 봇 토큰 형식 검증
+    const tokenRegex = /^\d+:[a-zA-Z0-9_-]+$/;
+    if (!tokenRegex.test(botToken)) {
+      console.error('잘못된 봇 토큰 형식:', botToken);
+      return NextResponse.json({ 
+        ok: false, 
+        error: '잘못된 봇 토큰 형식입니다. 올바른 형식: "123456:abcd123"', 
+        message: 'TELEGRAM_BOT_TOKEN 토큰 형식이 올바르지 않습니다.'
       }, { status: 400 });
     }
 
@@ -76,9 +88,16 @@ export async function POST(req: NextRequest) {
           status: telegramResponse.status,
           errorText
         });
+        
+        let errorMessage = `텔레그램 API 호출 실패 (${telegramResponse.status})`;
+        if (telegramResponse.status === 401) {
+          errorMessage = "텔레그램 봇 토큰이 잘못되었거나 유효하지 않습니다. 봇 토큰을 확인해주세요.";
+        }
+        
         return NextResponse.json({ 
           ok: false, 
-          error: `텔레그램 API 호출 실패 (${telegramResponse.status})` 
+          error: errorMessage,
+          details: errorText
         }, { status: 400 });
       }
 
@@ -86,9 +105,18 @@ export async function POST(req: NextRequest) {
 
       if (!telegramResult.ok) {
         console.error('텔레그램 전송 실패:', telegramResult);
+        let errorMessage = `텔레그램 전송 실패: ${telegramResult.description || '알 수 없는 오류'}`;
+        
+        if (telegramResult.error_code === 401) {
+          errorMessage = "텔레그램 봇 토큰이 잘못되었습니다. 올바른 봇 토큰을 설정해주세요.";
+        } else if (telegramResult.error_code === 400) {
+          errorMessage = `채팅 ID가 잘못되었거나 비활성화되었습니다: ${telegramResult.description}`;
+        }
+        
         return NextResponse.json({ 
           ok: false, 
-          error: `텔레그램 전송 실패: ${telegramResult.description || '알 수 없는 오류'}` 
+          error: errorMessage,
+          telegramError: telegramResult
         }, { status: 400 });
       }
 
