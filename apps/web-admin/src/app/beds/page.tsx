@@ -188,6 +188,7 @@ function BedsManagementContent() {
             const mockDevices = teamsResult.devices as Device[];
             console.log('Mock 데이터 사용 및 저장:', mockDevices);
             console.log('Mock 데이터 베드 개수:', mockDevices?.length || 0);
+            console.log('Mock 데이터 세부 내용:', JSON.stringify(mockDevices, null, 2));
             setDevices(mockDevices);
             if (mockDevices && mockDevices.length > 0) {
               localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
@@ -195,7 +196,9 @@ function BedsManagementContent() {
             }
           }
         } else {
-          setDevices(teamsResult.devices as Device[]);
+          const mockDevices = teamsResult.devices as Device[];
+          console.log('SSR Mock 데이터 사용:', mockDevices);
+          setDevices(mockDevices);
         }
         
         setSensors(teamsResult.sensors as Sensor[]);
@@ -203,8 +206,13 @@ function BedsManagementContent() {
         
         // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
         const farmId = searchParams.get('farm');
+        console.log('URL 파라미터 farm:', farmId);
         if (!farmId && currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member') && currentUser.team_id) {
           setSelectedFarmTab(currentUser.team_id);
+        } else if (farmId) {
+          // URL 파라미터가 있으면 우선 적용
+          console.log('URL 파라미터로 농장 탭 설정:', farmId);
+          setSelectedFarmTab(farmId);
         }
         
         console.log('농장관리 페이지 - 현재 사용자:', currentUser);
@@ -246,11 +254,16 @@ function BedsManagementContent() {
     const farmId = searchParams.get('farm');
     console.log('농장 ID 파라미터:', farmId);
     console.log('사용 가능한 농장 수:', farms.length);
+    console.log('현재 선택된 농장 탭:', selectedFarmTab);
     if (farmId && farms.length > 0) {
       console.log('농장 탭 설정:', farmId);
       setSelectedFarmTab(farmId);
+    } else if (!farmId && !selectedFarmTab && farms.length > 0) {
+      // URL 파라미터가 없고 선택된 농장도 없으면 첫 번째 농장 선택
+      setSelectedFarmTab(farms[0].id);
+      console.log('기본 농장 선택:', farms[0].id);
     }
-  }, [searchParams, farms]);
+  }, [searchParams, farms, selectedFarmTab]);
 
   // 필터링된 디바이스
   const getFilteredDevices = () => {
@@ -565,11 +578,17 @@ function BedsManagementContent() {
               {/* 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시 */}
               {(() => {
                 const farmId = searchParams.get('farm');
-                const farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id && !farmId
-                  ? farms.filter(farm => farm.id === user.team_id)
-                  : farmId 
-                    ? farms.filter(farm => farm.id === farmId)
-                    : farms;
+                let farmsToShow = farms;
+                
+                // URL 파라미터가 있으면 해당 농장만 표시 (대시보드에서 농장 클릭시)
+                if (farmId) {
+                  farmsToShow = farms.filter(farm => farm.id === farmId);
+                  console.log('URL 파라미터로 탭 표시 필터링:', farmId, farmsToShow);
+                } else if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
+                  farmsToShow = farms.filter(farm => farm.id === user.team_id);
+                } else {
+                  farmsToShow = farms;
+                }
                 
                 return farmsToShow.map(farm => (
                   <button
@@ -591,10 +610,15 @@ function BedsManagementContent() {
           {/* 농장별 베드 목록 */}
           <div className="space-y-6">
             {(() => {
-              // 선택된 탭에 따라 농장 필터링
+              // 선택된 탭에 따라 농장 필터링 - 대시보드에서 농장 클릭시 해당 농장만 표시
               let farmsToShow = farms;
               
-              if (selectedFarmTab === 'all') {
+              // URL 파라미터가 있을 경우 우선 처리 (대시보드에서 농장 관리 클릭시)
+              const farmId = searchParams.get('farm');
+              if (farmId) {
+                console.log('URL 파라미터로 특정 농장 필터링:', farmId);
+                farmsToShow = farms.filter(farm => farm.id === farmId);
+              } else if (selectedFarmTab === 'all') {
                 // 전체 농장 표시
                 farmsToShow = farms;
               } else if (selectedFarmTab) {
@@ -602,16 +626,18 @@ function BedsManagementContent() {
                 farmsToShow = farms.filter(farm => farm.id === selectedFarmTab);
               } else {
                 // 기본값: 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시
-                const farmId = searchParams.get('farm');
-                farmsToShow = user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id && !farmId
-                  ? farms.filter(farm => farm.id === user.team_id)
-                  : farmId 
-                    ? farms.filter(farm => farm.id === farmId)
-                    : farms;
+                if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
+                  farmsToShow = farms.filter(farm => farm.id === user.team_id);
+                } else {
+                  farmsToShow = farms;
+                }
               }
               
               const farmGroups = farmsToShow.map(farm => {
                 const farmDevices = filteredDevices.filter(device => device.farm_id === farm.id);
+                console.log(`농장 ${farm.id} (${farm.name})의 베드들:`, farmDevices);
+                console.log(`filteredDevices 전체:`, filteredDevices);
+                console.log(`${farm.id}와 매칭되는 베드들:`, filteredDevices.filter(d => d.farm_id === farm.id));
                 return { farm, devices: farmDevices };
               });
 
@@ -644,6 +670,9 @@ function BedsManagementContent() {
                   </div>
                 );
               }
+
+              console.log('렌더링할 농장 그룹들:', farmGroups);
+              console.log('각 농장별 베드들:', farmGroups.map(g => ({ farmId: g.farm.id, farmName: g.farm.name, deviceCount: g.devices.length })));
 
               return farmGroups.map(({ farm, devices }) => (
                 <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
