@@ -82,37 +82,37 @@ export default function AppHeader({
   // 햄버거 메뉴용 메뉴 아이템들 (모바일에서는 모든 메뉴 포함)
   const menuItems = [
     ...(canManageUsers ? [{
-      label: '👥 사용자 관리',
+      label: '사용자 관리',
       path: '/admin',
       color: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
     }] : []),
     ...(canManageMyTeamMembers ? [{
-      label: '👨‍👩‍👧‍👦 팀원 관리',
+      label: '팀원 관리',
       path: '/team-management',
       color: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
     }] : []),
     ...(canManageFarms ? [{
-      label: user.role === 'team_member' ? '🌾 농장 보기' : '🌾 농장 관리',
+      label: user.role === 'team_member' ? '농장 보기' : '농장 관리',
       path: '/beds',
       color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
     }] : []),
     ...(canManageTeamMembers && !canManageUsers && user.role !== 'team_leader' ? [{
-      label: '👥 팀원 보기',
+      label: '팀원 보기',
       path: '/team',
       color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
     }] : []),
     {
-      label: '🌱 양액계산',
+      label: '양액계산',
       path: '/nutrients/plan',
       color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
     },
     {
-      label: '📊 시세정보',
+      label: '시세정보',
       path: '/market',
       color: 'from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
     },
     {
-      label: '🔔 알림설정',
+      label: '알림설정',
       path: '/notifications',
       color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
     }
@@ -165,18 +165,16 @@ export default function AppHeader({
               {canManageUsers && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-medium transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                 >
-                  <span className="mr-2">👥</span>
                   사용자 관리
                 </button>
               )}
               {canManageFarms && (
                 <button
                   onClick={() => router.push('/beds')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-medium transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                 >
-                  <span className="mr-2">🌾</span>
                   {user.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>
               )}
@@ -224,7 +222,7 @@ export default function AppHeader({
                       router.push(item.path);
                       setIsMenuOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-medium transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
                   >
                     {item.label}
                   </button>
@@ -234,9 +232,9 @@ export default function AppHeader({
               {/* 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}
-                className="w-full px-3 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                className="w-full px-3 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-sm font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
-                🚪 로그아웃
+                로그아웃
               </button>
 
               {/* 시스템 상태 */}

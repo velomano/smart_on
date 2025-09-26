@@ -485,8 +485,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   <span className="text-3xl">🌱</span>
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">농장 현황</h2>
-                  <p className="text-white/90">관리 중인 농장과 베드의 실시간 상태를 확인하세요</p>
+                  <h1 className="text-4xl font-bold text-white mb-2">농장 현황</h1>
+                  <p className="text-white/90 text-lg">관리 중인 농장과 베드의 실시간 상태를 확인하세요</p>
                 </div>
               </div>
                 

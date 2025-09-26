@@ -515,8 +515,8 @@ export default function AdminPage() {
                 <span className="text-3xl">👑</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">관리자 대시보드</h2>
-                <p className="text-white/90">사용자 승인 및 시스템 관리를 수행하세요</p>
+                <h1 className="text-4xl font-bold text-white mb-2">관리자 대시보드</h1>
+                <p className="text-white/90 text-lg">사용자 승인 및 시스템 관리를 수행하세요</p>
               </div>
             </div>
           </div>

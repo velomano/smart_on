@@ -226,8 +226,8 @@ export default function TeamPage() {
                 <span className="text-3xl">👥</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white mb-1">팀 관리 대시보드</h2>
-                <p className="text-white/90">{user?.role === 'system_admin' ? '전체 사용자를 관리합니다' : 
+                <h1 className="text-4xl font-bold text-white mb-2">팀 관리 대시보드</h1>
+                <p className="text-white/90 text-lg">{user?.role === 'system_admin' ? '전체 사용자를 관리합니다' : 
                    user?.team_name ? `${user.team_name}의 멤버들을 관리합니다` : 
                    '농장의 멤버들을 확인합니다'}</p>
               </div>
