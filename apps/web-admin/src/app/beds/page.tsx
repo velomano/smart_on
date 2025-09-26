@@ -839,9 +839,9 @@ function BedsManagementContent() {
                               </div>
                             </div>
 
-                            {/* 제어 상태 - Tuya 스마트 스위치 제어 */}
+                            {/* 제어 상태 - 원격 스위치 제어 */}
                             <div className="mb-4">
-                              <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 Tuya 스마트 스위치 제어</h6>
+                              <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 원격 스위치 제어</h6>
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                                   <div className="flex items-center justify-between mb-3">
