@@ -354,22 +354,44 @@ export default function NotificationsPage() {
                     ⚠️ 번호가 음수인 경우: 앞에 '-' 제거하고 숫자만 입력하세요
                   </p>
                 </div>
-                {!settings.telegramChatId && (
-                  <p className="text-red-600 text-sm mt-1 font-medium">
-                    ❌ 400 오류 시 → 채팅 ID 형식을 다시 확인하세요
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
+                  <p className="text-sm text-yellow-800 font-medium mb-2">🔍 채팅 ID: 6827239951 - 정상 확인됨</p>
+                  <p className="text-xs text-yellow-700 mb-2">필수 확인 단계:</p>
+                  <ol className="text-xs text-yellow-700 ml-3 space-y-1">
+                    <li>1. 텔레그램에서 <strong>실제 봇과 1:1 대화</strong>를 시작하셨나요?</li>
+                    <li>2. 그 봇에게 <strong>"hi"</strong> 또는 <strong>"/start"</strong> 메시지를 보냈나요?</li>
+                    <li>3. 봇이 당신의 메시지를 읽을 수 있는 상태인가요?</li>
+                    <li>4. Vercel에서 <strong>TELEGRAM_BOT_TOKEN</strong>이 올바르게 설정되었나요?</li>
+                  </ol>
+                  <p className="text-xs text-red-700 font-medium mt-2">
+                    ⚠️ 봇을 처음 만든 것이라면 채팅방에서 직접 그 봇을 찾아서 대화를 시작해야 합니다!
                   </p>
-                )}
+                </div>
               </div>
 
-              <div className="flex justify-between items-center space-x-3">
-                <button
-                  onClick={sendTestNotification}
-                  disabled={testing || !settings.telegramChatId}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                  title={!settings.telegramChatId ? '채팅 ID를 먼저 입력하세요' : '텔레그램 알림 테스트'}
-                >
-                  {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
-                </button>
+              <div className="flex flex-col md:flex-row md:justify-between items-stretch md:items-center space-y-3 md:space-y-0 md:space-x-3">
+                <div className="flex flex-col md:flex-row space-x-0 md:space-x-3 space-y-3 md:space-y-0 pb-2">
+                  <button
+                    onClick={debugEnvironmentVariables}
+                    disabled={testing}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    title="환경변수 상태 확인"
+                  >
+                    🔧 환경변수 상태
+                  </button>
+                  <button
+                    onClick={sendTestNotification}
+                    disabled={testing || settings.telegramChatId !== '6827239951'}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    title="정확한 채팅 ID 6827239951로 테스트"
+                  >
+                    {testing ? '🧪 테스트 중...' : '🧪 400 오류 진단'}
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500">
+                  📋 채팅방에서 봇과 먼저 대화를 시작하셨나요?
+                </div>
+              </div>
                 
                 <button
                   onClick={debugEnvironmentVariables}
