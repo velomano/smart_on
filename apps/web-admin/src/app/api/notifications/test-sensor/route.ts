@@ -24,13 +24,14 @@ export async function POST(req: NextRequest) {
 
     console.log('🧪 테스트 센서 데이터:', testSensorData);
 
-    // MQTT 연동 전까지 모든 알림 차단
-    console.log('🔒 센서 테스트 알림 차단됨 (MQTT 연동 전까지 알림 비활성화)');
+    // MQTT 연동 전까지 모든 자동 알림 완전 차단
+    console.log('🔒 모든 자동 센서 알림이 완전히 차단됨 (MQTT 연동 전까지)');
     
     return NextResponse.json({
       ok: true,
-      message: '센서 테스트 알림이 차단되었습니다. (MQTT 연동 전까지 알림 비활성화)',
-      sensorData: testSensorData
+      message: '🔒 자동 알림이 완전히 차단되었습니다. (MQTT 연동 전까지 알림 비활성화)',
+      sensorData: testSensorData,
+      autoNotificationsBlocked: true
     });
 
   } catch (error: any) {

@@ -183,8 +183,10 @@ async function sendNotificationToTelegram(
   }
 }
 
-// 센서 데이터 검증 및 알림 전송 - 다시 활성화
+// 센서 데이터 검증 및 알림 전송 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
+  console.log('🚫 자동 센서 알림 완전 차단됨 (봇 차단 방지)', sensorData.type);
+  return; // 완전 차단
   try {
     const chatId = await getCurrentUserTelegramChatId();
     await sendNotificationToTelegram(sensorData.type, sensorData.location, sensorData.value, sensorData.unit || '', sensorData.timestamp, chatId);
@@ -193,47 +195,33 @@ export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<
   }
 }
 
-// 시스템 상태 검증 및 알림 전송
+// 시스템 상태 검증 및 알림 전송 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
 export async function checkSystemStatusAndNotify(systemStatus: SystemStatus): Promise<void> {
-  try {
-    const chatId = await getCurrentUserTelegramChatId();
-    if (!systemStatus.online) {
-      await sendNotificationToTelegram('시스템 상태', '농장 관리', '시스템이 오프라인 상태입니다.', '', new Date().toISOString(), chatId);
-    }
-  } catch (error) {
-    console.error('시스템 상태 알림 전송 실패:', error);
-  }
+  console.log('🚫 자동 시스템 상태 알림 완전 차단됨 (봇 차단 방지)');
+  return; // 완전 차단
 }
 
-// 제어 시스템 오류 알림
+// 제어 시스템 오류 알림 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
 export async function notifyControlError(
   deviceType: 'pump' | 'valve',
   deviceId: string,
   location: string,
   error: string
 ): Promise<void> {
-  try {
-    const chatId = await getCurrentUserTelegramChatId();
-    await sendNotificationToTelegram('제어 시스템 오류', location, `${deviceType} 오류: ${error}`, '', new Date().toISOString(), chatId);
-  } catch (error) {
-    console.error('제어 시스템 오류 알림 전송 실패:', error);
-  }
+  console.log('🚫 자동 제어 시스템 오류 알림 완전 차단됨 (봇 차단 방지)');
+  return; // 완전 차단
 }
 
-// 사용자 액션 알림 (예: 레시피 저장)
+// 사용자 액션 알림 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
 export async function notifyUserAction(
   action: 'nutrient_recipe_saved',
   variables: Record<string, string | number>
 ): Promise<void> {
-  try {
-    const chatId = await getCurrentUserTelegramChatId();
-    await sendNotificationToTelegram('사용자 액션', '농장 관리', `레시피가 저장되었습니다: ${JSON.stringify(variables)}`, '', new Date().toISOString(), chatId);
-  } catch (error) {
-    console.error('사용자 액션 알림 전송 실패:', error);
-  }
+  console.log('🚫 자동 사용자 액션 알림 완전 차단됨 (봇 차단 방지)');
+  return; // 완전 차단
 }
 
-// 일일 리포트 생성 및 전송
+// 일일 리포트 생성 및 전송 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
 export async function sendDailyReport(reportData: {
   date: string;
   avgTemp: number;
@@ -241,18 +229,8 @@ export async function sendDailyReport(reportData: {
   avgEC: number;
   location: string;
 }): Promise<void> {
-  try {
-    const chatId = await getCurrentUserTelegramChatId();
-    const reportText = `일일 리포트 (${reportData.date})
-위치: ${reportData.location}
-평균 온도: ${reportData.avgTemp}°C
-평균 습도: ${reportData.avgHumidity}%
-평균 EC: ${reportData.avgEC}`;
-    
-    await sendNotificationToTelegram('일일 리포트', reportData.location, reportText, '', new Date().toISOString(), chatId);
-  } catch (error) {
-    console.error('일일 리포트 알림 전송 실패:', error);
-  }
+  console.log('🚫 자동 일일 리포트 알림 완전 차단됨 (봇 차단 방지)');
+  return; // 완전 차단
 }
 
 // 알림 서비스 초기화 (센서 데이터 모니터링 시작)

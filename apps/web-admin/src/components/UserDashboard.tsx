@@ -202,9 +202,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           // checkMockSensorData(); // 센서 모니터링 비활성화
         };
 
-        // Mock 센서 데이터 알림 체크 함수 - 완전 차단 (MQTT 연동 전까지)
+        // Mock 센서 데이터 알림 체크 함수 - 완전 차단 (사용자가 차단한 봇 안전)
         const checkMockSensorData = async () => {
-          console.log('🚫 모든 센서 알림이 완전히 차단됨 (MQTT 연동 대기)');
+          console.log('🚫 모든 자동 센서 알림이 완전히 차단됨 (봇 차단 방지)');
           return;
           
           // 완전 비활성화된 코드 - 테스트 목적으로 남겨둠
