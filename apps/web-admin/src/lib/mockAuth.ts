@@ -698,7 +698,6 @@ const mockDeleteUser = async (userId: string) => {
 const authFunctions = getAuthFunctions();
 
 export const signIn = authFunctions.signIn;
-export { checkAndRestoreUsers };
 // 사용자 설정 관리 함수들
 const getUserSettingsInternal = (userId: string) => {
   if (typeof window === 'undefined') return {};

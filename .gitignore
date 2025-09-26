@@ -83,6 +83,22 @@ jspm_packages/
 # next.js build output
 .next
 
+# Mobile apps builds and cache
+mobile-app/android/app/build/
+mobile-app/build/
+mobile-app/node_modules/
+
+# Large binaries and native dependencies
+**/hermes/
+**/libvips-*
+**/next-swc.win32-*
+**/lightningcss.win32-*
+**/icudt64.dll
+**/*.apk
+**/*.aar
+**/app-debug.apk
+**/classes.dex
+
 # nuxt.js build output
 .nuxt
 
@@ -107,3 +123,4 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
+.vercel

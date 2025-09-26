@@ -1,0 +1,37 @@
+# Mobile app builds (너무 큰 안드로이드 빌드 파일들)
+mobile-app/
+apps/web-admin/src/app/mobile/*
+
+# Node modules and build artifacts
+node_modules/
+apps/web-admin/node_modules/
+apps/web-admin/.next/
+apps/web-admin/.swc/
+apps/web-admin/dist/
+apps/web-admin/build/
+
+# Mobile app specific files
+**/android/
+**/*.apk
+**/*.aar
+
+# Large build files
+**/bin/
+**/build/
+**/output/
+**/debug/
+**/release/
+
+# React Native specific
+**/hermes/
+**/libvips-*
+**/next-swc.win32-*
+**/lightningcss.win32-*
+**/icudt64.dll
+
+# TypeScript lib files
+**/typescript.js
+
+# Temporary files
+**/.DS_Store
+**/Thumbs.db
