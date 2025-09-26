@@ -141,7 +141,7 @@ export default function AppHeader({
                       <h1 className="text-4xl font-black bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
                         {title}
                       </h1>
-                      <p className="text-sm text-gray-600 font-semibold bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">
+                      <p className="text-xs text-gray-600 font-semibold bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">
                         {subtitle}
                       </p>
                     </>
