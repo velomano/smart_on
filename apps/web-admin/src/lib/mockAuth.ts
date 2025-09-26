@@ -362,56 +362,88 @@ const mockSignUp = async (data: SignUpData) => {
   await new Promise(resolve => setTimeout(resolve, 500));
 
   try {
-    // Supabase에 실제 사용자 데이터 저장
-    const { getSupabaseClient } = await import('./supabase');
-    const supabase = getSupabaseClient();
-    
-    // 이미 존재하는 이메일인지 확인
-    const { data: existingUser, error: checkError } = await supabase
-      .from('users')
-      .select('email')
-      .eq('email', data.email)
-      .single();
-    
-    if (existingUser && !checkError) {
+    // 먼저 로컬스토리지에 있는 데이터 확인
+    mockUsers = loadUsersFromStorage();
+    const existingUser = mockUsers.find(u => u.email === data.email);
+    if (existingUser) {
       return { success: false, error: '이미 존재하는 이메일입니다.' };
     }
 
-    // 새 사용자를 Supabase에 저장 (승인 대기 상태)
-    const { data: newUser, error: insertError } = await supabase
-      .from('users')
-      .insert({
-        id: crypto.randomUUID(),
+    try {
+      // Supabase 연동 시도
+      const { getSupabaseClient } = await import('./supabase');
+      const supabase = getSupabaseClient();
+      
+      // 이미 존재하는 이메일인지 확인
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('email')
+        .eq('email', data.email)
+        .single();
+      
+      if (existingUser && !checkError) {
+        return { success: false, error: '이미 존재하는 이메일입니다.' };
+      }
+
+      // 새 사용자를 Supabase에 저장 (승인 대기 상태)
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert({
+          id: crypto.randomUUID(),
+          email: data.email,
+          name: data.name,
+          is_approved: false,
+          phone: data.phone || null,
+          company: data.company || null
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Supabase 사용자 저장 실패:', insertError);
+        // Supabase 실패 시에도 로컬스토리지로 폴백
+        throw new Error(`Supabase 저장 실패: ${insertError.message}`);
+      }
+
+      // Supabase 성공 시 로컬스토리지에도 동기화
+      const authUser: AuthUser = {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        role: 'team_member',
+        preferred_team: data.preferred_team,
+        is_approved: false,
+        is_active: true
+      };
+
+      mockUsers.push(authUser);
+      mockPasswords[data.email] = data.password;
+      saveUsersToStorage(mockUsers);
+
+      console.log('새 사용자 Supabase에 저장 완료:', authUser);
+      return { success: true, user: authUser };
+
+    } catch (supabaseError) {
+      console.error('Supabase 연결 실패, 로컬스토리지로 폴백:', supabaseError);
+      
+      // Supabase 실패 시 로컬스토리지로 폴백
+      const newUser: AuthUser = {
+        id: `mock-user-${Date.now()}`,
         email: data.email,
         name: data.name,
+        role: 'team_member',
+        preferred_team: data.preferred_team,
         is_approved: false,
-        phone: data.phone || null,
-        company: data.company || null
-      })
-      .select()
-      .single();
+        is_active: true
+      };
 
-    if (insertError) {
-      console.error('Supabase 사용자 저장 실패:', insertError);
-      return { success: false, error: '사용자 등록에 실패했습니다.' };
+      mockUsers.push(newUser);
+      mockPasswords[data.email] = data.password;
+      saveUsersToStorage(mockUsers);
+
+      console.log('새 사용자 로컬스토리지에 저장 완료 (Supabase 폴백):', newUser);
+      return { success: true, user: newUser };
     }
-
-    // 로컬 mock 시스템과도 동기화
-    const authUser: AuthUser = {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      role: 'team_member',
-      preferred_team: data.preferred_team,
-      is_approved: false,
-      is_active: true
-    };
-
-    mockPasswords[data.email] = data.password;
-
-    console.log('새 사용자 Supabase에 저장 완료:', authUser);
-
-    return { success: true, user: authUser };
 
   } catch (error) {
     console.error('회원가입 오류:', error);
