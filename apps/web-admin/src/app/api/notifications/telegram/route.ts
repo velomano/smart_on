@@ -26,7 +26,14 @@ export async function POST(req: NextRequest) {
         tokenLength: process.env.TELEGRAM_BOT_TOKEN?.length || 0,
         hasDefaultChatId: !!process.env.TELEGRAM_CHAT_ID,
         envCheck: process.env.NODE_ENV,
-        timestamp: new Date().toISOString()
+        deploymentEnv: process.env.VERCEL ? 'Vercel 배포' : '로컬 개발',
+        timestamp: new Date().toISOString(),
+        allEnvs: {
+          telegramBotTokenPresent: !!process.env.TELEGRAM_BOT_TOKEN,
+          telegramChatIdPresent: !!process.env.TELEGRAM_CHAT_ID,
+          nodeEnv: process.env.NODE_ENV,
+          inVercel: !!process.env.VERCEL
+        }
       });
     }
 
@@ -61,7 +68,9 @@ export async function POST(req: NextRequest) {
       defaultChatIdPreview: defaultChatId ? defaultChatId.substring(0, 10) + '...' : '없음',
       targetChatId,
       userId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      deploymentEnv: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL ? '배포됨' : '로컬'
     });
 
     // 토큰 형식 검증 강화
@@ -71,10 +80,14 @@ export async function POST(req: NextRequest) {
 
     if (!botToken) {
       console.warn('텔레그램 봇 토큰이 설정되지 않았습니다.');
+      const deploymentEnv = process.env.VERCEL ? 'Vercel 배포' : '로컬 개발';
       return NextResponse.json({ 
         ok: false, 
-        error: '텔레그램 봇 토큰이 설정되지 않았습니다.', 
-        message: 'TELEGRAM_BOT_TOKEN 환경변수가 설정되지 않았습니다.'
+        error: `텔레그램 봇 토큰이 설정되지 않았습니다. (${deploymentEnv})`, 
+        message: `${deploymentEnv}에서 TELEGRAM_BOT_TOKEN 환경변수를 설정해야 합니다.`,
+        hint: deploymentEnv === 'Vercel 배포' ? 
+          'Vercel 대시보드 → Settings → Environment Variables' : 
+          '.env.local 파일에 토큰 추가'
       }, { status: 400 });
     }
     

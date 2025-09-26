@@ -200,10 +200,13 @@ export default function NotificationsPage() {
 
       const debugInfo = await response.json();
       
+      // 환경변수 상태에 따른 상세 메시지
+      const deploymentEnv = window.location.hostname.includes('vercel') ? 'Vercel 배포' : '로컬';
+      
       if (debugInfo.hasBotToken) {
-        setTestResult(`✅ 환경변수 상태: 토큰 설정됨 (길이: ${debugInfo.tokenLength}), 채팅 ID${debugInfo.hasDefaultChatId ? ' 설정됨' : ' 없음'}`);
+        setTestResult(`✅ 환경변수 상태 (${deploymentEnv}): 토큰 설정됨 (길이: ${debugInfo.tokenLength}), 채팅 ID${debugInfo.hasDefaultChatId ? ' 설정됨' : ' 없음'}`);
       } else {
-        setTestResult(`❌ 환경변수 문제: TELEGRAM_BOT_TOKEN이 설정되지 않았습니다. Vercel 대시보드에서 환경변수를 확인하세요.`);
+        setTestResult(`❌ 환경변수 문제 (${deploymentEnv}): TELEGRAM_BOT_TOKEN이 설정되지 않았습니다. ${deploymentEnv.includes('Vercel') ? 'Vercel 대시보드 → Settings → Environment Variables에서 설정하세요.' : '로컬용 .env.local 파일을 확인하세요.'}`);
       }
     } catch (error) {
       setTestResult(`❌ 디버그 확인 실패: ${error}`);
