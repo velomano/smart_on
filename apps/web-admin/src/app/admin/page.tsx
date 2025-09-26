@@ -505,8 +505,28 @@ export default function AdminPage() {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden">
+      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+        
+        {/* Overview Section */}
+        <div className="mb-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">시스템 관리</h2>
+            <p className="text-lg text-gray-600">사용자 승인 및 권한 관리를 통해 시스템을 관리하세요</p>
+          </div>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-purple-500 to-blue-600 px-8 py-6">
+            <div className="flex items-center">
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                <span className="text-3xl">👑</span>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white mb-1">관리자 대시보드</h2>
+                <p className="text-white/90">사용자 승인 및 시스템 관리를 수행하세요</p>
+              </div>
+            </div>
+          </div>
           <div className="px-8 py-8">
             {/* 탭 메뉴 */}
             <div className="flex space-x-1 mb-8">

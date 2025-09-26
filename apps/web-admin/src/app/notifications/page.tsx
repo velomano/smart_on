@@ -215,7 +215,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <AppHeader 
         user={user}
         title="알림 설정"
@@ -224,9 +224,17 @@ export default function NotificationsPage() {
         backButtonText="대시보드"
       />
       
-      <div className="container mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+        
+        {/* Overview Section */}
+        <div className="mb-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">알림 설정</h2>
+            <p className="text-lg text-gray-600">텔레그램 알림 시스템을 설정하고 관리하세요</p>
+          </div>
+        </div>
+        
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">🔔 알림 설정</h1>
 
           {/* 사용방법 안내 */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200 mb-6">
@@ -417,7 +425,7 @@ export default function NotificationsPage() {
           </div>
 
         </div>
-      </div>
+      </main>
 
       {/* 채팅 ID 확인 모달 */}
       {showBotInfoModal && (
