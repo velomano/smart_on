@@ -148,6 +148,7 @@ const loadUsersFromStorage = (): AuthUser[] => {
   
   try {
     const stored = localStorage.getItem('mock_users');
+    console.log('현재 localStorage에 저장된 내용:', stored);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
@@ -158,11 +159,12 @@ const loadUsersFromStorage = (): AuthUser[] => {
           is_approved: user.is_approved !== undefined ? user.is_approved : true
         }));
         console.log('로컬 스토리지에서 로드된 사용자들:', loadedUsers);
+        console.log('승인 대기 사용자 수:', loadedUsers.filter(u => !u.is_approved).length);
         return loadedUsers;
       }
     }
-    } catch {
-    console.error('Error loading users from storage');
+    } catch (error) {
+    console.error('Error loading users from storage:', error);
   }
   
   console.log('기본 사용자 데이터 사용:', defaultUsers);
@@ -175,8 +177,12 @@ const saveUsersToStorage = (users: AuthUser[]) => {
   
   try {
     localStorage.setItem('mock_users', JSON.stringify(users));
-    } catch {
-    console.error('Error saving users to storage');
+    // 비밀번호도 함께 저장
+    const passwords = JSON.parse(localStorage.getItem('mock_passwords') || '{}');
+    localStorage.setItem('mock_passwords', JSON.stringify(passwords));
+    console.log('사용자 데이터 저장완료:', users.length, '명');
+    } catch (error) {
+    console.error('Error saving users to storage:', error);
   }
 };
 
@@ -205,13 +211,13 @@ saveUsersToStorage(mockUsers);
 // 디버깅을 위해 초기 사용자 데이터 확인
 console.log('초기 mockUsers:', mockUsers);
 
-// 로컬 스토리지 강제 초기화 (개발용)
-if (typeof window !== 'undefined') {
-  localStorage.removeItem('mock_users');
-  mockUsers = cleanUserData(defaultUsers);
-  saveUsersToStorage(mockUsers);
-  console.log('로컬 스토리지 초기화 후 mockUsers:', mockUsers);
-}
+// 로컬 스토리지 초기화 방지 - 사용자 등록 후 데이터 유지
+// if (typeof window !== 'undefined') {
+//   localStorage.removeItem('mock_users');
+//   mockUsers = cleanUserData(defaultUsers);
+//   saveUsersToStorage(mockUsers);
+//   console.log('로컬 스토리지 초기화 후 mockUsers:', mockUsers);
+// }
 
 // 로컬 스토리지 초기화 함수 (디버깅용)
 export const resetMockUsers = () => {
@@ -221,6 +227,28 @@ export const resetMockUsers = () => {
     saveUsersToStorage(mockUsers);
     console.log('Mock 사용자 데이터 초기화 완료:', mockUsers);
   }
+};
+
+// 현재 localStorage 확인 및 복원 함수 (디버깅용)
+export const checkAndRestoreUsers = () => {
+  if (typeof window === 'undefined') return [];
+  
+  try {
+    const stored = localStorage.getItem('mock_users');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        console.log('localStorage 현재 저장된 사용자들:', parsed);
+        const pendingUsers = parsed.filter(u => !u.is_approved);
+        console.log('현재 승인 대기 중인 사용자들:', pendingUsers);
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.error('localStorage 확인 실패:', error);
+  }
+  
+  return [];
 };
 
 // Mock 비밀번호 (실제로는 해시화되어야 함)
@@ -357,6 +385,7 @@ const mockSignUp = async (data: SignUpData) => {
 // Mock 로그아웃
 const mockSignOut = async () => {
   try {
+    // 현재 로그인된 사용자만 삭제하고, 사용자 데이터는 유지
     localStorage.removeItem('mock_user');
     // 페이지 새로고침을 통해 상태 초기화
     if (typeof window !== 'undefined') {
@@ -414,10 +443,21 @@ const mockGetPendingUsers = async () => {
   
   // 현재 사용자 데이터 다시 로드
   mockUsers = loadUsersFromStorage();
+  console.log('승인 대기 사용자 조회:', {
+    totalUsers: mockUsers.length,
+    processedUsers: mockUsers.map(u => ({ 
+      email: u.email, 
+      is_approved: u.is_approved,
+      created_at: u.created_at 
+    }))
+  });
+  
   const pendingUsers = mockUsers.filter(u => !u.is_approved).map(user => ({
     ...user,
     created_at: user.created_at || new Date().toISOString()
   }));
+  
+  console.log('처리된 승인 대기 사용자 수:', pendingUsers.length);
   return { success: true, users: pendingUsers };
 };
 
@@ -658,6 +698,7 @@ const mockDeleteUser = async (userId: string) => {
 const authFunctions = getAuthFunctions();
 
 export const signIn = authFunctions.signIn;
+export { checkAndRestoreUsers };
 // 사용자 설정 관리 함수들
 const getUserSettingsInternal = (userId: string) => {
   if (typeof window === 'undefined') return {};

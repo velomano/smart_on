@@ -1141,7 +1141,7 @@ function BedsManagementContent() {
 
       {/* 새 농장 추가 모달 */}
       {showAddFarmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-gray-900">새 농장 추가</h3>
@@ -1214,7 +1214,7 @@ function BedsManagementContent() {
 
       {/* 새 베드 추가 모달 */}
       {showAddBedModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-gray-900">새 베드 추가</h3>

@@ -83,6 +83,7 @@ export default function AdminPage() {
     team_id: '',
     is_active: 'true'
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -181,6 +182,22 @@ export default function AdminPage() {
       unassignedUsers
     };
   };
+
+  // 승인된 사용자 필터링
+  const filteredApprovedUsers = approvedUsers.filter(user => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    
+    const name = (user.name || '').toLowerCase();
+    const email = user.email.toLowerCase();
+    const company = (user.company || '').toLowerCase();
+    const teamName = (user.team_name || '').toLowerCase();
+    
+    return name.includes(query) || 
+           email.includes(query) || 
+           company.includes(query) ||
+           teamName.includes(query);
+  });
 
   const handleApprove = async (userId: string) => {
     setActionLoading(userId);
@@ -329,12 +346,12 @@ export default function AdminPage() {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.length === approvedUsers.length) {
+    if (selectedUsers.length === filteredApprovedUsers.length) {
       setSelectedUsers([]);
       setBulkEditMode(false);
       setEditingUser(null);
     } else {
-      setSelectedUsers(approvedUsers.map(u => u.id));
+      setSelectedUsers(filteredApprovedUsers.map(u => u.id));
       setBulkEditMode(true);
       setEditingUser(null);
     }
@@ -541,7 +558,7 @@ export default function AdminPage() {
                     : 'bg-white/50 text-gray-600 hover:bg-white/70'
                 }`}
               >
-                승인된 사용자 ({approvedUsers.length})
+                승인된 사용자 ({filteredApprovedUsers.length})
               </button>
               <button
                 onClick={() => setActiveTab('teams')}
@@ -628,11 +645,11 @@ export default function AdminPage() {
                                 ...prev,
                                 [pendingUser.id]: e.target.value
                               }))}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 bg-white"
                             >
-                              <option value="">테넌트를 선택하세요</option>
+                              <option value="" className="text-gray-900 bg-white">테넌트를 선택하세요</option>
                               {tenants.map(tenant => (
-                                <option key={tenant.id} value={tenant.id}>
+                                <option key={tenant.id} value={tenant.id} className="text-gray-900 bg-white">
                                   {tenant.name}
                                 </option>
                               ))}
@@ -653,13 +670,13 @@ export default function AdminPage() {
                                 [pendingUser.id]: e.target.value
                               }))}
                               disabled={selectedRole[pendingUser.id] === 'system_admin'}
-                              className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                                selectedRole[pendingUser.id] === 'system_admin' ? 'bg-gray-100 cursor-not-allowed' : ''
+                              className={`w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 bg-white ${
+                                selectedRole[pendingUser.id] === 'system_admin' ? 'bg-gray-100 cursor-not-allowed text-gray-900' : ''
                               }`}
                             >
-                              <option value="">농장을 선택하세요</option>
+                              <option value="" className="text-gray-900 bg-white">농장을 선택하세요</option>
                               {teams.map(team => (
-                                <option key={team.id} value={team.id}>
+                                <option key={team.id} value={team.id} className="text-gray-900 bg-white">
                                   {team.name}
                                 </option>
                               ))}
@@ -686,12 +703,12 @@ export default function AdminPage() {
                                   }));
                                 }
                               }}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-gray-900 bg-white"
                             >
-                              <option value="">권한을 선택하세요</option>
-                              <option value="system_admin">시스템 관리자</option>
-                              <option value="team_leader">농장장</option>
-                              <option value="team_member">팀원</option>
+                              <option value="" className="text-gray-900 bg-white">권한을 선택하세요</option>
+                              <option value="system_admin" className="text-gray-900 bg-white">시스템 관리자</option>
+                              <option value="team_leader" className="text-gray-900 bg-white">농장장</option>
+                              <option value="team_member" className="text-gray-900 bg-white">팀원</option>
                             </select>
                           </div>
                         </div>
@@ -734,9 +751,30 @@ export default function AdminPage() {
                     <p className="text-gray-600">현재 시스템에 등록된 모든 사용자 목록입니다</p>
                   </div>
                   <div className="flex items-center space-x-4">
+                    {/* 검색창 */}
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="이름 또는 이메일로 검색..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-80 px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-400 text-lg">🔍</span>
+                      </div>
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery('')}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                          <span className="text-lg">✕</span>
+                        </button>
+                      )}
+                    </div>
                     <div className="text-right">
-                      <div className="text-2xl font-black text-gray-900">{approvedUsers.length}</div>
-                      <div className="text-xs text-gray-500 font-medium">총 사용자</div>
+                      <div className="text-2xl font-black text-gray-900">{filteredApprovedUsers.length}</div>
+                      <div className="text-xs text-gray-500 font-medium">표시됨 {searchQuery ? `/${approvedUsers.length}` : ''}</div>
                     </div>
                     <div className="flex space-x-2">
                       <button
@@ -796,13 +834,17 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {approvedUsers.length === 0 ? (
+                {filteredApprovedUsers.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                       <span className="text-4xl">👥</span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">승인된 사용자가 없습니다</h3>
-                    <p className="text-gray-600 mb-6">아직 승인된 사용자가 없습니다.</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {searchQuery ? '검색 결과가 없습니다' : '승인된 사용자가 없습니다'}
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      {searchQuery ? `"${searchQuery}"에 대한 검색 결과가 없습니다.` : '아직 승인된 사용자가 없습니다.'}
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -813,12 +855,12 @@ export default function AdminPage() {
                           <label className="flex items-center space-x-3 cursor-pointer">
                             <input
                               type="checkbox"
-                              checked={selectedUsers.length === approvedUsers.length && approvedUsers.length > 0}
+                              checked={selectedUsers.length === filteredApprovedUsers.length && filteredApprovedUsers.length > 0}
                               onChange={handleSelectAll}
                               className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                             />
                             <span className="text-lg font-semibold text-gray-700">
-                              전체 선택 ({selectedUsers.length}/{approvedUsers.length})
+                              전체 선택 ({selectedUsers.length}/{filteredApprovedUsers.length})
                             </span>
                           </label>
                         </div>
@@ -988,7 +1030,7 @@ export default function AdminPage() {
                       </div>
                     )}
 
-         {approvedUsers.map((approvedUser) => (
+         {filteredApprovedUsers.map((approvedUser) => (
            <div 
              key={approvedUser.id} 
              className={`bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 ${
