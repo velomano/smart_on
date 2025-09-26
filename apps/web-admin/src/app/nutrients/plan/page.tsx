@@ -202,25 +202,25 @@ export default function NutrientPlanPage() {
               
                 <div className="space-y-4">
                   <label className="block space-y-2">
-                    <div className="text-sm font-medium text-gray-700">작물 이름</div>
+                    <div className="text-sm font-medium text-gray-900">작물 이름</div>
                     <input 
                       type="text" 
                       value={crop}
                       onChange={(e) => setCrop(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
                       placeholder="상추, 토마토, 오이, 딸기, 고추, 바질"
                     />
                   </label>
                   
                   <label className="block space-y-2">
-                    <div className="text-sm font-medium text-gray-700">용량 (L)</div>
+                    <div className="text-sm font-medium text-gray-900">용량 (L)</div>
                     <input 
                       type="number" 
                       value={volume}
                       onChange={(e) => setVolume(Number(e.target.value))}
                       min="1"
                       max="1000"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors bg-white text-gray-900 placeholder-gray-500"
                       placeholder="100"
                     />
                   </label>
@@ -400,7 +400,7 @@ export default function NutrientPlanPage() {
                           <h3 className="font-semibold text-gray-900">
                             {recipe.crop_profiles.crop_name} ({recipe.crop_profiles.stage})
                           </h3>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-800">
                             {recipe.target_volume_l}L • {recipe.water_profiles.name}
                           </p>
                         </div>
@@ -414,33 +414,33 @@ export default function NutrientPlanPage() {
                       
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-600">추정 EC:</span>
-                          <span className="font-medium">{recipe.ec_est || '-'} mS/cm</span>
+                          <span className="text-gray-800">추정 EC:</span>
+                          <span className="font-medium text-gray-900">{recipe.ec_est || '-'} mS/cm</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">추정 pH:</span>
-                          <span className="font-medium">{recipe.ph_est || '-'}</span>
+                          <span className="text-gray-800">추정 pH:</span>
+                          <span className="font-medium text-gray-900">{recipe.ph_est || '-'}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600">생성일:</span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-gray-800">생성일:</span>
+                          <span className="text-xs text-gray-700">
                             {new Date(recipe.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="text-xs text-gray-600">
-                          <div className="font-medium mb-1">사용 염류:</div>
+                        <div className="text-xs text-gray-800">
+                          <div className="font-medium mb-1 text-gray-900">사용 염류:</div>
                           <div className="space-y-1">
                             {recipe.lines.slice(0, 2).map((line: any, i: number) => (
                               <div key={i} className="flex justify-between">
-                                <span>{line.salt}:</span>
-                                <span>{line.grams}g</span>
+                                <span className="text-gray-800">{line.salt}:</span>
+                                <span className="text-gray-900 font-medium">{line.grams}g</span>
                               </div>
                             ))}
                             {recipe.lines.length > 2 && (
-                              <div className="text-gray-500">+{recipe.lines.length - 2}개 더...</div>
+                              <div className="text-gray-600">+{recipe.lines.length - 2}개 더...</div>
                             )}
                           </div>
                         </div>
@@ -461,7 +461,7 @@ export default function NutrientPlanPage() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     레시피 이름
                   </label>
                   <input
@@ -469,7 +469,7 @@ export default function NutrientPlanPage() {
                     value={recipeName}
                     onChange={(e) => setRecipeName(e.target.value)}
                     placeholder="예: 상추_영양생장기_100L"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 placeholder-gray-500"
                   />
                 </div>
                 
