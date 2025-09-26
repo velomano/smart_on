@@ -1,4 +1,14 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌱 TeraHub - 웹 어드민 대시보드
+
+인도어 스마트팜 ALL-IN-ONE BOARD를 위한 웹 관리자 대시보드입니다.
+
+## 주요 기능
+- 🏠 농장 및 베드 관리
+- 🌱 센서 모니터링 및 제어
+- 👥 사용자 권한 관리  
+- 📊 시세정보 및 양액계산
+- 🚨 실시간 알림 시스템
+- 💡 스마트 스위치 제어
 
 ## Getting Started
 
