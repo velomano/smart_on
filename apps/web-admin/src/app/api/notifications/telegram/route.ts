@@ -30,13 +30,20 @@ export async function POST(req: NextRequest) {
     // 텔레그램 채팅 ID 유효성 체크 (더 관대하게)
     const dummyIds = ['test1_default_id', 'default_id', '123456789', 'no-telegram-set'];
     
-    if (dummyIds.includes(targetChatId) || 
-        !targetChatId.match(/^-?\d+$|^@\w+/) ||
-        targetChatId.length < 4) {
-      console.log('테스트용 또는 유효하지 않은 채팅 ID:', targetChatId);
+    if (dummyIds.includes(targetChatId)) {
+      console.log('테스트용 채팅 ID:', targetChatId);
       return NextResponse.json({ 
         ok: false, 
-        error: `유효하지 않은 텔레그램 채팅 ID: ${targetChatId}` 
+        error: `테스트용 채팅 ID는 사용할 수 없습니다: ${targetChatId}` 
+      }, { status: 500 });
+    }
+    
+    // 실제 텔레그램 채팅 ID 형식 검증
+    if ((!targetChatId.match(/^-?\d+$/) && !targetChatId.match(/^@\w+$/)) || targetChatId.length < 4) {
+      console.log('유효하지 않은 채팅 ID 형식:', targetChatId);
+      return NextResponse.json({ 
+        ok: false, 
+        error: `유효하지 않은 텔레그램 채팅 ID 형식: ${targetChatId}` 
       }, { status: 500 });
     }
 

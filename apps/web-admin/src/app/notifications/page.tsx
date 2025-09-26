@@ -377,7 +377,7 @@ export default function NotificationsPage() {
 
               {testResult && (
                 <div className="p-3 bg-gray-100 rounded-lg">
-                  <p className="text-sm">{testResult}</p>
+                  <p className="text-sm text-gray-900 font-medium">{testResult}</p>
                 </div>
               )}
             </div>
