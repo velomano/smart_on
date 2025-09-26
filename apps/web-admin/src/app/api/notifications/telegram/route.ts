@@ -70,7 +70,11 @@ export async function POST(req: NextRequest) {
       userId,
       timestamp: new Date().toISOString(),
       deploymentEnv: process.env.NODE_ENV,
-      vercelEnv: process.env.VERCEL ? '배포됨' : '로컬'
+      vercelEnv: process.env.VERCEL ? '배포됨' : '로컬',
+      // Vercel 배포 환경 특성 진단
+      vercelDeploymentUrl: process.env.VERCEL_URL,
+      hasEnvProcess: typeof process !== 'undefined',
+      inServerlessFunction: process.env.VERCEL === '1'
     });
 
     // 토큰 형식 검증 강화
@@ -170,40 +174,45 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // 먼저 봇 정보 확인 (getMe API 호출로 토큰 검증)
-    console.log('🔍 봇 토큰 검증 시도:', { 
+    // Vercel 환경에서 token과 chatId 재확인
+    console.log('🔍 Vercel 배포 환경 진단:', { 
       hasToken: !!botToken, 
       tokenLength: botToken?.length,
-      tokenPreview: botToken ? botToken.substring(0, 20) + '...' : '없음'
+      hasChatId: !!targetChatId,
+      chatId: targetChatId,
+      tokenPreview: botToken ? botToken.substring(0, 20) + '...' : '없음',
+      vercelFunctionSize: process.env.VERCEL_ENV
     });
 
     try {
-      // 봇 정보 먼저 확인 (토큰 유효성 테스트)
+      // 봇 정보 먼저 확인 (토큰 유효성 테스트) - Vercel에서 테스트
       const botInfoResponse = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
       const botInfoResult = await botInfoResponse.json();
       
       if (!botInfoResult.ok) {
-        console.error('❌ 봇 토큰이 유효하지 않음:', botInfoResult);
+        console.error('❌ Vercel 배포에서 봇 토큰 검증 실패:', botInfoResult);
         
-        let detailedError = "봇 토큰이 잘못되었습니다.";
+        let detailedError = "Vercel 배포 환경에서 봇 토큰이 유효하지 않습니다.";
         if (botInfoResult.error_code === 401) {
-          detailedError = "봇 토큰이 유효하지 않습니다. Vercel 환경변수에서 올바른 TELEGRAM_BOT_TOKEN을 설정하세요.";
+          detailedError = "Vercel 환경변수에서 TELEGRAM_BOT_TOKEN이 올바르지 않거나 만료되었습니다.";
         } else if (botInfoResult.error_code === 426) {
-          detailedError = "HTTP 연결이 끊어졌습니다. 설정에서 봇을 다시 활성화하세요.";
+          detailedError = "Vercel 서버에서 텔레그램 API 접근이 차단되었습니다.";
         }
         
         return NextResponse.json({ 
           ok: false, 
           error: detailedError,
-          tokenInfo: {
-            hasToken: !!botToken,
+          deploymentInfo: {
+            inVercel: process.env.VERCEL,
+            environment: 'production',
+            tokenPresent: !!botToken,
             tokenLength: botToken?.length,
             telegramError: botInfoResult
           }
         }, { status: 400 });
       }
       
-      console.log('✅ 봇 토큰 검증 성공:', {
+      console.log('✅ Vercel 배포 환경에서 봇 토큰 검증 성공:', {
         username: botInfoResult.result?.username,
         first_name: botInfoResult.result?.first_name,
         can_join_groups: botInfoResult.result?.can_join_groups
