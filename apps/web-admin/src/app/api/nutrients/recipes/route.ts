@@ -65,8 +65,8 @@ export async function GET(req: NextRequest) {
 
         return {
           ...recipe,
-          lines: lines?.map(line => ({
-            salt: line.salts.name,
+          lines: lines?.map((line: any) => ({
+            salt: line.salts?.name || 'Unknown',
             grams: line.grams,
             tank: line.tank
           })) || []
