@@ -49,7 +49,6 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: apps/web-admin
-          scope: ${{ secrets.VERCEL_SCOPE }}
           vercel-args: '--prod'
 
       - name: Comment deployment URL
