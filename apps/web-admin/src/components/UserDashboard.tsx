@@ -372,9 +372,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       {/* Header */}
       <AppHeader
         user={user}
-        title="Smart Farm"
+        title="Tera Hub"
         subtitle={user.role === 'system_admin' ? 
-                    (user.email === 'sky3rain7@gmail.com' ? '최종 관리자 대시보드' : '시스템 관리자 대시보드') : 
+                    (user.email === 'sky3rain7@gmail.com' ? '인도어 스마트팜 ALL-IN-ONE BOARD' : '시스템 관리자 대시보드') : 
                    user.role === 'team_leader' ? `${user.team_name} 조장 대시보드` : 
                    `${user.team_name} 팀원 대시보드`}
         isDashboard={true}

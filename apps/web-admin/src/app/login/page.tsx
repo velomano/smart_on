@@ -114,7 +114,7 @@ export default function LoginPage() {
             <span className="text-3xl">🌱</span>
           </div>
           <h2 className="text-3xl font-black text-gray-900 mb-2">
-            Smart Farm
+            TeraHub
           </h2>
           <p className="text-gray-600 font-medium">
             {isLogin ? '로그인' : '회원가입'}
