@@ -356,6 +356,11 @@ export default function NotificationsPage() {
                   <p className="text-xs text-red-600 mt-2 font-medium">
                     ⚠️ 번호가 음수인 경우: 앞에 '-' 제거하고 숫자만 입력하세요
                   </p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-2 mt-2">
+                    <p className="text-xs text-red-700 font-medium">
+                      🚨 봇이 차단되어 있다면: 텔레그램에서 봇을 찾아 차단 해제하고 "/start"를 보내주세요!
+                    </p>
+                  </div>
                 </div>
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-2">
                   <p className="text-sm text-yellow-800 font-medium mb-2">🔍 채팅 ID: 6827239951 - 정상 확인됨</p>
