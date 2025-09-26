@@ -39,24 +39,24 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const range = maxVal - minVal || 1;
     
     const coords = values.map((value, index) => ({
-      x: 20 + (index / 23) * 340,
-      y: 40 + ((maxVal - value) / range) * 40,
+      x: 20 + (index / 23) * 260,
+      y: 8 + ((maxVal - value) / range) * 45,
       value
     }));
     
     const path = coords.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join('');
     
     return (
-      <div className="w-full h-32 bg-gray-50 rounded-lg overflow-hidden">
-        <svg viewBox="0 0 400 100" className="w-full h-full">
-          {/* 배경 그리드 없이 깔끔하게 */}
-          <rect width="360" height="60" fill="#fafafa" x="20" y="20"/>
+      <div className="w-full h-16 bg-gray-50 rounded overflow-hidden p-1">
+        <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+          {/* 배경 */}
+          <rect width="290" height="45" fill="#f8f9fa" x="5" y="5"/>
           
           {/* 데이터 포인트들 */}
           {coords.map(({ x, y, value }, index) => (
             <circle 
               key={index} 
-              cx={x} cy={y} r="3" 
+              cx={x} cy={y} r="2" 
               fill={color} 
               onMouseEnter={() => setHoveredPoint(index)}
               onMouseLeave={() => setHoveredPoint(null)}
@@ -65,26 +65,22 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
           ))}
           
           {/* 선 연결 */}
-          <path d={path} stroke={color} strokeWidth="3" fill="none"/>
+          <path d={path} stroke={color} strokeWidth="2.5" fill="none"/>
           
-          {/* 시간 라벨 - 박스 안에 수 놓 맨 */}
-          <text x="20" y="85" fontSize="10" fill="gray">0시</text>
-          <text x="90" y="85" fontSize="10" fill="gray">6시</text>
-          <text x="160" y="85" fontSize="10" fill="gray">12시</text>
-          <text x="230" y="85" fontSize="10" fill="gray">18시</text>
-          <text x="300" y="85" fontSize="10" fill="gray">24시</text>
-          
-          {/* 값 라벨 - 박스 내부에 */}
-          <text x="10" y="25" fontSize="9" fill="gray">{maxVal.toFixed(1)}</text>
-          <text x="10" y="75" fontSize="9" fill="gray">{minVal.toFixed(1)}</text>
+          {/* 시간 라벨 - 완전 안쪽으로 */}
+          <text x="10" y="52" fontSize="6" fill="#666">0시</text>
+          <text x="70" y="52" fontSize="6" fill="#666">6시</text>
+          <text x="130" y="52" fontSize="6" fill="#666">12시</text>
+          <text x="190" y="52" fontSize="6" fill="#666">18시</text>
+          <text x="250" y="52" fontSize="6" fill="#666">24시</text>
         </svg>
         
         {/* 호버 툴팁 */}
         {hoveredPoint !== null && coords[hoveredPoint] && (
-          <div className="absolute bg-black text-white px-2 py-1 rounded text-xs"
+          <div className="absolute bg-gray-800 text-white px-2 py-1 rounded text-xs z-10"
                style={{
-                 left: `${coords[hoveredPoint].x}px`,
-                 top: '-20px',
+                 left: '50%',
+                 top: '-25px',
                  transform: 'translateX(-50%)'
                }}>
             {formatValue(coords[hoveredPoint].value)}{unit}
