@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface SensorCardProps {
   type: 'temperature' | 'humidity' | 'ec' | 'ph';
@@ -25,95 +24,79 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     return val.toFixed(1);
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-200 rounded-lg shadow-lg text-xs">
-          <p className="font-medium text-gray-700">{`${label}`}</p>
-          <p className="font-bold" style={{ color: color }}>
-            {`${title}: ${formatValue(payload[0].value)}${unit}`}
-          </p>
-        </div>
-      );
-    }
-    return null;
+  // 심플한 미니 바 차트 생성
+  const createSimpleChart = () => {
+    if (!chartData || chartData.length === 0) return null;
+    
+    // 최근 10개 데이터 포인트만 사용
+    const recentData = chartData.slice(-10);
+    const maxValue = Math.max(...recentData.map(d => Number(d[type]) || 0));
+    const minValue = Math.min(...recentData.map(d => Number(d[type]) || 0));
+    const range = maxValue - minValue || 1;
+    
+    return (
+      <div className="flex items-end justify-between h-full space-x-0.5">
+        {recentData.map((point, index) => {
+          const value = Number(point[type]) || 0;
+          const height = ((value - minValue) / range) * 100;
+          return (
+            <div
+              key={index}
+              className="flex-1 rounded-t-sm"
+              style={{
+                backgroundColor: color,
+                opacity: 0.7,
+                height: `${Math.max(height, 5)}%`
+              }}
+            />
+          );
+        })}
+      </div>
+    );
   };
 
   return (
-    <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 h-56 flex flex-col">
-      {/* 헤더 - 아이콘과 제목 */}
-      <div className="flex items-center justify-between mb-2">
+    <div className="bg-white rounded-xl p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-64 flex flex-col">
+      {/* 헤더 섹션 */}
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <span className="text-xl">{icon}</span>
-          <span className="text-sm font-medium text-gray-700">{title}</span>
-        </div>
-        <div className="text-xs text-gray-500">실시간</div>
-      </div>
-
-      {/* 디지털 표시 영역 - 컴팩트하게 */}
-      <div className="mb-2">
-        <div className="text-center">
-          <div 
-            className="text-3xl font-bold mb-0.5"
-            style={{ color: color }}
-          >
-            {formatValue(value)}
-          </div>
-          <div 
-            className="text-sm font-medium"
-            style={{ color: color }}
-          >
-            {unit}
-          </div>
+          <span className="text-2xl">{icon}</span>
+          <span className="text-sm font-bold text-gray-800">{title}</span>
         </div>
       </div>
 
-      {/* 미니 실시간 그래프 - 최대한 크게 */}
-      <div className="flex-1 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 4 }}>
-            <XAxis 
-              dataKey="time" 
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 7, fill: '#666' }}
-              interval="preserveStartEnd"
-            />
-            <YAxis 
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 7, fill: '#666' }}
-              domain={['dataMin - 0.5', 'dataMax + 0.5']}
-              tickFormatter={(value) => {
-                if (type === 'ph') return value.toFixed(1);
-                if (type === 'ec') return value.toFixed(1);
-                return Math.round(value).toString();
-              }}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey={type}
-              stroke={color}
-              strokeWidth={2.5}
-              dot={false}
-              activeDot={{ r: 3, stroke: color, strokeWidth: 2, fill: 'white' }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+      {/* 대형 센서 값 표시 */}
+      <div className="flex-1 flex flex-col items-center justify-center mb-4">
+        <div 
+          className="text-6xl font-bold mb-2"
+          style={{ color: color }}
+        >
+          {formatValue(value)}
+        </div>
+        <div 
+          className="text-2xl font-semibold"
+          style={{ color: color }}
+        >
+          {unit}
+        </div>
       </div>
 
-      {/* 상태 표시 - 컴팩트하게 */}
-      <div className="flex items-center justify-between mt-1 text-xs">
-        <div className="flex items-center space-x-1">
+      {/* 심플한 미니 바 차트 */}
+      <div className="h-12 bg-gray-50 rounded-lg p-1 mb-3">
+        {createSimpleChart()}
+      </div>
+
+      {/* 상태 표시 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
           <div 
-            className="w-1.5 h-1.5 rounded-full animate-pulse"
+            className="w-3 h-3 rounded-full animate-pulse"
             style={{ backgroundColor: color }}
           ></div>
-          <span className="text-gray-500">활성</span>
+          <span className="text-sm font-medium text-gray-600">활성</span>
         </div>
-        <span className="text-gray-400">
-          {chartData.length > 0 ? `${chartData.length}개` : '없음'}
+        <span className="text-sm text-gray-500">
+          {chartData.length > 0 ? `${chartData.length}개 데이터` : '데이터 없음'}
         </span>
       </div>
     </div>

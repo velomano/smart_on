@@ -700,8 +700,11 @@ function BedsManagementContent() {
 
                             {/* 센서 데이터 */}
                             <div className="mb-6">
-                              <h6 className="text-sm font-semibold text-gray-700 mb-4">📊 센서 데이터</h6>
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                              <h6 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                                <span className="text-xl mr-2">📊</span>
+                                센서 데이터
+                              </h6>
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
                                 <SensorCard
                                   type="temperature"
                                   value={(() => {
