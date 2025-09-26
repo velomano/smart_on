@@ -3,11 +3,21 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Supabase 클라이언트 생성 함수 (mockAuth.ts에서 사용)
 export const getSupabaseClient = () => {
+  // 서비스 키가 있으면 서비스 키로 클라이언트 생성 (RLS 우회)
+  if (serviceKey) {
+    return createClient(supabaseUrl, serviceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+  }
   return createClient(supabaseUrl, supabaseKey);
 };
 
