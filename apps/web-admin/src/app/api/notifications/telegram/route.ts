@@ -7,13 +7,16 @@ export async function POST(req: NextRequest) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const defaultChatId = process.env.TELEGRAM_CHAT_ID;
 
+    // 사용할 채팅 ID 결정 (targetChatId 정의)
+    let targetChatId = chatId || defaultChatId;
+
     console.log('텔레그램 API 호출됨:', {
       hasBotToken: !!botToken,
       botTokenPrefix: botToken ? botToken.substring(0, 10) + '...' : '없음',
       botTokenLength: botToken ? botToken.length : 0,
       hasDefaultChatId: !!defaultChatId,
       defaultChatIdPreview: defaultChatId ? defaultChatId.substring(0, 10) + '...' : '없음',
-      targetChatId: targetChatId,
+      targetChatId,
       userId,
       timestamp: new Date().toISOString()
     });
@@ -39,9 +42,6 @@ export async function POST(req: NextRequest) {
       // 일단 저장이지만 경고만 출력하고 계속 진행
       console.warn('형식 검증을 건너뛰고 거져 시도합니다.');
     }
-
-    // 사용할 채팅 ID 결정
-    let targetChatId = chatId || defaultChatId;
 
     if (!targetChatId) {
       return NextResponse.json({ 
