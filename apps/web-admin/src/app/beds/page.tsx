@@ -615,9 +615,14 @@ function BedsManagementContent() {
               
               // URL 파라미터가 있을 경우 우선 처리 (대시보드에서 농장 관리 클릭시)
               const farmId = searchParams.get('farm');
+              console.log('현재 URL 파라미터 farmId:', farmId);
+              console.log('사용 가능한 farms ID들:', farms.map(f => f.id));
+              console.log('현재 selectedFarmTab:', selectedFarmTab);
+              
               if (farmId) {
                 console.log('URL 파라미터로 특정 농장 필터링:', farmId);
                 farmsToShow = farms.filter(farm => farm.id === farmId);
+                console.log('필터링된 농장들:', farmsToShow);
               } else if (selectedFarmTab === 'all') {
                 // 전체 농장 표시
                 farmsToShow = farms;
@@ -634,10 +639,16 @@ function BedsManagementContent() {
               }
               
               const farmGroups = farmsToShow.map(farm => {
-                const farmDevices = filteredDevices.filter(device => device.farm_id === farm.id);
-                console.log(`농장 ${farm.id} (${farm.name})의 베드들:`, farmDevices);
+                console.log(`처리 중인 농장: ${farm.id} (${farm.name})`);
                 console.log(`filteredDevices 전체:`, filteredDevices);
-                console.log(`${farm.id}와 매칭되는 베드들:`, filteredDevices.filter(d => d.farm_id === farm.id));
+                console.log(`filteredDevices에서 ${farm.id}와 매칭될 베드들:`, 
+                  filteredDevices.filter(d => {
+                    console.log(`${d.id}: farm_id=${d.farm_id} === target=${farm.id}? ${d.farm_id === farm.id}`);
+                    return d.farm_id === farm.id;
+                  })
+                );
+                const farmDevices = filteredDevices.filter(device => device.farm_id === farm.id);
+                console.log(`최종 농장 ${farm.id} (${farm.name})의 베드들:`, farmDevices);
                 return { farm, devices: farmDevices };
               });
 
