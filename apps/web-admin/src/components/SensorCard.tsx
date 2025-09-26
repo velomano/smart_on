@@ -39,16 +39,36 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const range = maxValue - minValue || 1;
     const padding = range * 0.1; // 10% 여유
     
-    // 심플한 직선 그래프 경로 생성
-    const createSimplePath = (points: Array<{x: number, y: number}>) => {
+    // 매끄러운 곡선 그래프 경로 생성
+    const createSmoothPath = (points: Array<{x: number, y: number}>) => {
       if (points.length < 2) return '';
+      if (points.length === 2) {
+        return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`;
+      }
       
       let path = `M${points[0].x},${points[0].y}`;
       
       for (let i = 1; i < points.length; i++) {
-        // 단순히 직선으로 연결
-        path += ` L${points[i].x},${points[i].y}`;
+        const current = points[i];
+        const prev = points[i - 1];
+        
+        if (i === points.length - 1) {
+          // 마지막 점은 직선
+          path += ` L${current.x},${current.y}`;
+        } else {
+          const next = points[i + 1];
+          const tension = 0.4; // 곡선 부드러움 조절
+          
+          // 부드러운 곡선으로 연결하는 베지어 제어점
+          const cp1x = prev.x + (current.x - prev.x) * tension;
+          const cp1y = prev.y;
+          const cp2x = current.x - (next.x - current.x) * tension;
+          const cp2y = current.y;
+          
+          path += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${current.x},${current.y}`;
+        }
       }
+      
       return path;
     };
     
@@ -64,7 +84,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const maxVal = Math.max(...values).toFixed(1);
     const minVal = Math.min(...values).toFixed(1);
     
-    const simplePath = createSimplePath(coords);
+    const smoothPath = createSmoothPath(coords);
     
     // 툴팁 상태는 컴포넌트 레벨에서 관리됨
     
@@ -85,14 +105,14 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
             </linearGradient>
           </defs>
           
-          {/* 심플한 직선 그래프 */}
+          {/* 부드러운 곡선 그래프 */}
           <path
-            d={simplePath}
+            d={smoothPath}
             fill="none"
             stroke={color}
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
-            strokeLinejoin="miter"
+            strokeLinejoin="round"
           />
           
           {/* 가로축 그리드 라인 (시간의 흐름) */}
