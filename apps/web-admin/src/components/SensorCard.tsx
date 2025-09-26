@@ -15,6 +15,8 @@ interface SensorCardProps {
 export default function SensorCard({ type, value, unit, icon, color, chartData, title }: SensorCardProps) {
   // 툴팁 상태 관리
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+  // 모달 상태 관리
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // 디버깅용 로그
   console.log(`📊 ${title} 센서 카드 - 데이터:`, { value, chartDataLength: chartData?.length });
@@ -27,11 +29,83 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     return val.toFixed(1);
   };
 
-  // 심플 차트 - 데이터 그냥 잇기
+  // 확대된 모달 차트 - 더 큰 크기와 자세한 정보
+  const createExpandedChart = () => {
+    if (!chartData || chartData.length === 0) return null;
+    
+    const recentData = chartData.slice(-24);
+    const values = recentData.map(d => Number(d[type]) || 0);
+    const maxVal = Math.max(...values);
+    const minVal = Math.min(...values);
+    const range = maxVal - minVal || 1;
+    
+    const coords = values.map((value, index) => ({
+      x: 60 + (index / 23) * 700,
+      y: 50 + ((maxVal - value) / range) * 250,
+      value
+    }));
+    
+    const Path = coords.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join('');
+    
+    return (
+      <svg viewBox="0 0 900 400" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+        {/* 배경 */}
+        <rect width="880" height="320" fill="#f8f9fa" x="10" y="20" stroke="#e5e7eb" strokeWidth="1"/>
+        
+        {/* 그리드 라인 */}
+        {[1, 2, 3, 4].map(i => (
+          <line 
+            key={`h-${i}`} 
+            x1="70" y1={50 + i * 60} x2="780" y2={50 + i * 60} 
+            stroke="#e5e7eb" strokeWidth="0.5"
+          />
+        ))}
+        
+        {/* 데이터 포인트들 */}
+        {coords.map(({ x, y, value }, index) => (
+          <circle 
+            key={index} 
+            cx={x} cy={y} r="4" 
+            fill={color} 
+            stroke="white" strokeWidth="2"
+            onMouseEnter={() => setHoveredPoint(index)}
+            onMouseLeave={() => setHoveredPoint(null)}
+            style={{ cursor: 'pointer' }}
+          />
+        ))}
+        
+        {/* 선 연결 */}
+        <path d={Path} stroke={color} strokeWidth="4" fill="none"/>
+        
+        {/* 시간 라벨 - 더 큰 폰트로 */}
+        <text x="70" y="360" fontSize="16" fill="#666" textAnchor="middle">0시</text>
+        <text x="200" y="360" fontSize="16" fill="#666" textAnchor="middle">6시</text>
+        <text x="330" y="360" fontSize="16" fill="#666" textAnchor="middle">12시</text>
+        <text x="460" y="360" fontSize="16" fill="#666" textAnchor="middle">18시</text>
+        <text x="590" y="360" fontSize="16" fill="#666" textAnchor="middle">20시</text>
+        <text x="720" y="360" fontSize="16" fill="#666" textAnchor="middle">24시</text>
+        
+        {/* 값 라벨 - 큰 폰트로 */}
+        {[maxVal, (maxVal + minVal) / 2, minVal].map((val, i) => (
+          <text 
+            key={i}
+            x="40" 
+            y={50 + (maxVal - val) / range * 250 + 5} 
+            fontSize="14" 
+            fill="#666" 
+            textAnchor="end"
+          >
+            {formatValue(val)}{unit}
+          </text>
+        ))}
+      </svg>
+    );
+  };
+
+  // 심플 차트 - 데이터 그냥 잇기 (작은 크기)
   const createSimpleChart = () => {
     if (!chartData || chartData.length === 0) return null;
     
-    // 최근 24개 데이터 포인트
     const recentData = chartData.slice(-24);
     const values = recentData.map(d => Number(d[type]) || 0);
     const maxVal = Math.max(...values);
@@ -49,10 +123,8 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     return (
       <div className="w-full h-16 bg-gray-50 rounded overflow-hidden p-1">
         <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-          {/* 배경 */}
           <rect width="290" height="35" fill="#f8f9fa" x="5" y="5"/>
           
-          {/* 데이터 포인트들 */}
           {coords.map(({ x, y, value }, index) => (
             <circle 
               key={index} 
@@ -64,10 +136,8 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
             />
           ))}
           
-          {/* 선 연결 */}
           <path d={path} stroke={color} strokeWidth="2.5" fill="none"/>
           
-          {/* 시간 라벨 - 완전 안쪽으로 */}
           <text x="10" y="47" fontSize="4" fill="#666">0시</text>
           <text x="70" y="47" fontSize="4" fill="#666">6시</text>
           <text x="130" y="47" fontSize="4" fill="#666">12시</text>
@@ -75,7 +145,6 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
           <text x="250" y="47" fontSize="4" fill="#666">24시</text>
         </svg>
         
-        {/* 호버 툴팁 */}
         {hoveredPoint !== null && coords[hoveredPoint] && (
           <div className="absolute bg-gray-800 text-white px-2 py-1 rounded text-xs z-10"
                style={{
@@ -91,7 +160,8 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
   };
 
   return (
-    <div className="bg-white rounded-xl p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-64 flex flex-col">
+    <div className="bg-white rounded-xl p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-64 flex flex-col cursor-pointer" 
+         onClick={() => setIsModalOpen(true)}>
       {/* 헤더 섹션 */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
@@ -134,6 +204,78 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
           {chartData.length > 0 ? `${chartData.length}개 데이터` : '데이터 없음'}
         </span>
       </div>
+
+      {/* 확대 모달 */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+             onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+               onClick={(e) => e.stopPropagation()}>
+            
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <span className="text-3xl">{icon}</span>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">{title} 상세 그래프</h3>
+                  <p className="text-sm text-gray-500">최근 24시간 데이터</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <span className="text-2xl">&times;</span>
+              </button>
+            </div>
+
+            {/* 모달 내용 - 확대된 그래프 */}
+            <div className="p-6">
+              <div className="h-96 bg-gray-50 rounded-lg p-4 relative">
+                {createExpandedChart()}
+                
+                {/* 확대 모달 전용 호버 툴팁 */}
+                {hoveredPoint !== null && (() => {
+                  const recentData = chartData?.slice(-24) || [];
+                  const values = recentData.map(d => Number(d[type]) || 0);
+                  const maxVal = Math.max(...values);
+                  const minVal = Math.min(...values);
+                  const range = maxVal - minVal || 1;
+                  const coords = values.map((value, index) => ({
+                    x: 60 + (index / 23) * 700,
+                    y: 50 + ((maxVal - value) / range) * 250,
+                    value
+                  }));
+                  
+                  if (coords[hoveredPoint]) {
+                    return (
+                      <div className="absolute bg-gray-900 text-white px-3 py-2 rounded-lg text-sm z-20 pointer-events-none"
+                           style={{
+                             left: `${coords[hoveredPoint].x}px`,
+                             top: `${coords[hoveredPoint].y - 30}px`,
+                             transform: 'translateX(-50%)'
+                           }}>
+                        {formatValue(coords[hoveredPoint].value)}{unit}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+
+              {/* 현재 값 정보 */}
+              <div className="mt-4 flex items-center justify-center space-x-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold" style={{ color: color }}>
+                    {formatValue(value)}
+                  </div>
+                  <div className="text-sm text-gray-500">{unit}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
