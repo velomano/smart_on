@@ -2,7 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, chatId, userId, debug } = await req.json();
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error('❌ 텔레그램 API 요청 파싱 실패:', parseError);
+      return NextResponse.json({ 
+        ok: false, 
+        error: '요청 데이터 형식이 올바르지 않습니다.',
+        parseError: parseError instanceof Error ? parseError.message : '알 수 없는 파싱 오류'
+      }, { status: 400 });
+    }
+
+    const { message, chatId, userId, debug } = requestData;
 
     // 디버그 요청이 있으면 환경변수 정보 반환
     if (debug === 'env') {
@@ -17,6 +29,23 @@ export async function POST(req: NextRequest) {
         timestamp: new Date().toISOString()
       });
     }
+
+    // 요청 데이터 유효성 검사 추가
+    if (!message) {
+      console.warn('❌ 메시지 데이터가 없습니다');
+      return NextResponse.json({ 
+        ok: false, 
+        error: '메시지 내용이 필요합니다.' 
+      }, { status: 400 });
+    }
+
+    console.log('📨 텔레그램 요청 데이터 확인:', {
+      hasMessage: !!message,
+      messageLength: message?.length || 0,
+      chatId: chatId,
+      userId: userId,
+      hasDebug: !!debug
+    });
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const defaultChatId = process.env.TELEGRAM_CHAT_ID;
@@ -69,10 +98,24 @@ export async function POST(req: NextRequest) {
     });
 
     if (!targetChatId) {
-      return NextResponse.json({ 
-        ok: false, 
-        error: '텔레그램 채팅 ID가 설정되지 않았습니다.' 
-      }, { status: 500 });
+      // 기본 채팅 ID가 없을 때 환경변수에서 우선 확인
+      const fallbackChatId = process.env.TELEGRAM_CHAT_ID;
+      
+      if (!fallbackChatId) {
+        return NextResponse.json({ 
+          ok: false, 
+          error: '텔레그램 채팅 ID가 설정되지 않았습니다.',
+          hint: '사용자가 알림 설정에서 채팅 ID를 입력하거나, 관리자가 Vercel에서 환경변수 TELEGRAM_CHAT_ID를 설정하세요.',
+          instructions: [
+            '1. 알림 설정 페이지에서 "텔레그램 채팅 ID" 필드에 숫자 ID 입력 (예: 6827239951)',
+            '2. 또는 Vercel 환경변수에 TELEGRAM_CHAT_ID 추가',
+            '3. @userinfobot에게 메시지를 보내면 본인의 채팅 ID를 확인할 수 있습니다'
+          ]
+        }, { status: 400 });
+      }
+      
+      targetChatId = fallbackChatId;
+      console.log('🔧 기본 환경변수 채팅 ID 사용:', fallbackChatId);
     }
 
     // 텔레그램 채팅 ID 유효성 체크 (더 관대하게)

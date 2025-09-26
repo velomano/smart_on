@@ -339,8 +339,18 @@ export default function NotificationsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                 />
                 <p className="text-sm text-gray-600 mt-1">
-                  💡 채팅 ID는 @userinfobot에게 메시지를 보내면 확인할 수 있습니다.
+                  💡 채팅 ID 확인 방법:
                 </p>
+                <ul className="text-xs text-gray-500 mt-1 ml-3 space-y-1">
+                  <li>• 텔레그램에서 @userinfobot 검색 후 대화 시작</li>
+                  <li>• '/start' 메시지 전송하여 채팅 ID 확인</li>
+                  <li>• 예: 1234567890 (숫자 형식) 또는 @username</li>
+                </ul>
+                {!settings.telegramChatId && (
+                  <p className="text-yellow-600 text-sm mt-1">
+                    ⚠️ 채팅 ID가 없으면 알림을 받을 수 없습니다
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-between items-center space-x-3">
@@ -348,6 +358,7 @@ export default function NotificationsPage() {
                   onClick={sendTestNotification}
                   disabled={testing || !settings.telegramChatId}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  title={!settings.telegramChatId ? '채팅 ID를 먼저 입력하세요' : '텔레그램 알림 테스트'}
                 >
                   {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
                 </button>
