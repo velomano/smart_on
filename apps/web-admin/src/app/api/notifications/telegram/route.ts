@@ -118,6 +118,15 @@ export async function POST(req: NextRequest) {
       console.log('🔧 기본 환경변수 채팅 ID 사용:', fallbackChatId);
     }
 
+    // 요청 상세 로깅 추가
+    console.log('🔍 텔레그램 요청 분석:', {
+      originalChatId: chatId,
+      finalTargetChatId: targetChatId,
+      messageLength: message?.length || 0,
+      messagePreview: message?.substring(0, 50) + (message?.length > 50 ? '...' : ''),
+      userId: userId
+    });
+
     // 텔레그램 채팅 ID 유효성 체크 (더 관대하게)
     const dummyIds = ['default_id', '123456789', 'no-telegram-set']; // test1_default_id 제거
     

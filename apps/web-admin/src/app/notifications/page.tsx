@@ -339,16 +339,24 @@ export default function NotificationsPage() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
                 />
                 <p className="text-sm text-gray-600 mt-1">
-                  💡 채팅 ID 확인 방법:
+                  💡 채팅 ID 다시 받기 방법:
                 </p>
-                <ul className="text-xs text-gray-500 mt-1 ml-3 space-y-1">
-                  <li>• 텔레그램에서 @userinfobot 검색 후 대화 시작</li>
-                  <li>• '/start' 메시지 전송하여 채팅 ID 확인</li>
-                  <li>• 예: 1234567890 (숫자 형식) 또는 @username</li>
-                </ul>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-2">
+                  <p className="text-sm text-blue-800 font-medium mb-2">🔥 새로운 채팅 ID 받는 방법:</p>
+                  <ol className="text-xs text-blue-700 space-y-1 ml-3">
+                    <li>1. 텔레그램 앱을 완전히 종료하고 다시 실행</li>
+                    <li>2. @userinfobot 검색</li>
+                    <li>3. "시작" 또는 "/start" 전송</li>
+                    <li>4. 봇이 보내는 숫자를 복사해서 여기에 입력</li>
+                    <li>5. 혹시 안되면 본인의 햄버거 메뉴(설정) → 개인정보설정 → 전화번호 보기에서 확인 가능</li>
+                  </ol>
+                  <p className="text-xs text-red-600 mt-2 font-medium">
+                    ⚠️ 번호가 음수인 경우: 앞에 '-' 제거하고 숫자만 입력하세요
+                  </p>
+                </div>
                 {!settings.telegramChatId && (
-                  <p className="text-yellow-600 text-sm mt-1">
-                    ⚠️ 채팅 ID가 없으면 알림을 받을 수 없습니다
+                  <p className="text-red-600 text-sm mt-1 font-medium">
+                    ❌ 400 오류 시 → 채팅 ID 형식을 다시 확인하세요
                   </p>
                 )}
               </div>
