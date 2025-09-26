@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUser } from '../lib/mockAuth';
 
@@ -27,6 +27,24 @@ export default function AppHeader({
 }: AppHeaderProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   // 사용자 역할에 따른 권한 확인
   const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
@@ -95,7 +113,7 @@ export default function AppHeader({
 
   return (
     <>
-      <header className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-[50]">
+      <header ref={menuRef} className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-[50] relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
@@ -144,44 +162,30 @@ export default function AppHeader({
             </div>
           </div>
         </div>
-      </header>
 
-      {/* 햄버거 메뉴 오버레이 */}
-      {isMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-[100]"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          <div 
-            className="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-[110]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
+        {/* 햄버거 드롭다운 메뉴 */}
+        {isMenuOpen && (
+          <div className="absolute top-full right-4 w-80 bg-white shadow-2xl border border-gray-200 rounded-b-2xl z-[60] overflow-hidden">
+            <div className="p-4">
               {/* 메뉴 헤더 */}
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
-                    <span className="text-xl">🌱</span>
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
+                    <span className="text-sm">🌱</span>
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900">메뉴</h2>
-                    <p className="text-sm text-gray-500">
+                    <h3 className="text-sm font-bold text-gray-900">메뉴</h3>
+                    <p className="text-xs text-gray-500">
                       {user.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
                        user.role === 'system_admin' ? '시스템 관리자' : 
                        user.role === 'team_leader' ? '농장장' : '팀원'}
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <span className="text-gray-500 text-xl">×</span>
-                </button>
               </div>
 
               {/* 메뉴 아이템들 */}
-              <div className="space-y-3 mb-8">
+              <div className="space-y-2 mb-4">
                 {menuItems.map((item, index) => (
                   <button
                     key={index}
@@ -189,7 +193,7 @@ export default function AppHeader({
                       router.push(item.path);
                       setIsMenuOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-3 rounded-xl bg-gradient-to-r ${item.color} text-white font-medium transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5`}
+                    className={`w-full text-left px-3 py-2.5 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-medium transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
                   >
                     {item.label}
                   </button>
@@ -199,22 +203,22 @@ export default function AppHeader({
               {/* 로그아웃 버튼 */}
               <button
                 onClick={handleLogout}
-                className="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="w-full px-3 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
               >
                 🚪 로그아웃
               </button>
 
               {/* 시스템 상태 */}
-              <div className="mt-8 pt-6 border-t border-gray-200">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div className="flex items-center space-x-2 text-xs text-gray-600">
+                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
                   <span>시스템 정상 운영 중</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </header>
     </>
   );
 }

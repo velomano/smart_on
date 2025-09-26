@@ -110,7 +110,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   
   // 통계 계산
   const totalFarms = farms.length;
-  const totalBeds = farms.length; // 농장 수를 전체 베드 수로 사용 (각 농장당 1개 베드)
+  const totalBeds = devices.filter(d => d.type === 'sensor_gateway').length; // 실제 센서 게이트웨이(베드) 수
   const activeBeds = devices.filter(d => d.type === 'sensor_gateway' && d.status?.online).length;
   const bedActivationRate = totalBeds > 0 ? Math.round((activeBeds / totalBeds) * 100) : 0;
   
