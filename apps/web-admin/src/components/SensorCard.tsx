@@ -40,8 +40,8 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     
     // 좌표 계산 (좌우로 늘리고 시간/값 표시)
     const coords = values.map((value, index) => {
-      const x = (index / (recentData.length - 1)) * 80 + 10; // 좌우 늘림
-      const y = ((maxValue - value) / range) * 60 + 15; // 세로 늘림
+      const x = (index / (recentData.length - 1)) * 320 + 40; // 좌우 늘림 (viewBox 400 기준)
+      const y = ((maxValue - value) / range) * 70 + 15; // 세로 늘림 
       return { x, y, value, time: index };
     });
     
@@ -54,62 +54,68 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     const timeLabels = [];
     for (let i = 0; i < 24; i += 6) {
       timeLabels.push({
-        x: (i / 23) * 80 + 10,
-        label: i === 0 ? `${i}시` : `${i}시`
+        x: (i / 23) * 320 + 40, // viewBox 400 기준으로 맞춤
+        label: `${i}시`
       });
     }
     
     return (
-      <div className="w-full h-full relative">
-        <svg viewBox="0 0 100 80" className="w-full h-full">
-          {/* 24시간 시간축 */}
+      <div className="w-full h-full relative bg-gray-50 rounded-lg">
+        <svg viewBox="0 0 400 120" className="w-full h-full">
+          {/* 24시간 시간축 그리드 + 라벨 */}
           {timeLabels.map(({ x, label }) => (
             <g key={label}>
-              <line x1={x} y1="5" x2={x} y2="75" stroke="#e5e7eb" strokeWidth="0.5" />
-              <text x={x} y="85" textAnchor="middle" fontSize="8" fill="#666">{label}</text>
+              <line 
+                x1={x} y1="10" x2={x} y2="90" 
+                stroke="#d1d5db" strokeWidth="1" 
+              />
+              <text x={x} y="105" textAnchor="middle" fontSize="10" fill="#6b7280">
+                {label}
+              </text>
             </g>
           ))}
           
           {/* 세로축 값 표시 */}
-          <text x="5" y="20" textAnchor="start" fontSize="8" fill="#666">{maxValue.toFixed(1)}</text>
-          <text x="5" y="45" textAnchor="start" fontSize="8" fill="#666">{((maxValue + minValue) / 2).toFixed(1)}</text>
-          <text x="5" y="70" textAnchor="start" fontSize="8" fill="#666">{minValue.toFixed(1)}</text>
+          <text x="8" y="15" fontSize="10" fill="#6b7280">{maxValue.toFixed(1)}</text>
+          <text x="8" y="60" fontSize="10" fill="#6b7280">{((maxValue + minValue) / 2).toFixed(1)}</text>
+          <text x="8" y="105" fontSize="10" fill="#6b7280">{minValue.toFixed(1)}</text>
           
           {/* 데이터 포인트들 + 호버 */}
           {coords.map(({ x, y, value, time }, index) => (
             <g key={index}>
-              {/* 호버 영역 */}
+              {/* 호버 영역 (큰 원) */}
               <circle
-                cx={x} cy={y} r="6"
+                cx={x} cy={y} r="8"
                 fill="transparent"
                 onMouseEnter={() => setHoveredPoint(index)}
                 onMouseLeave={() => setHoveredPoint(null)}
                 style={{ cursor: 'pointer' }}
               />
               {/* 데이터 포인트 */}
-              <circle cx={x} cy={y} r="2" fill={color} />
+              <circle cx={x} cy={y} r="3" fill={color} stroke="white" strokeWidth="1" />
             </g>
           ))}
           
           {/* 선으로 연결 */}
-          <path d={pathData} fill="none" stroke={color} strokeWidth="2.5" />
+          <path d={pathData} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
         </svg>
         
         {/* 호버 툴팁 */}
         {hoveredPoint !== null && coords[hoveredPoint] && (
           <div 
-            className="absolute bg-gray-800 text-white text-xs px-2 py-1 rounded-lg shadow-lg z-10 pointer-events-none"
+            className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg z-20 pointer-events-none"
             style={{
-              left: `${coords[hoveredPoint].x}%`,
-              top: '10px',
+              left: `${(coords[hoveredPoint].x / 400) * 100}%`,
+              top: '5px',
               transform: 'translateX(-50%)',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap',
+              fontSize: '12px'
             }}
           >
             <div className="font-bold">
               {formatValue(coords[hoveredPoint].value)}{unit}
             </div>
-            <div className="text-gray-300">
+            <div className="text-gray-300 text-xs">
               {coords[hoveredPoint].time}시
             </div>
           </div>
