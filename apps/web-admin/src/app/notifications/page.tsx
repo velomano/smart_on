@@ -400,15 +400,8 @@ export default function NotificationsPage() {
                   📋 채팅방에서 봇과 먼저 대화를 시작하셨나요?
                 </div>
               </div>
-                
-                <button
-                  onClick={debugEnvironmentVariables}
-                  disabled={botInfoLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                >
-                  {botInfoLoading ? '🔍 확인 중...' : '🔍 환경변수 확인'}
-                </button>
-                
+
+              <div className="flex justify-end gap-3 mt-4">
                 <button
                   onClick={saveSettings}
                   className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
@@ -516,8 +509,6 @@ export default function NotificationsPage() {
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
             </div>
           </div>
         </div>
