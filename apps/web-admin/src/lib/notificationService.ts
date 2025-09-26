@@ -4,7 +4,7 @@ import { sendNotification } from './notificationTemplates';
 
 export interface SensorData {
   id: string;
-  type: 'temperature' | 'humidity' | 'ec' | 'ph';
+  type: 'temperature' | 'humidity' | 'ec' | 'ph' | 'water';
   value: number;
   location: string;
   timestamp: Date;

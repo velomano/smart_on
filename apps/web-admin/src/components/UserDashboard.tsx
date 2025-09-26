@@ -147,7 +147,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto pt-6 pb-6 sm:px-6 lg:px-8 relative z-10">
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-white/20 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
