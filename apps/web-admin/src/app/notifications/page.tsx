@@ -225,16 +225,21 @@ export default function NotificationsPage() {
       />
       
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
-        
         {/* Overview Section */}
-        <div className="mb-8">
-          <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">알림 설정</h2>
-            <p className="text-lg text-gray-600">텔레그램 알림 시스템을 설정하고 관리하세요</p>
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-600 px-8 py-6">
+            <div className="flex items-center">
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                <span className="text-3xl">🔔</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">알림 설정</h1>
+                <p className="text-white/90 text-lg">텔레그램 알림 시스템을 설정하고 관리하세요</p>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div className="max-w-4xl mx-auto">
+          <div className="px-8 py-8">
+            <div className="max-w-4xl mx-auto">
 
           {/* 사용방법 안내 */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 border border-blue-200 mb-6">
@@ -423,7 +428,8 @@ export default function NotificationsPage() {
               ))}
             </div>
           </div>
-
+            </div>
+          </div>
         </div>
       </main>
 

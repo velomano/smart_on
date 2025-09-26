@@ -282,10 +282,23 @@ export default function MarketPage() {
       />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-
-        {/* 검색 및 필터 */}
-        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 p-6 mb-8">
+      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+        {/* Overview Section */}
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-8 py-6">
+            <div className="flex items-center">
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                <span className="text-3xl">📊</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">시세 정보</h1>
+                <p className="text-white/90 text-lg">농산물 시세 정보와 가격 추이를 확인하세요</p>
+              </div>
+            </div>
+          </div>
+          <div className="px-8 py-8">
+            {/* 검색 및 필터 */}
+            <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <input
@@ -400,8 +413,8 @@ export default function MarketPage() {
             </table>
           </div>
         </div>
-
-
+          </div>
+        </div>
       </main>
     </div>
   );

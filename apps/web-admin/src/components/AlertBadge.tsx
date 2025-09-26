@@ -27,6 +27,9 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
   }, []);
 
   useEffect(() => {
+    // 사용자가 로그인했을 때만 알림 구독 시작
+    if (!user) return;
+    
     // 알림 구독
     const unsubscribe = dashboardAlertManager.subscribe((newAlerts) => {
       setAlerts(newAlerts);
@@ -43,7 +46,7 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [user]); // user가 로그인되었을 때만 구독 시작
 
   const handleMarkAllAsRead = () => {
     dashboardAlertManager.markAllAsRead();
@@ -65,6 +68,8 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
     return null;
   }
 
+  // 항상 알림 버튼을 표시함 (알림이 있든 없든)
+
   return (
     <div className={`fixed bottom-6 right-6 z-50 ${className}`}>
       {/* 알림 배지 */}
@@ -77,10 +82,10 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
           hasUnreadAlerts 
             ? 'bg-gradient-to-r from-red-500 to-red-600 animate-pulse' 
             : hasAlerts 
-              ? 'bg-gradient-to-r from-gray-500 to-gray-600' 
-              : 'bg-gradient-to-r from-blue-500 to-blue-600'
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600' 
+              : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
         }`}>
-          <span>
+          <span className={`${!hasAlerts ? 'opacity-80' : ''}`}>
             🚨
           </span>
         </div>

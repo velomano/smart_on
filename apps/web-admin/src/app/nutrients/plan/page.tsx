@@ -167,8 +167,19 @@ export default function NutrientPlanPage() {
       />
       
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">배양액 제조 계획</h1>
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-emerald-500 to-blue-600 px-8 py-6">
+            <div className="flex items-center">
+              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                <span className="text-3xl">🌱</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">배양액 제조 계획</h1>
+                <p className="text-white/90 text-lg">작물별 최적 배양액 제조를 위한 지능형 계산 시스템</p>
+              </div>
+            </div>
+          </div>
+          <div className="px-8 py-8 space-y-6">
           <p className="text-gray-600">작물과 용량을 입력하면 최적의 양액 조성을 계산해드립니다.</p>
 
           {/* 탭 메뉴 */}
@@ -505,6 +516,7 @@ export default function NutrientPlanPage() {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );
