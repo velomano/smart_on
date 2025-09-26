@@ -130,6 +130,12 @@ export default function AppHeader({
                 📊 시세정보
               </button>
               <button
+                onClick={() => router.push('/notifications')}
+                className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white px-4 py-2.5 rounded-xl hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                🔔 알림설정
+              </button>
+              <button
                 onClick={async () => {
                   const { signOut } = await import('../lib/mockAuth');
                   await signOut();
