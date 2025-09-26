@@ -184,6 +184,34 @@ export default function NotificationsPage() {
     }
   };
 
+  // 환경변수 디버깅 기능 추가
+  const debugEnvironmentVariables = async () => {
+    setBotInfoLoading(true);
+    setTestResult('');
+    
+    try {
+      const response = await fetch('/api/notifications/telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ debug: 'env' })
+      });
+
+      const debugInfo = await response.json();
+      
+      if (debugInfo.hasBotToken) {
+        setTestResult(`✅ 환경변수 상태: 토큰 설정됨 (길이: ${debugInfo.tokenLength}), 채팅 ID${debugInfo.hasDefaultChatId ? ' 설정됨' : ' 없음'}`);
+      } else {
+        setTestResult(`❌ 환경변수 문제: TELEGRAM_BOT_TOKEN이 설정되지 않았습니다. Vercel 대시보드에서 환경변수를 확인하세요.`);
+      }
+    } catch (error) {
+      setTestResult(`❌ 디버그 확인 실패: ${error}`);
+    } finally {
+      setBotInfoLoading(false);
+    }
+  };
+
   // 채팅 ID 확인 (userinfobot 연동)
   const checkBotInfo = async () => {
     setBotInfoLoading(true);
@@ -315,13 +343,21 @@ export default function NotificationsPage() {
                 </p>
               </div>
 
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center space-x-3">
                 <button
                   onClick={sendTestNotification}
                   disabled={testing || !settings.telegramChatId}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
                   {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
+                </button>
+                
+                <button
+                  onClick={debugEnvironmentVariables}
+                  disabled={botInfoLoading}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {botInfoLoading ? '🔍 확인 중...' : '🔍 환경변수 확인'}
                 </button>
                 
                 <button

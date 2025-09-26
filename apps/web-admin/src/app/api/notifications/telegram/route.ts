@@ -2,7 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, chatId, userId } = await req.json();
+    const { message, chatId, userId, debug } = await req.json();
+
+    // 디버그 요청이 있으면 환경변수 정보 반환
+    if (debug === 'env') {
+      return NextResponse.json({
+        hasBotToken: !!process.env.TELEGRAM_BOT_TOKEN,
+        tokenPreview: process.env.TELEGRAM_BOT_TOKEN ? 
+          `${process.env.TELEGRAM_BOT_TOKEN.substring(0, 10)}...` : 
+          '없음',
+        tokenLength: process.env.TELEGRAM_BOT_TOKEN?.length || 0,
+        hasDefaultChatId: !!process.env.TELEGRAM_CHAT_ID,
+        envCheck: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+      });
+    }
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const defaultChatId = process.env.TELEGRAM_CHAT_ID;
@@ -42,6 +56,17 @@ export async function POST(req: NextRequest) {
       // 일단 저장이지만 경고만 출력하고 계속 진행
       console.warn('형식 검증을 건너뛰고 거져 시도합니다.');
     }
+
+    // 봇 토큰 상세 진단
+    console.log('🔍 봇 토큰 디버깅 정보:', {
+      hasToken: !!botToken,
+      tokenLength: botToken?.length,
+      tokenFirst10Chars: botToken?.substring(0, 10),
+      tokenLast10Chars: botToken ? '...' + botToken.substring(botToken.length - 10) : '없음',
+      tokenFormat: tokenRegex.test(botToken ? botToken : '') ? '올바른 형식' : '형식 오류',
+      envType: typeof botToken === 'string' ? '문자열' : typeof botToken,
+      environment: process.env.NODE_ENV
+    });
 
     if (!targetChatId) {
       return NextResponse.json({ 
@@ -207,6 +232,7 @@ export async function POST(req: NextRequest) {
     }, { status: 500 });
   }
 }
+
 
 // GET 메서드로 봇 정보 확인
 export async function GET(req: NextRequest) {
