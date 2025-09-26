@@ -1,6 +1,6 @@
-# 🌱 Smart Farm Platform
+# 🌱 TeraHub
 
-> 통합 스마트팜 원격 제어 및 모니터링 플랫폼
+> 인도어 스마트팜 ALL-IN-ONE BOARD 통합 관리 플랫폼
 
 ## 📋 프로젝트 개요
 
@@ -239,6 +239,13 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 - **Vercel** 배포: https://web-admin-fsi2tolta-smart-ons-projects.vercel.app
 - **자동 배포** (GitHub Actions)
 - **Mock 인증** 시스템 (개발/테스트용)
+
+### 🎨 최근 UI/UX 개선사항
+- **TeraHub 브랜딩**: 프로젝트명 변경 및 로고 통일 디자인 적용
+- **그라데이션 로고**: 대시보드/로그인 페이지 일관된 브랜딩 스타일
+- **페이지 타이틀 통합**: 시세정보/양액계산/알림설정 페이지 헤더 디자인 통일
+- **반응형 UI**: 모든 페이지 간 일관된 레이아웃과 스타일링
+- **제어 인터페이스 개선**: "Tuya" 브랜드명 제거하여 일반화된 용어 사용
 
 ### 모바일 앱
 - **Google Play Store** (Android)
