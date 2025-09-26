@@ -541,14 +541,22 @@ function BedsManagementContent() {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* 헤더 */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">농장 관리</h1>
-            <p className="text-gray-600 text-lg">농장과 베드를 관리하고 모니터링하세요</p>
+        {/* Main Card Container */}
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-green-500 to-blue-600 px-8 py-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                <span className="text-4xl">🏠</span>
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold text-white mb-2">농장 관리</h1>
+                <p className="text-white/90 text-lg">농장과 베드를 관리하고 모니터링하세요</p>
+              </div>
+            </div>
           </div>
-
-          {/* 농장별 탭 */}
-          <div className="mb-6">
+          <div className="px-8 py-8">
+            {/* 농장별 탭 */}
+            <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-700">농장별 보기</h4>
               {user && (user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com') && (
@@ -1125,6 +1133,8 @@ function BedsManagementContent() {
                 </div>
               ));
             })()}
+          </div>
+            </div>
           </div>
         </div>
       </main>

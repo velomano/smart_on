@@ -384,14 +384,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       {/* Main Content */}
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Overview Section */}
+        {/* Stats Overview */}
         <div className="mb-8">
-          <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">상황 대시보드</h2>
-            <p className="text-lg text-gray-600">농장 현황과 핵심 지표를 한눈에 확인하세요</p>
-          </div>
-          
-          {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
             <div className="p-6 flex items-center justify-between">

@@ -507,13 +507,6 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Overview Section */}
-        <div className="mb-8">
-          <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">시스템 관리</h2>
-            <p className="text-lg text-gray-600">사용자 승인 및 권한 관리를 통해 시스템을 관리하세요</p>
-          </div>
-        </div>
 
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
           <div className="bg-gradient-to-r from-purple-500 to-blue-600 px-8 py-6">
