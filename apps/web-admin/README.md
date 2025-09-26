@@ -7,8 +7,25 @@
 - 🌱 센서 모니터링 및 제어
 - 👥 사용자 권한 관리  
 - 📊 시세정보 및 양액계산
-- 🚨 실시간 알림 시스템
+- 🚨 실시간 알림 시스템 (텔레그램 연동)
 - 💡 스마트 스위치 제어
+
+## 텔레그램 봇 설정
+
+### 1. 봇 토큰 발급
+1. 텔레그램 앱에서 @BotFather 검색하여 채팅
+2. `/newbot` 명령 입력
+3. 봇 이름과 사용자명 설정
+4. 받은 토큰을 복사
+
+### 2. 환경변수 설정 (Vercel)
+1. Vercel 대시보드 → Project Settings → Environment Variables
+2. `TELEGRAM_BOT_TOKEN` : 발급받은 봇 토큰 입력
+3. `TELEGRAM_CHAT_ID` (선택): 기본 채팅 ID 설정
+
+### 3. 채팅 ID 확인
+1. 봇과 1:1 메시지에서 `/start` 입력
+2. https://api.telegram.org/bot[YOUR_BOT_TOKEN]/getUpdates 접속하여 chat ID 확인
 
 ## Getting Started
 

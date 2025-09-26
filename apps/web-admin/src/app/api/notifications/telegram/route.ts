@@ -13,10 +13,15 @@ export async function POST(req: NextRequest) {
       botTokenLength: botToken ? botToken.length : 0,
       hasDefaultChatId: !!defaultChatId,
       defaultChatIdPreview: defaultChatId ? defaultChatId.substring(0, 10) + '...' : '없음',
-      chatId,
+      targetChatId: targetChatId,
       userId,
       timestamp: new Date().toISOString()
     });
+
+    // 토큰 형식 검증 강화
+    if (botToken && !botToken.includes(':') && botToken.length < 20) {
+      console.warn('⚠️ 봇 토큰 형식이 의심스럽습니다. 형식: [숫자부]:[해시부분]');
+    }
 
     if (!botToken) {
       console.warn('텔레그램 봇 토큰이 설정되지 않았습니다.');
@@ -75,8 +80,46 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // 텔레그램 봇 API 호출
+    // 먼저 봇 정보 확인 (getMe API 호출로 토큰 검증)
+    console.log('🔍 봇 토큰 검증 시도:', { 
+      hasToken: !!botToken, 
+      tokenLength: botToken?.length,
+      tokenPreview: botToken ? botToken.substring(0, 20) + '...' : '없음'
+    });
+
     try {
+      // 봇 정보 먼저 확인 (토큰 유효성 테스트)
+      const botInfoResponse = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+      const botInfoResult = await botInfoResponse.json();
+      
+      if (!botInfoResult.ok) {
+        console.error('❌ 봇 토큰이 유효하지 않음:', botInfoResult);
+        
+        let detailedError = "봇 토큰이 잘못되었습니다.";
+        if (botInfoResult.error_code === 401) {
+          detailedError = "봇 토큰이 유효하지 않습니다. Vercel 환경변수에서 올바른 TELEGRAM_BOT_TOKEN을 설정하세요.";
+        } else if (botInfoResult.error_code === 426) {
+          detailedError = "HTTP 연결이 끊어졌습니다. 설정에서 봇을 다시 활성화하세요.";
+        }
+        
+        return NextResponse.json({ 
+          ok: false, 
+          error: detailedError,
+          tokenInfo: {
+            hasToken: !!botToken,
+            tokenLength: botToken?.length,
+            telegramError: botInfoResult
+          }
+        }, { status: 400 });
+      }
+      
+      console.log('✅ 봇 토큰 검증 성공:', {
+        username: botInfoResult.result?.username,
+        first_name: botInfoResult.result?.first_name,
+        can_join_groups: botInfoResult.result?.can_join_groups
+      });
+
+      // 실제 메시지 전송 
       const telegramResponse = await fetch(
         `https://api.telegram.org/bot${botToken}/sendMessage`,
         {
@@ -94,24 +137,26 @@ export async function POST(req: NextRequest) {
 
       if (!telegramResponse.ok) {
         const errorText = await telegramResponse.text();
-        console.error('텔레그램 API 응답 실패:', {
+        console.error('텔레그램 메시지 전송 실패:', {
           status: telegramResponse.status,
-          errorText
+          errorText,
+          targetChatId
         });
         
-        let errorMessage = `텔레그램 API 호출 실패 (${telegramResponse.status})`;
+        let errorMessage = `텔레그램 메시지 전송 실패 (${telegramResponse.status})`;
         if (telegramResponse.status === 401) {
-          errorMessage = "봇 토큰이 유효하지 않거나 봇이 비활성화되었습니다. 봇 토큰을 확인하거나 새로 발급받으세요.";
+          errorMessage = "봇 토큰이 유효하지 않거나 봇이 비활성화되었습니다. Vercel에서 TELEGRAM_BOT_TOKEN을 다시 확인하세요.";
         } else if (telegramResponse.status === 403) {
-          errorMessage = "봇이 해당 채팅방에 접근할 수 없습니다. 봇을 그룹에 추가하거나 봇과 1:1 대화를 시작해주세요.";
+          errorMessage = "봇이 해당 채팅방에 접근할 수 없습니다. 채팅방에서 봇을 추가하거나 `/start`를 명령하세요.";
         } else if (telegramResponse.status === 400) {
-          errorMessage = "잘못된 요청입니다. 채팅 ID 또는 메시지 형식을 확인해주세요.";
+          errorMessage = `채팅방 정보가 올바르지 않습니다: ${targetChatId}. 유효한 채팅 ID를 입력하세요.`;
         }
         
         return NextResponse.json({ 
           ok: false, 
           error: errorMessage,
-          details: errorText
+          details: errorText,
+          chatIdUsed: targetChatId
         }, { status: 400 });
       }
 
