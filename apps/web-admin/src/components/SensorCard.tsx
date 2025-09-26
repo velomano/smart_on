@@ -207,9 +207,9 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
 
       {/* 확대 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
              onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          <div className="bg-white rounded-xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] max-w-4xl w-full max-h-[90vh] overflow-hidden"
                onClick={(e) => e.stopPropagation()}>
             
             {/* 모달 헤더 */}
@@ -248,6 +248,11 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
                   }));
                   
                   if (coords[hoveredPoint]) {
+                    // 시간 계산 (24시간 기준)
+                    const hour = (hoveredPoint / 23) * 24;
+                    const hourStr = Math.floor(hour).toString().padStart(2, '0');
+                    const minuteStr = Math.floor((hour % 1) * 60).toString().padStart(2, '0');
+                    
                     return (
                       <div className="absolute bg-gray-900 text-white px-3 py-2 rounded-lg text-sm z-20 pointer-events-none"
                            style={{
@@ -255,7 +260,10 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
                              top: `${coords[hoveredPoint].y - 30}px`,
                              transform: 'translateX(-50%)'
                            }}>
-                        {formatValue(coords[hoveredPoint].value)}{unit}
+                        <div className="text-center">
+                          <div className="font-semibold">{formatValue(coords[hoveredPoint].value)}{unit}</div>
+                          <div className="text-xs text-gray-300">{hourStr}:{minuteStr}</div>
+                        </div>
                       </div>
                     );
                   }

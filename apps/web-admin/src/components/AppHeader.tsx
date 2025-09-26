@@ -60,11 +60,17 @@ export default function AppHeader({
     }
   };
 
+  const handleHomeClick = () => {
+    // 홈 아이콘 클릭 시 대시보드로 이동
+    router.push('/');
+  };
+
   const handleTitleClick = () => {
+    // 타이틀 클릭 시 페이지 새로고침
     if (isDashboard && onDashboardRefresh) {
       onDashboardRefresh();
     } else if (!isDashboard) {
-      handleBackClick();
+      window.location.reload();
     }
   };
 
@@ -73,6 +79,7 @@ export default function AppHeader({
     await signOut();
   };
 
+  // 햄버거 메뉴용 메뉴 아이템들 (모바일에서는 모든 메뉴 포함)
   const menuItems = [
     ...(canManageUsers ? [{
       label: '👥 사용자 관리',
@@ -117,8 +124,12 @@ export default function AppHeader({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <span className="text-2xl">🌱</span>
+              <div 
+                className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                onClick={handleHomeClick}
+                title="홈으로"
+              >
+                <span className="text-2xl">🏠</span>
               </div>
               <div 
                 className="flex items-center space-x-4 cursor-pointer hover:opacity-80 transition-opacity duration-200"
@@ -136,6 +147,26 @@ export default function AppHeader({
             </div>
             
             <div className="flex items-center space-x-6">
+              {/* 주요 메뉴 버튼들 */}
+              {canManageUsers && (
+                <button
+                  onClick={() => router.push('/admin')}
+                  className="hidden md:flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                >
+                  <span className="mr-2">👥</span>
+                  사용자 관리
+                </button>
+              )}
+              {canManageFarms && (
+                <button
+                  onClick={() => router.push('/beds')}
+                  className="hidden md:flex items-center px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-sm font-medium transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                >
+                  <span className="mr-2">🌾</span>
+                  {user.role === 'team_member' ? '농장 보기' : '농장 관리'}
+                </button>
+              )}
+              
               {/* 데스크톱 사용자 정보 */}
               <div className="hidden md:flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-2">
