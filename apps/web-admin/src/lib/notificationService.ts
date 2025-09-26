@@ -66,9 +66,30 @@ function loadNotificationSettings() {
     };
   }
   
-  // test1@test.com 계정도 일반 사용자와 동일하게 처리 (강제 활성화 제거)
-  // 모든 알림은 사용자 설정에 따름 - 텔레그램 알림을 받고 싶으면 알림 설정에서 명시적으로 활성화
-  console.log('🔒 test1 계정도 강제 알림 활성화 해제됨');
+  // test1@test.com은 강제로 텔레그램 알림 활성화 (개발/관리자 계정)
+  if (typeof window !== 'undefined') {
+    const currentUserData = localStorage.getItem('mock_user');
+    if (currentUserData) {
+      try {
+        const currentUser = JSON.parse(currentUserData);
+        if (currentUser.email === 'test1@test.com') {
+          return {
+            telegramEnabled: true,
+            telegramChatId: 'test1_default_id',
+            notifications: {
+              temperature_notification: true,
+              ec_notification: true,
+              ph_notification: true,
+              humidity_notification: true,
+              water_notification: true
+            }
+          };
+        }
+      } catch (error) {
+        console.error('test1 계정 설정 로드 실패:', error);
+      }
+    }
+  }
   
   return {
     telegramEnabled,
@@ -89,10 +110,10 @@ async function getCurrentUserTelegramChatId(): Promise<string> {
     if (currentUserData) {
       const currentUser = JSON.parse(currentUserData);
       
-      // test1 계정도 일반 사용자와 동일하게 처리 (하드코딩된 ID 제거)
+      // test1 계정 특별 처리 (하드코딩된 ID 반환)
       if (currentUser.email === 'test1@test.com') {
-        // test1 계정의 특별한 처리를 모두 제거 - 일반 사용자와 동일하게 처리
-        console.log('test1 계정 일반 사용자 취급됨');
+        console.log('test1 계정 텔레그램 ID 사용됨');
+        return 'test1_default_id'; // test1 계정용 특별 ID
       }
       
       // 다른 사용자는 설정할 수 있는 텔레그램 채팅 ID 사용

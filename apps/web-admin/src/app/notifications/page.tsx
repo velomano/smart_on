@@ -45,11 +45,16 @@ export default function NotificationsPage() {
     const savedSettings = localStorage.getItem('notificationSettings');
     let loadedSettings = savedSettings ? JSON.parse(savedSettings) : {};
 
-    // test1 계정도 일반 사용자와 동일하게 처리 (강제 설정 제거)  
-    // 사용자가 원할 때만 알림 활성화 가능
-    console.log('🔒 test1 계정 강제 텔레그램 설정 제거됨');
-    
-    // 모든 사용자는 자신이 원하는 때에만 알림을 활성화할 수 있음
+    // test1 계정은 기본적으로 텔레그램 알림이 활성화되어 있어야 함 (개발계정)
+    if (user?.email === 'test1@test.com') {
+      console.log('test1 계정 텔레그램 설정 강제 활성화됨');
+      loadedSettings.telegramEnabled = true;
+      loadedSettings.telegramChatId = 'test1_default_id';
+      // 모든 알림 타입도 강제 활성화
+      Object.keys(loadedSettings.notifications || {}).forEach(key => {
+        loadedSettings.notifications[key] = true;
+      });
+    }
 
     setSettings(prev => ({ ...prev, ...loadedSettings }));
 
