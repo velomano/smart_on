@@ -27,23 +27,38 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     return val.toFixed(1);
   };
 
-  // 진짜 간단한 직선
+  // 데이터 값들 찍고 선으로 연결
   const createSimpleChart = () => {
+    if (!chartData || chartData.length === 0) return null;
+    
+    // 최근 10개 데이터
+    const recentData = chartData.slice(-10);
+    const values = recentData.map(d => Number(d[type]) || 0);
+    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values);
+    const range = maxValue - minValue || 1;
+    
+    // 좌표 계산
+    const coords = values.map((value, index) => {
+      const x = (index / (values.length - 1)) * 100;
+      const y = ((maxValue - value) / range) * 30 + 10; // 위아래 여유공간
+      return { x, y, value };
+    });
+    
+    // 선으로 연결할 path 생성
+    const pathData = coords.map((point, index) => 
+      index === 0 ? `M${point.x},${point.y}` : `L${point.x},${point.y}`
+    ).join(' ');
+    
     return (
-      <div className="w-full h-full flex items-center relative">
-        <svg 
-          viewBox="0 0 100 50" 
-          className="w-full h-full"
-        >
-          {/* 그냥 대각선 하나! */}
-          <line
-            x1="10"
-            y1="35"
-            x2="90"
-            y2="15"
-            stroke={color}
-            strokeWidth="3"
-          />
+      <div className="w-full h-full">
+        <svg viewBox="0 0 100 40" className="w-full h-full">
+          {/* 데이터 포인트들 */}
+          {coords.map(({ x, y }, index) => (
+            <circle key={index} cx={x} cy={y} r="1.5" fill={color} />
+          ))}
+          {/* 선으로 연결 */}
+          <path d={pathData} fill="none" stroke={color} strokeWidth="2" />
         </svg>
       </div>
     );
