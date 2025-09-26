@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 텔레그램 채팅 ID 유효성 체크 (더 관대하게)
-    const dummyIds = ['test1_default_id', 'default_id', '123456789', 'no-telegram-set'];
+    const dummyIds = ['default_id', '123456789', 'no-telegram-set']; // test1_default_id 제거
     
     if (dummyIds.includes(targetChatId)) {
       console.log('테스트용 채팅 ID:', targetChatId);
@@ -54,6 +54,16 @@ export async function POST(req: NextRequest) {
         ok: false, 
         error: `테스트용 채팅 ID는 사용할 수 없습니다: ${targetChatId}` 
       }, { status: 500 });
+    }
+
+    // test1_default_id는 허용하되 실제 텔레그램 알림 테스트 모드로 처리
+    if (targetChatId === 'test1_default_id') {
+      console.log('🚨 test1 계정 텔레그램 테스트 모드 활성화');
+      
+      // test1 계정은 기본 텔레그램 채팅 ID 실행 (환경변수 또는 기본 설정값 사용)
+      const realChatId = process.env.TELEGRAM_CHAT_ID || '6827239951';
+      targetChatId = realChatId; // 실제 채팅 ID로 교체
+      console.log('🔧 test1 실제 텔레그램 채팅 ID 사용:', realChatId);
     }
     
     // 실제 텔레그램 채팅 ID 형식 검증
