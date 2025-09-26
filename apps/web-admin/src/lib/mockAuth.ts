@@ -384,8 +384,9 @@ const mockSignUp = async (data: SignUpData) => {
         id: crypto.randomUUID(),
         email: data.email,
         name: data.name,
-        is_approved: false
-        // company, phone 컬럼이 없어서 일시적으로 제거
+        is_approved: false,
+        phone: data.phone || null,
+        company: data.company || null
       })
       .select()
       .single();
