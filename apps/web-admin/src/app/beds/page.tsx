@@ -179,13 +179,20 @@ function BedsManagementContent() {
         if (typeof window !== 'undefined') {
           const savedDevices = localStorage.getItem('mock_devices');
           if (savedDevices) {
-            setDevices(JSON.parse(savedDevices));
+            const parsedDevices = JSON.parse(savedDevices);
+            console.log('localStorage에서 로드된 베드 데이터:', parsedDevices);
+            console.log('localStorage에서 로드된 베드 개수:', parsedDevices?.length || 0);
+            setDevices(parsedDevices);
           } else {
             // localStorage에 데이터가 없으면 Mock 데이터 사용하고 저장
             const mockDevices = teamsResult.devices as Device[];
+            console.log('Mock 데이터 사용 및 저장:', mockDevices);
+            console.log('Mock 데이터 베드 개수:', mockDevices?.length || 0);
             setDevices(mockDevices);
-            localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
-            console.log('Mock 베드 데이터를 localStorage에 저장:', mockDevices);
+            if (mockDevices && mockDevices.length > 0) {
+              localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
+              console.log('Mock 베드 데이터를 localStorage에 저장:', mockDevices);
+            }
           }
         } else {
           setDevices(teamsResult.devices as Device[]);
@@ -202,6 +209,9 @@ function BedsManagementContent() {
         
         console.log('농장관리 페이지 - 현재 사용자:', currentUser);
         console.log('농장관리 페이지 - 농장 목록:', teamsResult.teams);
+        console.log('농장관리 페이지 - 디바이스 목록:', teamsResult.devices);
+        console.log('농장관리 페이지 - 디바이스 개수:', teamsResult.devices?.length || 0);
+        console.log('농장관리 페이지 - 1농장 디바이스들:', teamsResult.devices?.filter(d => d.farm_id === 'team-001'));
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -234,7 +244,10 @@ function BedsManagementContent() {
   // URL 파라미터 처리 (대시보드에서 특정 농장으로 이동)
   useEffect(() => {
     const farmId = searchParams.get('farm');
+    console.log('농장 ID 파라미터:', farmId);
+    console.log('사용 가능한 농장 수:', farms.length);
     if (farmId && farms.length > 0) {
+      console.log('농장 탭 설정:', farmId);
       setSelectedFarmTab(farmId);
     }
   }, [searchParams, farms]);
@@ -242,16 +255,23 @@ function BedsManagementContent() {
   // 필터링된 디바이스
   const getFilteredDevices = () => {
     let filteredDevices = devices.filter(device => device.type === 'sensor_gateway');
+    console.log('전체 베드 (센서게이트웨이):', filteredDevices);
+    console.log('현재 선택된 농장 탭:', selectedFarmTab);
     
     // 농장장과 팀원이 로그인한 경우 자기 농장의 베드만 보이도록 필터링
     if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
       filteredDevices = filteredDevices.filter(device => device.farm_id === user.team_id);
+      console.log('사용자 팀 필터 적용 후 베드:', filteredDevices);
     }
     
     if (selectedFarmTab === 'all') {
+      console.log('전체 농장 선택 - 모든 베드 반환:', filteredDevices);
       return filteredDevices;
     }
-    return filteredDevices.filter(device => device.farm_id === selectedFarmTab);
+    
+    const selectedFarmDevices = filteredDevices.filter(device => device.farm_id === selectedFarmTab);
+    console.log(`선택된 농장 ${selectedFarmTab}의 베드:`, selectedFarmDevices);
+    return selectedFarmDevices;
   };
 
   const filteredDevices = getFilteredDevices();
