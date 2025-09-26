@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BedNote, BedNoteFormData, saveBedNote, getBedNotes, updateBedNote, deleteBedNote, COMMON_TAGS, getTagColor } from '../lib/bedNotes';
+import { BedNote, BedNoteFormData, saveBedNote, getBedNotes, updateBedNote, deleteBedNote, COMMON_TAGS, getTagColor, canCreateAnnouncement, hasExistingAnnouncement } from '../lib/bedNotes';
+import { getCurrentUser } from '../lib/mockAuth';
 
 interface BedNoteModalProps {
   isOpen: boolean;
@@ -23,8 +24,25 @@ function NoteForm({ note, onSubmit, onCancel, isEditing = false }: NoteFormProps
   const [formData, setFormData] = useState<BedNoteFormData>({
     title: note?.title || '',
     content: note?.content || '',
-    tags: note?.tags || []
+    tags: note?.tags || [],
+    isAnnouncement: note?.isAnnouncement || false
   });
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [checkingUser, setCheckingUser] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('사용자 정보 로드 실패:', error);
+      } finally {
+        setCheckingUser(false);
+      }
+    };
+    checkUser();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +115,23 @@ function NoteForm({ note, onSubmit, onCancel, isEditing = false }: NoteFormProps
             ))}
           </div>
         </div>
+
+        {/* 공지 체크박스 - 권한이 있는 사용자만 표시 */}
+        {!checkingUser && currentUser && canCreateAnnouncement(currentUser.role) && (
+          <div className="flex items-center space-x-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="isAnnouncement"
+              checked={formData.isAnnouncement || false}
+              onChange={(e) => setFormData(prev => ({ ...prev, isAnnouncement: e.target.checked }))}
+              className="h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-yellow-300 rounded"
+            />
+            <label htmlFor="isAnnouncement" className="text-sm font-medium text-yellow-800 flex items-center">
+              <span className="mr-2">📢</span>
+              공지사항으로 설정 (베드 최상단에 표시)
+            </label>
+          </div>
+        )}
 
         <div className="flex justify-end space-x-3 pt-4">
           <button
@@ -247,12 +282,26 @@ export default function BedNoteModal({ isOpen, onClose, bedId, bedName, authorId
                   </div>
                 ) : (
                   notes.map(note => (
-                    <div key={note.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div 
+                      key={note.id} 
+                      className={`rounded-lg p-4 border ${
+                        note.isAnnouncement 
+                          ? 'bg-yellow-50 border-yellow-300 border-2' 
+                          : 'bg-gray-50 border-gray-200'
+                      }`}
+                    >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-gray-900 mb-1">
-                            {note.title}
-                          </h4>
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h4 className="text-lg font-semibold text-gray-900">
+                              {note.title}
+                            </h4>
+                            {note.isAnnouncement && (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                📢 공지
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                             <span>👤 {note.authorName}</span>
                             <span>📅 {note.createdAt.toLocaleDateString('ko-KR')}</span>

@@ -10,12 +10,14 @@ export interface BedNote {
   authorId: string;
   authorName: string;
   tags?: string[]; // 예: ['생장', '병해', '수확', '관수']
+  isAnnouncement?: boolean; // 공지사항 여부
 }
 
 export interface BedNoteFormData {
   title: string;
   content: string;
   tags: string[];
+  isAnnouncement?: boolean; // 공지사항 여부
 }
 
 // 로컬 스토리지 키
@@ -24,6 +26,24 @@ const STORAGE_KEY = 'bed_notes';
 // 노트 저장/불러오기 함수들
 export function saveBedNote(bedId: string, noteData: BedNoteFormData, authorId: string, authorName: string): BedNote {
   const notes = getAllBedNotes();
+  
+  // 새로운 공지사항을 저장할 때 기존 공지사항을 찾아서 제거
+  if (noteData.isAnnouncement) {
+    const existingBedNotes = notes.filter(note => note.bedId === bedId);
+    const existingAnnouncement = existingBedNotes.find(note => note.isAnnouncement);
+    
+    if (existingAnnouncement) {
+      // 기존 공지사항을 일반 노트로 변경
+      const noteIndex = notes.findIndex(note => note.id === existingAnnouncement.id);
+      if (noteIndex !== -1) {
+        notes[noteIndex] = {
+          ...notes[noteIndex],
+          isAnnouncement: false,
+          updatedAt: new Date()
+        };
+      }
+    }
+  }
   
   const newNote: BedNote = {
     id: `note_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -34,7 +54,8 @@ export function saveBedNote(bedId: string, noteData: BedNoteFormData, authorId: 
     updatedAt: new Date(),
     authorId,
     authorName,
-    tags: noteData.tags || []
+    tags: noteData.tags || [],
+    isAnnouncement: noteData.isAnnouncement || false
   };
 
   notes.push(newNote);
@@ -64,9 +85,15 @@ export function getAllBedNotes(): BedNote[] {
 }
 
 export function getBedNotes(bedId: string): BedNote[] {
-  return getAllBedNotes()
+  const allNotes = getAllBedNotes()
     .filter(note => note.bedId === bedId)
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  
+  // 공지사항을 최상단으로 이동하고 나머지는 날짜순으로 정렬
+  const announcements = allNotes.filter(note => note.isAnnouncement);
+  const regularNotes = allNotes.filter(note => !note.isAnnouncement);
+  
+  return [...announcements, ...regularNotes];
 }
 
 export function updateBedNote(noteId: string, noteData: BedNoteFormData): BedNote | null {
@@ -80,6 +107,7 @@ export function updateBedNote(noteId: string, noteData: BedNoteFormData): BedNot
     title: noteData.title,
     content: noteData.content,
     tags: noteData.tags || [],
+    isAnnouncement: noteData.isAnnouncement || false,
     updatedAt: new Date()
   };
   
@@ -128,17 +156,32 @@ export const COMMON_TAGS = [
 
 export function getTagColor(tag: string): string {
   const colorMap: Record<string, string> = {
-    '🌱 생장': 'bg-green-100 text-green-800',
-    '💧 관수': 'bg-blue-100 text-blue-800',
-    '🌡️ 온도': 'bg-red-100 text-red-800',
-    '💡 조명': 'bg-yellow-100 text-yellow-800',
-    '🌿 수확': 'bg-purple-100 text-purple-800',
-    '🐛 병해': 'bg-red-100 text-red-800',
-    '🌱 정식': 'bg-green-100 text-green-800',
-    '✂️ 정지': 'bg-orange-100 text-orange-800',
-    '📊 측정': 'bg-indigo-100 text-indigo-800',
-    '🔧 관리': 'bg-gray-100 text-gray-800'
+    '🌱 생장': 'bg-green-100 text-green-900',
+    '💧 관수': 'bg-blue-100 text-blue-900',
+    '🌡️ 온도': 'bg-red-100 text-red-900',
+    '💡 조명': 'bg-yellow-100 text-yellow-900',
+    '🌿 수확': 'bg-purple-100 text-purple-900',
+    '🐛 병해': 'bg-red-100 text-red-900',
+    '🌱 정식': 'bg-green-100 text-green-900',
+    '✂️ 정지': 'bg-orange-100 text-orange-900',
+    '📊 측정': 'bg-indigo-100 text-indigo-900',
+    '🔧 관리': 'bg-gray-100 text-gray-900'
   };
   
-  return colorMap[tag] || 'bg-gray-100 text-gray-800';
+  return colorMap[tag] || 'bg-gray-100 text-gray-900';
+}
+
+// 공지 노트 관련 유틸리티 함수
+export function getBedAnnouncement(bedId: string): BedNote | null {
+  const notes = getBedNotes(bedId);
+  const announcement = notes.find(note => note.isAnnouncement);
+  return announcement || null;
+}
+
+export function canCreateAnnouncement(userRole: string): boolean {
+  return userRole === 'system_admin' || userRole === 'team_leader';
+}
+
+export function hasExistingAnnouncement(bedId: string): boolean {
+  return getBedAnnouncement(bedId) !== null;
 }

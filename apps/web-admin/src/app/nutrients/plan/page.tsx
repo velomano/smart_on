@@ -61,8 +61,7 @@ export default function NutrientPlanPage() {
 
   useEffect(()=>{ 
     if (user) {
-      plan(); // 자동 미리보기 
-      loadSavedRecipes(); // 저장된 레시피 로드
+      loadSavedRecipes(); // 저장된 레시피 로드만 진행
     }
   }, [user]);
 

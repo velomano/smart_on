@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettings } from '../lib/mockAuth';
 import { Farm, Device, Sensor, SensorReading } from '../lib/supabase';
 import { mockSystem } from '../lib/mockSystem';
-import { getBedNoteStats } from '../lib/bedNotes';
 import AppHeader from './AppHeader';
-import BedNoteModal from './BedNoteModal';
 
 interface UserDashboardProps {
   user: AuthUser;
@@ -31,8 +29,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
   const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
   const [localActuatorStates, setLocalActuatorStates] = useState<Record<string, boolean>>({});
-  const [noteModalOpen, setNoteModalOpen] = useState(false);
-  const [selectedBed, setSelectedBed] = useState<{id: string, name: string} | null>(null);
   
   // 팀 데이터 로드
   useEffect(() => {
@@ -559,57 +555,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 </div>
                           </div>
 
-                              {/* 생육 노트 미리보기 */}
-                              <div className="mt-4 pt-3 border-t border-gray-200">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h6 className="text-sm font-medium text-gray-700 flex items-center">
-                                    <span className="mr-1">📝</span>
-                                    생육 노트
-                                  </h6>
-                                  <button
-                                    onClick={() => {
-                                      setSelectedBed({
-                                        id: device.id,
-                                        name: String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')
-                                      });
-                                      setNoteModalOpen(true);
-                                    }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                                  >
-                                    보기 →
-                                  </button>
-                                </div>
-                                {(() => {
-                                  const noteStats = getBedNoteStats(device.id);
-                                  if (noteStats.totalNotes === 0) {
-                                    return (
-                                      <div className="text-xs text-gray-500 italic">
-                                        아직 노트가 없습니다
-                                      </div>
-                                    );
-                                  }
-                                  return (
-                                    <div className="space-y-2">
-                                      <div className="text-xs text-gray-600">
-                                        총 {noteStats.totalNotes}개 노트
-                                      </div>
-                                      {noteStats.recentNotes.slice(0, 2).map((note, index) => (
-                                        <div key={note.id} className="bg-white rounded p-2 border border-gray-100">
-                                          <div className="text-xs font-medium text-gray-900 truncate">
-                                            {note.title}
-                                          </div>
-                                          <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                            {note.content}
-                                          </div>
-                                          <div className="text-xs text-gray-500 mt-1">
-                                            {note.createdAt.toLocaleDateString('ko-KR')}
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
                         </div>
                           );
                         })}
@@ -697,20 +642,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         </div>
       </main>
 
-      {/* 베드 노트 모달 */}
-      {selectedBed && (
-        <BedNoteModal
-          isOpen={noteModalOpen}
-          onClose={() => {
-            setNoteModalOpen(false);
-            setSelectedBed(null);
-          }}
-          bedId={selectedBed.id}
-          bedName={selectedBed.name}
-          authorId={user.id || 'unknown'}
-          authorName={user.name || 'Unknown User'}
-        />
-      )}
     </div>
   );
 }

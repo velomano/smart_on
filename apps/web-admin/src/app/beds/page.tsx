@@ -11,6 +11,8 @@ import ScheduleModal from '../../components/ScheduleModal';
 import DualTimeModal from '../../components/DualTimeModal';
 import SensorChart from '../../components/SensorChart';
 import SensorCard from '../../components/SensorCard';
+import BedNoteModal from '../../components/BedNoteModal';
+import { getBedNoteStats, getTagColor } from '../../lib/bedNotes';
 
 function BedsManagementContent() {
   const router = useRouter();
@@ -36,6 +38,8 @@ function BedsManagementContent() {
   const [showActuatorModal, setShowActuatorModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showDualTimeModal, setShowDualTimeModal] = useState(false);
+  const [noteModalOpen, setNoteModalOpen] = useState(false);
+  const [selectedBed, setSelectedBed] = useState<{id: string, name: string} | null>(null);
   const [sensorChartData, setSensorChartData] = useState<any[]>([]);
   const [showAddFarmModal, setShowAddFarmModal] = useState(false);
   const [showAddBedModal, setShowAddBedModal] = useState(false);
@@ -905,25 +909,137 @@ function BedsManagementContent() {
                               </div>
                             </div>
 
+                            {/* 생육 노트 섹션 */}
+                            <div className="mt-6 pt-4 border-t border-gray-200">
+                              <div className="flex items-center justify-between mb-4">
+                                <h6 className="text-sm font-medium text-gray-700 flex items-center">
+                                  <span className="mr-1">📝</span>
+                                  생육 노트
+                                </h6>
+                                <button
+                                  onClick={() => {
+                                    setSelectedBed({
+                                      id: device.id,
+                                      name: String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')
+                                    });
+                                    setNoteModalOpen(true);
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                  보기 →
+                                </button>
+                              </div>
+                              
+                              {(() => {
+                                const noteStats = getBedNoteStats(device.id);
+                                if (noteStats.totalNotes === 0) {
+                                  return (
+                                    <div className="text-xs text-gray-500 italic">
+                                      아직 노트가 없습니다
+                                    </div>
+                                  );
+                                }
+                                
+                                // 미리보기 표시 논리 개선
+                                const allNotes = noteStats.recentNotes;
+                                const announcements = allNotes.filter(note => note.isAnnouncement);
+                                const regularNotes = allNotes.filter(note => !note.isAnnouncement);
+                                
+                                let notesToShow = [];
+                                if (announcements.length > 0) {
+                                  // 공지사항이 있으면 공지사항 1개 + 일반 노트 2개까지 표시
+                                  notesToShow = [...announcements.slice(0, 1), ...regularNotes.slice(0, 2)];
+                                } else {
+                                  // 공지사항이 없으면 일반 노트 2개만 표시
+                                  notesToShow = regularNotes.slice(0, 2);
+                                }
+                                
+                                return (
+                                  <div className="space-y-2">
+                                    <div className="text-xs text-gray-600">
+                                      총 {noteStats.totalNotes}개 노트
+                                    </div>
+                                    {notesToShow.map((note, index) => (
+                                      <div 
+                                        key={note.id} 
+                                        className={`rounded p-2 border ${
+                                          note.isAnnouncement 
+                                            ? 'bg-yellow-50 border-yellow-200 border-2' 
+                                            : 'bg-white border-gray-100'
+                                        }`}
+                                      >
+                                        <div className="flex items-center space-x-2">
+                                          <div className="text-xs font-medium text-gray-900 truncate">
+                                            {note.title}
+                                          </div>
+                                          {note.isAnnouncement && (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                              📢
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-gray-600 mt-1 line-clamp-2">
+                                          {note.content}
+                                        </div>
+                                        <div className="flex items-center justify-between mt-1">
+                                          <div className="text-xs text-gray-500">
+                                            {note.createdAt.toLocaleDateString('ko-KR')}
+                                          </div>
+                                          {note.tags && note.tags.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                              {note.tags.slice(0, 2).map((tag, tagIndex) => (
+                                                <span
+                                                  key={tagIndex}
+                                                  className={`px-1 py-0.5 rounded-full text-xs ${getTagColor(tag)}`}
+                                                  style={{ fontSize: '10px' }}
+                                                >
+                                                  {tag}
+                                                </span>
+                                              ))}
+                                              {note.tags.length > 2 && (
+                                                <span className="px-1 text-gray-600">{note.tags.length - 2}+</span>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+
                             {/* 액션 버튼들 */}
                             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                               <div className="text-xs text-gray-500">
                                 마지막 업데이트: {new Date().toLocaleTimeString()}
                               </div>
-                              {/* 관리자와 농장장만 편집 버튼 표시 */}
-                              {user && user.role !== 'team_member' && (
-                                <div className="flex items-center space-x-2">
+                              <div className="flex items-center space-x-2">
+                                <button 
+                                  onClick={() => {
+                                    setSelectedBed({
+                                      id: device.id,
+                                      name: String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')
+                                    });
+                                    setNoteModalOpen(true);
+                                  }}
+                                  className="bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                >
+                                  📝 생육 노트
+                                </button>
+                                {/* 관리자와 농장장만 편집 버튼 표시 */}
+                                {user && user.role !== 'team_member' && (
                                   <button 
                                     onClick={() => {
                                       // 편집 기능 구현
                                       alert('베드 편집 기능은 추후 구현 예정입니다.');
                                     }}
-                                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                                   >
                                     편집
                                   </button>
-                                </div>
-                              )}
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -1146,6 +1262,21 @@ function BedsManagementContent() {
           deviceId={selectedActuator.deviceId}
           currentDualTime={actuatorDualTimes[selectedActuator.deviceId]}
           onDualTimeChange={handleDualTimeChange}
+        />
+      )}
+
+      {/* 생육 노트 모달 */}
+      {selectedBed && (
+        <BedNoteModal
+          isOpen={noteModalOpen}
+          onClose={() => {
+            setNoteModalOpen(false);
+            setSelectedBed(null);
+          }}
+          bedId={selectedBed.id}
+          bedName={selectedBed.name}
+          authorId={user?.id || 'unknown'}
+          authorName={user?.name || 'Unknown User'}
         />
       )}
     </div>
