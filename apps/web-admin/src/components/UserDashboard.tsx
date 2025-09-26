@@ -382,146 +382,147 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto pt-2 pb-6 sm:px-6 lg:px-8 relative z-10">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-4 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-xl">🏠</span>
-                  </div>
-                  <div className="ml-3">
-                    <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      농장 수
-                    </dt>
-                    <dd className="text-2xl font-black text-gray-900">{totalFarms}</dd>
-                  </div>
+      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+        
+        {/* Overview Section */}
+        <div className="mb-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">상황 대시보드</h2>
+            <p className="text-lg text-gray-600">농장 현황과 핵심 지표를 한눈에 확인하세요</p>
+          </div>
+          
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">🏠</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg text-blue-500 font-bold">
+                <div className="ml-4">
+                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                    농장 수
+                  </dt>
+                  <dd className="text-3xl font-black text-gray-900">{totalFarms}</dd>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-600">
+                  {teamsLoading ? '...' : activeMembers}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">활성 팀원</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">🌱</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                    베드 활성률
+                  </dt>
+                  <dd className="text-3xl font-black text-gray-900">{bedActivationRate}%</dd>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-600">{activeBeds}/{totalBeds}</div>
+                <div className="text-sm text-gray-600 font-medium">활성/전체</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">👥</span>
+                </div>
+                <div className="ml-4">
+                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                    활성화 팀원 수
+                  </dt>
+                  <dd className="text-3xl font-black text-gray-900">
                     {teamsLoading ? '...' : activeMembers}
-                  </div>
-                  <div className="text-xs text-gray-500">총 팀원 수</div>
+                  </dd>
                 </div>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-purple-600">
+                  {teamsLoading ? '...' : totalFarms}
+                </div>
+                <div className="text-sm text-gray-600 font-medium">총 농장 수</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-4 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-xl">🌱</span>
-                  </div>
-                  <div className="ml-3">
-                    <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      베드 활성률
-                    </dt>
-                    <dd className="text-2xl font-black text-gray-900">{bedActivationRate}%</dd>
-                  </div>
+          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-orange-300">
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">🌡️</span>
                 </div>
-                <div className="text-right">
-                  <div className="text-lg text-green-500 font-bold">{activeBeds}/{totalBeds}</div>
-                  <div className="text-xs text-gray-500">활성/전체</div>
+                <div className="ml-4">
+                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                    평균 온도
+                  </dt>
+                  <dd className="text-3xl font-black text-gray-900">{averageTemp.toFixed(1)}°C</dd>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-4 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-xl">👥</span>
-                  </div>
-                  <div className="ml-3">
-                    <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      활성화 팀원 수
-                    </dt>
-                    <dd className="text-2xl font-black text-gray-900">
-                      {teamsLoading ? '...' : activeMembers}
-                    </dd>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg text-purple-500 font-bold">
-                    {teamsLoading ? '...' : totalFarms}
-                  </div>
-                  <div className="text-xs text-gray-500">총 농장 수</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white/70 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
-            <div className="p-4 h-24 flex items-center">
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-xl">🌡️</span>
-                  </div>
-                  <div className="ml-3">
-                    <dt className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                      평균 온도
-                    </dt>
-                    <dd className="text-2xl font-black text-gray-900">{averageTemp.toFixed(1)}°C</dd>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg text-orange-500 font-bold">적정</div>
-                  <div className="text-xs text-gray-500">상태</div>
-                </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-orange-600">적정</div>
+                <div className="text-sm text-gray-600 font-medium">상태</div>
               </div>
             </div>
           </div>
         </div>
-
-
-
-        {/* Farm Overview */}
-        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
-          <div className="px-8 py-6">
-            {/* 농장현황 타이틀과 토글 스위치를 나란히 배치 */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-4xl lg:text-3xl font-bold text-gray-900 mb-1 flex items-center">
-                    <span className="text-5xl lg:text-4xl mr-4">🌱</span>
-                    농장현황
-                  </h2>
-                  <p className="text-xl lg:text-lg text-gray-600">관리 중인 농장과 베드 현황을 확인하세요</p>
+        </div>
+        
+        {/* Farm Overview Section */}
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 px-8 py-6">
+            {/* Enhanced Header */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                  <span className="text-3xl">🌱</span>
                 </div>
-                
-                {/* 토글 스위치를 우측 끝에 배치 */}
-                {(user.role === 'team_leader' || user.role === 'team_member') && (
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      자기 농장만 보기
-                    </label>
-                    <button
-                      onClick={() => {
-                        const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
-                        setUserSettings(newSettings);
-                        updateUserSettings(user.id, newSettings);
-                      }}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-                        userSettings.showOnlyMyFarm ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
-                          userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
-                  </div>
-                )}
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">농장 현황</h2>
+                  <p className="text-white/90">관리 중인 농장과 베드의 실시간 상태를 확인하세요</p>
+                </div>
               </div>
+                
+              {/* Enhanced Toggle Switch */}
+              {(user.role === 'team_leader' || user.role === 'team_member') && (
+                <div className="flex items-center bg-white/20 rounded-xl px-4 py-2">
+                  <label className="text-sm font-medium text-white">
+                    자기 농장만 보기
+                  </label>
+                  <button
+                    onClick={() => {
+                      const newSettings = { ...userSettings, showOnlyMyFarm: !userSettings.showOnlyMyFarm };
+                      setUserSettings(newSettings);
+                      updateUserSettings(user.id, newSettings);
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ml-3 ${
+                      userSettings.showOnlyMyFarm ? 'bg-white/30' : 'bg-white/10'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                        userSettings.showOnlyMyFarm ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
             </div>
+          </div>
+          <div className="px-8 py-6">
             <div className="space-y-6">
               {(() => {
                 // 농장 필터링 및 베드 계산
