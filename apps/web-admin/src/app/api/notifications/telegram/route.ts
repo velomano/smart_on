@@ -9,10 +9,13 @@ export async function POST(req: NextRequest) {
 
     console.log('텔레그램 API 호출됨:', {
       hasBotToken: !!botToken,
-      botTokenPrefix: botToken ? botToken.substring(0, 10) : '없음',
+      botTokenPrefix: botToken ? botToken.substring(0, 10) + '...' : '없음',
+      botTokenLength: botToken ? botToken.length : 0,
       hasDefaultChatId: !!defaultChatId,
+      defaultChatIdPreview: defaultChatId ? defaultChatId.substring(0, 10) + '...' : '없음',
       chatId,
-      userId
+      userId,
+      timestamp: new Date().toISOString()
     });
 
     if (!botToken) {
@@ -24,15 +27,12 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
-    // 봇 토큰 형식 검증
+    // 봇 토큰 형식 검증 (더 관대하게 처리)
     const tokenRegex = /^\d+:[a-zA-Z0-9_-]+$/;
     if (!tokenRegex.test(botToken)) {
-      console.error('잘못된 봇 토큰 형식:', botToken);
-      return NextResponse.json({ 
-        ok: false, 
-        error: '잘못된 봇 토큰 형식입니다. 올바른 형식: "123456:abcd123"', 
-        message: 'TELEGRAM_BOT_TOKEN 토큰 형식이 올바르지 않습니다.'
-      }, { status: 400 });
+      console.warn('텔레그램 봇 토큰 형식이 틀릴 수 있습니다:', botToken ? botToken.substring(0, 10) + '...' : '없음');
+      // 일단 저장이지만 경고만 출력하고 계속 진행
+      console.warn('형식 검증을 건너뛰고 거져 시도합니다.');
     }
 
     // 사용할 채팅 ID 결정
@@ -91,7 +91,11 @@ export async function POST(req: NextRequest) {
         
         let errorMessage = `텔레그램 API 호출 실패 (${telegramResponse.status})`;
         if (telegramResponse.status === 401) {
-          errorMessage = "텔레그램 봇 토큰이 잘못되었거나 유효하지 않습니다. 봇 토큰을 확인해주세요.";
+          errorMessage = "봇 토큰이 유효하지 않거나 봇이 비활성화되었습니다. 봇 토큰을 확인하거나 새로 발급받으세요.";
+        } else if (telegramResponse.status === 403) {
+          errorMessage = "봇이 해당 채팅방에 접근할 수 없습니다. 봇을 그룹에 추가하거나 봇과 1:1 대화를 시작해주세요.";
+        } else if (telegramResponse.status === 400) {
+          errorMessage = "잘못된 요청입니다. 채팅 ID 또는 메시지 형식을 확인해주세요.";
         }
         
         return NextResponse.json({ 
@@ -108,9 +112,15 @@ export async function POST(req: NextRequest) {
         let errorMessage = `텔레그램 전송 실패: ${telegramResult.description || '알 수 없는 오류'}`;
         
         if (telegramResult.error_code === 401) {
-          errorMessage = "텔레그램 봇 토큰이 잘못되었습니다. 올바른 봇 토큰을 설정해주세요.";
+          errorMessage = "봇 토큰이 유효하지 않습니다. 올바른 봇 토큰을 확인하세요.";
         } else if (telegramResult.error_code === 400) {
-          errorMessage = `채팅 ID가 잘못되었거나 비활성화되었습니다: ${telegramResult.description}`;
+          if (telegramResult.description?.includes('chat not found')) {
+            errorMessage = "채팅방을 찾을 수 없습니다. 봇과 대화를 시작했는지 확인하고 올바른 채팅 ID를 입력하세요.";
+          } else if (telegramResult.description?.includes('bot was blocked')) {
+            errorMessage = "봇이 차단되었습니다. 봇을 차단해제하고 /start 명령어를 실행하세요.";
+          } else {
+            errorMessage = `텔레그램 요청 오류: ${telegramResult.description || '알 수 없는 오류'}`;
+          }
         }
         
         return NextResponse.json({ 
