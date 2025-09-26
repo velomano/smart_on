@@ -56,7 +56,7 @@ function NoteForm({ note, onSubmit, onCancel, isEditing = false }: NoteFormProps
             type="text"
             value={formData.title}
             onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
             placeholder="예: 토마토 생장 관찰"
             required
           />
@@ -70,7 +70,7 @@ function NoteForm({ note, onSubmit, onCancel, isEditing = false }: NoteFormProps
             value={formData.content}
             onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900"
             placeholder="생육 상황, 관리 내용, 특이사항 등을 기록하세요..."
             required
           />
