@@ -27,97 +27,73 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     return val.toFixed(1);
   };
 
-  // 데이터 값들 찍고 선으로 연결 (24시간 기준)
+  // 심플 차트 - 데이터 그냥 잇기
   const createSimpleChart = () => {
     if (!chartData || chartData.length === 0) return null;
     
-    // 최근 24시간 데이터
+    // 최근 24개 데이터 포인트
     const recentData = chartData.slice(-24);
     const values = recentData.map(d => Number(d[type]) || 0);
-    const maxValue = Math.max(...values);
-    const minValue = Math.min(...values);
-    const range = maxValue - minValue || 1;
+    const maxVal = Math.max(...values);
+    const minVal = Math.min(...values);
+    const range = maxVal - minVal || 1;
     
-    // 좌표 계산 (좌우로 늘리고 시간/값 표시)
-    const coords = values.map((value, index) => {
-      const x = (index / (recentData.length - 1)) * 320 + 40; // 좌우 늘림 (viewBox 400 기준)
-      const y = ((maxValue - value) / range) * 70 + 15; // 세로 늘림 
-      return { x, y, value, time: index };
-    });
+    const coords = values.map((value, index) => ({
+      x: 20 + (index / 23) * 300,
+      y: 20 + ((maxVal - value) / range) * 80,
+      value
+    }));
     
-    // 선으로 연결할 path 생성
-    const pathData = coords.map((point, index) => 
-      index === 0 ? `M${point.x},${point.y}` : `L${point.x},${point.y}`
-    ).join(' ');
-    
-    // 시간 레이블 (0시~23시)
-    const timeLabels = [];
-    for (let i = 0; i < 24; i += 6) {
-      timeLabels.push({
-        x: (i / 23) * 320 + 40, // viewBox 400 기준으로 맞춤
-        label: `${i}시`
-      });
-    }
+    const path = coords.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join('');
     
     return (
-      <div className="w-full h-full relative bg-gray-50 rounded-lg" style={{ height: '200px' }}>
-        <svg viewBox="0 0 400 120" className="w-full h-full" style={{transform: 'scale(2.5)', transformOrigin: 'center'}}>
-          {/* 24시간 시간축 그리드 + 라벨 */}
-          {timeLabels.map(({ x, label }) => (
-            <g key={label}>
-              <line 
-                x1={x} y1="10" x2={x} y2="90" 
-                stroke="#d1d5db" strokeWidth="2" 
-              />
-              <text x={x} y="105" textAnchor="middle" fontSize="15" fill="#6b7280">
-                {label}
-              </text>
-            </g>
+      <div className="w-full h-32 bg-white border">
+        <svg viewBox="0 0 340 100" className="w-full h-full">
+          <defs>
+            <pattern id="grid" width="30" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 30 0 L 0 0 0 20" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
+            </pattern>
+          </defs>
+          
+          {/* 그리드 */}
+          <rect width="320" height="80" fill="url(#grid)" x="20" y="10"/>
+          
+          {/* 데이터 포인트들 */}
+          {coords.map(({ x, y, value }, index) => (
+            <circle 
+              key={index} 
+              cx={x} cy={y} r="3" 
+              fill={color} 
+              onMouseEnter={() => setHoveredPoint(index)}
+              onMouseLeave={() => setHoveredPoint(null)}
+              style={{ cursor: 'pointer' }}
+            />
           ))}
           
-          {/* 세로축 값 표시 */}
-          <text x="8" y="15" fontSize="15" fill="#6b7280">{maxValue.toFixed(1)}</text>
-          <text x="8" y="60" fontSize="15" fill="#6b7280">{((maxValue + minValue) / 2).toFixed(1)}</text>
-          <text x="8" y="105" fontSize="15" fill="#6b7280">{minValue.toFixed(1)}</text>
+          {/* 선 연결 */}
+          <path d={path} stroke={color} strokeWidth="3" fill="none"/>
           
-          {/* 데이터 포인트들 + 호버 */}
-          {coords.map(({ x, y, value, time }, index) => (
-            <g key={index}>
-              {/* 호버 영역 (큰 원) */}
-              <circle
-                cx={x} cy={y} r="12"
-                fill="transparent"
-                onMouseEnter={() => setHoveredPoint(index)}
-                onMouseLeave={() => setHoveredPoint(null)}
-                style={{ cursor: 'pointer' }}
-              />
-              {/* 데이터 포인트 */}
-              <circle cx={x} cy={y} r="6" fill={color} stroke="white" strokeWidth="2" />
-            </g>
-          ))}
+          {/* 시간 라벨 */}
+          <text x="20" y="95" fontSize="10" fill="gray">0시</text>
+          <text x="90" y="95" fontSize="10" fill="gray">6시</text>
+          <text x="160" y="95" fontSize="10" fill="gray">12시</text>
+          <text x="230" y="95" fontSize="10" fill="gray">18시</text>
+          <text x="300" y="95" fontSize="10" fill="gray">24시</text>
           
-          {/* 선으로 연결 */}
-          <path d={pathData} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" />
+          {/* 값 라벨 */}
+          <text x="2" y="15" fontSize="9" fill="gray">{maxVal.toFixed(1)}</text>
+          <text x="2" y="55" fontSize="9" fill="gray">{minVal.toFixed(1)}</text>
         </svg>
         
         {/* 호버 툴팁 */}
         {hoveredPoint !== null && coords[hoveredPoint] && (
-          <div 
-            className="absolute bg-gray-800 text-white px-3 py-2 rounded-lg shadow-lg z-20 pointer-events-none"
-            style={{
-              left: `${(coords[hoveredPoint].x / 400) * 100}%`,
-              top: '5px',
-              transform: 'translateX(-50%)',
-              whiteSpace: 'nowrap',
-              fontSize: '12px'
-            }}
-          >
-            <div className="font-bold">
-              {formatValue(coords[hoveredPoint].value)}{unit}
-            </div>
-            <div className="text-gray-300 text-xs">
-              {coords[hoveredPoint].time}시
-            </div>
+          <div className="absolute bg-black text-white px-2 py-1 rounded text-xs"
+               style={{
+                 left: `${coords[hoveredPoint].x}px`,
+                 bottom: '100%',
+                 transform: 'translateX(-50%)'
+               }}>
+            {formatValue(coords[hoveredPoint].value)}{unit}
           </div>
         )}
       </div>
