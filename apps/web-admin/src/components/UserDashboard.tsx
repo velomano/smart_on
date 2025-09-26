@@ -160,9 +160,11 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Mock 시스템 초기화 및 시작
+        // Mock 시스템 초기화 및 시작 - MQTT 연동 전까지 임시 중지
         mockSystem.initialize();
-        mockSystem.start();
+        // mockSystem.start(); // 자동 센서 데이터 송수신 중지
+        
+        console.log('⏸️ Mock 시스템 데이터 송수신이 임시 중지됨 (MQTT 연동 대기)');
 
         // Mock 데이터 업데이트를 위한 주기적 폴링
         const updateMockData = () => {
@@ -182,8 +184,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             return newStates;
           });
           
-          // Mock 센서 데이터 직접 모니터링 (alarm test)
-          checkMockSensorData();
+          // Mock 센서 데이터 모니터링은 MQTT 연동 전까지 임시 중지
+          // checkMockSensorData(); // 센서 모니터링 비활성화
         };
 
         // Mock 센서 데이터 알림 체크 함수 추가 (2농장 1베드만 테스트)
@@ -275,9 +277,11 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           checkMockSensorData();
         }, 1000);
 
-        // 5초마다 Mock 데이터 업데이트
-        const interval = setInterval(updateMockData, 5000);
-        setMockDataInterval(interval);
+        // Mock 데이터 주기적 업데이트 중지 (MQTT 연동 전까지)
+        // const interval = setInterval(updateMockData, 30000);
+        // setMockDataInterval(interval);
+        
+        console.log('⏸️ 자동 센서 데이터 업데이트가 임시 중지됨 (MQTT 대기 상태)');
 
         const [teamsResult, usersResult] = await Promise.all([
           getTeams(),

@@ -59,9 +59,11 @@ function BedsManagementContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Mock 시스템 초기화 및 시작
+        // Mock 시스템 초기화 및 시작 - MQTT 연동 전까지 임시 중지
         mockSystem.initialize();
-        mockSystem.start();
+        // mockSystem.start(); // 자동 센서 데이터 송수신 중지
+        
+        console.log('⏸️ Mock 시스템 데이터 송수신이 임시 중지됨 (MQTT 연동 대기)');
 
         // Mock 데이터 업데이트를 위한 주기적 폴링
         const updateMockData = () => {
@@ -94,7 +96,10 @@ function BedsManagementContent() {
         console.log('📊 초기 차트 데이터 생성:', initialChartData.length, '개 데이터 포인트');
         setSensorChartData(initialChartData);
 
-        // 5분마다 Mock 데이터 업데이트 (실제 농장 환경에 적합)
+        // MQTT 연동 전까지 자동 업데이트 비활성화
+        console.log('⏸️ 자동 센서 데이터 업데이트 비활성화 중 (MQTT 대기 상태)');
+        
+        /*
         const interval = setInterval(() => {
           updateMockData();
           
@@ -153,6 +158,7 @@ function BedsManagementContent() {
           });
         }, 300000); // 5분 = 300,000ms
         setMockDataInterval(interval);
+        */
 
         // 먼저 현재 로그인된 사용자 확인
         const currentUser = await getCurrentUser();

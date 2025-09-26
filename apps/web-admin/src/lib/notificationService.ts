@@ -155,6 +155,14 @@ async function getCurrentUserTelegramChatId(): Promise<string> {
 // 알림 전송 기록 저장 (중복 방지용)
 const sentNotifications = new Map<string, number>();
 
+// 개발자 도구에서 중복 방지 메모리 클리어 (테스트용)
+if (typeof window !== 'undefined') {
+  (window as any).clearNotificationCooldown = () => {
+    sentNotifications.clear();
+    console.log('텔레그램 알림 중복 방지 메모리 초기화됨');
+  };
+}
+
 // 센서 데이터 검증 및 알림 전송
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
   const settings = loadNotificationSettings();
@@ -335,9 +343,10 @@ export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<
       const currentTime = Date.now();
       const lastSentTime = sentNotifications.get(notificationKey_dup) || 0;
       
-      // 이전 전송이 30분 이내면 중복 방지
-      if (currentTime - lastSentTime < 30 * 60 * 1000) {
-        console.log('텔레그램 알림 중복 전송 방지:', notificationKey_dup);
+      // 이전 전송이 30분 이내면 중복 방지 (테스트를 위해 단축)
+      const cooldownMinutes = 5; // 30분에서 5분으로 단축
+      if (currentTime - lastSentTime < cooldownMinutes * 60 * 1000) {
+        console.log('텔레그램 알림 중복 전송 방지:', notificationKey_dup, `쉬는 시간: ${cooldownMinutes}분`);
       } else {
         const result = await sendNotification(templateId, variables, currentUserChatId);
         if (result.ok) {
@@ -345,7 +354,10 @@ export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<
           // 전송 성공 시 기록 저장
           sentNotifications.set(notificationKey_dup, currentTime);
         } else {
-          console.error('텔레그램 알림 전송 실패:', result.error);
+          console.warn('텔레그램 알림 전송 실패:', result.error);
+          console.log('텔레그램 전송 실패했지만 대시보드 알림은 이미 추가됨');
+          // 텔레그램 전송이 실패해도 대시보드 알림은 작동하므로 중복 전송 기록은 설정
+          sentNotifications.set(notificationKey_dup, currentTime);
         }
       }
     } catch (error) {

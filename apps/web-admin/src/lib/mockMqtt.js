@@ -89,6 +89,9 @@ export class MockMqttClient {
 
   // 센서 데이터 수집 시작
   startSensorDataCollection(intervalMs = 5000) {
+    console.log('⏸️ MQTT 센서 데이터 발행이 비활성화됨 (연동 대기)');
+    return; // MQTT 연동 전까지 임시 비활성화
+    
     if (!this.sensorCollector) {
       throw new Error('센서 수집기가 연결되지 않았습니다.')
     }

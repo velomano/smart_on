@@ -82,6 +82,9 @@ export class MockSensorCollector {
   startCollection(intervalMs = 5000) {
     if (this.isRunning) return
 
+    console.log('⏸️ Mock 센서 자동 수집이 비활성화됨 (MQTT 연동 대기 상태)');
+    return; // MQTT 연동 전까지 센서 자동 수집 무력
+
     this.isRunning = true
     this.intervalId = setInterval(() => {
       this.collectAllSensors()
@@ -112,8 +115,10 @@ export class MockSensorCollector {
       }
     }
 
-    // 콘솔에 로그 출력 (개발용)
-    console.log('📊 Mock 센서 데이터 수집:', allReadings.length, '개')
+    // 콘솔에 로그 출력 (개발용) - 주기 출력으로 줄임
+    if (this.sensors.size % 12 === 0) {  // 1분마다 한 번만 표시 (5초×12)
+      console.log('📊 Mock 센서 데이터 수집:', allReadings.length, '개')
+    }
 
     return allReadings
   }

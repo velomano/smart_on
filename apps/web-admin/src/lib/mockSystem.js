@@ -66,14 +66,17 @@ export class MockSystem {
 
     if (this.isRunning) return
 
-    // MQTT 구독 설정 (연결 후)
-    this.setupMqttSubscriptions()
+    // MQTT 연동 전까지 센서 데이터 송수신 중지
+    console.log('⚠️ MQTT 연결 대기 중: 소서 데이터 송수신 기능이 비활성화됨')
+    
+    // MQTT 구독 설정 (연결 후) - 임시 비활성화
+    // this.setupMqttSubscriptions()
 
-    // 센서 데이터 수집 시작
-    mockMqttClient.startSensorDataCollection(5000)
+    // 센서 데이터 수집 시작 - 임시 비활성화  
+    // mockMqttClient.startSensorDataCollection(5000)
 
-    this.isRunning = true
-    console.log('🚀 Mock 시스템 시작됨')
+    this.isRunning = false  // 중지 상태 유지
+    console.log('⏸️ Mock 시스템 데이터 전송 기능이 임시 중지됨')
   }
 
   // 시스템 중지

@@ -172,8 +172,10 @@ export async function sendNotification(
     const message = generateNotificationMessage(templateId, variables);
     
     // 서버사이드에서는 절대 URL 필요
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
     const url = `${baseUrl}/api/notifications/telegram`;
+    
+    console.log('텔레그램 API 호출 URL:', url);
     
     const response = await fetch(url, {
       method: 'POST',

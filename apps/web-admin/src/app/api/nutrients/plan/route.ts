@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { solveNutrients } from '@/lib/nutrients-engine/solve';
 import { loaders } from '@/lib/nutrientsLoaders';
 
-export const runtime = 'edge';
+// export const runtime = 'edge';
 
 export async function POST(req: Request) {
+  let body: any = {};
   try {
-    const body = await req.json();
+    body = await req.json();
     console.log('API 요청 본문:', body);
     
     const cropNameOrKey = (body.cropNameOrKey || body.crop || '').trim();
@@ -30,6 +31,12 @@ export async function POST(req: Request) {
   } catch (e:any) {
     console.error('API 에러:', e);
     const msg = String(e?.message || e);
-    return NextResponse.json({ ok:false, error: msg }, { status: 400 });
+    console.error('에러 스택:', e?.stack);
+    return NextResponse.json({ 
+      ok: false, 
+      error: msg,
+      details: e?.stack || 'No stack trace',
+      body: body
+    }, { status: 400 });
   }
 }

@@ -8,6 +8,8 @@ export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [authLoading, setAuthLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,16 +19,20 @@ export default function LoginPage() {
     preferred_team: ''
   });
   const router = useRouter();
-  
-  // 새로운 세션 매니저 사용
-  const { isAuthenticated, loading: authLoading } = useAuthSession();
 
   useEffect(() => {
-    // 이미 로그인된 사용자는 대시보드로 리다이렉트
-    if (isAuthenticated) {
-      router.push('/');
-    }
-  }, [isAuthenticated, router]);
+    const checkAuth = async () => {
+      const currentUser = await getCurrentUser();
+      if (currentUser && currentUser.is_approved && currentUser.is_active) {
+        setIsAuthenticated(true);
+        router.push('/');
+      } else {
+        setIsAuthenticated(false);
+        setAuthLoading(false);
+      }
+    };
+    checkAuth();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +96,15 @@ export default function LoginPage() {
       [e.target.name]: e.target.value
     });
   };
+
+  // 로딩 중이거나 이미 인증된 경우 처리
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
