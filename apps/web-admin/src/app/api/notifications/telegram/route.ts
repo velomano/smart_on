@@ -7,14 +7,20 @@ export async function POST(req: NextRequest) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const defaultChatId = process.env.TELEGRAM_CHAT_ID;
 
+    console.log('텔레그램 API 호출됨:', {
+      hasBotToken: !!botToken,
+      hasDefaultChatId: !!defaultChatId,
+      chatId,
+      userId
+    });
+
     if (!botToken) {
-      console.warn('텔레그램 봇 토큰이 설정되지 않았습니다. 개발 모드에서는 기본 대시보드 알림만 사용됩니다.');
+      console.warn('텔레그램 봇 토큰이 설정되지 않았습니다.');
       return NextResponse.json({ 
         ok: false, 
         error: '텔레그램 봇 토큰이 설정되지 않았습니다.', 
-        isDevelopment: true,
-        message: '개발 환경에서는 텔레그램 알림이 비활성화됩니다. 대시보드 알림만 사용됩니다.'
-      }, { status: 200 });
+        message: 'TELEGRAM_BOT_TOKEN 환경변수가 설정되지 않았습니다.'
+      }, { status: 400 });
     }
 
     // 사용할 채팅 ID 결정
@@ -48,36 +54,57 @@ export async function POST(req: NextRequest) {
     }
 
     // 텔레그램 봇 API 호출
-    const telegramResponse = await fetch(
-      `https://api.telegram.org/bot${botToken}/sendMessage`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chat_id: targetChatId,
-          text: message,
-          parse_mode: 'HTML'
-        }),
+    try {
+      const telegramResponse = await fetch(
+        `https://api.telegram.org/bot${botToken}/sendMessage`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: targetChatId,
+            text: message,
+            parse_mode: 'HTML'
+          }),
+        }
+      );
+
+      if (!telegramResponse.ok) {
+        const errorText = await telegramResponse.text();
+        console.error('텔레그램 API 응답 실패:', {
+          status: telegramResponse.status,
+          errorText
+        });
+        return NextResponse.json({ 
+          ok: false, 
+          error: `텔레그램 API 호출 실패 (${telegramResponse.status})` 
+        }, { status: 400 });
       }
-    );
 
-    const telegramResult = await telegramResponse.json();
+      const telegramResult = await telegramResponse.json();
 
-    if (!telegramResult.ok) {
-      console.error('텔레그램 전송 실패:', telegramResult);
+      if (!telegramResult.ok) {
+        console.error('텔레그램 전송 실패:', telegramResult);
+        return NextResponse.json({ 
+          ok: false, 
+          error: `텔레그램 전송 실패: ${telegramResult.description || '알 수 없는 오류'}` 
+        }, { status: 400 });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        message: '텔레그램 알림이 성공적으로 전송되었습니다.',
+        telegramResult
+      });
+
+    } catch (telegramError) {
+      console.error('텔레그램 API 호출 에러:', telegramError);
       return NextResponse.json({ 
         ok: false, 
-        error: `텔레그램 전송 실패: ${telegramResult.description}` 
+        error: `텔레그램 API 호출 중 에러: ${telegramError instanceof Error ? telegramError.message : '알 수 없는 오류'}` 
       }, { status: 500 });
     }
-
-    return NextResponse.json({
-      ok: true,
-      message: '텔레그램 알림이 성공적으로 전송되었습니다.',
-      telegramResult
-    });
 
   } catch (error) {
     console.error('텔레그램 알림 API 에러:', error);

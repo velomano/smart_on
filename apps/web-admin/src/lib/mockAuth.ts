@@ -482,35 +482,45 @@ const mockGetPendingUsers = async () => {
   await new Promise(resolve => setTimeout(resolve, 200));
   
   try {
-    // Supabase에서 직접 승인 대기 사용자 조회
-    const { getSupabaseClient } = await import('./supabase');
-    const supabase = getSupabaseClient();
+    // 먼저 로컬스토리지에서 확인
+    mockUsers = loadUsersFromStorage();
+    const localPendingUsers = mockUsers.filter(u => !u.is_approved);
     
-    const { data: pendingUsers, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('is_approved', false)
-      .order('created_at', { ascending: false });
+    try {
+      // Supabase에서도 시도
+      const { getSupabaseClient } = await import('./supabase');
+      const supabase = getSupabaseClient();
+      
+      const { data: pendingUsers, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('is_approved', false)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Supabase에서 승인 대기 사용자 조회 실패:', error);
-      return { success: false, error: '사용자 목록 조회에 실패했습니다.' };
+      if (!error && pendingUsers) {
+        // Supabase 데이터를 AuthUser 형태로 변환
+        const users = pendingUsers.map(user => ({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: 'team_member' as const,
+          preferred_team: undefined,
+          is_approved: false,
+          is_active: true,
+          created_at: user.created_at
+        }));
+
+        console.log('Supabase에서 조회된 승인 대기 사용자 수:', users.length);
+        return { success: true, users };
+      }
+      
+    } catch (supabaseError) {
+      console.error('Supabase 조회 실패:', supabaseError);
     }
-
-    // AuthUser 타입으로 변환
-    const users = pendingUsers.map(user => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: 'team_member' as const,
-      preferred_team: undefined,
-      is_approved: false,
-      is_active: true,
-      created_at: user.created_at
-    }));
-
-    console.log('Supabase에서 조회된 승인 대기 사용자 수:', users.length);
-    return { success: true, users };
+    
+    // Supabase 실패 시 로컬스토리지에서 반환
+    console.log('로컬스토리지에서 승인 대기 사용자 조회:', localPendingUsers.length);
+    return { success: true, users: localPendingUsers };
     
   } catch (error) {
     console.error('승인 대기 사용자 조회 오류:', error);
