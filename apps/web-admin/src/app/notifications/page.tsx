@@ -129,11 +129,12 @@ export default function NotificationsPage() {
       const testLocation = '2농장-베드2';
       const testDeviceId = 'bed_004';
 
-      // 대시보드 알림도 함께 추가하기 위해 notificationService를 직접 호출
-      const { checkSensorDataAndNotify } = await import('@/lib/notificationService');
+      // MQTT 연동 전까지 모든 알림 차단
+      console.log('🔒 테스트 센서 알림 차단됨 (MQTT 연동 전까지 알림 비활성화)');
+      
       const { dashboardAlertManager } = await import('@/lib/dashboardAlerts');
       
-      // 샌서 데이터 생성 (2농장 2베드 연동)
+      // 샌서 데이터 생성은 테스트 목적으로는 유지하되 알림은 차단
       const sensorData = {
         id: `test_${sensorType}_${Date.now()}`,
         type: sensorType as 'temperature' | 'humidity' | 'ec' | 'ph' | 'water',
@@ -144,8 +145,8 @@ export default function NotificationsPage() {
         deviceId: testDeviceId
       };
 
-      // 알림 전송 (텔레그램 + 대시보드 모두)
-      await checkSensorDataAndNotify(sensorData);
+      // 모든 센서 알림 차단
+      console.log('🔒 센서 테스트 알림이 완전히 차단됨 (MQTT 연동 대기 상태)');
 
       // 추가적으로 대시보드 경고도 직접 추가
       try {

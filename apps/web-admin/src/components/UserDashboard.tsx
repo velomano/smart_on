@@ -133,7 +133,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           water: { min: 20, max: 90 }
         };
         
-        // 센서 데이터 검증 및 알림
+        // 센서 데이터 검증 및 알림 - MQTT 연동 전까지 차단
+        console.log('🔒 센서 데이터 검증 및 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', sensor.type, location);
+        /*
         checkSensorDataAndNotify({
           id: sensor.id,
           type: sensor.type as 'temperature' | 'humidity' | 'ec' | 'ph' | 'water',
@@ -145,6 +147,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         }).catch(error => {
           console.error('센서 데이터 모니터링 에러:', error);
         });
+        */
       });
     };
 

@@ -162,40 +162,17 @@ export function generateNotificationMessage(
   return `${template.title}\n\n${message}`;
 }
 
-// 알림 전송 함수
+// 알림 전송 함수 - MQTT 연동 전까지 완전 차단
 export async function sendNotification(
   templateId: string,
   variables: Record<string, string | number>,
   chatId?: string
 ): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const message = generateNotificationMessage(templateId, variables);
-    
-    // 서버사이드에서는 절대 URL 필요
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-    const url = `${baseUrl}/api/notifications/telegram`;
-    
-    console.log('텔레그램 API 호출 URL:', url);
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message,
-        chatId
-      }),
-    });
-
-    const result = await response.json();
-    return result;
-
-  } catch (error) {
-    console.error('알림 전송 실패:', error);
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : '알 수 없는 오류'
-    };
-  }
+  // MQTT 서버 연동 전까지 모든 알림 완전 차단
+  console.log('🔒 sendNotification 호출 차단됨 (MQTT 연동 전까지 모든 알림 비활성화):', templateId);
+  
+  return {
+    ok: false,
+    error: 'MQTT 서버 연동 전까지 텔레그램 알림이 비활성화되었습니다.'
+  };
 }

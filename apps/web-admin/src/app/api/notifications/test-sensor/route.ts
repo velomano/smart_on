@@ -24,12 +24,12 @@ export async function POST(req: NextRequest) {
 
     console.log('🧪 테스트 센서 데이터:', testSensorData);
 
-    // 알림 검사 및 전송
-    await checkSensorDataAndNotify(testSensorData);
-
+    // MQTT 연동 전까지 모든 알림 차단
+    console.log('🔒 센서 테스트 알림 차단됨 (MQTT 연동 전까지 알림 비활성화)');
+    
     return NextResponse.json({
       ok: true,
-      message: '센서 테스트 알림이 전송되었습니다.',
+      message: '센서 테스트 알림이 차단되었습니다. (MQTT 연동 전까지 알림 비활성화)',
       sensorData: testSensorData
     });
 

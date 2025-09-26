@@ -174,25 +174,9 @@ export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<
 
 // 시스템 상태 검증 및 알림 전송
 export async function checkSystemStatusAndNotify(systemStatus: SystemStatus): Promise<void> {
-  const settings = loadNotificationSettings();
-  
-  if (!settings.telegramEnabled) {
-    return;
-  }
-
-  // 시스템 오프라인 알림
-  if (!systemStatus.online && (settings.notifications as any)?.system_offline) {
-    const variables = {
-      location: systemStatus.location,
-      lastSeen: systemStatus.lastSeen.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-    };
-
-    try {
-      await sendNotification('system_offline', variables);
-    } catch (error) {
-      console.error('시스템 오프라인 알림 전송 실패:', error);
-    }
-  }
+  // COMPLETELY DISABLED: 모든 알림 완전 차단
+  console.log('🔒 시스템 상태 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', systemStatus.online);
+  return;
 }
 
 // 제어 시스템 오류 알림
@@ -202,29 +186,9 @@ export async function notifyControlError(
   location: string,
   error: string
 ): Promise<void> {
-  const settings = loadNotificationSettings();
-  
-  if (!settings.telegramEnabled) {
-    return;
-  }
-
-  const templateId = deviceType === 'pump' ? 'pump_failure' : 'valve_stuck';
-  
-  if (!(settings.notifications as any)?.[templateId]) {
-    return;
-  }
-
-  const variables = {
-    location,
-    [`${deviceType}Id`]: deviceId,
-    status: error
-  };
-
-  try {
-    await sendNotification(templateId, variables);
-  } catch (error) {
-    console.error(`${deviceType} 오류 알림 전송 실패:`, error);
-  }
+  // COMPLETELY DISABLED: 모든 알림 완전 차단
+  console.log('🔒 제어 시스템 오류 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', deviceType, deviceId);
+  return;
 }
 
 // 사용자 액션 알림 (예: 레시피 저장)
@@ -232,17 +196,9 @@ export async function notifyUserAction(
   action: 'nutrient_recipe_saved',
   variables: Record<string, string | number>
 ): Promise<void> {
-  const settings = loadNotificationSettings();
-  
-  if (!settings.telegramEnabled || !(settings.notifications as any)?.[action]) {
-    return;
-  }
-
-  try {
-    await sendNotification(action, variables);
-  } catch (error) {
-    console.error('사용자 액션 알림 전송 실패:', error);
-  }
+  // COMPLETELY DISABLED: 모든 알림 완전 차단
+  console.log('🔒 사용자 액션 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', action);
+  return;
 }
 
 // 일일 리포트 생성 및 전송
@@ -253,17 +209,9 @@ export async function sendDailyReport(reportData: {
   avgEC: number;
   location: string;
 }): Promise<void> {
-  const settings = loadNotificationSettings();
-  
-  if (!settings.telegramEnabled || !(settings.notifications as any)?.daily_report) {
-    return;
-  }
-
-  try {
-    await sendNotification('daily_report', reportData);
-  } catch (error) {
-    console.error('일일 리포트 전송 실패:', error);
-  }
+  // COMPLETELY DISABLED: 모든 알림 완전 차단
+  console.log('🔒 일일 리포트 알림 차단됨 (MQTT 연동 전까지 알림 비활성화):', reportData.location);
+  return;
 }
 
 // 알림 서비스 초기화 (센서 데이터 모니터링 시작)
