@@ -213,27 +213,53 @@ export async function POST(req: NextRequest) {
       );
 
       if (!telegramResponse.ok) {
-        const errorText = await telegramResponse.text();
-        console.error('텔레그램 메시지 전송 실패:', {
+        let errorData;
+        try {
+          errorData = await telegramResponse.json();
+        } catch (parseError) {
+          const errorText = await telegramResponse.text();
+          errorData = { error_code: telegramResponse.status, description: errorText };
+        }
+        
+        console.error('텔레그램 메시지 전송 상세 오류:', {
           status: telegramResponse.status,
-          errorText,
-          targetChatId
+          errorData,
+          targetChatId,
+          timestamp: new Date().toISOString()
         });
         
-        let errorMessage = `텔레그램 메시지 전송 실패 (${telegramResponse.status})`;
+        let errorMessage = `텔레그램 전송 실패 (${telegramResponse.status})`;
+        let hint = '';
+        
         if (telegramResponse.status === 401) {
-          errorMessage = "봇 토큰이 유효하지 않거나 봇이 비활성화되었습니다. Vercel에서 TELEGRAM_BOT_TOKEN을 다시 확인하세요.";
+          errorMessage = "봇 토큰이 유효하지 않습니다.";
+          hint = "Vercel 환경변수에서 TELEGRAM_BOT_TOKEN을 다시 확인하세요.";
         } else if (telegramResponse.status === 403) {
-          errorMessage = "봇이 해당 채팅방에 접근할 수 없습니다. 채팅방에서 봇을 추가하거나 `/start`를 명령하세요.";
+          errorMessage = "봇이 해당 채팅방에 접근할 수 없습니다.";
+          hint = "봇과 대화를 시작하고, 로봇인증을 클리어해주세요.";
         } else if (telegramResponse.status === 400) {
-          errorMessage = `채팅방 정보가 올바르지 않습니다: ${targetChatId}. 유효한 채팅 ID를 입력하세요.`;
+          // 400 오류의 구체적인 원인 분석
+          const errorDesc = errorData.description || '';
+          
+          if (errorDesc.includes('chat not found')) {
+            errorMessage = "채팅방을 찾을 수 없습니다.";
+            hint = "채팅 ID를 다시 확인하고, 봇과 1:1 메시지를 먼저 나누어주세요.";
+          } else if (errorDesc.includes('bot was blocked')) {
+            errorMessage = "봇이 차단되었습니다.";
+            hint = "텔레그램에서 봇을 찾아서 차단해제하고 메시지를 보내주세요.";
+          } else {
+            errorMessage = `채팅방 접근 오류: ${errorDesc}`;
+            hint = "채팅 ID를 다시 확인하거나 봇에게 먼저 메시지를 보내주세요.";
+          }
         }
         
         return NextResponse.json({ 
           ok: false, 
           error: errorMessage,
-          details: errorText,
-          chatIdUsed: targetChatId
+          hint: hint,
+          telegramError: errorData,
+          chatIdUsed: targetChatId,
+          statusCode: telegramResponse.status
         }, { status: 400 });
       }
 
