@@ -423,7 +423,7 @@ const getAuthFunctions = () => {
     return {
       signIn: hybridSignIn,
       signUp: mockSignUp,
-      signOut: mockSignOut,
+      signOut: hybridSignOut,
       getCurrentUser: hybridGetCurrentUser,
       getPendingUsers: mockGetPendingUsers,
       approveUser: mockApproveUser,
@@ -636,7 +636,7 @@ const mockSignUp = async (data: SignUpData) => {
   }
 };
 
-// Supabase 로그아웃
+// Mock 로그아웃 (로컬스토리지 기반)
 const mockSignOut = async () => {
   try {
     console.log('Mock 로그아웃 시작');
@@ -654,6 +654,71 @@ const mockSignOut = async () => {
     return { success: true };
   } catch (error) {
     console.error('Mock 로그아웃 중 오류:', error);
+    return { success: false, error: '로그아웃 중 오류가 발생했습니다.' };
+  }
+};
+
+// Supabase 로그아웃
+const realSignOut = async () => {
+  try {
+    console.log('Supabase 로그아웃 시작');
+    
+    const supabase = createSbClient();
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('Supabase 로그아웃 오류:', error);
+      return { success: false, error: error.message };
+    }
+    
+    // 페이지 새로고침을 통해 상태 초기화
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    
+    console.log('Supabase 로그아웃 성공');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Supabase 로그아웃 중 오류:', error);
+    return { success: false, error: '로그아웃 중 오류가 발생했습니다.' };
+  }
+};
+
+// 하이브리드 로그아웃 함수
+const hybridSignOut = async () => {
+  try {
+    console.log('하이브리드 로그아웃 시작');
+    
+    // 현재 사용자 확인
+    const currentUser = await hybridGetCurrentUser();
+    
+    if (!currentUser) {
+      console.log('로그인된 사용자가 없습니다.');
+      // 로그인 페이지로 이동
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return { success: true };
+    }
+    
+    // Mock 계정인지 확인
+    const storedUsers = localStorage.getItem('mock_users');
+    if (storedUsers) {
+      const mockUsers: AuthUser[] = JSON.parse(storedUsers);
+      const isMockUser = mockUsers.some(user => user.email === currentUser.email);
+      
+      if (isMockUser) {
+        console.log('Mock 사용자 로그아웃:', currentUser.email);
+        return await mockSignOut();
+      }
+    }
+    
+    // Supabase 계정인 경우
+    console.log('Supabase 사용자 로그아웃:', currentUser.email);
+    return await realSignOut();
+    
+  } catch (error: any) {
+    console.error('하이브리드 로그아웃 중 오류:', error);
     return { success: false, error: '로그아웃 중 오류가 발생했습니다.' };
   }
 };
