@@ -2,10 +2,10 @@
 // 개발 환경: 미리 생성된 테스트 계정 사용
 // 운영 환경: Supabase Auth + 승인 시스템 사용
 
-// 환경 설정 - 하이브리드 인증 사용
+// 환경 설정 - Supabase 인증만 사용
 const isDevelopment = process.env.NODE_ENV === 'development';
-const useMockAuth = true; // Mock 인증 사용 (개발용)
-const useHybridAuth = true; // 하이브리드 모드: Mock + Supabase
+const useMockAuth = false; // Mock 인증 비활성화
+const useHybridAuth = false; // 하이브리드 모드 비활성화
 
 export interface AuthUser {
   id: string;
@@ -406,7 +406,6 @@ const realGetCurrentUser = async (): Promise<AuthUser | null> => {
 
 // 나머지 real 함수들은 기본값으로 설정
 const realSignUp = async (data: any) => ({ success: false, error: '회원가입은 관리자에게 문의하세요.' });
-const realSignOut = async () => ({ success: true });
 const realGetPendingUsers = async () => [];
 const realApproveUser = async (id: string) => ({ success: false, error: '권한이 없습니다.' });
 const realRejectUser = async (id: string) => ({ success: false, error: '권한이 없습니다.' });
