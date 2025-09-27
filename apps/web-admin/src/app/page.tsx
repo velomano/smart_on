@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getFarms, getDevices, getSensors, getLatestSensorReadings, Farm, Device, Sensor, SensorReading } from '../lib/supabase';
-import { getCurrentUser, AuthUser, getTeams } from '../lib/mockAuth';
+import { getCurrentUser, AuthUser, getTeams } from '../../lib/auth';
 import UserDashboard from '../components/UserDashboard';
 
 export default function WebAdminDashboard() {

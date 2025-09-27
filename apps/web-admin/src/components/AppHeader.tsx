@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthUser } from '../lib/mockAuth';
+import { AuthUser } from '../lib/auth';
 
 interface AppHeaderProps {
   user: AuthUser;
@@ -75,7 +75,7 @@ export default function AppHeader({
   };
 
   const handleLogout = async () => {
-    const { signOut } = await import('../lib/mockAuth');
+    const { signOut } = await import('../lib/auth');
     await signOut();
   };
 

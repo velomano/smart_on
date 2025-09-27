@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../lib/mockAuth';
+import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../lib/auth';
 import AppHeader from '../../components/AppHeader';
 
 interface TeamMember extends AuthUser {

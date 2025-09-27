@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/mockAuth';
+import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/auth';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
 import { mockSystem } from '../../lib/mockSystem';
 import AppHeader from '../../components/AppHeader';

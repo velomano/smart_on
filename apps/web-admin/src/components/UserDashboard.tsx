@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettings } from '../lib/mockAuth';
+import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettings } from '../../lib/auth';
 import { Farm, Device, Sensor, SensorReading } from '../lib/supabase';
 import { mockSystem } from '../lib/mockSystem';
 import AppHeader from './AppHeader';
