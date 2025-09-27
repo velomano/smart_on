@@ -472,26 +472,39 @@ const getAuthFunctions = () => {
 // Supabase 인증 함수들
 const mockSignIn = async (data: SignInData) => {
   try {
+    console.log('Mock 로그인 시도:', data.email);
+    
     // Mock 계정 확인 (로컬스토리지 기반)
     const storedUsers = localStorage.getItem('mock_users');
     if (!storedUsers) {
+      console.log('Mock 사용자 데이터가 없습니다.');
       return { success: false, error: 'Mock 사용자 데이터가 없습니다.' };
     }
 
     const users: AuthUser[] = JSON.parse(storedUsers);
+    console.log('저장된 사용자 수:', users.length);
+    console.log('사용자 목록:', users.map(u => u.email));
+    
     const user = users.find(u => u.email === data.email);
     
     if (!user) {
+      console.log('사용자를 찾을 수 없습니다:', data.email);
       return { success: false, error: '사용자를 찾을 수 없습니다.' };
     }
 
+    console.log('사용자 찾음:', user.email, user.name);
+
     // 비밀번호 확인 (Mock 계정은 123456)
     const expectedPassword = mockPasswords[data.email] || '123456';
+    console.log('비밀번호 확인:', data.password, 'vs', expectedPassword);
+    
     if (data.password !== expectedPassword) {
+      console.log('비밀번호 불일치');
       return { success: false, error: '비밀번호가 올바르지 않습니다.' };
     }
 
     if (!user.is_active) {
+      console.log('계정 비활성화');
       return { success: false, error: '계정이 비활성화되었습니다.' };
     }
 
@@ -499,6 +512,7 @@ const mockSignIn = async (data: SignInData) => {
     localStorage.setItem('current_user', JSON.stringify(user));
     localStorage.setItem('auth_token', 'mock_token_' + Date.now());
 
+    console.log('Mock 로그인 성공:', user.email);
     return { success: true, user };
   } catch (error) {
     console.error('Mock 로그인 중 오류:', error);
