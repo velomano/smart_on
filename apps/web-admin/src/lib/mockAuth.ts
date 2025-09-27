@@ -321,6 +321,101 @@ const hybridGetCurrentUser = async (): Promise<AuthUser | null> => {
   }
 };
 
+// Supabase 인증 함수들 (real 접두사)
+const realSignIn = async (data: SignInData) => {
+  try {
+    const { getSupabaseClient } = await import('./supabase');
+    const supabase = getSupabaseClient();
+    
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password
+    });
+
+    if (authError) {
+      return { success: false, error: authError.message };
+    }
+
+    if (authData.user) {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (userError || !userData?.is_active) {
+        return { success: false, error: '사용자 정보를 찾을 수 없거나 비활성화된 계정입니다.' };
+      }
+
+      const user: AuthUser = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        role: 'team_member', // 기본값
+        tenant_id: userData.tenant_id,
+        is_approved: userData.is_approved,
+        is_active: userData.is_active,
+        created_at: userData.created_at
+      };
+
+      return { success: true, user };
+    }
+
+    return { success: false, error: '로그인에 실패했습니다.' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+const realGetCurrentUser = async (): Promise<AuthUser | null> => {
+  try {
+    const { getSupabaseClient } = await import('./supabase');
+    const supabase = getSupabaseClient();
+    
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !authUser) {
+      return null;
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .single();
+
+    if (userError || !userData) {
+      return null;
+    }
+
+    return {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: 'team_member', // 기본값
+      tenant_id: userData.tenant_id,
+      is_approved: userData.is_approved,
+      is_active: userData.is_active,
+      created_at: userData.created_at
+    };
+  } catch (error) {
+    console.error('Supabase 사용자 조회 오류:', error);
+    return null;
+  }
+};
+
+// 나머지 real 함수들은 기본값으로 설정
+const realSignUp = async (data: any) => ({ success: false, error: '회원가입은 관리자에게 문의하세요.' });
+const realSignOut = async () => ({ success: true });
+const realGetPendingUsers = async () => [];
+const realApproveUser = async (id: string) => ({ success: false, error: '권한이 없습니다.' });
+const realRejectUser = async (id: string) => ({ success: false, error: '권한이 없습니다.' });
+const realGetTenants = async () => [];
+const realGetTeams = async () => [];
+const realGetApprovedUsers = async () => [];
+const realUpdateUser = async (id: string, data: any) => ({ success: false, error: '권한이 없습니다.' });
+const realDeleteUser = async (id: string) => ({ success: false, error: '권한이 없습니다.' });
+
 // 환경별 인증 함수 선택
 const getAuthFunctions = () => {
   if (useMockAuth && useHybridAuth) {
