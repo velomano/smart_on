@@ -2,9 +2,10 @@
 // 개발 환경: 미리 생성된 테스트 계정 사용
 // 운영 환경: Supabase Auth + 승인 시스템 사용
 
-// 환경 설정 - Supabase 우선 사용
+// 환경 설정 - 하이브리드 인증 사용
 const isDevelopment = process.env.NODE_ENV === 'development';
-const useMockAuth = false; // Supabase로 완전 전환
+const useMockAuth = true; // Mock 인증 사용 (개발용)
+const useHybridAuth = true; // 하이브리드 모드: Mock + Supabase
 
 export interface AuthUser {
   id: string;
@@ -274,9 +275,72 @@ const mockPasswords: { [key: string]: string } = {
   'test7@test.com': '123456'
 };
 
+// 하이브리드 인증 함수들
+const hybridSignIn = async (data: SignInData): Promise<{ success: boolean; user?: AuthUser; error?: string }> => {
+  try {
+    // 1. Mock 계정 확인
+    const mockResult = await mockSignIn(data);
+    if (mockResult.success) {
+      return mockResult;
+    }
+
+    // 2. Supabase 계정 확인 (하이브리드 모드일 때)
+    if (useHybridAuth) {
+      const supabaseResult = await realSignIn(data);
+      if (supabaseResult.success) {
+        return supabaseResult;
+      }
+    }
+
+    return { success: false, error: 'Invalid login credentials' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+const hybridGetCurrentUser = async (): Promise<AuthUser | null> => {
+  try {
+    // 1. Mock 사용자 확인
+    const mockUser = await mockGetCurrentUser();
+    if (mockUser) {
+      return mockUser;
+    }
+
+    // 2. Supabase 사용자 확인 (하이브리드 모드일 때)
+    if (useHybridAuth) {
+      const supabaseUser = await realGetCurrentUser();
+      if (supabaseUser) {
+        return supabaseUser;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('하이브리드 사용자 조회 오류:', error);
+    return null;
+  }
+};
+
 // 환경별 인증 함수 선택
 const getAuthFunctions = () => {
-  if (useMockAuth) {
+  if (useMockAuth && useHybridAuth) {
+    // 하이브리드 모드: Mock + Supabase
+    return {
+      signIn: hybridSignIn,
+      signUp: mockSignUp,
+      signOut: mockSignOut,
+      getCurrentUser: hybridGetCurrentUser,
+      getPendingUsers: mockGetPendingUsers,
+      approveUser: mockApproveUser,
+      rejectUser: mockRejectUser,
+      getTenants: mockGetTenants,
+      getTeams: mockGetTeams,
+      getApprovedUsers: mockGetApprovedUsers,
+      updateUser: mockUpdateUser,
+      deleteUser: mockDeleteUser
+    };
+  } else if (useMockAuth) {
+    // Mock 인증만 사용
     return {
       signIn: mockSignIn,
       signUp: mockSignUp,
@@ -292,20 +356,20 @@ const getAuthFunctions = () => {
       deleteUser: mockDeleteUser
     };
   } else {
-    // Mock 인증만 사용 (Supabase 연결 시에도)
+    // Supabase 인증만 사용
     return {
-      signIn: mockSignIn,
-      signUp: mockSignUp,
-      signOut: mockSignOut,
-      getCurrentUser: mockGetCurrentUser,
-      getPendingUsers: mockGetPendingUsers,
-      approveUser: mockApproveUser,
-      rejectUser: mockRejectUser,
-      getTenants: mockGetTenants,
-      getTeams: mockGetTeams,
-      getApprovedUsers: mockGetApprovedUsers,
-      updateUser: mockUpdateUser,
-      deleteUser: mockDeleteUser
+      signIn: realSignIn,
+      signUp: realSignUp,
+      signOut: realSignOut,
+      getCurrentUser: realGetCurrentUser,
+      getPendingUsers: realGetPendingUsers,
+      approveUser: realApproveUser,
+      rejectUser: realRejectUser,
+      getTenants: realGetTenants,
+      getTeams: realGetTeams,
+      getApprovedUsers: realGetApprovedUsers,
+      updateUser: realUpdateUser,
+      deleteUser: realDeleteUser
     };
   }
 };
