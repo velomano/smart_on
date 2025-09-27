@@ -2,8 +2,8 @@
 import { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
 import { notificationTemplates } from '@/lib/notificationTemplates';
-import { getCurrentUser } from '@/lib/mockAuth';
-import { AuthUser } from '@/lib/mockAuth';
+import { getCurrentUser } from '@/lib/auth';
+import { AuthUser } from '@/lib/auth';
 import { UserService } from '@/lib/userService';
 
 export default function NotificationsPage() {

@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { dashboardAlertManager, DashboardAlert } from '@/lib/dashboardAlerts';
-import { getCurrentUser } from '@/lib/mockAuth';
-import { AuthUser } from '@/lib/mockAuth';
+import { getCurrentUser, AuthUser } from '@/lib/auth';
 
 interface AlertBadgeProps {
   className?: string;

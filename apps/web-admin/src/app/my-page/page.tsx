@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import { getCurrentUser } from '@/lib/mockAuth';
-import { AuthUser } from '@/lib/mockAuth';
+import { getCurrentUser } from '@/lib/auth';
+import { AuthUser } from '@/lib/auth';
 import { UserService, UserProfile, UserSettings } from '@/lib/userService';
 import { User } from '@supabase/supabase-js';
 
