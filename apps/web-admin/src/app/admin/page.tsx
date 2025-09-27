@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getPendingUsers, getApprovedUsers, getTenants, getTeams, approveUser, rejectUser, updateUser, deleteUser, resetMockUsers, AuthUser } from '../../lib/auth';
+import { getCurrentUser, getPendingUsers, getApprovedUsers, getTenants, getTeams, approveUser, rejectUser, updateUser, deleteUser, resetMockUsers, AuthUser } from '../lib/auth';
 import AppHeader from '../../components/AppHeader';
 
 interface PendingUser {

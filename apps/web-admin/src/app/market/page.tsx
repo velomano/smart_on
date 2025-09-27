@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, AuthUser } from '../../lib/auth';
+import { getCurrentUser, AuthUser } from '../lib/auth';
 import AppHeader from '../../components/AppHeader';
 
 // KAMIS API 타입 정의

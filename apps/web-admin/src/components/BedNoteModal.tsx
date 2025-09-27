@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BedNote, BedNoteFormData, saveBedNote, getBedNotes, updateBedNote, deleteBedNote, COMMON_TAGS, getTagColor, canCreateAnnouncement, hasExistingAnnouncement } from '../lib/bedNotes';
-import { getCurrentUser } from '../../lib/auth';
+import { getCurrentUser } from '../lib/auth';
 
 interface BedNoteModalProps {
   isOpen: boolean;

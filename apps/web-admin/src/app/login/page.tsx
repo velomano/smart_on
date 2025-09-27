@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signIn, signUp, getCurrentUser } from '../../lib/auth';
+import { signIn, signUp, getCurrentUser } from '../lib/auth';
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
