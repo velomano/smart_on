@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from '../../components/AppHeader';
-import { AuthUser, getCurrentUser, getApprovedUsers, updateUserSettings } from '../lib/auth';
+import { AuthUser, getCurrentUser, getApprovedUsers, updateUserSettings } from '../../lib/auth';
 
 export default function TeamManagementPage() {
   const router = useRouter();
