@@ -662,7 +662,8 @@ const realSignOut = async () => {
   try {
     console.log('Supabase 로그아웃 시작');
     
-    const supabase = createSbClient();
+    const { getSupabaseClient } = await import('./supabase');
+    const supabase = getSupabaseClient();
     const { error } = await supabase.auth.signOut();
     
     if (error) {
