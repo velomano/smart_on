@@ -639,26 +639,21 @@ const mockSignUp = async (data: SignUpData) => {
 // Supabase 로그아웃
 const mockSignOut = async () => {
   try {
-    // Supabase Auth 로그아웃
-    const { getSupabaseClient } = await import('./supabase');
-    const supabase = getSupabaseClient();
+    console.log('Mock 로그아웃 시작');
     
-    const { error } = await supabase.auth.signOut();
+    // 로컬스토리지에서 사용자 정보 제거
+    localStorage.removeItem('current_user');
+    localStorage.removeItem('auth_token');
     
-    if (error) {
-      console.error('Supabase 로그아웃 오류:', error);
-      return { success: false, error: error.message };
-    }
-
     // 페이지 새로고침을 통해 상태 초기화
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }
     
-    console.log('Supabase 로그아웃 성공');
+    console.log('Mock 로그아웃 성공');
     return { success: true };
   } catch (error) {
-    console.error('로그아웃 중 오류:', error);
+    console.error('Mock 로그아웃 중 오류:', error);
     return { success: false, error: '로그아웃 중 오류가 발생했습니다.' };
   }
 };
