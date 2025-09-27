@@ -76,21 +76,21 @@ export const getFarms = async (): Promise<Farm[]> => {
   console.log('Using mock data for farms');
   return [
     {
-      id: 'team-001',
+      id: '00000000-0000-0000-0000-000000000001',
       tenant_id: '00000000-0000-0000-0000-000000000001',
       name: '1농장',
       location: '서울시 강남구',
       created_at: new Date().toISOString()
     },
     {
-      id: 'team-002',
+      id: '00000000-0000-0000-0000-000000000002',
       tenant_id: '00000000-0000-0000-0000-000000000001',
       name: '2농장',
       location: '서울시 서초구',
       created_at: new Date().toISOString()
     },
     {
-      id: 'team-003',
+      id: '00000000-0000-0000-0000-000000000003',
       tenant_id: '00000000-0000-0000-0000-000000000001',
       name: '3농장',
       location: '서울시 송파구',
@@ -100,21 +100,177 @@ export const getFarms = async (): Promise<Farm[]> => {
 };
 
 export const getDevices = async (): Promise<Device[]> => {
-  // Mock 데이터 반환
-  return [];
+  // Mock 데이터 반환 - 베드 정보
+  return [
+    {
+      id: 'bed-001',
+      name: '1농장 A베드',
+      type: 'sensor_gateway',
+      status: { online: true, brightness: 80 },
+      farm_id: '00000000-0000-0000-0000-000000000001',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'bed-002',
+      name: '1농장 B베드',
+      type: 'sensor_gateway',
+      status: { online: true, brightness: 60 },
+      farm_id: '00000000-0000-0000-0000-000000000001',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'bed-003',
+      name: '2농장 A베드',
+      type: 'sensor_gateway',
+      status: { online: false, brightness: 0 },
+      farm_id: '00000000-0000-0000-0000-000000000002',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'bed-004',
+      name: '2농장 B베드',
+      type: 'sensor_gateway',
+      status: { online: true, brightness: 70 },
+      farm_id: '00000000-0000-0000-0000-000000000002',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'bed-005',
+      name: '3농장 A베드',
+      type: 'sensor_gateway',
+      status: { online: true, brightness: 90 },
+      farm_id: '00000000-0000-0000-0000-000000000003',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'bed-006',
+      name: '3농장 B베드',
+      type: 'sensor_gateway',
+      status: { online: true, brightness: 50 },
+      farm_id: '00000000-0000-0000-0000-000000000003',
+      created_at: new Date().toISOString()
+    }
+  ];
 };
 
 export const getSensors = async (): Promise<Sensor[]> => {
-  // Mock 데이터 반환
-  return [];
+  // Mock 데이터 반환 - 센서 정보
+  return [
+    {
+      id: 'sensor-001',
+      name: '온도센서',
+      type: 'temperature',
+      unit: '°C',
+      device_id: 'bed-001',
+      value: 24.5,
+      status: 'active',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'sensor-002',
+      name: '습도센서',
+      type: 'humidity',
+      unit: '%',
+      device_id: 'bed-001',
+      value: 65.2,
+      status: 'active',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'sensor-003',
+      name: 'pH센서',
+      type: 'ph',
+      unit: 'pH',
+      device_id: 'bed-001',
+      value: 6.8,
+      status: 'active',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: 'sensor-004',
+      name: 'EC센서',
+      type: 'ec',
+      unit: 'mS/cm',
+      device_id: 'bed-001',
+      value: 1.8,
+      status: 'active',
+      created_at: new Date().toISOString()
+    }
+  ];
 };
 
 export const getSensorReadings = async (): Promise<SensorReading[]> => {
-  // Mock 데이터 반환
-  return [];
+  // Mock 데이터 반환 - 센서 읽기 데이터
+  return [
+    {
+      id: 'reading-001',
+      sensor_id: 'sensor-001',
+      value: 24.5,
+      unit: '°C',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: 'reading-002',
+      sensor_id: 'sensor-002',
+      value: 65.2,
+      unit: '%',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: 'reading-003',
+      sensor_id: 'sensor-003',
+      value: 6.8,
+      unit: 'pH',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: 'reading-004',
+      sensor_id: 'sensor-004',
+      value: 1.8,
+      unit: 'mS/cm',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    }
+  ];
 };
 
 export const getLatestSensorReadings = async (): Promise<SensorReading[]> => {
-  // Mock 데이터 반환
-  return [];
+  // Mock 데이터 반환 - 최신 센서 읽기 데이터
+  return [
+    {
+      id: 'reading-001',
+      sensor_id: 'sensor-001',
+      value: 24.5,
+      unit: '°C',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: 'reading-002',
+      sensor_id: 'sensor-002',
+      value: 65.2,
+      unit: '%',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: 'reading-003',
+      sensor_id: 'sensor-003',
+      value: 6.8,
+      unit: 'pH',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: 'reading-004',
+      sensor_id: 'sensor-004',
+      value: 1.8,
+      unit: 'mS/cm',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    }
+  ];
 };

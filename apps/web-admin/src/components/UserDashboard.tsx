@@ -347,16 +347,16 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   }, [user.id]);
   
   // 통계 계산
-  const totalFarms = farms.length;
-  const totalBeds = devices.filter(d => d.type === 'sensor_gateway').length; // 실제 센서 게이트웨이(베드) 수
-  const activeBeds = devices.filter(d => d.type === 'sensor_gateway' && d.status?.online).length;
+  const totalFarms = farms?.length || 0;
+  const totalBeds = devices?.filter(d => d.type === 'sensor_gateway').length || 0; // 실제 센서 게이트웨이(베드) 수
+  const activeBeds = devices?.filter(d => d.type === 'sensor_gateway' && d.status?.online).length || 0;
   const bedActivationRate = totalBeds > 0 ? Math.round((activeBeds / totalBeds) * 100) : 0;
   
-  const activeMembers = approvedUsers.filter(user => 
+  const activeMembers = approvedUsers?.filter(user => 
     user.is_active && user.is_approved && 
     (user.role === 'team_leader' || user.role === 'team_member')
-  ).length; // 실제 활성화된 팀원 수
-  const tempReadings = sensorReadings.filter(r => r.unit === '°C').slice(0, 10);
+  ).length || 0; // 실제 활성화된 팀원 수
+  const tempReadings = sensorReadings?.filter(r => r.unit === '°C').slice(0, 10) || [];
   const averageTemp = tempReadings.reduce((sum, r) => sum + r.value, 0) / Math.max(tempReadings.length, 1);
 
         // 사용자 역할에 따른 권한 확인
@@ -502,7 +502,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                       updateUserSettings(user.id, newSettings);
                     }}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 ml-3 ${
-                      userSettings.showOnlyMyFarm ? 'bg-white/30' : 'bg-white/10'
+                      userSettings.showOnlyMyFarm ? 'bg-blue-500' : 'bg-gray-400'
                     }`}
                   >
                     <span
@@ -519,19 +519,29 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             <div className="space-y-6">
               {(() => {
                 // 농장 필터링 및 베드 계산
-                const filteredFarms = farms.filter(farm => {
+                console.log('🔍 대시보드 필터링 디버그:', {
+                  userRole: user.role,
+                  userTeamId: user.team_id,
+                  showOnlyMyFarm: userSettings.showOnlyMyFarm,
+                  totalFarms: (farms || []).length,
+                  farms: (farms || []).map(f => ({ id: f.id, name: f.name }))
+                });
+                
+                const filteredFarms = (farms || []).filter(farm => {
                   // 농장장/팀원인 경우 설정에 따라 필터링
                   if (user.role === 'team_leader' || user.role === 'team_member') {
                     if (userSettings.showOnlyMyFarm) {
                       // 자기 농장만 표시
-                      return farm.id === user.team_id;
+                      const isMyFarm = farm.id === user.team_id;
+                      console.log(`농장 ${farm.name} (${farm.id}) vs 사용자 팀 ID (${user.team_id}): ${isMyFarm ? '포함' : '제외'}`);
+                      return isMyFarm;
                     }
                     // 설정이 꺼져있으면 모든 농장 표시
                   }
                   return true;
                 }).map(farm => {
                   // 농장의 베드들 중 대시보드에 노출되는 것들만 필터링
-                  const farmDevices = devices.filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway');
+                  const farmDevices = (devices || []).filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway');
                   const visibleDevices = farmDevices.filter(device => {
                     // 베드별 대시보드 노출 설정 확인
                     const showOnDashboard = bedDashboardSettings[device.id] !== false; // 기본값은 true
@@ -628,7 +638,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         </div>
                       ) : (
                         farm.visibleDevices.map((device: Device, deviceIndex: number) => {
-                        const deviceSensors = sensors.filter(s => s.device_id === device.id);
+                        const deviceSensors = (sensors || []).filter(s => s.device_id === device.id);
                         
                           // 전체 알림 로그와 비교 
                           const allAlerts = dashboardAlertManager.getAlerts();
@@ -839,10 +849,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
               </div>
             </div>
             <div className="space-y-4">
-              {sensorReadings.slice(0, 5).map((reading) => {
-                const sensor = sensors.find(s => s.id === reading.sensor_id);
-                const device = devices.find(d => d.id === sensor?.device_id);
-                const farm = farms.find(f => f.id === device?.farm_id);
+              {(sensorReadings || []).slice(0, 5).map((reading) => {
+                const sensor = (sensors || []).find(s => s.id === reading.sensor_id);
+                const device = (devices || []).find(d => d.id === sensor?.device_id);
+                const farm = (farms || []).find(f => f.id === device?.farm_id);
                 
                 return (
                   <div key={reading.id} className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
@@ -872,7 +882,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   </div>
                 );
               })}
-              {sensorReadings.length === 0 && (
+              {(sensorReadings || []).length === 0 && (
                 <div className="text-center py-16">
                   <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <span className="text-4xl">📊</span>

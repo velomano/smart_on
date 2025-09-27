@@ -1,6 +1,31 @@
 // Supabase 인증 시스템
 import { getSupabaseClient } from './supabase';
 
+// 임시 타입 정의 (Supabase 타입 생성 전까지 사용)
+interface DatabaseUser {
+  id: string;
+  email: string;
+  name: string;
+  role?: string;
+  tenant_id?: string;
+  team_id?: string;
+  team_name?: string;
+  preferred_team?: string;
+  is_approved?: boolean;
+  is_active?: boolean;
+  company?: string;
+  phone?: string;
+  avatar_url?: string;
+  last_login_at?: string;
+  created_at?: string;
+  updated_at?: string;
+  approved_at?: string;
+  approved_by?: string;
+}
+
+// Mock 인증 사용 여부 확인
+const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true';
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -32,8 +57,45 @@ export interface SignInData {
 }
 
 // Supabase 로그인
+// Supabase 에러 메시지를 한글로 변환
+const translateAuthError = (errorMessage: string): string => {
+  const errorMap: { [key: string]: string } = {
+    'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
+    'Email not confirmed': '이메일 인증이 완료되지 않았습니다.',
+    'User not found': '사용자를 찾을 수 없습니다.',
+    'Invalid email': '올바르지 않은 이메일 형식입니다.',
+    'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다.',
+    'User already registered': '이미 등록된 사용자입니다.',
+    'Too many requests': '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.',
+    'Network error': '네트워크 오류가 발생했습니다.',
+    'Server error': '서버 오류가 발생했습니다.',
+    'Invalid refresh token': '인증 토큰이 만료되었습니다. 다시 로그인해주세요.'
+  };
+
+  // 정확한 매칭 시도
+  if (errorMap[errorMessage]) {
+    return errorMap[errorMessage];
+  }
+
+  // 부분 매칭 시도
+  for (const [key, value] of Object.entries(errorMap)) {
+    if (errorMessage.includes(key)) {
+      return value;
+    }
+  }
+
+  // 기본 메시지
+  return `로그인 중 오류가 발생했습니다: ${errorMessage}`;
+};
+
 export const signIn = async (data: SignInData) => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { signIn: mockSignIn } = await import('./mockAuth');
+      return mockSignIn(data);
+    }
+
     const supabase = getSupabaseClient();
     
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -42,7 +104,7 @@ export const signIn = async (data: SignInData) => {
     });
 
     if (authError) {
-      return { success: false, error: authError.message };
+      return { success: false, error: translateAuthError(authError.message) };
     }
 
     if (authData.user) {
@@ -51,9 +113,13 @@ export const signIn = async (data: SignInData) => {
         .from('users')
         .select('*')
         .eq('id', authData.user.id)
-        .single();
+        .single() as { data: DatabaseUser | null; error: any };
 
       if (userError) {
+        return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
+      }
+
+      if (!userData) {
         return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
       }
 
@@ -61,7 +127,7 @@ export const signIn = async (data: SignInData) => {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: userData.role || 'team_member',
+        role: (userData.role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
         tenant_id: userData.tenant_id,
         is_approved: userData.is_approved,
         is_active: userData.is_active,
@@ -80,6 +146,12 @@ export const signIn = async (data: SignInData) => {
 // Supabase 현재 사용자 정보 가져오기
 export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getCurrentUser: mockGetCurrentUser } = await import('./mockAuth');
+      return mockGetCurrentUser();
+    }
+
     const supabase = getSupabaseClient();
     
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
@@ -92,7 +164,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       .from('users')
       .select('*')
       .eq('id', authUser.id)
-      .single();
+      .single() as { data: DatabaseUser | null; error: any };
 
     if (userError || !userData) {
       return null;
@@ -102,7 +174,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       id: userData.id,
       email: userData.email,
       name: userData.name,
-      role: userData.role || 'team_member',
+      role: (userData.role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
       tenant_id: userData.tenant_id,
       is_approved: userData.is_approved,
       is_active: userData.is_active,
@@ -117,6 +189,12 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 // Supabase 로그아웃
 export const signOut = async () => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { signOut: mockSignOut } = await import('./mockAuth');
+      return mockSignOut();
+    }
+
     console.log('Supabase 로그아웃 시작');
     
     const supabase = getSupabaseClient();
@@ -143,6 +221,12 @@ export const signOut = async () => {
 // Supabase 회원가입
 export const signUp = async (data: SignUpData) => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { signUp: mockSignUp } = await import('./mockAuth');
+      return mockSignUp(data);
+    }
+
     const supabase = getSupabaseClient();
     
     // Supabase Auth로 사용자 등록
@@ -160,12 +244,12 @@ export const signUp = async (data: SignUpData) => {
     });
 
     if (authError) {
-      return { success: false, error: authError.message };
+      return { success: false, error: translateAuthError(authError.message) };
     }
 
     if (authData.user) {
       // users 테이블에 사용자 정보 저장
-      const { error: userError } = await supabase
+      const { error: userError } = await (supabase as any)
         .from('users')
         .insert({
           id: authData.user.id,
@@ -195,6 +279,12 @@ export const signUp = async (data: SignUpData) => {
 // 승인 대기 사용자 조회
 export const getPendingUsers = async () => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getPendingUsers: mockGetPendingUsers } = await import('./mockAuth');
+      return mockGetPendingUsers();
+    }
+
     const supabase = getSupabaseClient();
     
     const { data: pendingUsers, error } = await supabase
@@ -202,7 +292,7 @@ export const getPendingUsers = async () => {
       .select('*')
       .eq('is_approved', false)
       .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: DatabaseUser[] | null; error: any };
 
     if (error) {
       return [];
@@ -218,9 +308,15 @@ export const getPendingUsers = async () => {
 // 사용자 승인
 export const approveUser = async (userId: string) => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { approveUser: mockApproveUser } = await import('./mockAuth');
+      return mockApproveUser(userId);
+    }
+
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .update({ 
         is_approved: true,
@@ -241,9 +337,15 @@ export const approveUser = async (userId: string) => {
 // 사용자 거부
 export const rejectUser = async (userId: string) => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { rejectUser: mockRejectUser } = await import('./mockAuth');
+      return mockRejectUser(userId);
+    }
+
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .update({ 
         is_active: false 
@@ -263,6 +365,12 @@ export const rejectUser = async (userId: string) => {
 // 승인된 사용자 조회
 export const getApprovedUsers = async () => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getApprovedUsers: mockGetApprovedUsers } = await import('./mockAuth');
+      return mockGetApprovedUsers();
+    }
+
     const supabase = getSupabaseClient();
     
     const { data: approvedUsers, error } = await supabase
@@ -270,7 +378,7 @@ export const getApprovedUsers = async () => {
       .select('*')
       .eq('is_approved', true)
       .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false }) as { data: DatabaseUser[] | null; error: any };
 
     if (error) {
       return [];
@@ -286,6 +394,12 @@ export const getApprovedUsers = async () => {
 // 테넌트 목록 조회
 export const getTenants = async () => {
   try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getTenants: mockGetTenants } = await import('./mockAuth');
+      return mockGetTenants();
+    }
+
     const supabase = getSupabaseClient();
     
     const { data: tenants, error } = await supabase
@@ -315,13 +429,178 @@ export const getTeams = async () => {
       .order('name');
 
     if (error) {
-      return [];
+      console.log('teams 테이블 조회 실패, Mock 데이터 사용:', error.message);
+      // teams 테이블이 없으면 Mock 데이터 반환
+      return {
+        success: true,
+        teams: [
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            name: '1농장',
+            description: '1번 농장 팀',
+            team_code: 'FARM001',
+            location: '서울시 강남구',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            name: '2농장',
+            description: '2번 농장 팀',
+            team_code: 'FARM002',
+            location: '서울시 서초구',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000003',
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            name: '3농장',
+            description: '3번 농장 팀',
+            team_code: 'FARM003',
+            location: '서울시 송파구',
+            created_at: new Date().toISOString()
+          }
+        ],
+        devices: [
+          {
+            id: 'bed-001',
+            name: '1농장 A베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 80 },
+            farm_id: '00000000-0000-0000-0000-000000000001',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-002',
+            name: '1농장 B베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 60 },
+            farm_id: '00000000-0000-0000-0000-000000000001',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-003',
+            name: '2농장 A베드',
+            type: 'sensor_gateway',
+            status: { online: false, brightness: 0 },
+            farm_id: '00000000-0000-0000-0000-000000000002',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-004',
+            name: '2농장 B베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 70 },
+            farm_id: '00000000-0000-0000-0000-000000000002',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-005',
+            name: '3농장 A베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 90 },
+            farm_id: '00000000-0000-0000-0000-000000000003',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-006',
+            name: '3농장 B베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 50 },
+            farm_id: '00000000-0000-0000-0000-000000000003',
+            created_at: new Date().toISOString()
+          }
+        ],
+        sensors: [
+          {
+            id: 'sensor-001',
+            name: '온도센서',
+            type: 'temperature',
+            unit: '°C',
+            device_id: 'bed-001',
+            value: 24.5,
+            status: 'active',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'sensor-002',
+            name: '습도센서',
+            type: 'humidity',
+            unit: '%',
+            device_id: 'bed-001',
+            value: 65.2,
+            status: 'active',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'sensor-003',
+            name: 'pH센서',
+            type: 'ph',
+            unit: 'pH',
+            device_id: 'bed-001',
+            value: 6.8,
+            status: 'active',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'sensor-004',
+            name: 'EC센서',
+            type: 'ec',
+            unit: 'mS/cm',
+            device_id: 'bed-001',
+            value: 1.8,
+            status: 'active',
+            created_at: new Date().toISOString()
+          }
+        ],
+        sensorReadings: [
+          {
+            id: 'reading-001',
+            sensor_id: 'sensor-001',
+            value: 24.5,
+            unit: '°C',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          },
+          {
+            id: 'reading-002',
+            sensor_id: 'sensor-002',
+            value: 65.2,
+            unit: '%',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          },
+          {
+            id: 'reading-003',
+            sensor_id: 'sensor-003',
+            value: 6.8,
+            unit: 'pH',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          },
+          {
+            id: 'reading-004',
+            sensor_id: 'sensor-004',
+            value: 1.8,
+            unit: 'mS/cm',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          }
+        ]
+      };
     }
 
-    return teams || [];
+    return {
+      success: true,
+      teams: teams || []
+    };
   } catch (error) {
     console.error('팀 조회 오류:', error);
-    return [];
+    return {
+      success: false,
+      teams: []
+    };
   }
 };
 
@@ -330,9 +609,25 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    // AuthUser에서 데이터베이스 테이블에 존재하는 필드만 추출
+    const dbData: Record<string, any> = {};
+    
+    // 데이터베이스 테이블에 존재하는 필드들만 매핑
+    if (data.name !== undefined) dbData.name = data.name;
+    if (data.email !== undefined) dbData.email = data.email;
+    if (data.role !== undefined) dbData.role = data.role;
+    if (data.tenant_id !== undefined) dbData.tenant_id = data.tenant_id;
+    if (data.team_id !== undefined) dbData.team_id = data.team_id;
+    if (data.team_name !== undefined) dbData.team_name = data.team_name;
+    if (data.preferred_team !== undefined) dbData.preferred_team = data.preferred_team;
+    if (data.is_approved !== undefined) dbData.is_approved = data.is_approved;
+    if (data.is_active !== undefined) dbData.is_active = data.is_active;
+    if (data.company !== undefined) dbData.company = data.company;
+    if (data.phone !== undefined) dbData.phone = data.phone;
+    
+    const { error } = await (supabase as any)
       .from('users')
-      .update(data)
+      .update(dbData)
       .eq('id', userId);
 
     if (error) {
@@ -350,7 +645,7 @@ export const deleteUser = async (userId: string) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .update({ is_active: false })
       .eq('id', userId);
@@ -371,7 +666,8 @@ const getUserSettingsInternal = (userId: string) => {
   const settings = localStorage.getItem(`user_settings_${userId}`);
   return settings ? JSON.parse(settings) : {
     showTeamBedsOnDashboard: true,
-    showAllBedsInBedManagement: false
+    showAllBedsInBedManagement: false,
+    showOnlyMyFarm: false // 기본값은 모든 농장 표시
   };
 };
 
@@ -384,9 +680,86 @@ export const getUserSettings = (userId: string) => {
   return getUserSettingsInternal(userId);
 };
 
-export const updateUserSettings = (userId: string, settings: any) => {
-  const currentSettings = getUserSettingsInternal(userId);
-  const newSettings = { ...currentSettings, ...settings };
-  saveUserSettings(userId, newSettings);
-  return newSettings;
+export const updateUserSettings = async (userId: string, settings: any) => {
+  try {
+    // Supabase에 설정 저장 시도
+    const supabase = getSupabaseClient();
+    
+    // 기존 설정 조회
+    const { data: existingSettings, error: fetchError } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single() as { data: any | null; error: any };
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        // 테이블이 없거나 데이터가 없는 경우 - localStorage만 사용
+        console.log('user_settings 테이블이 없거나 데이터가 없음, localStorage 사용');
+        const currentSettings = getUserSettingsInternal(userId);
+        const newSettings = { ...currentSettings, ...settings };
+        saveUserSettings(userId, newSettings);
+        return newSettings;
+      } else if (fetchError.code === 'PGRST205') {
+        // 테이블이 존재하지 않는 경우 - localStorage만 사용
+        console.log('user_settings 테이블이 존재하지 않음, localStorage 사용');
+        const currentSettings = getUserSettingsInternal(userId);
+        const newSettings = { ...currentSettings, ...settings };
+        saveUserSettings(userId, newSettings);
+        return newSettings;
+      } else {
+        // 기타 오류 - localStorage 백업
+        console.error('기존 설정 조회 오류:', fetchError);
+        const currentSettings = getUserSettingsInternal(userId);
+        const newSettings = { ...currentSettings, ...settings };
+        saveUserSettings(userId, newSettings);
+        return newSettings;
+      }
+    }
+
+    // dashboard_preferences에 showOnlyMyFarm 추가
+    const dashboardPrefs = existingSettings?.dashboard_preferences || {};
+    const updatedDashboardPrefs = {
+      ...dashboardPrefs,
+      showOnlyMyFarm: settings.showOnlyMyFarm
+    };
+
+    const settingsUpdate = {
+      user_id: userId,
+      ...existingSettings,
+      dashboard_preferences: updatedDashboardPrefs,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: insertOrUpdateError } = existingSettings
+      ? await (supabase as any)
+          .from('user_settings')
+          .update(settingsUpdate)
+          .eq('user_id', userId)
+      : await (supabase as any)
+          .from('user_settings')
+          .insert(settingsUpdate);
+
+    if (insertOrUpdateError) {
+      console.error('사용자 설정 업데이트 오류:', insertOrUpdateError);
+      // localStorage 백업
+      const currentSettings = getUserSettingsInternal(userId);
+      const newSettings = { ...currentSettings, ...settings };
+      saveUserSettings(userId, newSettings);
+      return newSettings;
+    }
+
+    // localStorage에도 백업
+    saveUserSettings(userId, settings);
+    
+    console.log('사용자 설정 업데이트 성공:', settings);
+    return settings;
+  } catch (error) {
+    console.error('사용자 설정 업데이트 중 오류:', error);
+    // localStorage 백업
+    const currentSettings = getUserSettingsInternal(userId);
+    const newSettings = { ...currentSettings, ...settings };
+    saveUserSettings(userId, newSettings);
+    return newSettings;
+  }
 };

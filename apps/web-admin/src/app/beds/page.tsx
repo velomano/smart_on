@@ -639,10 +639,23 @@ function BedsManagementContent() {
                 farmsToShow = farms.filter(farm => farm.id === selectedFarmTab);
               } else {
                 // 기본값: 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시
+                console.log('🔍 농장 관리 페이지 필터링 디버그:', {
+                  userRole: user?.role,
+                  userTeamId: user?.team_id,
+                  totalFarms: farms.length,
+                  farms: farms.map(f => ({ id: f.id, name: f.name }))
+                });
+                
                 if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
-                  farmsToShow = farms.filter(farm => farm.id === user.team_id);
+                  farmsToShow = farms.filter(farm => {
+                    const isMyFarm = farm.id === user.team_id;
+                    console.log(`농장 ${farm.name} (${farm.id}) vs 사용자 팀 ID (${user.team_id}): ${isMyFarm ? '포함' : '제외'}`);
+                    return isMyFarm;
+                  });
+                  console.log('농장장/팀원 필터링 결과:', farmsToShow);
                 } else {
                   farmsToShow = farms;
+                  console.log('관리자 - 모든 농장 표시:', farmsToShow);
                 }
               }
               

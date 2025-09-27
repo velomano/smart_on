@@ -1,7 +1,7 @@
 'use client';
 
-import { supabase } from './supabase';
-import { AuthUser } from './mockAuth';
+import { getSupabaseClient } from './supabase';
+import { AuthUser } from './auth';
 
 export interface UserProfile {
   id: string;
@@ -39,6 +39,7 @@ export class UserService {
    */
   static async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
+      const supabase = getSupabaseClient();
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
