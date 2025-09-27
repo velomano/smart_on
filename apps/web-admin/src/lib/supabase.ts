@@ -5,21 +5,33 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-projec
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// 싱글톤 클라이언트 인스턴스들
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+let serviceClient: ReturnType<typeof createClient> | null = null;
 
-// Supabase 클라이언트 생성 함수 (mockAuth.ts에서 사용)
+// 일반 클라이언트 (싱글톤)
 export const getSupabaseClient = () => {
-  // 서비스 키가 있으면 서비스 키로 클라이언트 생성 (RLS 우회)
-  if (serviceKey) {
-    return createClient(supabaseUrl, serviceKey, {
+  if (!supabaseClient) {
+    supabaseClient = createClient(supabaseUrl, supabaseKey);
+  }
+  return supabaseClient;
+};
+
+// 서비스 클라이언트 (싱글톤)
+export const getServiceClient = () => {
+  if (!serviceClient && serviceKey) {
+    serviceClient = createClient(supabaseUrl, serviceKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
       }
     });
   }
-  return createClient(supabaseUrl, supabaseKey);
+  return serviceClient;
 };
+
+// 기존 호환성을 위한 export
+export const supabase = getSupabaseClient();
 
 // 타입 정의
 export interface Farm {
