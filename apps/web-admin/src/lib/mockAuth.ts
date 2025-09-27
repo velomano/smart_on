@@ -472,67 +472,36 @@ const getAuthFunctions = () => {
 // Supabase 인증 함수들
 const mockSignIn = async (data: SignInData) => {
   try {
-    // Supabase Auth로 로그인
-    const { getSupabaseClient } = await import('./supabase');
-    const supabase = getSupabaseClient();
+    // Mock 계정 확인 (로컬스토리지 기반)
+    const storedUsers = localStorage.getItem('mock_users');
+    if (!storedUsers) {
+      return { success: false, error: 'Mock 사용자 데이터가 없습니다.' };
+    }
+
+    const users: AuthUser[] = JSON.parse(storedUsers);
+    const user = users.find(u => u.email === data.email);
     
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password
-    });
-
-    if (authError) {
-      console.error('Supabase 로그인 오류:', authError);
-      return { success: false, error: authError.message };
+    if (!user) {
+      return { success: false, error: '사용자를 찾을 수 없습니다.' };
     }
 
-    if (authData.user) {
-      // users 테이블에서 사용자 정보 조회
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (userError) {
-        console.error('사용자 정보 조회 오류:', userError);
-        return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
-      }
-
-      if (!userData.is_active) {
-        return { success: false, error: '계정이 비활성화되었습니다. 관리자에게 문의하세요.' };
-      }
-
-      // memberships 테이블에서 권한 정보 조회
-      const { data: membershipData } = await supabase
-        .from('memberships')
-        .select('role, tenant_id, tenants(name)')
-        .eq('user_id', authData.user.id)
-        .single();
-
-      const user: AuthUser = {
-        id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        role: membershipData?.role as any || 'team_member',
-        tenant_id: membershipData?.tenant_id,
-        team_id: userData.team_id,
-        team_name: userData.team_name,
-        preferred_team: userData.preferred_team,
-        is_approved: userData.is_approved,
-        is_active: userData.is_active,
-        created_at: userData.created_at,
-        company: userData.company,
-        phone: userData.phone
-      };
-
-      console.log('Supabase 로그인 성공:', user.email);
-      return { success: true, user };
+    // 비밀번호 확인 (Mock 계정은 123456)
+    const expectedPassword = mockPasswords[data.email] || '123456';
+    if (data.password !== expectedPassword) {
+      return { success: false, error: '비밀번호가 올바르지 않습니다.' };
     }
 
-    return { success: false, error: '로그인에 실패했습니다.' };
+    if (!user.is_active) {
+      return { success: false, error: '계정이 비활성화되었습니다.' };
+    }
+
+    // 로그인 성공 - 세션에 저장
+    localStorage.setItem('current_user', JSON.stringify(user));
+    localStorage.setItem('auth_token', 'mock_token_' + Date.now());
+
+    return { success: true, user };
   } catch (error) {
-    console.error('로그인 중 오류:', error);
+    console.error('Mock 로그인 중 오류:', error);
     return { success: false, error: '로그인 중 오류가 발생했습니다.' };
   }
 };
@@ -683,56 +652,16 @@ const mockSignOut = async () => {
 // Supabase 현재 사용자 정보 가져오기
 const mockGetCurrentUser = async (): Promise<AuthUser | null> => {
   try {
-    // Supabase Auth에서 현재 사용자 조회
-    const { getSupabaseClient } = await import('./supabase');
-    const supabase = getSupabaseClient();
-    
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !authUser) {
-      console.log('Supabase 인증 사용자 없음');
+    // 로컬스토리지에서 현재 사용자 조회
+    const currentUser = localStorage.getItem('current_user');
+    if (!currentUser) {
       return null;
     }
 
-    // users 테이블에서 사용자 정보 조회
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', authUser.id)
-      .single();
-
-    if (userError) {
-      console.error('사용자 정보 조회 오류:', userError);
-      return null;
-    }
-
-    // memberships 테이블에서 권한 정보 조회
-    const { data: membershipData } = await supabase
-      .from('memberships')
-      .select('role, tenant_id, tenants(name)')
-      .eq('user_id', authUser.id)
-      .single();
-
-    const user: AuthUser = {
-      id: userData.id,
-      email: userData.email,
-      name: userData.name,
-      role: membershipData?.role as any || 'team_member',
-      tenant_id: membershipData?.tenant_id,
-      team_id: userData.team_id,
-      team_name: userData.team_name,
-      preferred_team: userData.preferred_team,
-      is_approved: userData.is_approved,
-      is_active: userData.is_active,
-      created_at: userData.created_at,
-      company: userData.company,
-      phone: userData.phone
-    };
-
-    console.log('Supabase 현재 사용자 조회 성공:', user.email);
+    const user: AuthUser = JSON.parse(currentUser);
     return user;
   } catch (error) {
-    console.error('현재 사용자 조회 중 오류:', error);
+    console.error('Mock 현재 사용자 조회 중 오류:', error);
     return null;
   }
 };
