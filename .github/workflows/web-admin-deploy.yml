@@ -1,16 +1,7 @@
 name: Deploy Web Admin
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'apps/web-admin/**'
-      - 'packages/database/**'
-  pull_request:
-    branches: [main]
-    paths:
-      - 'apps/web-admin/**'
-      - 'packages/database/**'
+  # 자동 실행 비활성화 (수동 실행만 가능)
   workflow_dispatch: # 수동 실행 가능
 
 jobs:

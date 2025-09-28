@@ -52,31 +52,28 @@ export default function TeamPage() {
 
   const loadTeamMembers = async () => {
     try {
-      const result = await getApprovedUsers();
-      if (result.success) {
-        const allUsers = result.users;
-        
-        // 현재 사용자의 농장 멤버들만 필터링
-        let members: AuthUser[] = [];
-        
-        console.log('현재 사용자:', user);
-        console.log('전체 사용자:', allUsers);
-        
-        if (user?.role === 'system_admin') {
-          // 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
-          members = allUsers.filter(member => member.id !== user?.id) as AuthUser[];
-        } else if (user?.team_id) {
-          // 농장장/팀원은 자신의 농장 멤버들만 볼 수 있음 (자신 포함)
-          members = allUsers.filter(member => 
-            member.team_id === user.team_id && 
-            member.role !== 'system_admin' // 시스템 관리자는 제외
-          ) as AuthUser[];
-        }
-        
-        console.log('필터링된 멤버들:', members);
-        
-        setTeamMembers(members as TeamMember[]);
+      const allUsers = await getApprovedUsers();
+      
+      // 현재 사용자의 농장 멤버들만 필터링
+      let members: AuthUser[] = [];
+      
+      console.log('현재 사용자:', user);
+      console.log('전체 사용자:', allUsers);
+      
+      if (user?.role === 'system_admin') {
+        // 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
+        members = allUsers.filter(member => member.id !== user?.id) as AuthUser[];
+      } else if (user?.team_id) {
+        // 농장장/팀원은 자신의 농장 멤버들만 볼 수 있음 (자신 포함)
+        members = allUsers.filter(member => 
+          member.team_id === user.team_id && 
+          member.role !== 'system_admin' // 시스템 관리자는 제외
+        ) as AuthUser[];
       }
+      
+      console.log('필터링된 멤버들:', members);
+      
+      setTeamMembers(members as TeamMember[]);
     } catch {
       console.error('Error loading team members');
     } finally {
@@ -214,8 +211,8 @@ export default function TeamPage() {
         {/* Overview Section */}
         <div className="mb-8">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">팀 관리</h2>
-            <p className="text-lg text-gray-600">팀원들의 정보를 확인하고 관리하세요</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">팀 정보</h2>
+            <p className="text-lg text-gray-600">팀의 정보를 볼 수 있습니다</p>
           </div>
         </div>
 

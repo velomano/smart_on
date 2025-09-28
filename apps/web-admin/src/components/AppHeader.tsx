@@ -52,6 +52,39 @@ export default function AppHeader({
   const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member' || user.email === 'sky3rain7@gmail.com';
   const canManageMyTeamMembers = user.role === 'team_leader'; // 농장장은 자신의 팀원만 관리
 
+  // 팀원 보기 메뉴 조건 - team_member만 볼 수 있음
+  const canViewTeamMembers = user.role === 'team_member';
+  
+  // 디버깅: 사용자 정보와 권한 상태 출력
+  console.log('🔍 AppHeader 디버깅:', {
+    role: user.role,
+    email: user.email,
+    canManageUsers,
+    canManageTeamMembers,
+    canManageFarms,
+    canManageMyTeamMembers,
+    canViewTeamMembers,
+    teamId: user.team_id,
+    teamName: user.team_name,
+    conditions: {
+      condition1: canManageTeamMembers,
+      condition2: !canManageUsers,
+      condition3: user.role !== 'team_leader',
+      final: canViewTeamMembers
+    },
+    fullUser: user
+  });
+  
+  // 추가 디버깅: 각 조건별 상세 분석
+  console.log('🔍 상세 조건 분석:', {
+    'user.role': user.role,
+    'user.role === "team_member"': user.role === 'team_member',
+    'canManageTeamMembers': canManageTeamMembers,
+    '!canManageUsers': !canManageUsers,
+    'user.role !== "team_leader"': user.role !== 'team_leader',
+    '최종 canViewTeamMembers': canViewTeamMembers
+  });
+
   const handleBackClick = () => {
     if (onBackClick) {
       onBackClick();
@@ -96,7 +129,7 @@ export default function AppHeader({
       path: '/beds',
       color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
     }] : []),
-    ...(canManageTeamMembers && !canManageUsers && user.role !== 'team_leader' ? [{
+    ...(canViewTeamMembers ? [{
       label: '팀원 보기',
       path: '/team',
       color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
@@ -122,6 +155,12 @@ export default function AppHeader({
       color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
     }
   ];
+
+  // 메뉴 아이템 디버깅
+  console.log('🔍 AppHeader menuItems:', menuItems);
+  console.log('🔍 AppHeader menuItems 길이:', menuItems.length);
+  console.log('🔍 AppHeader menuItems 상세:', menuItems.map(item => ({ label: item.label, path: item.path })));
+  console.log('🔍 AppHeader canViewTeamMembers 최종값:', canViewTeamMembers);
 
   return (
     <>

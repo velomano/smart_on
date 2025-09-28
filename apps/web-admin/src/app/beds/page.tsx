@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/auth';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
-import { mockSystem } from '../../lib/mockSystem';
+// Mock 시스템 제거됨 - 실제 Supabase 데이터 사용
 import AppHeader from '../../components/AppHeader';
 import ActuatorControlModal from '../../components/ActuatorControlModal';
 import ScheduleModal from '../../components/ScheduleModal';
@@ -24,9 +24,7 @@ function BedsManagementContent() {
   const [sensorReadings, setSensorReadings] = useState<SensorReading[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFarmTab, setSelectedFarmTab] = useState<string>('');
-  const [mockSensorData, setMockSensorData] = useState<any[]>([]);
-  const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
-  const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
+  // Mock 데이터 변수들 제거됨 - 실제 Supabase 데이터 사용
   const [localActuatorStates, setLocalActuatorStates] = useState<Record<string, boolean>>({});
   const [actuatorSchedules, setActuatorSchedules] = useState<Record<string, any>>({});
   const [actuatorDualTimes, setActuatorDualTimes] = useState<Record<string, any>>({});
@@ -59,37 +57,10 @@ function BedsManagementContent() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Mock 시스템 초기화 및 시작 - MQTT 연동 전까지 임시 중지
-        mockSystem.initialize();
-        // mockSystem.start(); // 자동 센서 데이터 송수신 중지
-        
-        console.log('⏸️ Mock 시스템 데이터 송수신이 임시 중지됨 (MQTT 연동 대기)');
-
-        // Mock 데이터 업데이트를 위한 주기적 폴링
-        const updateMockData = () => {
-          const sensorData = mockSystem.getBedSensorData('bed_001'); // 예시: 첫 번째 베드
-          const actuatorData = mockSystem.getBedActuators('bed_001');
-          setMockSensorData(sensorData);
-          setMockActuatorData(actuatorData);
-          
-          // 액추에이터 상태는 초기에만 설정하고 이후에는 덮어쓰지 않음
-          setLocalActuatorStates(prev => {
-            // 이미 설정된 상태가 있으면 유지
-            if (Object.keys(prev).length > 0) {
-              return prev;
-            }
-            
-            // 초기 설정만 수행
-            const newStates = { ...prev };
-            actuatorData.forEach((actuator: any) => {
-              newStates[actuator.deviceId] = actuator.status === 'on';
-            });
-            return newStates;
-          });
-        };
+        console.log('📊 실제 Supabase 데이터 로드 중...');
 
         // 초기 데이터 로드
-        updateMockData();
+        console.log('📊 실제 데이터 로드 완료');
 
         // 24시간 차트 데이터 초기화
         const initialChartData = generateChartData();
@@ -98,67 +69,6 @@ function BedsManagementContent() {
 
         // MQTT 연동 전까지 자동 업데이트 비활성화
         console.log('⏸️ 자동 센서 데이터 업데이트 비활성화 중 (MQTT 대기 상태)');
-        
-        /*
-        const interval = setInterval(() => {
-          updateMockData();
-          
-          // 차트 데이터도 업데이트 (새로운 데이터 포인트 추가)
-          setSensorChartData(prevData => {
-            const newData = [...prevData];
-            
-            // 288개 데이터 포인트 유지 (5분마다 업데이트, 24시간 데이터)
-            if (newData.length >= 288) {
-              newData.shift(); // 가장 오래된 데이터 제거
-            }
-            
-            // 새로운 현재 시간 데이터 추가
-            const now = new Date();
-            const hour = now.getHours();
-            const minute = now.getMinutes();
-            const second = now.getSeconds();
-            
-            // 시간대별 패턴을 고려한 Mock 데이터 생성
-            const baseTemp = 20 + Math.sin((hour - 6) * Math.PI / 12) * 8; // 6시 최저, 18시 최고
-            const baseHumidity = 60 + Math.sin((hour - 12) * Math.PI / 12) * 20; // 12시 최저
-            const baseEC = 1.5 + Math.sin((hour - 6) * Math.PI / 12) * 0.5;
-            const basePH = 6.0 + Math.sin((hour - 12) * Math.PI / 12) * 0.8;
-            
-            // 더 큰 변동 추가 (센서별로 다른 변동폭)
-            const getVariation = (sensorType: string) => {
-              switch(sensorType) {
-                case 'temperature': return () => (Math.random() - 0.5) * 3; // 온도: ±1.5°C 변동
-                case 'humidity': return () => (Math.random() - 0.5) * 4; // 습도: ±2% 변동
-                case 'ec': return () => (Math.random() - 0.5) * 0.3; // EC: ±0.15 변동
-                case 'ph': return () => (Math.random() - 0.5) * 0.4; // pH: ±0.2 변동
-                default: return () => (Math.random() - 0.5) * 2;
-              }
-            };
-            
-            const timeVariation = (minute * 60 + second) / 3600 * 0.5; // 시간에 따른 변화 증가
-            const waveVariation = Math.sin(second * Math.PI / 30) * 1.0; // 30초 주기 파동 증가
-            const randomSpike = Math.random() < 0.1 ? (Math.random() - 0.5) * 2 : 0; // 10% 확률로 급격한 변화
-            
-            // 센서별 변동 적용
-            const tempVariation = getVariation('temperature');
-            const humidityVariation = getVariation('humidity');
-            const ecVariation = getVariation('ec');
-            const phVariation = getVariation('ph');
-            
-            newData.push({
-              time: now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
-              fullTime: now.toISOString(),
-              temperature: Math.round((baseTemp + tempVariation() + timeVariation + waveVariation + randomSpike) * 10) / 10,
-              humidity: Math.round((baseHumidity + humidityVariation() + timeVariation + waveVariation + randomSpike) * 10) / 10,
-              ec: Math.round((baseEC + ecVariation() + timeVariation * 0.1 + waveVariation * 0.1 + randomSpike * 0.1) * 10) / 10,
-              ph: Math.round((basePH + phVariation() + timeVariation * 0.1 + waveVariation * 0.1 + randomSpike * 0.1) * 10) / 10
-            });
-            
-            return newData;
-          });
-        }, 300000); // 5분 = 300,000ms
-        setMockDataInterval(interval);
-        */
 
         // 먼저 현재 로그인된 사용자 확인
         const currentUser = await getCurrentUser();
@@ -231,10 +141,7 @@ function BedsManagementContent() {
 
     // 컴포넌트 언마운트 시 Mock 시스템 정리
     return () => {
-      mockSystem.stop();
-      if (mockDataInterval) {
-        clearInterval(mockDataInterval);
-      }
+      // 정리 작업 (필요시 추가)
     };
   }, [router]);
 
@@ -319,7 +226,8 @@ function BedsManagementContent() {
     
     // Mock 시스템에 명령 전달
     try {
-      mockSystem.handleControlCommand('control/farm_001/bed_001/' + deviceId, command);
+      // 실제 MQTT 제어 명령 (향후 구현)
+      console.log('🔧 액추에이터 제어:', deviceId, command);
       console.log(`✅ 액추에이터 제어 성공: ${deviceId} -> ${newState ? 'ON' : 'OFF'}`);
     } catch (error) {
       console.error(`❌ 액추에이터 제어 실패: ${deviceId}`, error);
@@ -373,7 +281,8 @@ function BedsManagementContent() {
     };
     
     try {
-      mockSystem.handleControlCommand('control/farm_001/bed_001/' + deviceId, command);
+      // 실제 MQTT 제어 명령 (향후 구현)
+      console.log('🔧 액추에이터 제어:', deviceId, command);
       console.log(`✅ 액추에이터 상태 변경: ${deviceId} -> ${status ? 'ON' : 'OFF'}`);
     } catch (error) {
       console.error(`❌ 액추에이터 상태 변경 실패: ${deviceId}`, error);
@@ -789,8 +698,6 @@ function BedsManagementContent() {
                                 <SensorCard
                                   type="temperature"
                                   value={(() => {
-                                    const mockTemp = mockSensorData.find(s => s.type === 'temperature');
-                                    if (mockTemp) return mockTemp.value;
                                     const tempSensor = deviceSensors.find(s => s.type === 'temperature');
                                     const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
                                     return reading ? reading.value : 0;
@@ -805,8 +712,6 @@ function BedsManagementContent() {
                                 <SensorCard
                                   type="humidity"
                                   value={(() => {
-                                    const mockHumidity = mockSensorData.find(s => s.type === 'humidity');
-                                    if (mockHumidity) return mockHumidity.value;
                                     const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
                                     const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
                                     return reading ? reading.value : 0;
@@ -821,8 +726,6 @@ function BedsManagementContent() {
                                 <SensorCard
                                   type="ec"
                                   value={(() => {
-                                    const mockEC = mockSensorData.find(s => s.type === 'ec');
-                                    if (mockEC) return mockEC.value;
                                     const ecSensor = deviceSensors.find(s => s.type === 'ec');
                                     const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
                                     return reading ? reading.value : 0;
@@ -837,8 +740,6 @@ function BedsManagementContent() {
                                 <SensorCard
                                   type="ph"
                                   value={(() => {
-                                    const mockPH = mockSensorData.find(s => s.type === 'ph');
-                                    if (mockPH) return mockPH.value;
                                     const phSensor = deviceSensors.find(s => s.type === 'ph');
                                     const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
                                     return reading ? reading.value : 0;

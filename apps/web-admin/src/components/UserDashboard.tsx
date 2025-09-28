@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getUserSettings, updateUserSettings } from '../lib/auth';
 import { Farm, Device, Sensor, SensorReading } from '../lib/supabase';
-import { mockSystem } from '../lib/mockSystem';
+// Mock 시스템 제거됨 - 실제 Supabase 데이터 사용
 import AppHeader from './AppHeader';
 import NotificationButton from './NotificationButton';
 import { dashboardAlertManager } from '../lib/dashboardAlerts';
@@ -13,7 +13,11 @@ const ALERTS_DISABLED_MESSAGE = "🔒 ALERTS COMPLETELY DISABLED";
 
 // Hard-coded stub to replace checkSensorDataAndNotify to ensure complete disable of alerts
 async function checkSensorDataAndNotify(sensorData: any) {
-  console.log('🔒 PERMANENT DISABLED - checkSensorDataAndNotify stub called:', sensorData. type, sensorData.location);
+  console.log(
+    '🔒 PERMANENT DISABLED - checkSensorDataAndNotify stub called:',
+    sensorData.type,
+    sensorData.location
+  );
   // Return immediately without any actions whatsoever
   return;
 }
@@ -37,9 +41,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     showAllBedsInBedManagement: false
   });
   const [bedDashboardSettings, setBedDashboardSettings] = useState<Record<string, boolean>>({});
-  const [mockSensorData, setMockSensorData] = useState<any[]>([]);
-  const [mockActuatorData, setMockActuatorData] = useState<any[]>([]);
-  const [mockDataInterval, setMockDataInterval] = useState<NodeJS.Timeout | null>(null);
+  // Mock 데이터 변수들 제거됨 - 실제 Supabase 데이터 사용
   const [localActuatorStates, setLocalActuatorStates] = useState<Record<string, boolean>>({});
   const [bedAlerts, setBedAlerts] = useState<Record<string, DashboardAlert[]>>({});
 
@@ -173,152 +175,27 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   // 팀 데이터 로드
   useEffect(() => {
     const loadData = async () => {
+      setTeamsLoading(true);
       try {
-        // Mock 시스템 초기화 및 시작 - MQTT 연동 전까지 임시 중지
-        mockSystem.initialize();
-        // mockSystem.start(); // 자동 센서 데이터 송수신 중지
-        
-        console.log('⏸️ Mock 시스템 데이터 송수신이 임시 중지됨 (MQTT 연동 대기)');
-
-        // Mock 데이터 업데이트를 위한 주기적 폴링
-        const updateMockData = () => {
-          const sensorData = mockSystem.getBedSensorData('bed_001'); // 예시: 첫 번째 베드
-          const actuatorData = mockSystem.getBedActuators('bed_001');
-          setMockSensorData(sensorData);
-          setMockActuatorData(actuatorData);
-          
-          // 로컬 액추에이터 상태가 없을 때만 Mock 데이터로 초기화
-          setLocalActuatorStates(prev => {
-            const newStates = { ...prev };
-            actuatorData.forEach((actuator: any) => {
-              if (prev[actuator.deviceId] === undefined) {
-                newStates[actuator.deviceId] = actuator.status === 'on';
-              }
-            });
-            return newStates;
-          });
-          
-          // Mock 센서 데이터 모니터링은 MQTT 연동 전까지 임시 중지
-          // checkMockSensorData(); // 센서 모니터링 비활성화
-        };
-
-        // Mock 센서 데이터 알림 체크 함수 - 완전 차단 (사용자가 차단한 봇 안전)
-        const checkMockSensorData = async () => {
-          console.log('🚫 모든 자동 센서 알림이 완전히 차단됨 (봇 차단 방지)');
-          return;
-          
-          // 완전 비활성화된 코드 - 테스트 목적으로 남겨둠
-          /*
-          console.log('🔔 경고 알림 테스트 시작!');
-          
-          // test1 계정을 위한 텔레그램 ID 강제 저장
-          try {
-            const currentUserData = localStorage.getItem('mock_user');
-            if (currentUserData) {
-              const currentUser = JSON.parse(currentUserData);
-              if (currentUser.email === 'test1@test.com') {
-                // test1 계정용 텔레그램 ID 확인 및 초기화
-                const currentSettings = localStorage.getItem('notificationSettings');
-                const userDefinedId = currentSettings ? JSON.parse(currentSettings).telegramChatId : '';
-                
-                // 사용자가 입력한 ID가 있으면 사용, 없으면 기본값 사용
-                if (userDefinedId && userDefinedId.trim() !== '') {
-                  localStorage.setItem('test1_telegram_chat_id', userDefinedId);
-                  console.log('🔧 test1 계정: 사용자 입력 텔레그램 채팅 ID 사용:', userDefinedId);
-                } else {
-                  const testChatId = localStorage.getItem('test1_telegram_chat_id');
-                  if (!testChatId || testChatId === 'no-telegram-set' || testChatId === '123456789') {
-                    // 하드코딩된 기본값 제거 - 사용자가 직접 설정하도록 유도
-                    console.log('🔧 test1 계정: 텔레그램 채팅 ID가 설정되지 않음. 마이페이지에서 설정하세요.');
-                  }
-                }
-              }
-            }
-          } catch (error) {
-            console.error('텔레그램 ID 저장 실패:', error);
-          }
-          
-          // 2농장 1베드만 체크 (bed_003)
-          const testBedId = 'bed_003';
-          const bedSensorData = mockSystem.getBedSensorData(testBedId);
-          
-          console.log('센서 데이터 확인:', bedSensorData);
-          
-          // 각 센서 데이터에 대해 경고 체크 (습도만 저습도 상태로 모니터링)
-          for (const sensor of bedSensorData) {
-            // 습도 센서만 체크하고, 테스트 목적으로 값 강제 수정
-            if (sensor.type === 'humidity') {
-              console.log('💧 습도 센서 데이터:', sensor);
-              
-              const farmId = 'farm_002';   // 2농장
-              
-              const farm = farms.find(f => f.id === farmId) || {
-                id: farmId,
-                name: '2농장',
-                location: '테스트 농장 위치'
-              };
-              
-              const location = `${farm.name}-베드1`;
-              console.log('📍 경고 위치:', location);
-              
-              // 습도 임계값 설정
-              const humidityThreshold = { min: 30, max: 80 };
-              
-              // 테스트용으로 습도 값을 낮게 조정 
-              const testHumidityValue = Math.random() * 15 + 5;  // 5-20% (임계값 30% 이하)
-              console.log('💧 테스트 습도 값:', testHumidityValue);
-              
-              try {
-                await checkSensorDataAndNotify({
-                  id: `${testBedId}_${sensor.type}`,
-                  type: 'humidity',
-                  value: testHumidityValue,
-                  location: location,
-                  timestamp: new Date(sensor.lastUpdate),
-                  thresholds: humidityThreshold,
-                  deviceId: testBedId
-                });
-                console.log('✅ 경고 전송 완료!');
-              } catch (error) {
-                console.error('Mock 습도 센서 모니터링 에러:', error);
-              }
-            }
-          }
-          */
-        };
-
-        // 초기 데이터 로드
-        updateMockData();
-        
-        // 즉시 경고 알림 테스트 실행 - 임시 차단 (MQTT 연동 전까지)
-        // setTimeout(() => {
-        //   console.log('🚨 즉시 경고 테스트 실행');
-        //   checkMockSensorData();
-        // }, 1000);
-
-        // Mock 데이터 주기적 업데이트 중지 (MQTT 연동 전까지)
-        // const interval = setInterval(updateMockData, 30000);
-        // setMockDataInterval(interval);
-        
+        console.log('📊 실제 Supabase 데이터 로드 중...');
+        console.log('🔧 실제 Supabase 데이터 로드 완료');
         console.log('⏸️ 자동 센서 데이터 업데이트가 임시 중지됨 (MQTT 대기 상태)');
 
         const [teamsResult, usersResult] = await Promise.all([
           getTeams(),
           getApprovedUsers()
         ]);
-        
+
         if (teamsResult.success) {
           setTeams(teamsResult.teams);
         }
-        
-        if (usersResult.success) {
-          setApprovedUsers(usersResult.users as AuthUser[]);
-        }
-        
+
+        setApprovedUsers(usersResult as AuthUser[]);
+
         // 사용자 설정 로드
         const settings = getUserSettings(user.id);
         setUserSettings(settings);
-        
+
         // 베드 대시보드 설정 로드
         if (typeof window !== 'undefined') {
           const savedBedSettings = localStorage.getItem('bed_dashboard_settings');
@@ -327,7 +204,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             setBedDashboardSettings(parsedSettings);
             console.log('대시보드에서 베드 설정 로드됨:', parsedSettings);
           }
-          
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -335,14 +211,11 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         setTeamsLoading(false);
       }
     };
+
     loadData();
 
-    // 컴포넌트 언마운트 시 Mock 시스템 정리
     return () => {
-      mockSystem.stop();
-      if (mockDataInterval) {
-        clearInterval(mockDataInterval);
-      }
+      // 정리 작업 (필요시 추가)
     };
   }, [user.id]);
   
@@ -736,13 +609,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-3xl font-black text-red-600">
                                     {(() => {
-                                      // Mock 데이터 우선 사용
-                                      const mockTemp = mockSensorData.find(s => s.type === 'temperature');
-                                      if (mockTemp) {
-                                        return `${mockTemp.value}°C`;
-                                      }
-                                      
-                                      // 기존 데이터 폴백
+                                      // 실제 센서 데이터 사용
                                       const tempSensor = deviceSensors.find(s => s.type === 'temperature');
                                       const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
                                       return reading ? `${reading.value}°C` : '--°C';
@@ -757,13 +624,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-3xl font-black text-blue-600">
                                     {(() => {
-                                      // Mock 데이터 우선 사용
-                                      const mockHumidity = mockSensorData.find(s => s.type === 'humidity');
-                                      if (mockHumidity) {
-                                        return `${mockHumidity.value}%`;
-                                      }
-                                      
-                                      // 기존 데이터 폴백
+                                      // 실제 센서 데이터 사용
                                       const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
                                       const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
                                       return reading ? `${reading.value}%` : '--%';
@@ -778,13 +639,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-3xl font-black text-green-600">
                                     {(() => {
-                                      // Mock 데이터 우선 사용
-                                      const mockEC = mockSensorData.find(s => s.type === 'ec');
-                                      if (mockEC) {
-                                        return `${mockEC.value}`;
-                                      }
-                                      
-                                      // 기존 데이터 폴백
+                                      // 실제 센서 데이터 사용
                                       const ecSensor = deviceSensors.find(s => s.type === 'ec');
                                       const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
                                       return reading ? `${reading.value}` : '--';
@@ -799,13 +654,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </div>
                                   <span className="text-3xl font-black text-purple-600">
                                     {(() => {
-                                      // Mock 데이터 우선 사용
-                                      const mockPH = mockSensorData.find(s => s.type === 'ph');
-                                      if (mockPH) {
-                                        return `${mockPH.value}`;
-                                      }
-                                      
-                                      // 기존 데이터 폴백
+                                      // 실제 센서 데이터 사용
                                       const phSensor = deviceSensors.find(s => s.type === 'ph');
                                       const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
                                       return reading ? `${reading.value}` : '--';

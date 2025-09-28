@@ -68,26 +68,44 @@ export class UserService {
     team_name?: string;
   } | null> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { data: membership, error } = await supabase
         .from('memberships')
-        .select(`
-          role,
-          tenant_id,
-          tenants!inner(name)
-        `)
+        .select('role, tenant_id, team_id')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.warn('사용자 권한 정보 조회 실패:', error);
         return null;
       }
 
+      if (!membership) {
+        console.warn('사용자 membership 정보가 없습니다:', userId);
+        return null;
+      }
+
+      let teamName = null;
+      
+      // team_id가 있으면 teams 테이블에서 팀 이름 조회
+      if (membership.team_id) {
+        const { data: teamData } = await supabase
+          .from('teams')
+          .select('name')
+          .eq('id', membership.team_id)
+          .maybeSingle();
+        
+        if (teamData) {
+          teamName = teamData.name;
+        }
+      }
+
       return {
         role: membership.role,
         tenant_id: membership.tenant_id,
-        // team_id는 실제 team 테이블 구조에 따라 조회 가능
-        team_name: membership.tenants?.name // tenants 테이블에서 조인
+        team_id: membership.team_id,
+        team_name: teamName
       };
     } catch (error) {
       console.error('사용자 권한 정보 조회 중 오류:', error);
@@ -100,6 +118,8 @@ export class UserService {
    */
   static async getUserSettings(userId: string): Promise<UserSettings | null> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { data: settings, error } = await supabase
         .from('user_settings')
         .select('*')
@@ -128,6 +148,8 @@ export class UserService {
    */
   static async createDefaultUserSettings(userId: string): Promise<UserSettings | null> {
     try {
+      const supabase = getSupabaseClient();
+      
       const defaultSettings = {
         user_id: userId,
         notification_preferences: {
@@ -170,6 +192,8 @@ export class UserService {
    */
   static async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<boolean> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { error } = await supabase
         .from('users')
         .update({
@@ -195,6 +219,8 @@ export class UserService {
    */
   static async updateUserSetting(userId: string, settingKey: string, value: any): Promise<boolean> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { data: existingSettings, error: fetchError } = await supabase
         .from('user_settings')
         .select('*')
@@ -239,6 +265,8 @@ export class UserService {
    */
   static async updateAllUserSettings(userId: string, settings: Partial<UserSettings>): Promise<boolean> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { data: existingSettings, error: fetchError } = await supabase
         .from('user_settings')
         .select('*')
@@ -278,6 +306,8 @@ export class UserService {
    */
   static async getCurrentSupabaseUser(): Promise<{ id: string; email?: string; user_metadata?: any } | null> {
     try {
+      const supabase = getSupabaseClient();
+      
       // 먼저 세션이 존재하는지 확인
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -310,6 +340,8 @@ export class UserService {
    */
   static async updatePassword(currentPassword: string, newPassword: string): Promise<boolean> {
     try {
+      const supabase = getSupabaseClient();
+      
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
