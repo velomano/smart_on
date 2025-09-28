@@ -711,8 +711,9 @@ export default function AdminPage() {
                                       ✏️ 편집
                                     </button>
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              ))}
+                            </div>
                     ))}
 
                     {Object.keys(getUsersByFarm()).length === 0 && (
