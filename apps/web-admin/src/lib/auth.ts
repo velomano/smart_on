@@ -308,12 +308,12 @@ export const getApprovedUsers = async () => {
       return [];
     }
 
-    // 각 사용자의 팀 정보 조회
+    // 각 사용자의 농장 정보 조회 (farm_memberships 사용)
     const usersWithTeamInfo = await Promise.all(
       approvedUsers.map(async (user) => {
         const { data: membershipData, error: membershipError } = await (supabase as any)
-          .from('memberships')
-          .select('role, tenant_id, team_id') // Simplified select
+          .from('farm_memberships')
+          .select('role, tenant_id, farm_id') // farm_memberships 사용
           .eq('user_id', user.id)
           .maybeSingle(); // Use maybeSingle for defensive coding
 
@@ -327,29 +327,34 @@ export const getApprovedUsers = async () => {
         let teamName = null;
         let role = user.role;
 
-        if (membershipError) {
-          console.error(`사용자 ${user.email} memberships 로드 오류:`, membershipError);
+        // system_admin은 farm_memberships에 관계없이 최고 권한 유지
+        if (user.role === 'system_admin') {
+          console.log(`🔍 system_admin 감지: ${user.email}, role: ${user.role}`);
+          role = 'system_admin';
+          // system_admin은 모든 농장에 접근 가능하므로 teamId는 null로 유지
+        } else if (membershipError) {
+          console.error(`사용자 ${user.email} farm_memberships 로드 오류:`, membershipError);
           // membership이 없는 경우 기본값 사용
         } else if (membershipData) {
-          teamId = membershipData.team_id;
+          teamId = membershipData.farm_id; // farm_id를 team_id로 사용
           
-          // team_id가 있으면 teams 테이블에서 팀 이름 조회
+          // farm_id가 있으면 farms 테이블에서 농장 이름 조회
           if (teamId) {
-            const { data: teamData } = await (supabase as any)
-              .from('teams')
+            const { data: farmData } = await (supabase as any)
+              .from('farms')
               .select('name')
               .eq('id', teamId)
               .maybeSingle(); // Use maybeSingle for defensive coding
             
-            if (teamData) {
-              teamName = teamData.name;
+            if (farmData) {
+              teamName = farmData.name;
             }
           }
           
-          // memberships 테이블의 role을 우선 사용
+          // farm_memberships 테이블의 role을 users 테이블의 role로 매핑
           if (membershipData.role) {
-            role = membershipData.role === 'owner' ? 'system_admin' :
-                   membershipData.role === 'operator' ? 'team_leader' :
+            role = membershipData.role === 'owner' ? 'team_leader' :
+                   membershipData.role === 'operator' ? 'team_member' :
                    membershipData.role === 'viewer' ? 'team_member' : user.role;
           }
         }
@@ -484,7 +489,7 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
 
     console.log('🔍 updateUser 호출:', { userId, data });
 
-    // 1) 팀 배정 관련은 farm_memberships로 위임하고 users 업데이트 페이로드에서 제거
+    // 1) 팀 배정 관련은 farm_memberships로만 처리 (users.team_id는 사용하지 않음)
     const { team_id: maybeFarmId, tenant_id: maybeTenantId, ...rest } = data ?? {};
     
     // tenant_id는 users 테이블에서 제거되었으므로 rest에서도 제거
@@ -536,7 +541,7 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
       }
     }
 
-    // 2) users 업데이트: 허용 컬럼만 pick (team_id는 제거됨)
+    // 2) users 업데이트: 허용 컬럼만 pick (team_id 제외 - farm_memberships로만 관리)
     const allowed: any = {};
     if (typeof rest.email !== 'undefined') allowed.email = rest.email as string;
     if (typeof rest.name !== 'undefined') allowed.name = rest.name as string;
@@ -545,6 +550,23 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
     if (typeof rest.is_active !== 'undefined') allowed.is_active = rest.is_active as boolean;
     if (typeof rest.is_approved !== 'undefined') allowed.is_approved = rest.is_approved as boolean;
     if (typeof rest.role !== 'undefined') allowed.role = rest.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member';
+
+    // 3) farm_memberships의 역할도 함께 업데이트
+    if (typeof rest.role !== 'undefined') {
+      const farmRole = rest.role === 'system_admin' ? 'owner' : 
+                      rest.role === 'team_leader' ? 'owner' : 'operator';
+      
+      // 사용자의 모든 farm_memberships 업데이트
+      const { error: fmUpdateError } = await (supabase as any)
+        .from('farm_memberships')
+        .update({ role: farmRole })
+        .eq('user_id', userId);
+      
+      if (fmUpdateError) {
+        console.error('farm_memberships 역할 업데이트 오류:', fmUpdateError);
+        // 오류가 있어도 users 업데이트는 계속 진행
+      }
+    }
 
     // 변경할 것이 없다면 바로 성공 리턴
     if (Object.keys(allowed).length === 0) {
