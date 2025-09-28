@@ -3,16 +3,17 @@ import { encrypt, decrypt } from '@/lib/crypto';
 
 export async function GET(
   request: Request,
-  { params }: { params: { farmId: string } }
+  { params }: { params: Promise<{ farmId: string }> }
 ) {
   try {
+    const { farmId } = await params;
     const supa = supaAdmin();
     
     // MQTT 설정 조회
     const { data: config, error } = await supa
       .from('farm_mqtt_configs')
       .select('*')
-      .eq('farm_id', params.farmId)
+      .eq('farm_id', farmId)
       .single();
 
     if (error) {
@@ -65,15 +66,16 @@ export async function GET(
   }
 }
 
-export async function PUT(req: Request, { params }: { params: { farmId: string }}) {
+export async function PUT(req: Request, { params }: { params: Promise<{ farmId: string }>}) {
   try {
+    const { farmId } = await params;
     const b = await req.json();
     const supa = supaAdmin();
     const secret_enc = b.auth_mode === 'api_key' ? encrypt(b.api_key) :
                        b.auth_mode === 'user_pass' ? encrypt(b.password) : null;
 
     const { error } = await supa.from('farm_mqtt_configs').upsert({
-      farm_id: params.farmId,
+      farm_id: farmId,
       broker_url: b.broker_url,
       port: b.port ?? 8883,
       auth_mode: b.auth_mode,

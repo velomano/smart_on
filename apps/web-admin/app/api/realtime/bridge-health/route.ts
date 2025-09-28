@@ -17,13 +17,14 @@ export async function GET() {
         total_farms: 0,
         active_farms: 0,
         healthy_farms: 0,
-        last_updated: new Date().toISOString()
+        last_updated: new Date().toISOString(),
+        farms: []
       };
       return Response.json({ success: true, data: health });
     }
 
     const now = new Date();
-    const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // 1시간으로 연장
 
     const health = {
       total_farms: configs?.length || 0,
@@ -32,9 +33,15 @@ export async function GET() {
         c.is_active && 
         c.last_test_ok && 
         c.last_test_at && 
-        new Date(c.last_test_at) > fiveMinutesAgo
+        new Date(c.last_test_at) > oneHourAgo
       ).length || 0,
-      last_updated: now.toISOString()
+      last_updated: now.toISOString(),
+      farms: (configs || []).map(c => ({
+        farm_id: c.farm_id,
+        last_test_ok: c.last_test_ok,
+        last_test_at: c.last_test_at,
+        is_recent: c.last_test_at && new Date(c.last_test_at) > oneHourAgo
+      }))
     };
 
     return Response.json({ success: true, data: health });
@@ -46,7 +53,8 @@ export async function GET() {
       total_farms: 0,
       active_farms: 0,
       healthy_farms: 0,
-      last_updated: new Date().toISOString()
+      last_updated: new Date().toISOString(),
+      farms: []
     };
     
     return Response.json({ success: true, data: health });

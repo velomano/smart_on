@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, AuthUser } from '../../src/lib/auth';
-import AppHeader from '../../components/AppHeader';
+import AppHeader from '../../src/components/AppHeader';
 
 // KAMIS API 타입 정의
 interface KamisPriceData {

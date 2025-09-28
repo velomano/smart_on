@@ -33,7 +33,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: 'system_admin' | 'team_leader' | 'team_member';
+  role: 'super_admin' | 'system_admin' | 'team_leader' | 'team_member';
   tenant_id: string;
   team_id?: string | null;
   team_name?: string | null;
@@ -395,38 +395,51 @@ export const getTeams = async () => {
   try {
     const supabase = getSupabaseClient();
 
-    // 병렬 조회 - 실제 Supabase 스키마에 맞게 수정
+    // 병렬 조회 - teams와 farms 테이블 모두 조회
     const [
+      { data: teams, error: teamsError },
       { data: farms, error: farmsError },
       { data: devices, error: devicesError },
       { data: sensors, error: sensorsError },
       { data: sensorReadings, error: readingsError },
     ] = await Promise.all([
+      supabase.from('teams').select('*').order('name'),
       supabase.from('farms').select('*').order('name'),
-      supabase.from('devices').select('*'), // name 컬럼이 없으므로 정렬 제거
-      supabase.from('sensors').select('*'), // name 컬럼이 없으므로 정렬 제거
+      supabase.from('devices').select('*'),
+      supabase.from('sensors').select('*'),
       supabase.from('sensor_readings')
         .select('*')
-        .order('ts', { ascending: false }) // created_at 대신 ts 사용
+        .order('ts', { ascending: false })
         .limit(1000),
     ]);
 
+    if (teamsError)   console.log('teams 테이블 조회 실패:', teamsError.message);
     if (farmsError)   console.log('farms 테이블 조회 실패:', farmsError.message);
     if (devicesError) console.log('devices 테이블 조회 실패:', devicesError.message);
     if (sensorsError) console.log('sensors 테이블 조회 실패:', sensorsError.message);
     if (readingsError)console.log('sensor_readings 테이블 조회 실패:', readingsError.message);
 
     console.log('🔍 Supabase 데이터 조회 결과:', {
+      teams: teams?.length || 0,
       farms: farms?.length || 0,
       devices: devices?.length || 0,
       sensors: sensors?.length || 0,
       readings: sensorReadings?.length || 0
     });
 
-    // Supabase 데이터만 사용 (Mock 데이터 완전 제거)
+    // teams와 farms를 매핑하여 통합된 데이터 반환
+    const teamsWithFarms = (teams || []).map((team: any) => {
+      const farm = (farms || []).find((f: any) => f.id === team.id);
+      return {
+        ...team,
+        location: farm?.location || team.description,
+        // teams 테이블의 정보를 우선 사용하되, farms 테이블의 location 정보도 포함
+      };
+    });
+
     const result = {
       success: true,
-      teams: farms || [], // farms 데이터를 teams로 매핑
+      teams: teamsWithFarms, // teams와 farms가 매핑된 데이터
       devices: devices || [],
       sensors: sensors || [],
       sensorReadings: sensorReadings || [],
@@ -452,18 +465,87 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    console.log('🔍 updateUser 호출:', { userId, data });
+    
+    // team_id가 변경되는 경우 해당 팀이 존재하는지 확인
+    if (data.team_id && data.team_id !== '') {
+      console.log('🔍 팀 존재 여부 확인:', data.team_id);
+      const { data: teamData, error: teamError } = await supabase
+        .from('teams')
+        .select('id, name')
+        .eq('id', data.team_id)
+        .maybeSingle();
+      
+      if (teamError) {
+        console.error('❌ 팀 조회 오류:', teamError);
+        return { 
+          success: false, 
+          error: `팀 조회에 실패했습니다: ${teamError.message}`, 
+          details: teamError
+        };
+      }
+      
+      if (!teamData) {
+        console.error('❌ 팀이 존재하지 않음:', data.team_id);
+        return { 
+          success: false, 
+          error: `선택한 팀이 존재하지 않습니다. 팀 ID: ${data.team_id}`, 
+          details: { team_id: data.team_id }
+        };
+      }
+      
+      console.log('✅ 팀 확인 완료:', teamData);
+    } else if (data.team_id === '') {
+      // 빈 문자열인 경우 null로 설정
+      data.team_id = null;
+    }
+    
+    const { error, data: result } = await supabase
       .from('users')
       .update(data)
-      .eq('id', userId);
+      .eq('id', userId)
+      .select();
 
     if (error) {
-      return { success: false, error: '사용자 정보 업데이트에 실패했습니다.' };
+      console.error('❌ updateUser 오류:', error);
+      console.error('❌ 오류 코드:', error.code);
+      console.error('❌ 오류 메시지:', error.message);
+      console.error('❌ 오류 세부사항:', error.details);
+      console.error('❌ 오류 힌트:', error.hint);
+      
+      // 409 Conflict 오류의 경우 더 구체적인 메시지 제공
+      if (error.code === '409') {
+        if (error.message.includes('duplicate key')) {
+          return { 
+            success: false, 
+            error: '이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.',
+            details: error
+          };
+        } else if (error.message.includes('foreign key')) {
+          return { 
+            success: false, 
+            error: '선택한 팀이 존재하지 않습니다. 올바른 팀을 선택해주세요.',
+            details: error
+          };
+        }
+      }
+      
+      return { 
+        success: false, 
+        error: `사용자 정보 업데이트에 실패했습니다: ${error.message || '알 수 없는 오류'}`,
+        details: error
+      };
     }
 
-    return { success: true };
+    console.log('✅ updateUser 성공:', result);
+    return { success: true, data: result };
   } catch (error: any) {
-    return { success: false, error: '사용자 정보 업데이트 중 오류가 발생했습니다.' };
+    console.error('❌ updateUser 예외:', error);
+    return { 
+      success: false, 
+      error: `사용자 정보 업데이트 중 오류가 발생했습니다: ${error.message}`,
+      details: error
+    };
   }
 };
 

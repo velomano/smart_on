@@ -52,14 +52,26 @@ export default function MyPage() {
             try {
               setSupabaseUser(supabaseAuth);
               
-              // 실제 Supabase 데이터 로드
-              const pageData = await UserService.getMyPageData(supabaseAuth.id);
-              if (pageData.profile) {
-                setUserProfile(pageData.profile);
+              // 실제 Supabase 데이터 로드 (오류 처리 강화)
+              try {
+                const pageData = await UserService.getMyPageData(supabaseAuth.id);
+                if (pageData.profile) {
+                  setUserProfile(pageData.profile);
+                  setProfileForm({
+                    name: pageData.profile.name || '',
+                    email: pageData.profile.email || '',
+                    phone: '' // phone 필드가 user 테이블에 없다면 별도 관리
+                  });
+                }
+                console.log('✅ 마이페이지 데이터 로드 성공');
+              } catch (pageDataError) {
+                console.error('❌ 마이페이지 데이터 로드 실패:', pageDataError);
+                // 기본 프로필 정보만 설정
+                setUserProfile(supabaseAuth);
                 setProfileForm({
-                  name: pageData.profile.name || '',
-                  email: pageData.profile.email || '',
-                  phone: '' // phone 필드가 user 테이블에 없다면 별도 관리
+                  name: supabaseAuth.name || '',
+                  email: supabaseAuth.email || '',
+                  phone: ''
                 });
               }
               if (pageData.settings) {

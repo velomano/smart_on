@@ -9,9 +9,12 @@
 ### 🎯 주요 기능
 - **🌱 센서 데이터 수집** - 아두이노를 통한 온도, 습도, EC, pH, 조도 센서 데이터 수집
 - **🏠 농장 관리** - 다중 농장 및 베드 관리 시스템 (농장장/팀원 권한 분리)
+- **🌱 베드 관리** - 베드 생성, 편집, 삭제 및 다단 구조 지원
 - **📊 실시간 모니터링** - 라즈베리 파이 + MQTT를 통한 실시간 센서 데이터 시각화
 - **🔌 디바이스 제어** - 릴레이 모듈을 통한 조명, 팬, 펌프 제어 (투야 스마트 스위치 대신)
-- **👥 사용자 관리** - 시스템 관리자, 농장장, 팀원 역할 기반 권한 관리
+- **👥 사용자 관리** - 3단계 역할 기반 권한 관리 (system_admin, team_leader, team_member)
+- **📝 생육 노트** - 베드별 노트 작성 및 관리 시스템
+- **🔧 MQTT 설정** - 농장별 MQTT 브로커 설정 및 연결 테스트
 - **📱 모바일 앱** - React Native + Expo 크로스 플랫폼 (센서 데이터 모니터링용)
 - **🌐 웹 어드민** - Next.js 기반 관리자/사용자 대시보드
 - **🌱 양액계산 서비스** - 작물별 최적 배양액 제조 계산 (4종 작물 지원)
@@ -42,6 +45,26 @@
 - **Raspberry Pi** - 게이트웨이 역할 + MQTT 브로커
 - **MQTT** - 센서 데이터 수집 및 제어 명령 전송
 - **릴레이 모듈** - 조명, 팬, 펌프 제어
+
+## 📚 문서
+
+### 핵심 문서
+- **[데이터베이스 스키마](docs/02_DB_SCHEMA.sql)** - 테이블 구조 및 관계
+- **[사용자 권한 시스템](docs/USER_PERMISSION_SYSTEM.md)** - 3단계 역할 기반 권한 관리
+- **[농장 관리 기능](docs/FARM_MANAGEMENT_FEATURES.md)** - 농장, 베드, 센서 관리
+- **[API 계약서](docs/06_API_CONTRACT.md)** - REST API 엔드포인트 명세
+- **[기술 아키텍처](docs/TECHNICAL_ARCHITECTURE.md)** - 전체 시스템 구조
+
+### 개발 가이드
+- **[환경 설정](docs/01_ENV.md)** - 개발 환경 구축
+- **[의존성 가이드](docs/DEPENDENCIES_GUIDE.md)** - 패키지 및 라이브러리
+- **[MQTT 통합 가이드](docs/MQTT_INTEGRATION_GUIDE.md)** - MQTT 브로커 연동
+- **[Tuya SDK 통합](docs/TUYA_SDK_INTEGRATION.md)** - Tuya 디바이스 연동
+
+### 운영 가이드
+- **[농장 운영 가이드](docs/FARM_OPERATION_GUIDE.md)** - 실제 농장 운영 방법
+- **[배포 설정](docs/VERCEL_DEPLOYMENT_SETUP.md)** - Vercel 배포 가이드
+- **[GitHub Secrets 설정](docs/GITHUB_SECRETS_SETUP.md)** - CI/CD 설정
 
 ## 📁 프로젝트 구조
 

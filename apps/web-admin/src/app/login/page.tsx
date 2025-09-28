@@ -109,7 +109,7 @@ export default function LoginPage() {
 
     try {
       // Supabase 비밀번호 재설정 이메일 전송
-      const { getSupabaseClient } = await import('../../lib/supabase');
+      const { getSupabaseClient } = await import('../../../lib/supabase');
       const supabase = getSupabaseClient();
       
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {

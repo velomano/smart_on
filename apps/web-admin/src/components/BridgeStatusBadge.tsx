@@ -5,6 +5,12 @@ interface BridgeHealth {
   active_farms: number;
   healthy_farms: number;
   last_updated: string;
+  farms?: Array<{
+    farm_id: string;
+    last_test_ok: boolean | null;
+    last_test_at: string | null;
+    is_recent?: boolean;
+  }>;
 }
 
 interface BridgeStatusBadgeProps {
@@ -113,12 +119,34 @@ export default function BridgeStatusBadge({ farmId, className = '' }: BridgeStat
   }
 
   // 특정 농장 상태 확인
-  if (farmId && health.healthy_farms < health.total_farms) {
-    // 실제로는 farmId별 상태를 확인해야 하지만, 
-    // 현재는 전체 상태만 반환하므로 간단히 처리
-    statusColor = 'bg-yellow-100 text-yellow-700';
-    statusIcon = '🟡';
-    statusText = '일부 농장 오류';
+  if (farmId && health.farms) {
+    const farmStatus = health.farms.find(f => f.farm_id === farmId);
+    if (farmStatus) {
+      const lastTestTime = farmStatus.last_test_at ? new Date(farmStatus.last_test_at) : null;
+      const isRecent = farmStatus.is_recent;
+      
+      if (farmStatus.last_test_ok && isRecent) {
+        statusColor = 'bg-green-100 text-green-700';
+        statusIcon = '🟢';
+        statusText = '연결됨';
+      } else if (farmStatus.last_test_ok && !isRecent) {
+        statusColor = 'bg-yellow-100 text-yellow-700';
+        statusIcon = '🟡';
+        statusText = '연결됨 (오래됨)';
+      } else if (farmStatus.last_test_ok === false) {
+        statusColor = 'bg-red-100 text-red-700';
+        statusIcon = '🔴';
+        statusText = '연결 실패';
+      } else {
+        statusColor = 'bg-gray-100 text-gray-700';
+        statusIcon = '⚪';
+        statusText = '테스트 안됨';
+      }
+    } else {
+      statusColor = 'bg-gray-100 text-gray-700';
+      statusIcon = '⚪';
+      statusText = '농장 없음';
+    }
   }
 
   return (

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../src/lib/auth';
-import AppHeader from '../../components/AppHeader';
+import AppHeader from '../../src/components/AppHeader';
 
 interface TeamMember extends AuthUser {
   team_name?: string;

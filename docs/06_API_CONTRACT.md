@@ -1,28 +1,294 @@
 # 🔗 API 계약서
 
-## 📋 현재 구현 상태 (2025.09.24)
+## 📋 현재 구현 상태 (2025.01.01)
 
 ### ✅ 구현 완료
 - **Supabase 클라이언트**: 모바일 앱 및 웹 어드민에서 직접 사용
-- **실시간 데이터**: `sensor_readings` 테이블에서 2,890개 레코드 조회
-- **디바이스 관리**: `devices` 테이블에서 7개 디바이스 관리
-- **Mock 데이터**: 개발용 Mock 데이터 제공
+- **실시간 데이터**: `sensor_readings` 테이블에서 센서 데이터 조회
+- **디바이스 관리**: `devices` 테이블에서 베드 및 센서게이트웨이 관리
+- **사용자 권한 시스템**: 3단계 역할 기반 권한 관리 (system_admin, team_leader, team_member)
+- **농장 관리**: 농장 생성, 편집, 삭제 및 베드 관리
+- **베드 관리**: 베드 생성, 편집, 삭제 및 다단 구조 지원
+- **센서 데이터**: 실시간 센서 데이터 수집 및 표시
+- **생육 노트**: 베드별 노트 작성 및 관리
+- **MQTT 설정**: 농장별 MQTT 브로커 설정
 - **🌱 양액계산 API**: `/api/nutrients/plan` - 작물별 최적 배양액 계산
 - **📊 시세정보 API**: `/api/market-prices` - KAMIS 농산물 시세 조회
 
 ### 🔄 구현 예정
-- **REST API 엔드포인트**: Next.js API Routes로 구현 예정
 - **Raspberry Pi 연동**: 센서 데이터 수집 API
 - **Tuya 디바이스 제어**: 실제 Tuya SDK 연동
+- **실시간 MQTT 통신**: WebSocket 기반 실시간 데이터 스트리밍
 
-## 📋 REST API 엔드포인트 (계획)
+## 📋 REST API 엔드포인트
 
 ### 🌐 기본 정보
-- **Base URL**: `https://smart-on.vercel.app/api` (구현 예정)
-- **현재**: Supabase 클라이언트 직접 사용
+- **Base URL**: `https://smart-on.vercel.app/api`
+- **현재**: Next.js API Routes + Supabase 클라이언트
 - **인증**: Supabase JWT Token
 - **Content-Type**: `application/json`
 - **Rate Limiting**: Supabase 기본 제한 적용
+
+## 🔐 사용자 관리 API
+
+### GET /api/users/current
+현재 로그인한 사용자 정보를 조회합니다.
+
+**응답:**
+```json
+{
+  "success": true,
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "name": "사용자명",
+    "role": "team_leader",
+    "team_id": "farm_uuid",
+    "is_approved": true,
+    "is_active": true
+  }
+}
+```
+
+### GET /api/users/approved
+승인된 사용자 목록을 조회합니다.
+
+**쿼리 파라미터:**
+- `role` (optional): 역할 필터 (system_admin, team_leader, team_member)
+- `team_id` (optional): 팀 ID 필터
+
+**응답:**
+```json
+{
+  "success": true,
+  "users": [
+    {
+      "id": "uuid",
+      "email": "user@example.com",
+      "name": "사용자명",
+      "role": "team_leader",
+      "team_id": "farm_uuid",
+      "is_active": true
+    }
+  ]
+}
+```
+
+### PUT /api/users/[userId]
+사용자 정보를 업데이트합니다.
+
+**요청 본문:**
+```json
+{
+  "name": "새 이름",
+  "role": "team_member",
+  "team_id": "new_farm_uuid",
+  "is_active": true
+}
+```
+
+## 🏠 농장 관리 API
+
+### GET /api/farms
+농장 목록을 조회합니다.
+
+**응답:**
+```json
+{
+  "success": true,
+  "farms": [
+    {
+      "id": "uuid",
+      "name": "농장명",
+      "location": "위치",
+      "created_at": "2025-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+### POST /api/farms
+새 농장을 생성합니다.
+
+**요청 본문:**
+```json
+{
+  "name": "새 농장",
+  "location": "위치"
+}
+```
+
+### PUT /api/farms/[farmId]
+농장 정보를 업데이트합니다.
+
+### DELETE /api/farms/[farmId]
+농장을 삭제합니다.
+
+## 🌱 베드 관리 API
+
+### GET /api/farms/[farmId]/beds
+특정 농장의 베드 목록을 조회합니다.
+
+**응답:**
+```json
+{
+  "success": true,
+  "beds": [
+    {
+      "id": "device_uuid",
+      "name": "베드-1",
+      "crop_name": "토마토",
+      "growing_method": "담액식",
+      "total_tiers": 3,
+      "sensors": [
+        {
+          "id": "sensor_uuid",
+          "type": "temperature",
+          "unit": "°C",
+          "latest_value": 25.5
+        }
+      ]
+    }
+  ]
+}
+```
+
+### POST /api/farms/[farmId]/beds
+새 베드를 생성합니다.
+
+**요청 본문:**
+```json
+{
+  "name": "베드-2",
+  "crop_name": "상추",
+  "growing_method": "NFT식",
+  "total_tiers": 2
+}
+```
+
+### PUT /api/farms/[farmId]/beds/[bedId]
+베드 정보를 업데이트합니다.
+
+### DELETE /api/farms/[farmId]/beds/[bedId]
+베드를 삭제합니다.
+
+## 📊 센서 데이터 API
+
+### GET /api/sensors/[sensorId]/readings
+센서 데이터를 조회합니다.
+
+**쿼리 파라미터:**
+- `start_time` (optional): 시작 시간 (ISO 8601)
+- `end_time` (optional): 종료 시간 (ISO 8601)
+- `limit` (optional): 조회 개수 (기본값: 100)
+
+**응답:**
+```json
+{
+  "success": true,
+  "readings": [
+    {
+      "id": 12345,
+      "sensor_id": "sensor_uuid",
+      "value": 25.5,
+      "ts": "2025-01-01T12:00:00Z",
+      "quality": 1
+    }
+  ]
+}
+```
+
+### POST /api/sensors/[sensorId]/readings
+센서 데이터를 저장합니다.
+
+**요청 본문:**
+```json
+{
+  "value": 25.5,
+  "ts": "2025-01-01T12:00:00Z",
+  "quality": 1
+}
+```
+
+## 📝 생육 노트 API
+
+### GET /api/beds/[bedId]/notes
+베드의 생육 노트를 조회합니다.
+
+**응답:**
+```json
+{
+  "success": true,
+  "notes": [
+    {
+      "id": "note_uuid",
+      "title": "노트 제목",
+      "content": "노트 내용",
+      "tags": ["성장", "관리"],
+      "is_announcement": false,
+      "created_at": "2025-01-01T12:00:00Z"
+    }
+  ]
+}
+```
+
+### POST /api/beds/[bedId]/notes
+새 생육 노트를 작성합니다.
+
+**요청 본문:**
+```json
+{
+  "title": "노트 제목",
+  "content": "노트 내용",
+  "tags": ["성장", "관리"],
+  "is_announcement": false
+}
+```
+
+## 🔧 MQTT 설정 API
+
+### GET /api/farms/[farmId]/mqtt-config
+농장의 MQTT 설정을 조회합니다.
+
+**응답:**
+```json
+{
+  "success": true,
+  "config": {
+    "broker_url": "mqtt://broker.example.com:1883",
+    "username": "farm_user",
+    "password": "encrypted_password",
+    "topic_prefix": "farm/001",
+    "is_enabled": true
+  }
+}
+```
+
+### PUT /api/farms/[farmId]/mqtt-config
+MQTT 설정을 업데이트합니다.
+
+**요청 본문:**
+```json
+{
+  "broker_url": "mqtt://broker.example.com:1883",
+  "username": "farm_user",
+  "password": "new_password",
+  "topic_prefix": "farm/001",
+  "is_enabled": true
+}
+```
+
+### POST /api/farms/[farmId]/mqtt-test
+MQTT 연결을 테스트합니다.
+
+**응답:**
+```json
+{
+  "success": true,
+  "message": "MQTT 연결 성공",
+  "connection_time": 150
+}
+```
 
 ## 📊 센서 데이터 수집
 

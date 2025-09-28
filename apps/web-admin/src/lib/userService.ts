@@ -1,6 +1,7 @@
 'use client';
 
 import { getSupabaseClient } from './supabase';
+import { supaAdmin } from './supabaseAdmin';
 import { AuthUser } from './auth';
 
 export interface UserProfile {
@@ -169,15 +170,33 @@ export class UserService {
         }
       };
 
-      const { data: settings, error } = await supabase
+      console.log('🔍 기본 사용자 설정 생성 시도:', {
+        userId,
+        defaultSettings
+      });
+
+      // 서비스 역할로 INSERT 시도
+      const supabaseAdmin = supaAdmin();
+      const { data: settings, error } = await supabaseAdmin
         .from('user_settings')
         .insert(defaultSettings)
         .select()
         .single();
 
+      console.log('🔍 Supabase 응답:', {
+        data: settings,
+        error: error,
+        errorType: typeof error,
+        errorKeys: error ? Object.keys(error) : 'no error'
+      });
+
       if (error) {
         console.error('기본 사용자 설정 생성 오류:', {
-          error,
+          error: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          fullError: error,
           userId,
           defaultSettings
         });

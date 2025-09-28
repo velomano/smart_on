@@ -280,9 +280,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   const averageTemp = tempReadings.reduce((sum, r) => sum + r.value, 0) / Math.max(tempReadings.length, 1);
 
         // 사용자 역할에 따른 권한 확인
-        const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
-        const canManageTeamMembers = user.role === 'team_leader' || user.role === 'team_member';
-        const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com';
+        const canManageUsers = user.role === 'system_admin' || user.role === 'super_admin' || user.email === 'sky3rain7@gmail.com';
+        const canManageTeamMembers = user.role === 'system_admin' || user.role === 'super_admin' || user.role === 'team_leader' || user.role === 'team_member';
+        const canManageFarms = user.role === 'system_admin' || user.role === 'super_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com';
         const canViewData = true; // 모든 사용자는 데이터 조회 가능
 
 

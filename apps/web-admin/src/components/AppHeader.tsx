@@ -58,13 +58,13 @@ export default function AppHeader({
 
   // 사용자 역할에 따른 권한 확인
   // 시스템 관리자는 모든 권한 가짐
-  const canManageUsers = safeUser.role === 'system_admin' || safeUser.email === 'sky3rain7@gmail.com';
-  const canManageTeamMembers = safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member';
-  const canManageFarms = safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member' || safeUser.email === 'sky3rain7@gmail.com';
-  const canManageMyTeamMembers = safeUser.role === 'team_leader'; // 농장장은 자신의 팀원만 관리
+  const canManageUsers = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.email === 'sky3rain7@gmail.com';
+  const canManageTeamMembers = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member';
+  const canManageFarms = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member' || safeUser.email === 'sky3rain7@gmail.com';
+  const canManageMyTeamMembers = safeUser.role === 'team_leader' || safeUser.role === 'super_admin'; // 농장장과 슈퍼 어드민은 자신의 팀원만 관리
 
-  // 팀원 보기 메뉴 조건 - 시스템 관리자는 항상 볼 수 있음
-  const canViewTeamMembers = safeUser.role === 'system_admin' || safeUser.email === 'velomano@naver.com' || 
+  // 팀원 보기 메뉴 조건 - 시스템 관리자와 슈퍼 어드민은 항상 볼 수 있음
+  const canViewTeamMembers = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.email === 'velomano@naver.com' || 
                             (safeUser.role === 'team_leader' && safeUser.team_id) ||
                             (safeUser.role === 'team_member' && safeUser.team_id);
   

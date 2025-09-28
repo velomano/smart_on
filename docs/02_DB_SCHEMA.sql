@@ -1,6 +1,7 @@
 -- =============================================
 -- 스마트팜 데이터베이스 스키마 (실제 구조)
 -- 업데이트: 2025.01.01
+-- 최종 업데이트: 2025.01.01 (권한 시스템 및 농장 관리 기능 완성)
 -- =============================================
 
 -- =============================================
@@ -11,7 +12,7 @@
 CREATE TABLE IF NOT EXISTS tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    description TEXT,
+  description TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -41,10 +42,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS teams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES tenants(id),
-    name TEXT NOT NULL,
-    description TEXT,
+  name TEXT NOT NULL,
+  description TEXT,
     team_code TEXT UNIQUE,
-    is_active BOOLEAN DEFAULT true,
+  is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -62,54 +63,54 @@ CREATE TABLE IF NOT EXISTS memberships (
 CREATE TABLE IF NOT EXISTS user_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID UNIQUE REFERENCES users(id),
-    notification_preferences JSONB DEFAULT '{
-        "email": true,
-        "telegram": false,
-        "dashboard": true,
+  notification_preferences JSONB DEFAULT '{
+    "email": true,
+    "telegram": false,
+    "dashboard": true,
         "ph_alerts": true,
         "water_level": true,
         "low_humidity": true,
-        "sensor_alerts": true,
-        "system_alerts": true,
+    "sensor_alerts": true,
+    "system_alerts": true,
         "high_temperature": true
     }'::jsonb,
-    ui_preferences JSONB DEFAULT '{
-        "theme": "light",
-        "language": "ko",
-        "dashboard_layout": "default",
-        "sidebar_collapsed": false,
-        "show_advanced_options": false
+  ui_preferences JSONB DEFAULT '{
+    "theme": "light",
+    "language": "ko",
+    "dashboard_layout": "default",
+    "sidebar_collapsed": false,
+    "show_advanced_options": false
     }'::jsonb,
-    dashboard_preferences JSONB DEFAULT '{
+  dashboard_preferences JSONB DEFAULT '{
         "auto_refresh": true,
         "default_view": "grid",
         "show_all_beds": false,
-        "show_team_beds": true,
-        "refresh_interval": 30,
+    "show_team_beds": true,
+    "refresh_interval": 30,
         "show_weather_info": true,
         "show_sensor_charts": true
     }'::jsonb,
-    telegram_chat_id TEXT,
-    telegram_bot_token TEXT,
-    telegram_notifications_enabled BOOLEAN DEFAULT false,
-    sensor_thresholds JSONB DEFAULT '{
+  telegram_chat_id TEXT,
+  telegram_bot_token TEXT,
+  telegram_notifications_enabled BOOLEAN DEFAULT false,
+  sensor_thresholds JSONB DEFAULT '{
         "ph": {"max": 7.5, "min": 6.0},
         "light": {"max": 1000, "min": 200},
         "humidity": {"max": 80, "min": 40},
         "temperature": {"max": 35, "min": 15},
         "soil_moisture": {"max": 70, "min": 30}
     }'::jsonb,
-    timezone TEXT DEFAULT 'Asia/Seoul',
-    date_format TEXT DEFAULT 'YYYY-MM-DD',
-    time_format TEXT DEFAULT '24h',
-    accessibility JSONB DEFAULT '{
+  timezone TEXT DEFAULT 'Asia/Seoul',
+  date_format TEXT DEFAULT 'YYYY-MM-DD',
+  time_format TEXT DEFAULT '24h',
+  accessibility JSONB DEFAULT '{
         "large_text": false,
-        "high_contrast": false,
-        "screen_reader": false,
-        "keyboard_navigation": true
+    "high_contrast": false,
+    "screen_reader": false,
+    "keyboard_navigation": true
     }'::jsonb,
-    privacy JSONB DEFAULT '{
-        "share_analytics": true,
+  privacy JSONB DEFAULT '{
+    "share_analytics": true,
         "allow_team_visibility": true,
         "share_performance_data": false
     }'::jsonb,
@@ -125,8 +126,8 @@ CREATE TABLE IF NOT EXISTS user_settings (
 CREATE TABLE IF NOT EXISTS farms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id),
-    name TEXT NOT NULL,
-    location TEXT,
+  name TEXT NOT NULL,
+  location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -214,7 +215,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 CREATE TABLE IF NOT EXISTS rules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     farm_id UUID NOT NULL REFERENCES farms(id),
-    name TEXT NOT NULL,
+  name TEXT NOT NULL,
     trigger JSONB NOT NULL,
     condition JSONB,
     action JSONB NOT NULL,

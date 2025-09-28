@@ -87,7 +87,7 @@ export default function FarmMqttSettingsForm({
               type="text"
               value={config.broker_url}
               onChange={(e) => setConfig(prev => ({ ...prev, broker_url: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               placeholder="mqtts://your-broker.com"
               required
             />
@@ -100,7 +100,7 @@ export default function FarmMqttSettingsForm({
               type="number"
               value={config.port}
               onChange={(e) => setConfig(prev => ({ ...prev, port: parseInt(e.target.value) }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               placeholder="8883"
               required
             />
@@ -113,7 +113,7 @@ export default function FarmMqttSettingsForm({
             인증 방식 *
           </label>
           <div className="flex space-x-4">
-            <label className="flex items-center">
+            <label className="flex items-center text-gray-900">
               <input
                 type="radio"
                 value="api_key"
@@ -123,7 +123,7 @@ export default function FarmMqttSettingsForm({
               />
               API 키
             </label>
-            <label className="flex items-center">
+            <label className="flex items-center text-gray-900">
               <input
                 type="radio"
                 value="user_pass"
@@ -147,7 +147,7 @@ export default function FarmMqttSettingsForm({
                 type="text"
                 value={config.username}
                 onChange={(e) => setConfig(prev => ({ ...prev, username: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
                 placeholder="username"
               />
             </div>
@@ -163,7 +163,7 @@ export default function FarmMqttSettingsForm({
                 ...prev, 
                 [config.auth_mode === 'api_key' ? 'api_key' : 'password']: e.target.value 
               }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               placeholder={config.auth_mode === 'api_key' ? 'API 키 입력' : '비밀번호 입력'}
               required
             />
@@ -180,7 +180,7 @@ export default function FarmMqttSettingsForm({
               type="text"
               value={config.client_id_prefix}
               onChange={(e) => setConfig(prev => ({ ...prev, client_id_prefix: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               placeholder="terahub-bridge"
             />
           </div>
@@ -192,7 +192,7 @@ export default function FarmMqttSettingsForm({
               type="text"
               value={config.ws_path}
               onChange={(e) => setConfig(prev => ({ ...prev, ws_path: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               placeholder="/mqtt"
             />
           </div>
@@ -205,7 +205,7 @@ export default function FarmMqttSettingsForm({
           <select
             value={config.qos_default}
             onChange={(e) => setConfig(prev => ({ ...prev, qos_default: parseInt(e.target.value) }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
           >
             <option value={0}>QoS 0 (최대 한 번)</option>
             <option value={1}>QoS 1 (최소 한 번)</option>

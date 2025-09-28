@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import FarmMqttSettingsForm from '@/components/FarmMqttSettingsForm';
 import BridgeStatusBadge from '@/components/BridgeStatusBadge';
 import AppHeader from '@/components/AppHeader';
+import MqttDesignGuideModal from '@/components/MqttDesignGuideModal';
 import { getCurrentUser, type AuthUser } from '@/lib/auth';
 
 interface MqttConfig {
@@ -31,6 +32,7 @@ export default function FarmMqttSettingsPage() {
   const [config, setConfig] = useState<MqttConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [farmName, setFarmName] = useState<string>('');
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   // 사용자 인증 확인
   useEffect(() => {
@@ -53,14 +55,27 @@ export default function FarmMqttSettingsPage() {
         const farmResponse = await fetch(`/api/farms/${farmId}`);
         if (farmResponse.ok) {
           const farmData = await farmResponse.json();
-          setFarmName(farmData.name || '알 수 없는 농장');
+          console.log('농장 정보 응답:', farmData);
+          if (farmData.success && farmData.data) {
+            setFarmName(farmData.data.name || '알 수 없는 농장');
+          } else {
+            setFarmName('알 수 없는 농장');
+          }
+        } else {
+          setFarmName('알 수 없는 농장');
         }
 
         // MQTT 설정 로드
         const configResponse = await fetch(`/api/farms/${farmId}/mqtt-config`);
         if (configResponse.ok) {
           const configData = await configResponse.json();
-          setConfig(configData);
+          console.log('MQTT 설정 응답:', configData);
+          if (configData.success && configData.data) {
+            setConfig(configData.data);
+          } else if (configData.data) {
+            // 직접 데이터가 있는 경우
+            setConfig(configData.data);
+          }
         }
       } catch (error) {
         console.error('데이터 로드 실패:', error);
@@ -89,11 +104,14 @@ export default function FarmMqttSettingsPage() {
     }
 
     // 설정 업데이트
-    setConfig(prev => ({
-      ...prev,
+    const updatedConfig = {
       ...configData,
-      farm_id: farmId
-    }));
+      farm_id: farmId,
+      is_active: true, // 저장 시 활성 상태로 설정
+      last_test_at: new Date().toISOString(),
+      last_test_ok: true
+    };
+    setConfig(updatedConfig);
   };
 
   const handleTest = async (): Promise<boolean> => {
@@ -159,7 +177,18 @@ export default function FarmMqttSettingsPage() {
                 {farmName} - {farmId}
               </p>
             </div>
-            <BridgeStatusBadge farmId={farmId} />
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowGuideModal(true)}
+                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 transition-colors flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>설계 가이드</span>
+              </button>
+              <BridgeStatusBadge farmId={farmId} />
+            </div>
           </div>
         </div>
 
@@ -252,6 +281,14 @@ export default function FarmMqttSettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* MQTT 설계 가이드 모달 */}
+      <MqttDesignGuideModal
+        isOpen={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        currentFarmId={farmId}
+        currentFarmName={farmName}
+      />
     </div>
   );
 }

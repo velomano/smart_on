@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AppHeader from '../../components/AppHeader';
+import AppHeader from '../../src/components/AppHeader';
 import { AuthUser, getCurrentUser, getApprovedUsers, updateUserSettings } from '../../src/lib/auth';
 
 export default function TeamManagementPage() {

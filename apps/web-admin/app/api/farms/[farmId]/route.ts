@@ -2,16 +2,17 @@ import { supaAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET(
   request: Request,
-  { params }: { params: { farmId: string } }
+  { params }: { params: Promise<{ farmId: string }> }
 ) {
   try {
+    const { farmId } = await params;
     const supa = supaAdmin();
     
     // 농장 정보 조회
     const { data: farm, error } = await supa
       .from('farms')
       .select('*')
-      .eq('id', params.farmId)
+      .eq('id', farmId)
       .single();
 
     if (error) {
@@ -50,9 +51,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { farmId: string } }
+  { params }: { params: Promise<{ farmId: string }> }
 ) {
   try {
+    const { farmId } = await params;
     const supa = supaAdmin();
     const body = await request.json();
     
@@ -65,7 +67,7 @@ export async function PUT(
         location: body.location,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.farmId)
+      .eq('id', farmId)
       .select()
       .single();
 

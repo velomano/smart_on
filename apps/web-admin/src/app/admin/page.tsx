@@ -9,6 +9,7 @@ import {
   approveUser,
   rejectUser,
   updateUser,
+  deleteUser,
   getTeams,
   type AuthUser,
 } from '../../lib/auth';
@@ -111,13 +112,22 @@ export default function AdminPage() {
 
         console.log('🔍 admin 페이지 - 데이터 로드 결과:', {
           pending: Array.isArray(pendingResult) ? pendingResult.length : pendingResult,
-          approved: Array.isArray(approvedResult) ? approvedResult.length : approvedResult
+          approved: Array.isArray(approvedResult) ? approvedResult.length : approvedResult,
+          teams: teamsResult?.teams?.length || 0
         });
 
         if (!alive) return;
         setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
-        setTeams(teamsResult.success ? teamsResult.teams : []);
+        
+        // teams 데이터 설정
+        if (teamsResult && teamsResult.success && teamsResult.teams) {
+          setTeams(teamsResult.teams);
+          console.log('✅ teams 데이터 로드 성공:', teamsResult.teams.length, '개');
+        } else {
+          console.log('❌ teams 데이터 로드 실패:', teamsResult);
+          setTeams([]);
+        }
       } catch (e) {
         console.error('admin 페이지 - loadData 에러:', e);
         setPendingUsers([]);
@@ -179,6 +189,29 @@ export default function AdminPage() {
       phone: '',
       team_id: ''
     });
+  };
+
+  // 사용자 삭제 (비활성화)
+  const handleDeleteUser = async (user: AuthUser) => {
+    if (!confirm(`정말로 ${user.name || user.email} 사용자를 삭제(비활성화)하시겠습니까?`)) {
+      return;
+    }
+
+    try {
+      const result = await deleteUser(user.id);
+      if (result.success) {
+        alert('사용자가 성공적으로 삭제(비활성화)되었습니다.');
+        // 사용자 목록 새로고침
+        const updatedUsers = await getApprovedUsers();
+        setApprovedUsers(updatedUsers as AuthUser[]);
+        setFilteredApprovedUsers(updatedUsers as AuthUser[]);
+      } else {
+        alert(`사용자 삭제 실패: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('사용자 삭제 오류:', error);
+      alert('사용자 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   // 사용자 정보 저장
@@ -308,14 +341,57 @@ export default function AdminPage() {
   const getUsersByFarm = () => {
     const farmGroups: { [key: string]: AuthUser[] } = {};
     
-    approvedUsers.forEach(user => {
-      const farmKey = user.team_name || user.team_id || '팀 미배정';
-      if (!farmGroups[farmKey]) {
-        farmGroups[farmKey] = [];
-      }
-      farmGroups[farmKey].push(user);
+    console.log('🔍 getUsersByFarm 디버깅:', {
+      teamsLength: teams.length,
+      approvedUsersLength: approvedUsers.length,
+      teams: teams.map(t => ({ id: t.id, name: t.name })),
+      users: approvedUsers.map(u => ({ email: u.email, team_id: u.team_id, team_name: u.team_name }))
     });
     
+    // 1. teams 데이터가 있으면 teams 사용, 없으면 빈 배열로 처리
+    if (teams && teams.length > 0) {
+      // teams 데이터가 있는 경우
+      const teamMap = new Map();
+      teams.forEach(team => {
+        teamMap.set(team.id, team.name);
+        farmGroups[team.name] = []; // 모든 팀을 먼저 그룹으로 생성
+      });
+      
+      // 사용자들을 해당 팀에 배정
+      approvedUsers.forEach(user => {
+        let farmKey = '팀 미배정';
+        
+        if (user.team_id) {
+          const teamName = teamMap.get(user.team_id);
+          farmKey = teamName || `팀 ID: ${user.team_id}`;
+        } else if (user.team_name) {
+          farmKey = user.team_name;
+        }
+        
+        if (!farmGroups[farmKey]) {
+          farmGroups[farmKey] = [];
+        }
+        farmGroups[farmKey].push(user);
+      });
+    } else {
+      // teams 데이터가 없는 경우 - 사용자 데이터만으로 그룹화
+      approvedUsers.forEach(user => {
+        let farmKey = '팀 미배정';
+        
+        if (user.team_name) {
+          farmKey = user.team_name;
+        } else if (user.team_id) {
+          farmKey = `팀 ID: ${user.team_id}`;
+        }
+        
+        if (!farmGroups[farmKey]) {
+          farmGroups[farmKey] = [];
+        }
+        farmGroups[farmKey].push(user);
+      });
+    }
+    
+    console.log('🔍 농장별 사용자 그룹화 최종 결과:', farmGroups);
     return farmGroups;
   };
 
@@ -594,9 +670,13 @@ export default function AdminPage() {
                                     🏢 {u.company}
                                   </span>
                                 )}
-                                {u.team_name && (
+                                {u.team_name ? (
                                   <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200 shadow-sm">
-                                    🏡 {u.team_name}
+                                    🏡 소속: {u.team_name}
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-gray-100 text-gray-600 border border-gray-200 shadow-sm">
+                                    🏡 소속: 미배정
                                   </span>
                                 )}
                                 <span className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
@@ -617,12 +697,20 @@ export default function AdminPage() {
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
-                        <button
-                              onClick={() => handleEditUser(u)}
-                              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                            >
-                              ✏️ 편집
-                        </button>
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditUser(u)}
+                                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                              >
+                                ✏️ 편집
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(u)}
+                                className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                              >
+                                🗑️ 삭제
+                              </button>
+                            </div>
                     </div>
                   </div>
                 </div>
@@ -692,7 +780,7 @@ export default function AdminPage() {
                                   <div className="flex-1 min-w-0">
                                     <h5 className="font-semibold text-gray-900 truncate">{user.name || '이름 없음'}</h5>
                                     <p className="text-sm text-gray-600 truncate">{user.email}</p>
-                                    <div className="flex items-center space-x-2 mt-1">
+                                    <div className="flex items-center space-x-2 mt-1 flex-wrap">
                                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                         user.role === 'system_admin' ? 'bg-yellow-100 text-yellow-800' :
                                         user.role === 'team_leader' ? 'bg-blue-100 text-blue-800' :
@@ -701,18 +789,35 @@ export default function AdminPage() {
                                         {user.role === 'system_admin' ? '관리자' :
                                          user.role === 'team_leader' ? '농장장' : '팀원'}
                                       </span>
+                                      {user.team_name ? (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                          🏡 {user.team_name}
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                          🏡 미배정
+                                        </span>
+                                      )}
                                       <div className={`w-2 h-2 rounded-full ${
                                         user.is_active ? 'bg-green-400' : 'bg-red-400'
                                       }`}></div>
                                 </div>
                                 </div>
                             </div>
-                                <button
-                                  onClick={() => handleEditUser(user)}
-                                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ml-2"
-                                >
-                                  ✏️ 편집
-                                </button>
+                                <div className="flex space-x-1 ml-2">
+                                  <button
+                                    onClick={() => handleEditUser(user)}
+                                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                                  >
+                                    ✏️ 편집
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteUser(user)}
+                                    className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                                  >
+                                    🗑️ 삭제
+                                  </button>
+                                </div>
                               </div>
                                   </div>
                           ))}
@@ -977,6 +1082,16 @@ export default function AdminPage() {
                     disabled={editLoading}
                   >
                     취소
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleCloseEditModal();
+                      handleDeleteUser(editingUser!);
+                    }}
+                    disabled={editLoading}
+                    className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                  >
+                    🗑️ 삭제
                   </button>
                   <button
                     onClick={handleSaveUser}
