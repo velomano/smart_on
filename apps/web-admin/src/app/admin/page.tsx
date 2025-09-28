@@ -403,8 +403,8 @@ export default function AdminPage() {
       const membershipsByUser = new Map<string, string>(); // user_id -> farm_id
       
       // farm_memberships 데이터가 있으면 사용
-      if (window.farmMembershipsData) {
-        window.farmMembershipsData.forEach((r: any) => {
+      if ((window as any).farmMembershipsData) {
+        (window as any).farmMembershipsData.forEach((r: any) => {
           membershipsByUser.set(r.user_id, r.farm_id);
         });
       }

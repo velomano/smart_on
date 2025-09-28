@@ -526,6 +526,9 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
 
     // 1) 팀 배정 관련은 farm_memberships로 위임하고 users 업데이트 페이로드에서 제거
     const { team_id: maybeFarmId, tenant_id: maybeTenantId, ...rest } = data ?? {};
+    
+    // tenant_id는 users 테이블에서 제거되었으므로 rest에서도 제거
+    delete (rest as any).tenant_id;
 
     // 팀(=농장) 배정 처리: 주어진 경우 farm_memberships upsert
     if (typeof maybeFarmId !== 'undefined') {
@@ -582,7 +585,6 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
     if (typeof rest.is_active !== 'undefined') allowed.is_active = rest.is_active as boolean;
     if (typeof rest.is_approved !== 'undefined') allowed.is_approved = rest.is_approved as boolean;
     if (typeof rest.role !== 'undefined') allowed.role = rest.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member';
-    if (typeof rest.tenant_id !== 'undefined') allowed.tenant_id = rest.tenant_id as string;
 
     // 변경할 것이 없다면 바로 성공 리턴
     if (Object.keys(allowed).length === 0) {
