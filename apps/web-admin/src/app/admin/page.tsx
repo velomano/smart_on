@@ -115,8 +115,8 @@ export default function AdminPage() {
         });
 
         if (!alive) return;
-        setPendingUsers(Array.isArray(pendingResult) ? pendingResult : []);
-        setApprovedUsers(Array.isArray(approvedResult) ? approvedResult : []);
+        setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+        setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         setTeams(teamsResult.success ? teamsResult.teams : []);
       } catch (e) {
         console.error('admin 페이지 - loadData 에러:', e);
@@ -187,7 +187,10 @@ export default function AdminPage() {
 
     setEditLoading(true);
     try {
-      const result = await updateUser(editingUser.id, editFormData);
+      const result = await updateUser(editingUser.id, {
+        ...editFormData,
+        role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member'
+      });
       if (result.success) {
         alert('사용자 정보가 업데이트되었습니다.');
         // 데이터 다시 로드
@@ -196,8 +199,8 @@ export default function AdminPage() {
             getPendingUsers(),
             getApprovedUsers()
           ]);
-          setPendingUsers(Array.isArray(pendingResult) ? pendingResult : []);
-          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult : []);
+          setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         }
         handleCloseEditModal();
       } else {
@@ -246,7 +249,7 @@ export default function AdminPage() {
 
       // 사용자 정보 업데이트 (역할, 팀 배정)
       const updateResult = await updateUser(approvingUser.id, {
-        role: approveFormData.role,
+        role: approveFormData.role as 'system_admin' | 'team_leader' | 'team_member',
         team_id: approveFormData.team_id || null
       });
 
@@ -258,8 +261,8 @@ export default function AdminPage() {
             getPendingUsers(),
             getApprovedUsers()
           ]);
-          setPendingUsers(Array.isArray(pendingResult) ? pendingResult : []);
-          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult : []);
+          setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         }
         handleCloseApproveModal();
       } else {
@@ -278,7 +281,7 @@ export default function AdminPage() {
     if (!confirm('정말로 이 사용자를 거부하시겠습니까?')) {
       return;
     }
-
+    
     try {
       const result = await rejectUser(userId);
       if (result.success) {
@@ -289,8 +292,8 @@ export default function AdminPage() {
             getPendingUsers(),
             getApprovedUsers()
           ]);
-          setPendingUsers(Array.isArray(pendingResult) ? pendingResult : []);
-          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult : []);
+          setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         }
       } else {
         alert('거부 처리에 실패했습니다.');
@@ -419,7 +422,7 @@ export default function AdminPage() {
                   </p>
                             </div>
                           </div>
-                        </div>
+                            </div>
 
             {/* 탭 내용 */}
             <div className="px-8 py-8">
@@ -450,8 +453,8 @@ export default function AdminPage() {
                           <div className="flex items-center space-x-4">
                             <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
                               <span className="text-2xl">⏳</span>
-                        </div>
-                            <div>
+                          </div>
+                          <div>
                               <h4 className="text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
                               <p className="text-gray-600 font-medium">{u.email}</p>
                               <div className="flex items-center space-x-3 mt-2">
@@ -461,28 +464,28 @@ export default function AdminPage() {
                                 {u.company && (
                                   <span className="text-xs text-gray-500">🏢 {u.company}</span>
                 )}
-              </div>
+                          </div>
                               <div className="text-xs text-gray-500 mt-1">
                                 가입일: {new Date(u.created_at).toLocaleDateString('ko-KR')}
-                  </div>
-                      </div>
+                          </div>
+                        </div>
                     </div>
                           <div className="flex space-x-3">
-                      <button
+                          <button
                               onClick={() => handleRejectUser(u.id)}
                               className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
-                      >
+                          >
                               거부
-                      </button>
-                            <button
+                          </button>
+                          <button
                               onClick={() => handleApproveUser(u)}
                               className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
                             >
                               승인
-                            </button>
+                          </button>
                     </div>
-                  </div>
-                </div>
+                        </div>
+                      </div>
                     ))}
 
                     {pendingUsers.length === 0 && (
@@ -493,23 +496,23 @@ export default function AdminPage() {
                         <h3 className="text-xl font-bold text-gray-900 mb-2">승인 대기 사용자가 없습니다</h3>
                         <p className="text-gray-600">현재 승인을 기다리는 사용자가 없습니다.</p>
                   </div>
-                    )}
+                )}
+              </div>
                         </div>
-                        </div>
-              )}
+            )}
 
               {/* 승인된 사용자 탭 */}
-              {activeTab === 'approved' && (
-                <div>
+            {activeTab === 'approved' && (
+              <div>
                         <div className="flex items-center justify-between mb-6">
-                          <div>
-                      <h3 className="text-2xl font-black text-gray-900 mb-2">
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">
                         ✅ 승인된 사용자 목록
-                            </h3>
+                    </h3>
                             <p className="text-gray-600">
                         시스템에 등록된 모든 승인된 사용자를 관리합니다
                             </p>
-                          </div>
+                  </div>
                     <div className="text-sm text-gray-500">
                       총 {approvedUsers.length}명 (검색결과: {filteredApprovedUsers.length}명)
                           </div>
@@ -523,7 +526,7 @@ export default function AdminPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                             </div>
-                                <input
+                      <input
                         type="text"
                         placeholder="이름, 이메일, 역할, 팀명, 소속으로 검색..."
                         value={searchTerm}
@@ -540,8 +543,8 @@ export default function AdminPage() {
                           </svg>
                         </button>
                       )}
-                            </div>
-                          </div>
+                    </div>
+                    </div>
 
                   <div className="space-y-6">
                     {filteredApprovedUsers.map((u) => (
@@ -604,56 +607,56 @@ export default function AdminPage() {
                                   {u.role === 'system_admin' ? '👑 시스템 관리자' :
                                    u.role === 'team_leader' ? '👨‍💼 농장장' : '👤 팀원'}
                                 </span>
-                                {u.updated_at && (
+                                {(u as any).updated_at && (
                                   <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
                                     <span className="mr-1.5">🕒</span>
-                                    최근 접속: {new Date(u.updated_at).toLocaleDateString('ko-KR')}
+                                    최근 접속: {new Date((u as any).updated_at).toLocaleDateString('ko-KR')}
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
-                                <button
+                        <button
                               onClick={() => handleEditUser(u)}
                               className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                             >
                               ✏️ 편집
-                                </button>
-                              </div>
-                                  </div>
-                              </div>
+                        </button>
+                    </div>
+                  </div>
+                </div>
                                 ))}
 
                     {filteredApprovedUsers.length === 0 && (
-                      <div className="text-center py-16">
-                        <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                          <span className="text-4xl">👥</span>
-                            </div>
+                  <div className="text-center py-16">
+                    <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                      <span className="text-4xl">👥</span>
+                    </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-2">승인된 사용자가 없습니다</h3>
                         <p className="text-gray-600">아직 승인된 사용자가 없습니다.</p>
-                                  </div>
+                  </div>
                                     )}
-                                  </div>
-                                </div>
+                        </div>
+                        </div>
                             )}
 
               {/* 농장별 정리 탭 */}
               {activeTab === 'farms' && (
-              <div>
+                          <div>
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h3 className="text-2xl font-black text-gray-900 mb-2">
                         🏢 농장별 사용자 보기
-                    </h3>
-                      <p className="text-gray-600">
+                            </h3>
+                            <p className="text-gray-600">
                         농장별로 분류된 사용자 목록을 확인할 수 있습니다
-                      </p>
-                                  </div>
+                            </p>
+                          </div>
                     <div className="text-sm text-gray-500">
                       {Object.keys(getUsersByFarm()).length}개 농장
-                                </div>
-                              </div>
+                          </div>
+                        </div>
 
                   <div className="space-y-8">
                     {Object.entries(getUsersByFarm()).map(([farmName, users]) => (
@@ -661,12 +664,12 @@ export default function AdminPage() {
                         <div className="flex items-center mb-6">
                           <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg mr-4">
                             <span className="text-2xl">🏢</span>
-                          </div>
+                            </div>
                           <div>
                             <h4 className="text-2xl font-bold text-gray-900">{farmName}</h4>
                             <p className="text-gray-600">{users.length}명의 사용자</p>
+                            </div>
                           </div>
-                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {users.map((user) => (
@@ -684,8 +687,8 @@ export default function AdminPage() {
                                     <span className="text-lg">
                                       {user.role === 'system_admin' ? '👑' : 
                                        user.role === 'team_leader' ? '👨‍💼' : '👤'}
-                                    </span>
-                                  </div>
+                              </span>
+                            </div>
                                   <div className="flex-1 min-w-0">
                                     <h5 className="font-semibold text-gray-900 truncate">{user.name || '이름 없음'}</h5>
                                     <p className="text-sm text-gray-600 truncate">{user.email}</p>
@@ -701,9 +704,9 @@ export default function AdminPage() {
                                       <div className={`w-2 h-2 rounded-full ${
                                         user.is_active ? 'bg-green-400' : 'bg-red-400'
                                       }`}></div>
-                                    </div>
-                                  </div>
                                 </div>
+                                </div>
+                            </div>
                                 <button
                                   onClick={() => handleEditUser(user)}
                                   className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ml-2"
@@ -711,10 +714,10 @@ export default function AdminPage() {
                                   ✏️ 편집
                                 </button>
                               </div>
-                            </div>
+                                  </div>
                           ))}
-                        </div>
-                      </div>
+                              </div>
+                          </div>
                     ))}
 
                     {Object.keys(getUsersByFarm()).length === 0 && (
@@ -727,11 +730,11 @@ export default function AdminPage() {
                                   </div>
                                     )}
                                   </div>
+                                </div>
+                                    )}
+                                  </div>
                               </div>
                             )}
-                          </div>
-              </div>
-            )}
 
         {/* 승인 모달 */}
         {isApproveModalOpen && approvingUser && (
@@ -742,28 +745,28 @@ export default function AdminPage() {
                   <div>
                     <h2 className="text-2xl font-bold text-white">사용자 승인</h2>
                     <p className="text-white/90">사용자를 승인하고 농장에 배정합니다</p>
-                  </div>
+                            </div>
                   <button
                     onClick={handleCloseApproveModal}
                     className="text-white/80 hover:text-white text-2xl"
                   >
                     ×
                   </button>
-                </div>
-              </div>
+                                  </div>
+                                </div>
 
               <div className="px-8 py-8">
                 <div className="mb-6">
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                       <span className="text-2xl">👤</span>
-                    </div>
+                                    </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900">{approvingUser.name || '이름 없음'}</h3>
                       <p className="text-gray-600">{approvingUser.email}</p>
-                    </div>
-                  </div>
-                </div>
+                                  </div>
+                              </div>
+                          </div>
 
                 <div className="space-y-6">
                   {/* 역할 */}
@@ -780,7 +783,7 @@ export default function AdminPage() {
                       <option value="team_leader">농장장</option>
                       <option value="system_admin">시스템 관리자</option>
                     </select>
-                  </div>
+                            </div>
 
                   {/* 농장 */}
                   <div>
@@ -799,8 +802,8 @@ export default function AdminPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                </div>
+                                  </div>
+                                </div>
 
                 {/* 버튼 */}
                 <div className="flex justify-end space-x-4 mt-8">
@@ -818,11 +821,11 @@ export default function AdminPage() {
                   >
                     {approveLoading ? '승인 중...' : '승인하기'}
                   </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+                                  </div>
+                                </div>
+                              </div>
+                              </div>
+                            )}
 
         {/* 편집 모달 */}
         {isEditModalOpen && editingUser && (
@@ -874,7 +877,7 @@ export default function AdminPage() {
                       </div>
 
                   {/* 역할 */}
-                  <div>
+                          <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       역할 *
                     </label>
@@ -887,10 +890,10 @@ export default function AdminPage() {
                       <option value="team_leader">농장장</option>
                       <option value="system_admin">시스템 관리자</option>
                     </select>
-                  </div>
+                      </div>
 
                   {/* 농장 */}
-                  <div>
+                          <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       농장
                     </label>
@@ -906,10 +909,10 @@ export default function AdminPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                          </div>
 
                   {/* 소속 */}
-                          <div>
+                            <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       소속
                     </label>
@@ -920,7 +923,7 @@ export default function AdminPage() {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                       placeholder="소속명"
                     />
-                          </div>
+                        </div>
 
                   {/* 전화번호 */}
                             <div>
@@ -962,9 +965,9 @@ export default function AdminPage() {
                         />
                         비활성
                       </label>
-                          </div>
-                          </div>
-                        </div>
+                                    </div>
+                                      </div>
+                                    </div>
 
                 {/* 버튼 */}
                 <div className="flex justify-end space-x-4 mt-8">
@@ -982,11 +985,11 @@ export default function AdminPage() {
                   >
                     {editLoading ? '저장 중...' : '저장'}
                   </button>
-                                    </div>
-                                      </div>
-                                    </div>
-                          </div>
-                        )}
+                              </div>
+                              </div>
+                </div>
+              </div>
+            )}
       </main>
     </div>
   );

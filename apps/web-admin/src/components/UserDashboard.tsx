@@ -222,7 +222,18 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
   // 통계 계산
   const totalFarms = farms?.length || 0;
   const totalBeds = devices?.filter(d => d.type === 'sensor_gateway').length || 0; // 실제 센서 게이트웨이(베드) 수
-  const activeBeds = devices?.filter(d => d.type === 'sensor_gateway' && d.status?.online).length || 0;
+  
+  // 베드 활성 상태 확인 로직 개선 - JSONB status 필드 처리
+  const activeBeds = devices?.filter(d => {
+    if (d.type !== 'sensor_gateway') return false;
+    // status가 JSONB이므로 안전하게 접근
+    if (typeof d.status === 'object' && d.status !== null) {
+      return d.status.online === true;
+    }
+    // status가 문자열이거나 다른 형태인 경우 기본적으로 활성으로 간주
+    return true;
+  }).length || 0;
+  
   const bedActivationRate = totalBeds > 0 ? Math.round((activeBeds / totalBeds) * 100) : 0;
   
   const activeMembers = approvedUsers?.filter(user => 

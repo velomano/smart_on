@@ -44,21 +44,9 @@ export default function WebAdminDashboard() {
         if (teamsResult.success) {
           setFarms(teamsResult.teams as Farm[]);
           
-          // 로컬 스토리지에서 베드 데이터 불러오기
-          if (typeof window !== 'undefined') {
-            const savedDevices = localStorage.getItem('mock_devices');
-            if (savedDevices) {
-              setDevices(JSON.parse(savedDevices));
-            } else {
-              // localStorage에 데이터가 없으면 Mock 데이터 사용하고 저장
-              const mockDevices = teamsResult.devices as Device[];
-              setDevices(mockDevices);
-              localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
-              console.log('대시보드 - Mock 베드 데이터를 localStorage에 저장:', mockDevices);
-            }
-          } else {
-            setDevices(teamsResult.devices as Device[]);
-          }
+          // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
+          console.log('✅ 대시보드 - Supabase 베드 데이터 사용:', teamsResult.devices?.length || 0, '개');
+          setDevices(teamsResult.devices as Device[]);
           
           setSensors(teamsResult.sensors as Sensor[]);
           setSensorReadings(teamsResult.sensorReadings as SensorReading[]);

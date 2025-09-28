@@ -107,7 +107,18 @@ function BedsManagementContent() {
         console.log('농장관리 페이지 - 농장 목록:', teamsResult.teams);
         console.log('농장관리 페이지 - 디바이스 목록:', teamsResult.devices);
         console.log('농장관리 페이지 - 디바이스 개수:', teamsResult.devices?.length || 0);
-        console.log('농장관리 페이지 - 1농장 디바이스들:', teamsResult.devices?.filter(d => d.farm_id === 'team-001'));
+        
+        // 디바이스와 농장 ID 매칭 디버깅
+        if (teamsResult.devices && teamsResult.teams) {
+          console.log('🔍 디바이스 farm_id 분석:');
+          teamsResult.devices.forEach(d => {
+            console.log(`  - 디바이스 ${d.id}: farm_id=${d.farm_id}, type=${d.type}`);
+          });
+          console.log('🔍 농장 ID 분석:');
+          teamsResult.teams.forEach(farm => {
+            console.log(`  - 농장 ${farm.id}: name=${farm.name}`);
+          });
+        }
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
