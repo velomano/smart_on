@@ -899,7 +899,7 @@ export default function AdminPage() {
                       계정 상태
                     </label>
                     <div className="flex space-x-4">
-                      <label className="flex items-center">
+                      <label className="flex items-center text-gray-900 font-medium">
                         <input
                           type="radio"
                           name="is_active"
@@ -909,7 +909,7 @@ export default function AdminPage() {
                         />
                         활성
                       </label>
-                      <label className="flex items-center">
+                      <label className="flex items-center text-gray-900 font-medium">
                         <input
                           type="radio"
                           name="is_active"
