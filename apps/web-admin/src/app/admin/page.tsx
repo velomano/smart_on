@@ -713,7 +713,6 @@ export default function AdminPage() {
                                   </div>
                                 ))}
                               </div>
-                              </div>
                     ))}
 
                     {Object.keys(getUsersByFarm()).length === 0 && (
