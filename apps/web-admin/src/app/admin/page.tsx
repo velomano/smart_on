@@ -525,7 +525,7 @@ export default function AdminPage() {
                             </div>
                                 <input
                         type="text"
-                        placeholder="이름, 이메일, 역할, 팀명, 회사명으로 검색..."
+                        placeholder="이름, 이메일, 역할, 팀명, 소속으로 검색..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
@@ -865,17 +865,17 @@ export default function AdminPage() {
                     </select>
                   </div>
 
-                  {/* 회사 */}
+                  {/* 소속 */}
                           <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      회사
+                      소속
                     </label>
                     <input
                       type="text"
                       value={editFormData.company}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, company: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
-                      placeholder="회사명"
+                      placeholder="소속명"
                     />
                           </div>
 

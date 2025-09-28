@@ -189,7 +189,7 @@ export default function LoginPage() {
 
                 <div>
                   <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-2">
-                    회사명
+                    소속
                   </label>
                   <input
                     id="company"
@@ -198,7 +198,7 @@ export default function LoginPage() {
                     value={formData.company}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-black !important"
-                    placeholder="스마트팜 주식회사"
+                    placeholder="스마트팜"
                   />
                 </div>
 
