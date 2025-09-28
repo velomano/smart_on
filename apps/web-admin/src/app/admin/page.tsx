@@ -661,12 +661,12 @@ export default function AdminPage() {
                         <div className="flex items-center mb-6">
                           <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg mr-4">
                             <span className="text-2xl">🏢</span>
-                              </div>
+                          </div>
                           <div>
                             <h4 className="text-2xl font-bold text-gray-900">{farmName}</h4>
                             <p className="text-gray-600">{users.length}명의 사용자</p>
-                        </div>
                           </div>
+                        </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {users.map((user) => (
@@ -674,46 +674,47 @@ export default function AdminPage() {
                               key={user.id}
                               className="bg-white/80 backdrop-blur-sm border rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300"
                             >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3 flex-1">
-                                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md ${
-                                        user.role === 'system_admin' ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
-                                        user.role === 'team_leader' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' :
-                                        'bg-gradient-to-br from-green-400 to-emerald-500'
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-3 flex-1">
+                                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-md ${
+                                    user.role === 'system_admin' ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                                    user.role === 'team_leader' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' :
+                                    'bg-gradient-to-br from-green-400 to-emerald-500'
+                                  }`}>
+                                    <span className="text-lg">
+                                      {user.role === 'system_admin' ? '👑' : 
+                                       user.role === 'team_leader' ? '👨‍💼' : '👤'}
+                                    </span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h5 className="font-semibold text-gray-900 truncate">{user.name || '이름 없음'}</h5>
+                                    <p className="text-sm text-gray-600 truncate">{user.email}</p>
+                                    <div className="flex items-center space-x-2 mt-1">
+                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                        user.role === 'system_admin' ? 'bg-yellow-100 text-yellow-800' :
+                                        user.role === 'team_leader' ? 'bg-blue-100 text-blue-800' :
+                                        'bg-emerald-100 text-emerald-800'
                                       }`}>
-                                        <span className="text-lg">
-                                          {user.role === 'system_admin' ? '👑' : 
-                                           user.role === 'team_leader' ? '👨‍💼' : '👤'}
-                                        </span>
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h5 className="font-semibold text-gray-900 truncate">{user.name || '이름 없음'}</h5>
-                                        <p className="text-sm text-gray-600 truncate">{user.email}</p>
-                                        <div className="flex items-center space-x-2 mt-1">
-                                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                            user.role === 'system_admin' ? 'bg-yellow-100 text-yellow-800' :
-                                            user.role === 'team_leader' ? 'bg-blue-100 text-blue-800' :
-                                            'bg-emerald-100 text-emerald-800'
-                                          }`}>
-                                            {user.role === 'system_admin' ? '관리자' :
-                                             user.role === 'team_leader' ? '농장장' : '팀원'}
-                                          </span>
-                                          <div className={`w-2 h-2 rounded-full ${
-                                            user.is_active ? 'bg-green-400' : 'bg-red-400'
-                                          }`}></div>
-                                        </div>
-                                      </div>
+                                        {user.role === 'system_admin' ? '관리자' :
+                                         user.role === 'team_leader' ? '농장장' : '팀원'}
+                                      </span>
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        user.is_active ? 'bg-green-400' : 'bg-red-400'
+                                      }`}></div>
                                     </div>
-                                    <button
-                                      onClick={() => handleEditUser(user)}
-                                      className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ml-2"
-                                    >
-                                      ✏️ 편집
-                                    </button>
                                   </div>
                                 </div>
-                              ))}
+                                <button
+                                  onClick={() => handleEditUser(user)}
+                                  className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 ml-2"
+                                >
+                                  ✏️ 편집
+                                </button>
+                              </div>
                             </div>
+                          ))}
+                        </div>
+                      </div>
                     ))}
 
                     {Object.keys(getUsersByFarm()).length === 0 && (
