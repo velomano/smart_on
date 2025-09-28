@@ -550,17 +550,26 @@ export default function AdminPage() {
                         className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-4 flex-1">
                             <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
                               <span className="text-2xl">
                                 {u.role === 'system_admin' ? '👑' : 
                                  u.role === 'team_leader' ? '👨‍💼' : '👤'}
                               </span>
                             </div>
-                            <div>
-                              <h4 className="text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
-                              <p className="text-gray-600 font-medium">{u.email}</p>
-                              <div className="flex items-center space-x-3 mt-2">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3 mb-2">
+                                <h4 className="text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
+                                <div className={`text-xs px-2 py-1 rounded-full ${
+                                  u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {u.is_active ? '활성' : '비활성'}
+                                </div>
+                              </div>
+                              <p className="text-gray-600 font-medium mb-2">{u.email}</p>
+                              
+                              {/* 기본 정보 행 */}
+                              <div className="flex items-center space-x-4 mb-2">
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   {u.role === 'system_admin' ? '시스템 관리자' :
                                    u.role === 'team_leader' ? '농장장' : '팀원'}
@@ -570,23 +579,30 @@ export default function AdminPage() {
                                     {u.team_name}
                                   </span>
                                 )}
+                              </div>
+                              
+                              {/* 추가 정보 행 */}
+                              <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 {u.company && (
-                                  <span className="text-xs text-gray-500">🏢 {u.company}</span>
-                                  )}
-                                </div>
+                                  <span className="flex items-center">
+                                    <span className="mr-1">🏢</span>
+                                    {u.company}
+                                  </span>
+                                )}
+                                {u.phone && (
+                                  <span className="flex items-center">
+                                    <span className="mr-1">📞</span>
+                                    {u.phone}
+                                  </span>
+                                )}
+                                <span className="flex items-center">
+                                  <span className="mr-1">📅</span>
+                                  가입: {new Date(u.created_at).toLocaleDateString('ko-KR')}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
-                            <div className="text-right">
-                              <div className={`text-xs px-2 py-1 rounded-full ${
-                                u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                              }`}>
-                                {u.is_active ? '활성' : '비활성'}
-                              </div>
-                              {u.phone && (
-                                <div className="text-xs text-gray-500 mt-1">📞 {u.phone}</div>
-                              )}
-                            </div>
                                 <button
                               onClick={() => handleEditUser(u)}
                               className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
