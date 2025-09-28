@@ -558,49 +558,50 @@ export default function AdminPage() {
                               </span>
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center space-x-3 mb-2">
-                                <h4 className="text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
-                                <div className={`text-xs px-2 py-1 rounded-full ${
+                              {/* 첫 번째 행: 이름, 상태, 이메일 */}
+                              <div className="flex items-center space-x-4 mb-3">
+                                <h4 className="text-2xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
+                                <div className={`text-sm px-3 py-1 rounded-full ${
                                   u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                 }`}>
                                   {u.is_active ? '활성' : '비활성'}
                                 </div>
+                                <p className="text-gray-600 font-medium text-lg">{u.email}</p>
                               </div>
-                              <p className="text-gray-600 font-medium mb-2">{u.email}</p>
                               
-                              {/* 기본 정보 행 */}
-                              <div className="flex items-center space-x-4 mb-2">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {/* 두 번째 행: 역할, 농장, 소속 */}
+                              <div className="flex items-center space-x-4 mb-3">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                                   {u.role === 'system_admin' ? '시스템 관리자' :
                                    u.role === 'team_leader' ? '농장장' : '팀원'}
                                 </span>
                                 {u.team_name && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                                     {u.team_name}
                                   </span>
                                 )}
                                 {u.company && (
-                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                                     🏢 {u.company}
                                   </span>
                                 )}
                               </div>
                               
-                              {/* 연락처 및 날짜 정보 행 */}
-                              <div className="flex items-center space-x-6 text-xs text-gray-500">
+                              {/* 세 번째 행: 연락처 및 날짜 정보 */}
+                              <div className="flex items-center space-x-8 text-sm text-gray-500">
                                 {u.phone && (
                                   <span className="flex items-center">
-                                    <span className="mr-1">📞</span>
+                                    <span className="mr-2">📞</span>
                                     {u.phone}
                                   </span>
                                 )}
                                 <span className="flex items-center">
-                                  <span className="mr-1">📅</span>
+                                  <span className="mr-2">📅</span>
                                   가입: {new Date(u.created_at).toLocaleDateString('ko-KR')}
                                 </span>
                                 {u.updated_at && (
                                   <span className="flex items-center">
-                                    <span className="mr-1">🕒</span>
+                                    <span className="mr-2">🕒</span>
                                     최근 접속: {new Date(u.updated_at).toLocaleDateString('ko-KR')}
                                   </span>
                                 )}
