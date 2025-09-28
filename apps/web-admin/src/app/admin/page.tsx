@@ -547,57 +547,66 @@ export default function AdminPage() {
                     {filteredApprovedUsers.map((u) => (
                       <div 
                         key={u.id} 
-                        className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+                        className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4 flex-1">
-                            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                              <span className="text-2xl">
+                          <div className="flex items-center space-x-5 flex-1">
+                            {/* 역할별 아이콘 색상 구분 */}
+                            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
+                              u.role === 'system_admin' ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                              u.role === 'team_leader' ? 'bg-gradient-to-br from-blue-400 to-indigo-500' :
+                              'bg-gradient-to-br from-green-400 to-emerald-500'
+                            }`}>
+                              <span className="text-3xl">
                                 {u.role === 'system_admin' ? '👑' : 
                                  u.role === 'team_leader' ? '👨‍💼' : '👤'}
                               </span>
                             </div>
                             <div className="flex-1">
                               {/* 첫 번째 행: 이름, 상태, 이메일, 전화번호, 가입일 */}
-                              <div className="flex items-center space-x-4 mb-3">
+                              <div className="flex items-center space-x-4 mb-4">
                                 <h4 className="text-2xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
-                                <div className={`text-sm px-3 py-1 rounded-full ${
-                                  u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                <div className={`text-sm px-3 py-1.5 rounded-full font-semibold ${
+                                  u.is_active ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'
                                 }`}>
                                   {u.is_active ? '활성' : '비활성'}
                                 </div>
                                 <p className="text-gray-600 font-medium text-lg">{u.email}</p>
                                 {u.phone && (
-                                  <span className="flex items-center text-sm text-gray-500">
-                                    <span className="mr-1">📞</span>
+                                  <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                    <span className="mr-1.5">📞</span>
                                     {u.phone}
                                   </span>
                                 )}
-                                <span className="flex items-center text-sm text-gray-500">
-                                  <span className="mr-1">📅</span>
+                                <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                  <span className="mr-1.5">📅</span>
                                   가입: {new Date(u.created_at).toLocaleDateString('ko-KR')}
                                 </span>
                               </div>
                               
                               {/* 두 번째 행: 소속, 농장, 등급, 최근 접속일 */}
-                              <div className="flex items-center space-x-4 mb-3">
+                              <div className="flex items-center space-x-4 mb-2">
                                 {u.company && (
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
+                                  <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-purple-100 text-purple-800 border border-purple-200 shadow-sm">
                                     🏢 {u.company}
                                   </span>
                                 )}
                                 {u.team_name && (
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                    {u.team_name}
+                                  <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200 shadow-sm">
+                                    🏡 {u.team_name}
                                   </span>
                                 )}
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                  {u.role === 'system_admin' ? '시스템 관리자' :
-                                   u.role === 'team_leader' ? '농장장' : '팀원'}
+                                <span className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
+                                  u.role === 'system_admin' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                                  u.role === 'team_leader' ? 'bg-blue-100 text-blue-800 border border-blue-200' :
+                                  'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                }`}>
+                                  {u.role === 'system_admin' ? '👑 시스템 관리자' :
+                                   u.role === 'team_leader' ? '👨‍💼 농장장' : '👤 팀원'}
                                 </span>
                                 {u.updated_at && (
-                                  <span className="flex items-center text-sm text-gray-500">
-                                    <span className="mr-1">🕒</span>
+                                  <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
+                                    <span className="mr-1.5">🕒</span>
                                     최근 접속: {new Date(u.updated_at).toLocaleDateString('ko-KR')}
                                   </span>
                                 )}
@@ -607,9 +616,9 @@ export default function AdminPage() {
                           <div className="flex items-center space-x-3">
                                 <button
                               onClick={() => handleEditUser(u)}
-                              className="bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+                              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                             >
-                              편집
+                              ✏️ 편집
                                 </button>
                               </div>
                                   </div>
