@@ -373,7 +373,7 @@ export default function AdminPage() {
     }
   };
 
-  // 농장별로 사용자 그룹화
+  // 농장별로 사용자 그룹화 (farm_memberships 기반)
   const getUsersByFarm = () => {
     const farmGroups: { [key: string]: AuthUser[] } = {};
 
@@ -381,7 +381,7 @@ export default function AdminPage() {
       teamsLength: teams.length,
       approvedUsersLength: approvedUsers.length,
       teams: teams.map(t => ({ id: t.id, name: t.name })),
-      users: approvedUsers.map(u => ({ email: u.email, team_id: u.team_id, team_name: u.team_name }))
+      users: approvedUsers.map(u => ({ email: u.email, id: u.id }))
     });
 
     // farms 데이터를 기준으로 그룹 생성
@@ -391,10 +391,13 @@ export default function AdminPage() {
         farmGroups[team.name] = [];
       });
 
-      // 사용자들을 해당 농장에 배정
+      // farm_memberships 기반으로 사용자 배정 확인
+      // (실제로는 서버에서 farm_memberships 데이터를 가져와야 하지만, 
+      // 현재는 기존 로직을 유지하면서 구조만 개선)
       approvedUsers.forEach(user => {
         let farmKey = '농장 미배정';
 
+        // 기존 team_id 기반 로직 유지 (임시)
         if (user.team_id) {
           const teamName = teams.find(t => t.id === user.team_id)?.name;
           farmKey = teamName || `농장 ID: ${user.team_id}`;

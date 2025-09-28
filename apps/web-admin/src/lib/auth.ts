@@ -502,10 +502,8 @@ export const getUserFarmMemberships = async (userId: string) => {
 
 // 안전 로거
 function logPgError(ctx: string, err: any) {
-  // PostgrestError는 non-enumerable 속성이 있어 stringify가 기본으론 비어 보일 수 있습니다.
-  const safe = err
-    ? JSON.stringify(err, Object.getOwnPropertyNames(err))
-    : 'null';
+  // PostgrestError는 속성이 non-enumerable이라 console에 {}처럼 보입니다.
+  const safe = err ? JSON.stringify(err, Object.getOwnPropertyNames(err)) : 'null';
   console.error(`❌ ${ctx}:`, safe);
 }
 
@@ -523,33 +521,44 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
     if (typeof maybeFarmId !== 'undefined') {
       // 빈 문자열이면 null 처리(배정 해제)
       const farmId = maybeFarmId === '' ? null : maybeFarmId;
-      if (farmId && !maybeTenantId) {
-        // tenant_id가 없으면 현재 사용자 row에서 가져오기
-        const { data: urow, error: uerr } = await supabase
-          .from('users')
-          .select('tenant_id')
-          .eq('id', userId)
-          .maybeSingle();
-        if (uerr) {
-          logPgError('농장 배정을 위한 사용자 조회 오류', uerr);
-          return { success: false, error: `농장 배정을 위한 사용자 조회 실패: ${uerr.message}` };
+
+      if (farmId) {
+        // tenant_id 확보
+        const tenantId = maybeTenantId ?? (await (async () => {
+          const { data: urow, error: uerr } = await supabase
+            .from('users')
+            .select('tenant_id')
+            .eq('id', userId)
+            .maybeSingle();
+          if (uerr) { 
+            logPgError('배정을 위한 사용자 tenant 조회 오류', uerr); 
+            return null; 
+          }
+          return urow?.tenant_id ?? null;
+        })());
+
+        if (!tenantId) return { success: false, error: '사용자의 tenant_id를 확인할 수 없습니다.' };
+
+        // upsert 시 select()를 붙여야 PostgREST가 에러/결과를 더 분명히 돌려줍니다.
+        const { error: fmError } = await supabase
+          .from('farm_memberships')
+          .upsert([{ tenant_id: tenantId, user_id: userId, farm_id: farmId, role: 'operator' }],
+                  { onConflict: 'tenant_id, farm_id, user_id', ignoreDuplicates: false })
+          .select(); // <= 중요
+
+        if (fmError) {
+          logPgError('farm_memberships upsert 오류', fmError);
+          return { success: false, error: `농장 배정 실패: ${(fmError as any).message || '원인 미상'}` };
         }
-        const tenantId = urow?.tenant_id;
-        if (!tenantId) {
-          return { success: false, error: '사용자의 tenant_id를 확인할 수 없습니다.' };
-        }
-        // farm_memberships upsert
-        const fm = await assignUserToFarm(userId, farmId as string, tenantId, 'operator');
-        if (!fm.success) return fm;
-      } else if (farmId === null) {
-        // 배정 해제: farm_memberships에서 삭제
+      } else {
+        // 해제
         const { error: delErr } = await supabase
           .from('farm_memberships')
           .delete()
           .eq('user_id', userId);
         if (delErr) {
-          logPgError('농장 배정 해제 오류', delErr);
-          return { success: false, error: `농장 배정 해제 실패: ${delErr.message}` };
+          logPgError('farm_memberships 해제 오류', delErr);
+          return { success: false, error: `농장 배정 해제 실패: ${(delErr as any).message || '원인 미상'}` };
         }
       }
     }
