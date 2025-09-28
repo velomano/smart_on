@@ -374,7 +374,13 @@ export default function AdminPage() {
         farmGroups[farmKey].push(user);
       });
     } else {
-      // teams 데이터가 없는 경우 - 사용자 데이터만으로 그룹화
+      // teams 데이터가 없는 경우 - 하드코딩된 농장 그룹 생성
+      console.log('⚠️ teams 데이터가 없음. 하드코딩된 농장 그룹 생성');
+      farmGroups['1조'] = [];
+      farmGroups['2조 농장'] = [];
+      farmGroups['3조'] = [];
+      
+      // 사용자들을 해당 팀에 배정
       approvedUsers.forEach(user => {
         let farmKey = '팀 미배정';
         
