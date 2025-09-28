@@ -118,6 +118,15 @@ export const signIn = async (data: SignInData) => {
         return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
       }
 
+      // 계정 상태 확인
+      if (!userData.is_active) {
+        return { success: false, error: '비활성화된 계정입니다. 관리자에게 문의하세요.' };
+      }
+
+      if (!userData.is_approved) {
+        return { success: false, error: '승인 대기 중인 계정입니다. 승인 후 로그인할 수 있습니다.' };
+      }
+
       const user: AuthUser = {
         id: userData.id,
         email: userData.email,
@@ -279,6 +288,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 // 승인된 사용자 목록 조회
 export const getApprovedUsers = async () => {
   try {
+    console.log('🚀 getApprovedUsers 함수 시작');
     const supabase = getSupabaseClient();
     
     const { data: approvedUsers, error } = await supabase
@@ -288,11 +298,18 @@ export const getApprovedUsers = async () => {
       .eq('is_active', true)
       .order('created_at', { ascending: false }) as { data: DatabaseUser[] | null; error: any };
 
+    console.log('🚀 getApprovedUsers Supabase 쿼리 결과:', {
+      data: approvedUsers?.length || 0,
+      error: error
+    });
+
     if (error) {
+      console.log('🚀 getApprovedUsers 오류 발생:', error);
       return [];
     }
 
     if (!approvedUsers) {
+      console.log('🚀 getApprovedUsers 데이터 없음');
       return [];
     }
 
@@ -307,7 +324,8 @@ export const getApprovedUsers = async () => {
 
         console.log(`🔍 getApprovedUsers - ${user.email}:`, {
           membershipData,
-          membershipError
+          membershipError,
+          userId: user.id
         });
 
         let teamId = null;
@@ -358,6 +376,13 @@ export const getApprovedUsers = async () => {
       })
     );
 
+    console.log('🚀 getApprovedUsers 최종 결과:', usersWithTeamInfo.length, '명');
+    console.log('🚀 getApprovedUsers 팀별 분포:', usersWithTeamInfo.map(u => ({
+      email: u.email,
+      team_id: u.team_id,
+      team_name: u.team_name
+    })));
+    console.log('🚀 getApprovedUsers 반환값:', usersWithTeamInfo);
     return usersWithTeamInfo;
   } catch (error) {
     console.error('승인된 사용자 조회 오류:', error);

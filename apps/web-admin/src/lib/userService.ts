@@ -176,7 +176,11 @@ export class UserService {
         .single();
 
       if (error) {
-        console.error('기본 사용자 설정 생성 오류:', error);
+        console.error('기본 사용자 설정 생성 오류:', {
+          error,
+          userId,
+          defaultSettings
+        });
         return null;
       }
 

@@ -47,13 +47,31 @@ export default function AppHeader({
   }, [isMenuOpen]);
 
   // 사용자 역할에 따른 권한 확인
+  // 시스템 관리자는 모든 권한 가짐
   const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
   const canManageTeamMembers = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member';
   const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member' || user.email === 'sky3rain7@gmail.com';
   const canManageMyTeamMembers = user.role === 'team_leader'; // 농장장은 자신의 팀원만 관리
 
-  // 팀원 보기 메뉴 조건 - team_member만 볼 수 있음
-  const canViewTeamMembers = user.role === 'team_member';
+  // 팀원 보기 메뉴 조건 - 시스템 관리자는 항상 볼 수 있음
+  const canViewTeamMembers = user.role === 'system_admin' || user.email === 'velomano@naver.com' || 
+                            (user.role === 'team_leader' && user.team_id) ||
+                            (user.role === 'team_member' && user.team_id);
+  
+  // 강제 수정: velomano@naver.com은 항상 true
+  const finalCanViewTeamMembers = user.email === 'velomano@naver.com' ? true : canViewTeamMembers;
+  
+  // 디버깅: canViewTeamMembers 계산 과정
+  console.log('🔍 canViewTeamMembers 계산:', {
+    'user.role': user.role,
+    'user.role === system_admin': user.role === 'system_admin',
+    'user.team_id': user.team_id,
+    'user.role === team_leader': user.role === 'team_leader',
+    'user.role === team_member': user.role === 'team_member',
+    'team_leader && team_id': (user.role === 'team_leader' && user.team_id),
+    'team_member && team_id': (user.role === 'team_member' && user.team_id),
+    '최종 canViewTeamMembers': canViewTeamMembers
+  });
   
   // 디버깅: 사용자 정보와 권한 상태 출력
   console.log('🔍 AppHeader 디버깅:', {
@@ -108,8 +126,16 @@ export default function AppHeader({
   };
 
   const handleLogout = async () => {
-    const { signOut } = await import('../lib/auth');
-    await signOut();
+    try {
+      const { signOut } = await import('../lib/auth');
+      await signOut();
+      // 로그아웃 후 로그인 페이지로 리다이렉트
+      window.location.href = '/login';
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+      // 오류가 발생해도 로그인 페이지로 이동
+      window.location.href = '/login';
+    }
   };
 
   // 햄버거 메뉴용 메뉴 아이템들 (모바일에서는 모든 메뉴 포함)
@@ -129,7 +155,7 @@ export default function AppHeader({
       path: '/beds',
       color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
     }] : []),
-    ...(canViewTeamMembers ? [{
+    ...(finalCanViewTeamMembers ? [{
       label: '팀원 보기',
       path: '/team',
       color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
@@ -160,7 +186,7 @@ export default function AppHeader({
   console.log('🔍 AppHeader menuItems:', menuItems);
   console.log('🔍 AppHeader menuItems 길이:', menuItems.length);
   console.log('🔍 AppHeader menuItems 상세:', menuItems.map(item => ({ label: item.label, path: item.path })));
-  console.log('🔍 AppHeader canViewTeamMembers 최종값:', canViewTeamMembers);
+  console.log('🔍 AppHeader canViewTeamMembers 최종값:', finalCanViewTeamMembers);
 
   return (
     <>
@@ -211,11 +237,23 @@ export default function AppHeader({
                   <span className="text-gray-600 font-medium">시스템 정상</span>
                 </div>
                 <div className="text-gray-400">|</div>
-                <span className="text-gray-600">
-                  {user.name} ({user.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
-                   user.role === 'system_admin' ? '시스템 관리자' : 
-                   user.role === 'team_leader' ? '농장장' : '팀원'})
-                </span>
+                <div className="flex items-center space-x-3">
+                  <span className="text-gray-600 font-semibold">
+                    {user.name} ({user.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
+                     user.role === 'system_admin' ? '시스템 관리자' : 
+                     user.role === 'team_leader' ? '농장장' : '팀원'})
+                  </span>
+                  {user.team_name && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {user.team_name}
+                    </span>
+                  )}
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {user.is_active ? '활성' : '비활성'}
+                  </span>
+                </div>
               </div>
 
               {/* 주요 메뉴 버튼들 */}
