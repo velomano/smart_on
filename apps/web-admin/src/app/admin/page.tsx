@@ -692,7 +692,7 @@ export default function AdminPage() {
 
         {/* 승인 모달 */}
         {isApproveModalOpen && approvingUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4">
               <div className="bg-gradient-to-r from-green-500 to-blue-500 px-8 py-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
@@ -783,7 +783,7 @@ export default function AdminPage() {
 
         {/* 편집 모달 */}
         {isEditModalOpen && editingUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
               <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6 rounded-t-2xl">
                 <div className="flex items-center justify-between">
