@@ -500,132 +500,105 @@ export const getUserFarmMemberships = async (userId: string) => {
   }
 };
 
+// 안전 로거
+function logPgError(ctx: string, err: any) {
+  // PostgrestError는 non-enumerable 속성이 있어 stringify가 기본으론 비어 보일 수 있습니다.
+  const safe = err
+    ? JSON.stringify(err, Object.getOwnPropertyNames(err))
+    : 'null';
+  console.error(`❌ ${ctx}:`, safe);
+}
+
 // 사용자 정보 업데이트
 export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
   try {
     const supabase = getSupabaseClient();
-    
+
     console.log('🔍 updateUser 호출:', { userId, data });
-    
-    // team_id가 변경되는 경우 farm_memberships 테이블을 통해 처리
-    let farmIdToAssign = null;
-    if (data.team_id && data.team_id !== '') {
-      console.log('🔍 농장 존재 여부 확인:', data.team_id);
-      const { data: farmData, error: farmError } = await supabase
-        .from('farms')
-        .select('id, name')
-        .eq('id', data.team_id)
-        .maybeSingle();
 
-      if (farmError) {
-        console.error('❌ 농장 조회 오류:', farmError);
-        return {
-          success: false,
-          error: `농장 조회에 실패했습니다: ${farmError.message}`,
-          details: farmError
-        };
-      }
+    // 1) 팀 배정 관련은 farm_memberships로 위임하고 users 업데이트 페이로드에서 제거
+    const { team_id: maybeFarmId, tenant_id: maybeTenantId, ...rest } = data ?? {};
 
-      if (!farmData) {
-        console.error('❌ 농장이 존재하지 않음:', data.team_id);
-        return {
-          success: false,
-          error: `선택한 농장이 존재하지 않습니다. 농장 ID: ${data.team_id}`,
-          details: { farm_id: data.team_id }
-        };
-      }
-
-      console.log('✅ 농장 확인 완료:', farmData);
-      farmIdToAssign = data.team_id;
-    }
-    
-    // team_id는 users 테이블에서 제거되었으므로 제거
-    delete data.team_id;
-    
-    const { error, data: result } = await supabase
-      .from('users')
-      .update(data)
-      .eq('id', userId)
-      .select();
-
-    if (error) {
-      console.error('❌ updateUser 오류:', error);
-      console.error('❌ 오류 타입:', typeof error);
-      console.error('❌ 오류 객체 키들:', Object.keys(error || {}));
-      
-      // 오류 객체의 속성들을 안전하게 접근
-      const errorCode = error?.code || 'UNKNOWN';
-      const errorMessage = error?.message || '알 수 없는 오류';
-      const errorDetails = error?.details || null;
-      const errorHint = error?.hint || null;
-      
-      console.error('❌ 오류 코드:', errorCode);
-      console.error('❌ 오류 메시지:', errorMessage);
-      console.error('❌ 오류 세부사항:', errorDetails);
-      console.error('❌ 오류 힌트:', errorHint);
-      
-      // 409 Conflict 오류의 경우 더 구체적인 메시지 제공
-      if (errorCode === '409') {
-        if (errorMessage.includes('duplicate key')) {
-          return { 
-            success: false, 
-            error: '이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.',
-            details: error
-          };
-        } else if (errorMessage.includes('foreign key')) {
-          return { 
-            success: false, 
-            error: '선택한 농장이 존재하지 않습니다. 올바른 농장을 선택해주세요.',
-            details: error
-          };
+    // 팀(=농장) 배정 처리: 주어진 경우 farm_memberships upsert
+    if (typeof maybeFarmId !== 'undefined') {
+      // 빈 문자열이면 null 처리(배정 해제)
+      const farmId = maybeFarmId === '' ? null : maybeFarmId;
+      if (farmId && !maybeTenantId) {
+        // tenant_id가 없으면 현재 사용자 row에서 가져오기
+        const { data: urow, error: uerr } = await supabase
+          .from('users')
+          .select('tenant_id')
+          .eq('id', userId)
+          .maybeSingle();
+        if (uerr) {
+          logPgError('농장 배정을 위한 사용자 조회 오류', uerr);
+          return { success: false, error: `농장 배정을 위한 사용자 조회 실패: ${uerr.message}` };
+        }
+        const tenantId = urow?.tenant_id;
+        if (!tenantId) {
+          return { success: false, error: '사용자의 tenant_id를 확인할 수 없습니다.' };
+        }
+        // farm_memberships upsert
+        const fm = await assignUserToFarm(userId, farmId as string, tenantId, 'operator');
+        if (!fm.success) return fm;
+      } else if (farmId === null) {
+        // 배정 해제: farm_memberships에서 삭제
+        const { error: delErr } = await supabase
+          .from('farm_memberships')
+          .delete()
+          .eq('user_id', userId);
+        if (delErr) {
+          logPgError('농장 배정 해제 오류', delErr);
+          return { success: false, error: `농장 배정 해제 실패: ${delErr.message}` };
         }
       }
+    }
 
-      return {
-        success: false,
-        error: `사용자 정보 업데이트에 실패했습니다: ${errorMessage}`,
-        details: error
-      };
+    // 2) users 업데이트: 허용 컬럼만 pick (team_id는 제거됨)
+    const allowed: any = {};
+    if (typeof rest.email !== 'undefined') allowed.email = rest.email as string;
+    if (typeof rest.name !== 'undefined') allowed.name = rest.name as string;
+    if (typeof rest.company !== 'undefined') allowed.company = rest.company as string | undefined;
+    if (typeof rest.phone !== 'undefined') allowed.phone = rest.phone as string | undefined;
+    if (typeof rest.is_active !== 'undefined') allowed.is_active = rest.is_active as boolean;
+    if (typeof rest.is_approved !== 'undefined') allowed.is_approved = rest.is_approved as boolean;
+    if (typeof rest.role !== 'undefined') allowed.role = rest.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member';
+    if (typeof rest.tenant_id !== 'undefined') allowed.tenant_id = rest.tenant_id as string;
+
+    // 변경할 것이 없다면 바로 성공 리턴
+    if (Object.keys(allowed).length === 0) {
+      return { success: true, data: [] };
+    }
+
+    const { error, data: result } = await supabase
+      .from('users')
+      .update(allowed)
+      .eq('id', userId)
+      .select('*')
+      .maybeSingle(); // ← 업데이트 후 단일 행만 기대
+
+    if (error) {
+      logPgError('updateUser 오류', error);
+
+      // 409, FK 등 메시지 매핑(있으면)
+      const msg = (error as any)?.message || '알 수 없는 오류';
+      if ((error as any)?.code === '409' && msg.includes('duplicate key')) {
+        return { success: false, error: '이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.' };
+      }
+      return { success: false, error: `사용자 정보 업데이트에 실패했습니다: ${msg}` };
+    }
+
+    // RLS로 인해 업데이트는 되었으나 row 반환이 안 되는 경우 대비
+    if (!result) {
+      console.warn('⚠️ updateUser: 업데이트는 되었으나 반환된 행이 없습니다(정책/권한으로 select 제한 가능).');
+      return { success: true, data: null };
     }
 
     console.log('✅ updateUser 성공:', result);
-    
-    // farm_memberships 처리
-    if (farmIdToAssign !== null) {
-      console.log('🔍 farm_memberships 처리:', { userId, farmId: farmIdToAssign });
-      
-      // 기존 farm_memberships 삭제
-      await supabase
-        .from('farm_memberships')
-        .delete()
-        .eq('user_id', userId);
-      
-      // 새로운 farm_memberships 추가
-      const { error: fmError } = await supabase
-        .from('farm_memberships')
-        .insert([{
-          user_id: userId,
-          farm_id: farmIdToAssign,
-          tenant_id: result?.[0]?.tenant_id || '00000000-0000-0000-0000-000000000001',
-          role: 'operator'
-        }]);
-      
-      if (fmError) {
-        console.error('❌ farm_memberships 처리 오류:', fmError);
-        // farm_memberships 오류는 경고만 출력하고 사용자 업데이트는 성공으로 처리
-      } else {
-        console.log('✅ farm_memberships 처리 성공');
-      }
-    }
-    
     return { success: true, data: result };
-  } catch (error: any) {
-    console.error('❌ updateUser 예외:', error);
-    return { 
-      success: false, 
-      error: `사용자 정보 업데이트 중 오류가 발생했습니다: ${error.message}`,
-      details: error
-    };
+  } catch (err: any) {
+    logPgError('updateUser 예외', err);
+    return { success: false, error: `사용자 정보 업데이트 중 오류: ${err?.message || err}` };
   }
 };
 

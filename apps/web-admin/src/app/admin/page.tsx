@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import AppHeader from '../../components/AppHeader';
+import { getSupabaseClient } from '../../lib/supabase';
 import {
   getCurrentUser,
   getApprovedUsers,
@@ -11,6 +12,7 @@ import {
   updateUser,
   deleteUser,
   getTeams,
+  assignUserToFarm,
   type AuthUser,
 } from '../../lib/auth';
 
@@ -220,25 +222,59 @@ export default function AdminPage() {
 
     setEditLoading(true);
     try {
+      // 1) 사용자 속성만 업데이트 (team_id 제외)
+      const { team_id: selectedFarmId, ...userData } = editFormData;
       const result = await updateUser(editingUser.id, {
-        ...editFormData,
+        ...userData,
         role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member'
       });
-      if (result.success) {
-        alert('사용자 정보가 업데이트되었습니다.');
-        // 데이터 다시 로드
-        if (authUser) {
-          const [pendingResult, approvedResult] = await Promise.all([
-            getPendingUsers(),
-            getApprovedUsers()
-          ]);
-          setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
-          setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
-        }
-        handleCloseEditModal();
-      } else {
-        alert('업데이트에 실패했습니다.');
+      
+      if (!result.success) {
+        alert(`사용자 정보 업데이트에 실패했습니다: ${result.error}`);
+        return;
       }
+
+      // 2) 농장 배정 처리 (별도)
+      if (selectedFarmId !== undefined) {
+        const supabase = getSupabaseClient();
+        const tenantId = editingUser.tenant_id;
+        
+        if (selectedFarmId) {
+          // 농장 배정
+          const farmResult = await assignUserToFarm(
+            editingUser.id, 
+            selectedFarmId, 
+            tenantId, 
+            editFormData.role === 'team_leader' ? 'owner' : 'operator'
+          );
+          if (!farmResult.success) {
+            console.warn('농장 배정 실패:', farmResult.error);
+            // 농장 배정 실패해도 사용자 업데이트는 성공으로 처리
+          }
+        } else {
+          // 배정 해제
+          const { error: delErr } = await supabase
+            .from('farm_memberships')
+            .delete()
+            .eq('user_id', editingUser.id);
+          if (delErr) {
+            console.warn('농장 배정 해제 실패:', delErr);
+          }
+        }
+      }
+
+      alert('사용자 정보가 업데이트되었습니다.');
+      
+      // 데이터 다시 로드
+      if (authUser) {
+        const [pendingResult, approvedResult] = await Promise.all([
+          getPendingUsers(),
+          getApprovedUsers()
+        ]);
+        setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+        setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+      }
+      handleCloseEditModal();
     } catch (error) {
       console.error('사용자 업데이트 오류:', error);
       alert('오류가 발생했습니다.');
