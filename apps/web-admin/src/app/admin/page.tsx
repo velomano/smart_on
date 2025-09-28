@@ -12,6 +12,7 @@ import {
   updateUser,
   deleteUser,
   getTeams,
+  getFarms,
   assignUserToFarm,
   type AuthUser,
 } from '../../lib/auth';
@@ -110,7 +111,7 @@ export default function AdminPage() {
         const [pendingResult, approvedResult, teamsResult, fmResult] = await Promise.all([
         getPendingUsers(),
         getApprovedUsers(),
-        getTeams(),
+        getFarms(),
         supabase.from('farm_memberships').select('user_id, farm_id')
       ]);
 
@@ -130,12 +131,12 @@ export default function AdminPage() {
         setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
         
-        // teams 데이터 설정
-        if (teamsResult && teamsResult.success && teamsResult.teams) {
+        // farms 데이터 설정
+        if (teamsResult && teamsResult.success && Array.isArray(teamsResult.teams)) {
           setTeams(teamsResult.teams);
-          console.log('✅ teams 데이터 로드 성공:', teamsResult.teams.length, '개');
+          console.log('✅ farms 데이터 로드 성공:', teamsResult.teams.length, '개');
         } else {
-          console.log('❌ teams 데이터 로드 실패:', teamsResult);
+          console.log('❌ farms 데이터 로드 실패:', teamsResult);
           setTeams([]);
         }
       } catch (e) {

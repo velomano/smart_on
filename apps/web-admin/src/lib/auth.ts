@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getFarms } from './supabase';
 
 // Supabase 클라이언트 설정
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -398,41 +399,14 @@ export const getApprovedUsers = async () => {
   }
 };
 
-// 농장 목록 조회 (farms 기반)
-export const getFarms = async () => {
-  try {
-    const supabase = getSupabaseClient();
-    
-    // farms 테이블에서 직접 조회
-    const { data: farms, error } = await supabase
-      .from('farms')
-      .select('id, name, location, tenant_id, created_at')
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('❌ getFarms 오류:', error);
-      return { success: false, error: error.message, farms: [] };
-    }
-
-    console.log('🔍 getFarms 결과:', {
-      farmsCount: farms?.length || 0,
-      farms: (farms || []).map((f: Farm) => ({ id: f.id, name: f.name }))
-    });
-
-    return { success: true, farms: farms || [] };
-  } catch (error: any) {
-    console.error('❌ getFarms 오류:', error);
-    return { success: false, error: error.message, farms: [] };
-  }
-};
+// getFarms는 supabase.ts에서 import하여 사용
 
 // 기존 getTeams 호환성을 위한 래퍼 함수
 export const getTeams = async () => {
-  const result = await getFarms();
+  const farms = await getFarms();
   return {
-    success: result.success,
-    error: result.error,
-    teams: result.farms // farms를 teams로 매핑
+    success: true,
+    teams: farms // Farm[]을 teams로 매핑
   };
 };
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getFarms, getDevices, getSensors, getLatestSensorReadings, Farm, Device, Sensor, SensorReading } from '../src/lib/supabase';
+import { getFarms, getDevices, getSensors, getLatestSensorReadings, Farm, Device, Sensor, SensorReading, getSupabaseClient } from '../src/lib/supabase';
 import { getCurrentUser, AuthUser, getTeams } from '../src/lib/auth';
 import UserDashboard from '../src/components/UserDashboard';
 
@@ -36,20 +36,33 @@ export default function WebAdminDashboard() {
       try {
         console.log('📊 대시보드 - 농장관리 페이지 데이터 읽기 전용 로드');
         
-        // 농장관리 페이지와 동일한 데이터 소스 사용 (읽기 전용)
-        const farmsResult = await getTeams();
+        // 분리 쿼리로 데이터 로드
+        const supabase = getSupabaseClient();
+        const [farmsResult, devicesRes, sensorsRes, readingsRes] = await Promise.all([
+          getFarms(),
+          supabase.from('devices').select('*').eq('type', 'sensor_gateway'),
+          supabase.from('sensors').select('*'),
+          supabase.from('sensor_readings').select('*').order('ts', { ascending: false }).limit(1000)
+        ]);
         
-        if (farmsResult.success) {
-          setFarms(farmsResult.teams); // getTeams는 teams 필드 반환
-          setDevices(farmsResult.devices);
-          setSensors(farmsResult.sensors);
-          setSensorReadings(farmsResult.sensorReadings);
+        if (farmsResult && Array.isArray(farmsResult)) {
+          // 분리 쿼리 결과를 안전하게 꺼냅니다.
+          const asArray = <T,>(v: T[] | null | undefined) => Array.isArray(v) ? v : [];
+          const farmsList = asArray(farmsResult);
+          const devicesList = asArray(devicesRes?.data);
+          const sensorsList = asArray(sensorsRes?.data);
+          const readingsList = asArray(readingsRes?.data);
+          
+          setFarms(farmsList as Farm[]);
+          setDevices(devicesList as Device[]);
+          setSensors(sensorsList as Sensor[]);
+          setSensorReadings(readingsList as SensorReading[]);
           
           console.log('✅ 대시보드 - 농장관리 데이터 동기화 완료:');
-          console.log('  - 농장:', farmsResult.teams.length, '개');
-          console.log('  - 베드:', farmsResult.devices.filter(d => d.type === 'sensor_gateway').length, '개');
-          console.log('  - 센서:', farmsResult.sensors.length, '개');
-          console.log('  - 센서값:', farmsResult.sensorReadings.length, '개');
+          console.log('  - 농장:', farmsList.length, '개');
+          console.log('  - 베드:', devicesList.filter(d => d?.type === 'sensor_gateway').length, '개');
+          console.log('  - 센서:', sensorsList.length, '개');
+          console.log('  - 센서값:', readingsList.length, '개');
         } else {
           console.error('농장 데이터 로드 실패');
         }

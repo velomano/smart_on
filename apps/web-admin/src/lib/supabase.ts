@@ -72,31 +72,24 @@ export interface SensorReading {
 
 // API 함수들
 export const getFarms = async (): Promise<Farm[]> => {
-  // 개발 환경에서는 Mock 데이터 사용
-  console.log('Using mock data for farms');
-  return [
-    {
-      id: '00000000-0000-0000-0000-000000000001',
-      tenant_id: '00000000-0000-0000-0000-000000000001',
-      name: '1농장',
-      location: '서울시 강남구',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000002',
-      tenant_id: '00000000-0000-0000-0000-000000000001',
-      name: '2농장',
-      location: '서울시 서초구',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: '00000000-0000-0000-0000-000000000003',
-      tenant_id: '00000000-0000-0000-0000-000000000001',
-      name: '3농장',
-      location: '서울시 송파구',
-      created_at: new Date().toISOString()
+  try {
+    const supabase = getSupabaseClient();
+    const { data: farms, error } = await supabase
+      .from('farms')
+      .select('id, name, location, tenant_id, created_at')
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('getFarms 오류:', error);
+      return [];
     }
-  ];
+
+    console.log('✅ getFarms 성공:', farms?.length || 0, '개 농장');
+    return farms || [];
+  } catch (error) {
+    console.error('getFarms 예외:', error);
+    return [];
+  }
 };
 
 export const getDevices = async (): Promise<Device[]> => {

@@ -111,8 +111,19 @@ function BedsManagementContent() {
           supabase.from('sensor_readings').select('*').order('ts', { ascending: false }).limit(1000)
         ]);
 
+        // 디버깅 로그
+        console.log('devicesRes:', {
+          hasDataArray: Array.isArray(devicesRes?.data),
+          error: devicesRes?.error,
+          dataLength: devicesRes?.data?.length || 0
+        });
+
+        if (devicesRes?.error) {
+          console.error('🔴 devices 쿼리 에러:', devicesRes.error);
+        }
+
         // team_leader인 경우 자신이 관리하는 농장만 표시
-        let filteredFarms = farmsResult.farms as Farm[];
+        let filteredFarms = farmsResult.teams as Farm[];
         if (currentUser && currentUser.role === 'team_leader') {
           // test4@test.com은 2조 농장을 관리하도록 하드코딩 (임시)
           if (currentUser.email === 'test4@test.com') {
@@ -124,7 +135,7 @@ function BedsManagementContent() {
             userRole: currentUser.role,
             userEmail: currentUser.email,
             teamId: currentUser.team_id,
-            originalFarms: farmsResult.farms.length,
+            originalFarms: farmsResult.teams.length,
             filteredFarms: filteredFarms.length
           });
         }
@@ -132,11 +143,20 @@ function BedsManagementContent() {
         setFarms(filteredFarms);
         
         // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
-        console.log('✅ Supabase 베드 데이터 사용:', devicesRes.data?.length || 0, '개');
-        setDevices((devicesRes.data || []) as Device[]);
+        console.log('devicesRes:', { 
+          hasArray: Array.isArray(devicesRes?.data), 
+          error: devicesRes?.error,
+          dataLength: devicesRes?.data?.length || 0
+        });
         
-        setSensors((sensorsRes.data || []) as Sensor[]);
-        setSensorReadings((readingsRes.data || []) as SensorReading[]);
+        if (devicesRes?.error) {
+          console.error('🔴 devices 쿼리 에러:', devicesRes.error);
+        }
+        
+        setDevices(Array.isArray(devicesRes?.data) ? devicesRes.data as Device[] : []);
+        
+        setSensors(asArray(sensorsRes?.data) as Sensor[]);
+        setSensorReadings(asArray(readingsRes?.data) as SensorReading[]);
         
         // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
         const farmId = searchParams.get('farm');
@@ -247,29 +267,30 @@ function BedsManagementContent() {
     });
   };
 
-  // 필터링된 디바이스
-  const getFilteredDevices = () => {
-    let filteredDevices = devices.filter(device => device.type === 'sensor_gateway');
-    console.log('전체 베드 (센서게이트웨이):', filteredDevices);
+  // 안전 배열 헬퍼
+  const asArray = <T,>(v: T[] | null | undefined) => Array.isArray(v) ? v : [];
+
+  // 필터링된 디바이스 (useMemo로 안전하게)
+  const filteredDevices = React.useMemo(() => {
+    let list = asArray(devices).filter(d => d?.type === 'sensor_gateway');
+    console.log('전체 베드 (센서게이트웨이):', list);
     console.log('현재 선택된 농장 탭:', selectedFarmTab);
     
     // 농장장과 팀원이 로그인한 경우 자기 농장의 베드만 보이도록 필터링
     if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
-      filteredDevices = filteredDevices.filter(device => device.farm_id === user.team_id);
-      console.log('사용자 팀 필터 적용 후 베드:', filteredDevices);
+      list = list.filter(d => d?.farm_id === user.team_id);
+      console.log('사용자 팀 필터 적용 후 베드:', list);
     }
     
     if (selectedFarmTab === 'all') {
-      console.log('전체 농장 선택 - 모든 베드 반환:', filteredDevices);
-      return sortBeds(filteredDevices);
+      console.log('전체 농장 선택 - 모든 베드 반환:', list);
+      return sortBeds(list);
     }
     
-    const selectedFarmDevices = filteredDevices.filter(device => device.farm_id === selectedFarmTab);
+    const selectedFarmDevices = list.filter(d => d?.farm_id === selectedFarmTab);
     console.log(`선택된 농장 ${selectedFarmTab}의 베드:`, selectedFarmDevices);
     return sortBeds(selectedFarmDevices);
-  };
-
-  const filteredDevices = getFilteredDevices();
+  }, [devices, user, selectedFarmTab]);
 
   // 액추에이터 제어 함수
   const toggleActuator = (deviceId: string) => {
@@ -456,7 +477,7 @@ function BedsManagementContent() {
           {
             name: newFarmData.name,
             location: newFarmData.location,
-            tenant_id: user?.tenant_id || '550e8400-e29b-41d4-a716-446655440000'
+            tenant_id: user?.tenant_id
           }
         ])
         .select()
@@ -995,10 +1016,10 @@ function BedsManagementContent() {
                 
                 // URL 파라미터가 있으면 해당 농장만 표시 (대시보드에서 농장 클릭시)
                 if (farmId) {
-                  farmsToShow = farms.filter(farm => farm.id === farmId);
+                  farmsToShow = (farms || []).filter(farm => farm.id === farmId);
                   console.log('URL 파라미터로 탭 표시 필터링:', farmId, farmsToShow);
                 } else if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
-                  farmsToShow = farms.filter(farm => farm.id === user.team_id);
+                  farmsToShow = (farms || []).filter(farm => farm.id === user.team_id);
                 } else {
                   farmsToShow = farms;
                 }
@@ -1013,7 +1034,7 @@ function BedsManagementContent() {
                         : 'bg-white/80 text-gray-700 hover:bg-green-50'
                     }`}
                   >
-                    {farm.name} ({devices.filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway').length}개 베드)
+                    {farm.name} ({(devices || []).filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway').length}개 베드)
                   </button>
                 ));
               })()}
@@ -1029,30 +1050,30 @@ function BedsManagementContent() {
               // URL 파라미터가 있을 경우 우선 처리 (대시보드에서 농장 관리 클릭시)
               const farmId = searchParams.get('farm');
               console.log('현재 URL 파라미터 farmId:', farmId);
-              console.log('사용 가능한 farms ID들:', farms.map(f => f.id));
+              console.log('사용 가능한 farms ID들:', asArray(farms).map(f => f.id));
               console.log('현재 selectedFarmTab:', selectedFarmTab);
               
               if (farmId) {
                 console.log('URL 파라미터로 특정 농장 필터링:', farmId);
-                farmsToShow = farms.filter(farm => farm.id === farmId);
+                farmsToShow = (farms || []).filter(farm => farm.id === farmId);
                 console.log('필터링된 농장들:', farmsToShow);
               } else if (selectedFarmTab === 'all') {
                 // 전체 농장 표시
                 farmsToShow = farms;
               } else if (selectedFarmTab) {
                 // 특정 농장만 표시
-                farmsToShow = farms.filter(farm => farm.id === selectedFarmTab);
+                farmsToShow = (farms || []).filter(farm => farm.id === selectedFarmTab);
               } else {
                 // 기본값: 농장장과 팀원인 경우 자기 농장만, 관리자인 경우 모든 농장 표시
                 console.log('🔍 농장 관리 페이지 필터링 디버그:', {
                   userRole: user?.role,
                   userTeamId: user?.team_id,
                   totalFarms: farms.length,
-                  farms: farms.map(f => ({ id: f.id, name: f.name }))
+                  farms: asArray(farms).map(f => ({ id: f.id, name: f.name }))
                 });
                 
                 if (user && (user.role === 'team_leader' || user.role === 'team_member') && user.team_id) {
-                  farmsToShow = farms.filter(farm => {
+                  farmsToShow = (farms || []).filter(farm => {
                     const isMyFarm = farm.id === user.team_id;
                     console.log(`농장 ${farm.name} (${farm.id}) vs 사용자 팀 ID (${user.team_id}): ${isMyFarm ? '포함' : '제외'}`);
                     return isMyFarm;
@@ -1172,7 +1193,7 @@ function BedsManagementContent() {
                         </div>
                       ) : (
                         devices.map((device) => {
-                        const deviceSensors = sensors.filter(s => s.device_id === device.id);
+                        const deviceSensors = asArray(sensors).filter(s => s.device_id === device.id);
           
                         return (
                           <div key={device.id} className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
@@ -1260,7 +1281,7 @@ function BedsManagementContent() {
                                   type="temperature"
                                   value={(() => {
                                     const tempSensor = deviceSensors.find(s => s.type === 'temperature');
-                                    const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                                    const reading = tempSensor && asArray(sensorReadings).find(r => r.sensor_id === tempSensor.id);
                                     return reading ? reading.value : 0;
                                   })()}
                                   unit="°C"
@@ -1274,7 +1295,7 @@ function BedsManagementContent() {
                                   type="humidity"
                                   value={(() => {
                                     const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
-                                    const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                                    const reading = humiditySensor && asArray(sensorReadings).find(r => r.sensor_id === humiditySensor.id);
                                     return reading ? reading.value : 0;
                                   })()}
                                   unit="%"
