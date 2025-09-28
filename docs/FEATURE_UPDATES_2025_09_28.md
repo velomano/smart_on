@@ -1,0 +1,195 @@
+# 🚀 기능 업데이트 문서 - 2025.09.28
+
+## 📋 개요
+
+2025년 1월 28일에 완료된 스마트팜 시스템의 주요 기능 개선 및 버그 수정 사항을 정리한 문서입니다.
+
+## ✅ 완료된 주요 기능
+
+### 1. 🔐 사용자 인증 시스템 완전 구축
+
+#### 구현된 기능
+- **Supabase 기반 인증**: 완전한 로그인/회원가입 시스템
+- **역할 기반 접근 제어**: system_admin, team_leader, team_member
+- **관리자 승인 시스템**: 회원가입 후 관리자 승인 필요
+- **세션 관리**: 자동 로그인 상태 유지
+
+#### 관련 파일
+- `apps/web-admin/src/lib/auth.ts` - 인증 로직
+- `apps/web-admin/src/app/login/page.tsx` - 로그인 UI
+- `docs/USER_AUTH_SYSTEM.md` - 인증 시스템 문서
+
+### 2. 👁️ 비밀번호 보기/숨기기 기능
+
+#### 구현된 기능
+- **직관적인 UI**: 눈 모양 아이콘으로 비밀번호 가시성 제어
+- **상태별 아이콘**: 
+  - 숨김 상태: 👁️ (눈 모양)
+  - 보임 상태: 👁️‍🗨️ (눈에 줄 그어진 모양)
+- **반응형 디자인**: 호버 효과 및 부드러운 애니메이션
+- **두 페이지 적용**: 로그인 페이지 + 비밀번호 재설정 페이지
+
+#### 관련 파일
+- `apps/web-admin/src/app/login/page.tsx` - 로그인 페이지
+- `apps/web-admin/src/app/reset-password/page.tsx` - 비밀번호 재설정 페이지
+
+### 3. 🇰🇷 에러 메시지 한글화
+
+#### 구현된 기능
+- **Supabase 에러 번역**: 영어 에러 메시지를 한국어로 변환
+- **주요 에러 메시지**:
+  - `Invalid login credentials` → `이메일 또는 비밀번호가 올바르지 않습니다.`
+  - `Email not confirmed` → `이메일 인증이 완료되지 않았습니다.`
+  - `Too many requests` → `너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.`
+- **스마트 매칭**: 정확한 매칭 우선, 부분 매칭으로 폴백
+
+#### 관련 파일
+- `apps/web-admin/src/lib/auth.ts` - `translateAuthError` 함수
+
+### 4. 🔑 비밀번호 재설정 기능
+
+#### 구현된 기능
+- **이메일 기반 재설정**: Supabase Auth의 resetPasswordForEmail 활용
+- **안전한 토큰 처리**: URL 파라미터와 fragment 모두 지원
+- **사용자 친화적 UI**: 깔끔한 재설정 페이지 디자인
+- **검증 로직**: 비밀번호 확인 및 최소 길이 검증
+
+#### 관련 파일
+- `apps/web-admin/src/app/reset-password/page.tsx` - 재설정 페이지
+- `apps/web-admin/src/app/login/page.tsx` - 비밀번호 찾기 모달
+
+### 5. 🛡️ RLS 정책 최적화
+
+#### 개선된 사항
+- **중복 정책 제거**: `allow_user_selects`, `allow_user_updates` 등 보안 취약 정책 삭제
+- **조건부 정책 생성**: 테이블 존재 여부 확인 후 정책 생성
+- **보안 강화**: 사용자별 접근 제어 강화
+- **안정성 향상**: 정책 충돌 방지
+
+#### 관련 파일
+- `docs/03_RLS_POLICIES.sql` - RLS 정책 스크립트
+
+### 6. 🧪 Mock 인증 시스템
+
+#### 구현된 기능
+- **개발 환경 지원**: Supabase 연결 불가 시 Mock 인증 사용
+- **완전한 시뮬레이션**: 실제 인증 플로우와 동일한 인터페이스
+- **환경 변수 토글**: `NEXT_PUBLIC_USE_MOCK_AUTH`로 간편 전환
+- **테스트 계정**: 개발용 사전 정의된 계정들
+
+#### 관련 파일
+- `apps/web-admin/src/lib/mockAuth.ts` - Mock 인증 로직
+
+### 7. ⚙️ 환경 변수 설정
+
+#### 완료된 설정
+- **Supabase 연결**: URL과 API 키 설정 완료
+- **환경별 분리**: 개발/프로덕션 환경 변수 분리
+- **보안 고려**: 민감한 정보의 적절한 처리
+
+#### 관련 파일
+- `apps/web-admin/.env.local` - 환경 변수 설정
+- `docs/01_ENV.md` - 환경 변수 문서
+
+### 8. 🐛 UserDashboard 안정성 향상
+
+#### 수정된 오류
+- **Runtime TypeError**: `Cannot read properties of undefined (reading 'filter')` 해결
+- **안전한 배열 처리**: 모든 배열에 optional chaining 적용
+- **기본값 설정**: undefined 시 빈 배열로 폴백
+
+#### 관련 파일
+- `apps/web-admin/src/components/UserDashboard.tsx` - 대시보드 컴포넌트
+
+## 🔧 기술적 개선사항
+
+### 1. 타입 안전성 향상
+- **DatabaseUser 인터페이스**: Supabase 테이블 스키마와 정확한 타입 매칭
+- **타입 어서션**: Supabase 클라이언트의 타입 이슈 해결
+- **Optional Chaining**: 안전한 객체 접근
+
+### 2. 에러 처리 강화
+- **한글 에러 메시지**: 사용자 친화적인 오류 메시지
+- **폴백 메커니즘**: Mock 인증으로의 안전한 전환
+- **로깅 개선**: 디버깅을 위한 상세한 로그
+
+### 3. 사용자 경험 개선
+- **직관적인 UI**: 비밀번호 보기/숨기기 아이콘
+- **반응형 디자인**: 모든 디바이스에서 최적화된 경험
+- **로딩 상태**: 사용자에게 명확한 피드백 제공
+
+## 📊 성능 최적화
+
+### 1. 렌더링 최적화
+- **조건부 렌더링**: 불필요한 컴포넌트 렌더링 방지
+- **배열 처리**: undefined 배열에 대한 안전한 처리
+- **메모이제이션**: 반복 계산 최적화
+
+### 2. 네트워크 최적화
+- **싱글톤 클라이언트**: Supabase 클라이언트 재사용
+- **에러 재시도**: 네트워크 오류 시 자동 재시도
+- **캐싱 전략**: 사용자 정보 캐싱
+
+## 🧪 테스트 계정
+
+### 시스템 관리자
+- `test1@test.com` / `123456` - 테스트 관리자
+- `sky3rain7@gmail.com` - 서천우 (Tera Hub 관리자)
+
+### 팀 리더
+- `test2@test.com` / `123456` - 1농장 농장장
+- `test4@test.com` / `123456` - 2농장 농장장
+- `test6@test.com` / `123456` - 3농장 농장장
+
+### 팀 멤버
+- `test3@test.com` / `123456` - 1농장 팀원
+- `test5@test.com` / `123456` - 2농장 팀원
+- `test7@test.com` / `123456` - 3농장 팀원
+
+## 🔄 향후 계획
+
+### Phase 2: MQTT 연동 (예정)
+- 라즈베리 파이와 MQTT 브로커 연동
+- 실시간 센서 데이터 수집
+- 원격 제어 기능
+
+### Phase 3: 하드웨어 연동 (예정)
+- 아두이노 릴레이 모듈 제어
+- 물리적 액추에이터 제어
+- 완전한 IoT 시스템 구축
+
+## 📝 변경 사항 요약
+
+### 추가된 파일
+- `apps/web-admin/src/app/reset-password/page.tsx`
+- `apps/web-admin/src/lib/mockAuth.ts`
+- `docs/USER_AUTH_SYSTEM.md`
+- `docs/FEATURE_UPDATES_2025_01_28.md`
+
+### 수정된 파일
+- `apps/web-admin/src/lib/auth.ts`
+- `apps/web-admin/src/app/login/page.tsx`
+- `apps/web-admin/src/components/UserDashboard.tsx`
+- `docs/00_README.md`
+- `docs/01_ENV.md`
+- `docs/02_DB_SCHEMA.sql`
+- `docs/03_RLS_POLICIES.sql`
+
+### 삭제된 정책
+- `allow_user_selects` (보안 취약점)
+- `allow_user_updates` (보안 취약점)
+- `allow_user_inserts` (중복 정책)
+
+## 🎯 성과 지표
+
+- **버그 수정**: 3개 주요 런타임 오류 해결
+- **기능 추가**: 8개 새로운 기능 구현
+- **보안 강화**: RLS 정책 최적화로 보안 수준 향상
+- **사용자 경험**: 한글화 및 직관적 UI로 UX 개선
+- **개발 효율성**: Mock 시스템으로 개발 환경 개선
+
+---
+
+**문서 작성일**: 2025.09.28  
+**작성자**: 스마트팜 개발팀  
+**버전**: v1.1

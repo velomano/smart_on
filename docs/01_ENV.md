@@ -1,5 +1,21 @@
 # 🔧 환경변수 매트릭스
 
+## 🆕 최근 업데이트 (2025.09.28)
+
+### ✅ 완료된 설정
+- **Supabase 연결 설정 완료**: 모든 환경 변수가 올바르게 설정됨
+- **Mock 인증 토글**: 개발 환경에서 Mock/Supabase 인증 전환 가능
+- **비밀번호 재설정**: 이메일 기반 비밀번호 재설정 기능 활성화
+- **에러 메시지 한글화**: 사용자 친화적인 한국어 오류 메시지
+
+### 🔧 현재 활성화된 설정
+```bash
+# apps/web-admin/.env.local (현재 활성화됨)
+NEXT_PUBLIC_SUPABASE_URL=https://kkrcwdybrsppbsufrrdg.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_USE_MOCK_AUTH=false  # Supabase 인증 사용
+```
+
 ## 📋 환경별 설정
 
 ### 🌐 Web Admin (Next.js) - .env.local에 설정됨

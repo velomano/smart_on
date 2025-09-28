@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import { getCurrentUser, AuthUser } from '@/lib/mockAuth';
+import { getCurrentUser, AuthUser } from '@/lib/auth';
 
 export default function NutrientPlanPage() {
   const [user, setUser] = useState<AuthUser | null>(null);

@@ -1,13 +1,45 @@
-import { supabase } from './supabase';
-// import { User } from '@supabase/supabase-js';
+// Supabase 인증 시스템
+import { getSupabaseClient } from './supabase';
+
+// 임시 타입 정의 (Supabase 타입 생성 전까지 사용)
+interface DatabaseUser {
+  id: string;
+  email: string;
+  name: string;
+  role?: string;
+  tenant_id?: string;
+  team_id?: string;
+  team_name?: string;
+  preferred_team?: string;
+  is_approved?: boolean;
+  is_active?: boolean;
+  company?: string;
+  phone?: string;
+  avatar_url?: string;
+  last_login_at?: string;
+  created_at?: string;
+  updated_at?: string;
+  approved_at?: string;
+  approved_by?: string;
+}
+
+// Mock 인증 사용 여부 확인
+const USE_MOCK_AUTH = process.env.NEXT_PUBLIC_USE_MOCK_AUTH === 'true';
 
 export interface AuthUser {
   id: string;
   email: string;
   name?: string;
-  role?: 'admin' | 'operator' | 'viewer';
+  role?: 'system_admin' | 'team_leader' | 'team_member';
   tenant_id?: string;
+  team_id?: string; // 배정된 조 ID
+  team_name?: string; // 배정된 조 이름
+  preferred_team?: string; // 선호 조
   is_approved?: boolean;
+  is_active?: boolean; // 활성/비활성 상태
+  created_at?: string; // 생성일
+  company?: string; // 회사명
+  phone?: string; // 전화번호
 }
 
 export interface SignUpData {
@@ -16,6 +48,7 @@ export interface SignUpData {
   name: string;
   company?: string;
   phone?: string;
+  preferred_team?: string; // 조 선호도
 }
 
 export interface SignInData {
@@ -23,159 +56,710 @@ export interface SignInData {
   password: string;
 }
 
-// Mock 인증 함수들 (순환 참조 방지)
-const mockUsers = [
-  { id: 'mock-test-001', email: 'test1@test.com', name: '시스템 관리자', role: 'system_admin', team_id: null, team_name: null, is_active: true },
-  { id: 'mock-test-002', email: 'test2@test.com', name: '1농장장', role: 'team_leader', team_id: 'team-001', team_name: '1농장', is_active: true },
-  { id: 'mock-test-003', email: 'test3@test.com', name: '2농장장', role: 'team_leader', team_id: 'team-002', team_name: '2농장', is_active: true },
-  { id: 'mock-test-004', email: 'test4@test.com', name: '3농장장', role: 'team_leader', team_id: 'team-003', team_name: '3농장', is_active: true },
-  { id: 'mock-test-005', email: 'test5@test.com', name: '1농장 팀원', role: 'team_member', team_id: 'team-001', team_name: '1농장', is_active: true },
-  { id: 'mock-test-006', email: 'test6@test.com', name: '2농장 팀원', role: 'team_member', team_id: 'team-002', team_name: '2농장', is_active: true },
-  { id: 'mock-test-007', email: 'test7@test.com', name: '3농장 팀원', role: 'team_member', team_id: 'team-003', team_name: '3농장', is_active: true },
-];
+// Supabase 로그인
+// Supabase 에러 메시지를 한글로 변환
+const translateAuthError = (errorMessage: string): string => {
+  const errorMap: { [key: string]: string } = {
+    'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
+    'Email not confirmed': '이메일 인증이 완료되지 않았습니다.',
+    'User not found': '사용자를 찾을 수 없습니다.',
+    'Invalid email': '올바르지 않은 이메일 형식입니다.',
+    'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다.',
+    'User already registered': '이미 등록된 사용자입니다.',
+    'Too many requests': '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.',
+    'Network error': '네트워크 오류가 발생했습니다.',
+    'Server error': '서버 오류가 발생했습니다.',
+    'Invalid refresh token': '인증 토큰이 만료되었습니다. 다시 로그인해주세요.'
+  };
 
-const mockPasswords = {
-  'test1@test.com': 'password',
-  'test2@test.com': 'password',
-  'test3@test.com': 'password',
-  'test4@test.com': 'password',
-  'test5@test.com': 'password',
-  'test6@test.com': 'password',
-  'test7@test.com': 'password',
+  // 정확한 매칭 시도
+  if (errorMap[errorMessage]) {
+    return errorMap[errorMessage];
+  }
+
+  // 부분 매칭 시도
+  for (const [key, value] of Object.entries(errorMap)) {
+    if (errorMessage.includes(key)) {
+      return value;
+    }
+  }
+
+  // 기본 메시지
+  return `로그인 중 오류가 발생했습니다: ${errorMessage}`;
 };
 
-// 회원가입
-export const signUp = async (data: SignUpData) => {
-  return { success: false, error: 'Mock 환경에서는 회원가입이 비활성화되어 있습니다.' };
-};
-
-// 로그인
 export const signIn = async (data: SignInData) => {
-  const user = mockUsers.find(u => u.email === data.email);
-  const password = mockPasswords[data.email as keyof typeof mockPasswords];
-  
-  if (!user || password !== data.password) {
-    return { success: false, error: 'Invalid login credentials' };
-  }
-  
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('mock_current_user', JSON.stringify(user));
-  }
-  
-  return { success: true, user };
-};
-
-// 로그아웃
-export const signOut = async () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('mock_current_user');
-  }
-  return { success: true };
-};
-
-// 현재 사용자 정보 가져오기
-export const getCurrentUser = async (): Promise<AuthUser | null> => {
-  if (typeof window === 'undefined') return null;
-  
-  const stored = localStorage.getItem('mock_current_user');
-  if (!stored) return null;
-  
   try {
-    return JSON.parse(stored);
-  } catch {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { signIn: mockSignIn } = await import('./mockAuth');
+      return mockSignIn(data);
+    }
+
+    const supabase = getSupabaseClient();
+    
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password
+    });
+
+    if (authError) {
+      return { success: false, error: translateAuthError(authError.message) };
+    }
+
+    if (authData.user) {
+      // Supabase users 테이블에서 사용자 정보 조회
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single() as { data: DatabaseUser | null; error: any };
+
+      if (userError) {
+        return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
+      }
+
+      if (!userData) {
+        return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
+      }
+
+      const user: AuthUser = {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        role: (userData.role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
+        tenant_id: userData.tenant_id,
+        is_approved: userData.is_approved,
+        is_active: userData.is_active,
+        created_at: userData.created_at
+      };
+
+      return { success: true, user };
+    }
+
+    return { success: false, error: '로그인에 실패했습니다.' };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+};
+
+// Supabase 현재 사용자 정보 가져오기
+export const getCurrentUser = async (): Promise<AuthUser | null> => {
+  try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getCurrentUser: mockGetCurrentUser } = await import('./mockAuth');
+      return mockGetCurrentUser();
+    }
+
+    const supabase = getSupabaseClient();
+    
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !authUser) {
+      return null;
+    }
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', authUser.id)
+      .single() as { data: DatabaseUser | null; error: any };
+
+    if (userError || !userData) {
+      return null;
+    }
+
+    return {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: (userData.role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
+      tenant_id: userData.tenant_id,
+      is_approved: userData.is_approved,
+      is_active: userData.is_active,
+      created_at: userData.created_at
+    };
+  } catch (error: any) {
+    console.error('Supabase 사용자 조회 오류:', error);
     return null;
   }
 };
 
-// 승인 대기 중인 사용자 목록 가져오기 (관리자용)
+// Supabase 로그아웃
+export const signOut = async () => {
+  try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { signOut: mockSignOut } = await import('./mockAuth');
+      return mockSignOut();
+    }
+
+    console.log('Supabase 로그아웃 시작');
+    
+    const supabase = getSupabaseClient();
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('Supabase 로그아웃 오류:', error);
+      return { success: false, error: error.message };
+    }
+    
+    // 페이지 새로고침을 통해 상태 초기화
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    
+    console.log('Supabase 로그아웃 성공');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Supabase 로그아웃 중 오류:', error);
+    return { success: false, error: '로그아웃 중 오류가 발생했습니다.' };
+  }
+};
+
+// Supabase 회원가입
+export const signUp = async (data: SignUpData) => {
+  try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { signUp: mockSignUp } = await import('./mockAuth');
+      return mockSignUp(data);
+    }
+
+    const supabase = getSupabaseClient();
+    
+    // Supabase Auth로 사용자 등록
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+          company: data.company,
+          phone: data.phone,
+          preferred_team: data.preferred_team
+        }
+      }
+    });
+
+    if (authError) {
+      return { success: false, error: translateAuthError(authError.message) };
+    }
+
+    if (authData.user) {
+      // users 테이블에 사용자 정보 저장
+      const { error: userError } = await (supabase as any)
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: data.email,
+          name: data.name,
+          company: data.company,
+          phone: data.phone,
+          preferred_team: data.preferred_team,
+          is_approved: false, // 승인 대기 상태
+          is_active: true
+        });
+
+      if (userError) {
+        return { success: false, error: '사용자 정보 저장에 실패했습니다.' };
+      }
+
+      return { success: true, message: '회원가입이 완료되었습니다. 관리자 승인을 기다려주세요.' };
+    }
+
+    return { success: false, error: '회원가입에 실패했습니다.' };
+  } catch (error: any) {
+    console.error('회원가입 중 오류:', error);
+    return { success: false, error: '회원가입 중 오류가 발생했습니다.' };
+  }
+};
+
+// 승인 대기 사용자 조회
 export const getPendingUsers = async () => {
   try {
-    const { data, error } = await supabase
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getPendingUsers: mockGetPendingUsers } = await import('./mockAuth');
+      return mockGetPendingUsers();
+    }
+
+    const supabase = getSupabaseClient();
+    
+    const { data: pendingUsers, error } = await supabase
       .from('users')
       .select('*')
       .eq('is_approved', false)
-      .order('created_at', { ascending: false });
+      .eq('is_active', true)
+      .order('created_at', { ascending: false }) as { data: DatabaseUser[] | null; error: any };
 
     if (error) {
-      throw error;
+      return [];
     }
 
-    return { success: true, users: data };
+    return pendingUsers || [];
   } catch (error) {
-    console.error('Get pending users error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error('승인 대기 사용자 조회 오류:', error);
+    return [];
   }
 };
 
-// 사용자 승인 (관리자용)
-export const approveUser = async (userId: string, role: 'admin' | 'operator' | 'viewer', tenantId?: string) => {
+// 사용자 승인
+export const approveUser = async (userId: string) => {
   try {
-    // 사용자 승인 상태 업데이트
-    const { error: userError } = await supabase
-      .from('users')
-      .update({ is_approved: true })
-      .eq('id', userId);
-
-    if (userError) {
-      throw userError;
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { approveUser: mockApproveUser } = await import('./mockAuth');
+      return mockApproveUser(userId);
     }
 
-    // 테넌트가 제공된 경우 멤버십 생성
-    if (tenantId) {
-      const { error: membershipError } = await supabase
-        .from('memberships')
-        .insert({
-          tenant_id: tenantId,
-          user_id: userId,
-          role: role
-        });
+    const supabase = getSupabaseClient();
+    
+    const { error } = await (supabase as any)
+      .from('users')
+      .update({ 
+        is_approved: true,
+        approved_at: new Date().toISOString()
+      })
+      .eq('id', userId);
 
-      if (membershipError) {
-        throw membershipError;
+    if (error) {
+      return { success: false, error: '사용자 승인에 실패했습니다.' };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: '사용자 승인 중 오류가 발생했습니다.' };
+  }
+};
+
+// 사용자 거부
+export const rejectUser = async (userId: string) => {
+  try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { rejectUser: mockRejectUser } = await import('./mockAuth');
+      return mockRejectUser(userId);
+    }
+
+    const supabase = getSupabaseClient();
+    
+    const { error } = await (supabase as any)
+      .from('users')
+      .update({ 
+        is_active: false 
+      })
+      .eq('id', userId);
+
+    if (error) {
+      return { success: false, error: '사용자 거부에 실패했습니다.' };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: '사용자 거부 중 오류가 발생했습니다.' };
+  }
+};
+
+// 승인된 사용자 조회
+export const getApprovedUsers = async () => {
+  try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getApprovedUsers: mockGetApprovedUsers } = await import('./mockAuth');
+      return mockGetApprovedUsers();
+    }
+
+    const supabase = getSupabaseClient();
+    
+    const { data: approvedUsers, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('is_approved', true)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false }) as { data: DatabaseUser[] | null; error: any };
+
+    if (error) {
+      return [];
+    }
+
+    return approvedUsers || [];
+  } catch (error) {
+    console.error('승인된 사용자 조회 오류:', error);
+    return [];
+  }
+};
+
+// 테넌트 목록 조회
+export const getTenants = async () => {
+  try {
+    // Mock 인증 사용 시
+    if (USE_MOCK_AUTH) {
+      const { getTenants: mockGetTenants } = await import('./mockAuth');
+      return mockGetTenants();
+    }
+
+    const supabase = getSupabaseClient();
+    
+    const { data: tenants, error } = await supabase
+      .from('tenants')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      return [];
+    }
+
+    return tenants || [];
+  } catch (error) {
+    console.error('테넌트 조회 오류:', error);
+    return [];
+  }
+};
+
+// 팀 목록 조회
+export const getTeams = async () => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    const { data: teams, error } = await supabase
+      .from('teams')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      console.log('teams 테이블 조회 실패, Mock 데이터 사용:', error.message);
+      // teams 테이블이 없으면 Mock 데이터 반환
+      return {
+        success: true,
+        teams: [
+          {
+            id: '00000000-0000-0000-0000-000000000001',
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            name: '1농장',
+            description: '1번 농장 팀',
+            team_code: 'FARM001',
+            location: '서울시 강남구',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000002',
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            name: '2농장',
+            description: '2번 농장 팀',
+            team_code: 'FARM002',
+            location: '서울시 서초구',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: '00000000-0000-0000-0000-000000000003',
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            name: '3농장',
+            description: '3번 농장 팀',
+            team_code: 'FARM003',
+            location: '서울시 송파구',
+            created_at: new Date().toISOString()
+          }
+        ],
+        devices: [
+          {
+            id: 'bed-001',
+            name: '1농장 A베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 80 },
+            farm_id: '00000000-0000-0000-0000-000000000001',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-002',
+            name: '1농장 B베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 60 },
+            farm_id: '00000000-0000-0000-0000-000000000001',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-003',
+            name: '2농장 A베드',
+            type: 'sensor_gateway',
+            status: { online: false, brightness: 0 },
+            farm_id: '00000000-0000-0000-0000-000000000002',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-004',
+            name: '2농장 B베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 70 },
+            farm_id: '00000000-0000-0000-0000-000000000002',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-005',
+            name: '3농장 A베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 90 },
+            farm_id: '00000000-0000-0000-0000-000000000003',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'bed-006',
+            name: '3농장 B베드',
+            type: 'sensor_gateway',
+            status: { online: true, brightness: 50 },
+            farm_id: '00000000-0000-0000-0000-000000000003',
+            created_at: new Date().toISOString()
+          }
+        ],
+        sensors: [
+          {
+            id: 'sensor-001',
+            name: '온도센서',
+            type: 'temperature',
+            unit: '°C',
+            device_id: 'bed-001',
+            value: 24.5,
+            status: 'active',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'sensor-002',
+            name: '습도센서',
+            type: 'humidity',
+            unit: '%',
+            device_id: 'bed-001',
+            value: 65.2,
+            status: 'active',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'sensor-003',
+            name: 'pH센서',
+            type: 'ph',
+            unit: 'pH',
+            device_id: 'bed-001',
+            value: 6.8,
+            status: 'active',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'sensor-004',
+            name: 'EC센서',
+            type: 'ec',
+            unit: 'mS/cm',
+            device_id: 'bed-001',
+            value: 1.8,
+            status: 'active',
+            created_at: new Date().toISOString()
+          }
+        ],
+        sensorReadings: [
+          {
+            id: 'reading-001',
+            sensor_id: 'sensor-001',
+            value: 24.5,
+            unit: '°C',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          },
+          {
+            id: 'reading-002',
+            sensor_id: 'sensor-002',
+            value: 65.2,
+            unit: '%',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          },
+          {
+            id: 'reading-003',
+            sensor_id: 'sensor-003',
+            value: 6.8,
+            unit: 'pH',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          },
+          {
+            id: 'reading-004',
+            sensor_id: 'sensor-004',
+            value: 1.8,
+            unit: 'mS/cm',
+            timestamp: new Date().toISOString(),
+            metadata: {}
+          }
+        ]
+      };
+    }
+
+    return {
+      success: true,
+      teams: teams || []
+    };
+  } catch (error) {
+    console.error('팀 조회 오류:', error);
+    return {
+      success: false,
+      teams: []
+    };
+  }
+};
+
+// 사용자 정보 업데이트
+export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    // AuthUser에서 데이터베이스 테이블에 존재하는 필드만 추출
+    const dbData: Record<string, any> = {};
+    
+    // 데이터베이스 테이블에 존재하는 필드들만 매핑
+    if (data.name !== undefined) dbData.name = data.name;
+    if (data.email !== undefined) dbData.email = data.email;
+    if (data.role !== undefined) dbData.role = data.role;
+    if (data.tenant_id !== undefined) dbData.tenant_id = data.tenant_id;
+    if (data.team_id !== undefined) dbData.team_id = data.team_id;
+    if (data.team_name !== undefined) dbData.team_name = data.team_name;
+    if (data.preferred_team !== undefined) dbData.preferred_team = data.preferred_team;
+    if (data.is_approved !== undefined) dbData.is_approved = data.is_approved;
+    if (data.is_active !== undefined) dbData.is_active = data.is_active;
+    if (data.company !== undefined) dbData.company = data.company;
+    if (data.phone !== undefined) dbData.phone = data.phone;
+    
+    const { error } = await (supabase as any)
+      .from('users')
+      .update(dbData)
+      .eq('id', userId);
+
+    if (error) {
+      return { success: false, error: '사용자 정보 업데이트에 실패했습니다.' };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: '사용자 정보 업데이트 중 오류가 발생했습니다.' };
+  }
+};
+
+// 사용자 삭제
+export const deleteUser = async (userId: string) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    const { error } = await (supabase as any)
+      .from('users')
+      .update({ is_active: false })
+      .eq('id', userId);
+
+    if (error) {
+      return { success: false, error: '사용자 삭제에 실패했습니다.' };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: '사용자 삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+// 사용자 설정 관리 함수들
+const getUserSettingsInternal = (userId: string) => {
+  if (typeof window === 'undefined') return {};
+  const settings = localStorage.getItem(`user_settings_${userId}`);
+  return settings ? JSON.parse(settings) : {
+    showTeamBedsOnDashboard: true,
+    showAllBedsInBedManagement: false,
+    showOnlyMyFarm: false // 기본값은 모든 농장 표시
+  };
+};
+
+const saveUserSettings = (userId: string, settings: any) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(`user_settings_${userId}`, JSON.stringify(settings));
+};
+
+export const getUserSettings = (userId: string) => {
+  return getUserSettingsInternal(userId);
+};
+
+export const updateUserSettings = async (userId: string, settings: any) => {
+  try {
+    // Supabase에 설정 저장 시도
+    const supabase = getSupabaseClient();
+    
+    // 기존 설정 조회
+    const { data: existingSettings, error: fetchError } = await supabase
+      .from('user_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single() as { data: any | null; error: any };
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        // 테이블이 없거나 데이터가 없는 경우 - localStorage만 사용
+        console.log('user_settings 테이블이 없거나 데이터가 없음, localStorage 사용');
+        const currentSettings = getUserSettingsInternal(userId);
+        const newSettings = { ...currentSettings, ...settings };
+        saveUserSettings(userId, newSettings);
+        return newSettings;
+      } else if (fetchError.code === 'PGRST205') {
+        // 테이블이 존재하지 않는 경우 - localStorage만 사용
+        console.log('user_settings 테이블이 존재하지 않음, localStorage 사용');
+        const currentSettings = getUserSettingsInternal(userId);
+        const newSettings = { ...currentSettings, ...settings };
+        saveUserSettings(userId, newSettings);
+        return newSettings;
+      } else {
+        // 기타 오류 - localStorage 백업
+        console.error('기존 설정 조회 오류:', fetchError);
+        const currentSettings = getUserSettingsInternal(userId);
+        const newSettings = { ...currentSettings, ...settings };
+        saveUserSettings(userId, newSettings);
+        return newSettings;
       }
     }
 
-    return { success: true };
-  } catch (error) {
-    console.error('Approve user error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-};
+    // dashboard_preferences에 showOnlyMyFarm 추가
+    const dashboardPrefs = existingSettings?.dashboard_preferences || {};
+    const updatedDashboardPrefs = {
+      ...dashboardPrefs,
+      showOnlyMyFarm: settings.showOnlyMyFarm
+    };
 
-// 사용자 거부 (관리자용)
-export const rejectUser = async (userId: string) => {
-  try {
-    const { error } = await supabase
-      .from('users')
-      .delete()
-      .eq('id', userId);
+    const settingsUpdate = {
+      user_id: userId,
+      ...existingSettings,
+      dashboard_preferences: updatedDashboardPrefs,
+      updated_at: new Date().toISOString()
+    };
 
-    if (error) {
-      throw error;
+    const { error: insertOrUpdateError } = existingSettings
+      ? await (supabase as any)
+          .from('user_settings')
+          .update(settingsUpdate)
+          .eq('user_id', userId)
+      : await (supabase as any)
+          .from('user_settings')
+          .insert(settingsUpdate);
+
+    if (insertOrUpdateError) {
+      console.error('사용자 설정 업데이트 오류:', insertOrUpdateError);
+      // localStorage 백업
+      const currentSettings = getUserSettingsInternal(userId);
+      const newSettings = { ...currentSettings, ...settings };
+      saveUserSettings(userId, newSettings);
+      return newSettings;
     }
 
-    return { success: true };
+    // localStorage에도 백업
+    saveUserSettings(userId, settings);
+    
+    console.log('사용자 설정 업데이트 성공:', settings);
+    return settings;
   } catch (error) {
-    console.error('Reject user error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
-};
-
-// 테넌트 목록 가져오기 (관리자용)
-export const getTenants = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('tenants')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    return { success: true, tenants: data };
-  } catch (error) {
-    console.error('Get tenants error:', error);
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.error('사용자 설정 업데이트 중 오류:', error);
+    // localStorage 백업
+    const currentSettings = getUserSettingsInternal(userId);
+    const newSettings = { ...currentSettings, ...settings };
+    saveUserSettings(userId, newSettings);
+    return newSettings;
   }
 };
