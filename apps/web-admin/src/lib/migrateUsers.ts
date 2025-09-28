@@ -138,3 +138,4 @@ export const migrateUsersToSupabase = async () => {
 if (typeof window !== 'undefined') {
   (window as any).migrateUsersToSupabase = migrateUsersToSupabase;
 }
+
