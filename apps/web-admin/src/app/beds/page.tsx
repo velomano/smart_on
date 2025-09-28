@@ -85,31 +85,9 @@ function BedsManagementContent() {
 
         setFarms(teamsResult.teams as Farm[]);
         
-        // 로컬 스토리지에서 베드 데이터 불러오기
-        if (typeof window !== 'undefined') {
-          const savedDevices = localStorage.getItem('mock_devices');
-          if (savedDevices) {
-            const parsedDevices = JSON.parse(savedDevices);
-            console.log('localStorage에서 로드된 베드 데이터:', parsedDevices);
-            console.log('localStorage에서 로드된 베드 개수:', parsedDevices?.length || 0);
-            setDevices(parsedDevices);
-          } else {
-            // localStorage에 데이터가 없으면 Mock 데이터 사용하고 저장
-            const mockDevices = teamsResult.devices as Device[];
-            console.log('Mock 데이터 사용 및 저장:', mockDevices);
-            console.log('Mock 데이터 베드 개수:', mockDevices?.length || 0);
-            console.log('Mock 데이터 세부 내용:', JSON.stringify(mockDevices, null, 2));
-            setDevices(mockDevices);
-            if (mockDevices && mockDevices.length > 0) {
-              localStorage.setItem('mock_devices', JSON.stringify(mockDevices));
-              console.log('Mock 베드 데이터를 localStorage에 저장:', mockDevices);
-            }
-          }
-        } else {
-          const mockDevices = teamsResult.devices as Device[];
-          console.log('SSR Mock 데이터 사용:', mockDevices);
-          setDevices(mockDevices);
-        }
+        // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
+        console.log('✅ Supabase 베드 데이터 사용:', teamsResult.devices?.length || 0, '개');
+        setDevices(teamsResult.devices as Device[]);
         
         setSensors(teamsResult.sensors as Sensor[]);
         setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
@@ -206,11 +184,8 @@ function BedsManagementContent() {
         [deviceId]: newState
       };
       
-      // localStorage에 저장
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('actuator_states', JSON.stringify(newStates));
-        console.log('💾 액추에이터 상태 저장:', newStates);
-      }
+      // 액추에이터 상태는 로컬 상태로만 관리 (localStorage 제거)
+      console.log('💾 액추에이터 상태 업데이트:', newStates);
       
       return newStates;
     });
@@ -406,11 +381,8 @@ function BedsManagementContent() {
 
     setDevices(prev => [...prev, newBed]);
     
-    // 로컬 스토리지에 저장
-    if (typeof window !== 'undefined') {
-      const updatedDevices = [...devices, newBed];
-      localStorage.setItem('mock_devices', JSON.stringify(updatedDevices));
-    }
+    // 새 베드는 Supabase에 저장 (localStorage 제거)
+    // TODO: 실제 Supabase INSERT 구현 필요
     
     setNewBedData({ name: '', cropName: '', growingMethod: '담액식' });
     setShowAddBedModal(false);

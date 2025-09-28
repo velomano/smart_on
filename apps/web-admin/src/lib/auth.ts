@@ -423,66 +423,13 @@ export const getTeams = async () => {
       readings: sensorReadings?.length || 0
     });
 
-    // 폴백 데이터
-    const fallbackTeams = [
-      {
-        id: '00000000-0000-0000-0000-000000000001',
-        tenant_id: '00000000-0000-0000-0000-000000000001',
-        name: '1농장',
-        description: '1번 농장 팀',
-        team_code: 'FARM001',
-        location: '서울시 강남구',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '00000000-0000-0000-0000-000000000002',
-        tenant_id: '00000000-0000-0000-0000-000000000001',
-        name: '2농장',
-        description: '2번 농장 팀',
-        team_code: 'FARM002',
-        location: '서울시 서초구',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: '00000000-0000-0000-0000-000000000003',
-        tenant_id: '00000000-0000-0000-0000-000000000001',
-        name: '3농장',
-        description: '3번 농장 팀',
-        team_code: 'FARM003',
-        location: '서울시 송파구',
-        created_at: new Date().toISOString(),
-      },
-    ];
-
-    const fallbackDevices = [
-      { id: 'bed-001', type: 'sensor_gateway', farm_id: '00000000-0000-0000-0000-000000000001', bed_id: null, vendor: 'Tuya', tuya_device_id: 'device001', status: { online: true,  brightness: 80 }, meta: { name: '1농장 A베드' }, created_at: new Date().toISOString() },
-      { id: 'bed-002', type: 'sensor_gateway', farm_id: '00000000-0000-0000-0000-000000000001', bed_id: null, vendor: 'Tuya', tuya_device_id: 'device002', status: { online: true,  brightness: 60 }, meta: { name: '1농장 B베드' }, created_at: new Date().toISOString() },
-      { id: 'bed-003', type: 'sensor_gateway', farm_id: '00000000-0000-0000-0000-000000000002', bed_id: null, vendor: 'Tuya', tuya_device_id: 'device003', status: { online: false, brightness: 0  }, meta: { name: '2농장 A베드' }, created_at: new Date().toISOString() },
-      { id: 'bed-004', type: 'sensor_gateway', farm_id: '00000000-0000-0000-0000-000000000002', bed_id: null, vendor: 'Tuya', tuya_device_id: 'device004', status: { online: true,  brightness: 70 }, meta: { name: '2농장 B베드' }, created_at: new Date().toISOString() },
-      { id: 'bed-005', type: 'sensor_gateway', farm_id: '00000000-0000-0000-0000-000000000003', bed_id: null, vendor: 'Tuya', tuya_device_id: 'device005', status: { online: true,  brightness: 90 }, meta: { name: '3농장 A베드' }, created_at: new Date().toISOString() },
-      { id: 'bed-006', type: 'sensor_gateway', farm_id: '00000000-0000-0000-0000-000000000003', bed_id: null, vendor: 'Tuya', tuya_device_id: 'device006', status: { online: true,  brightness: 50 }, meta: { name: '3농장 B베드' }, created_at: new Date().toISOString() },
-    ];
-
-    const fallbackSensors = [
-      { id: 'sensor-001', device_id: 'bed-001', type: 'temperature', unit: '°C',    meta: { name: '온도센서', value: 24.5, status: 'active' }, created_at: new Date().toISOString() },
-      { id: 'sensor-002', device_id: 'bed-001', type: 'humidity',    unit: '%',     meta: { name: '습도센서', value: 65.2, status: 'active' }, created_at: new Date().toISOString() },
-      { id: 'sensor-003', device_id: 'bed-001', type: 'ph',          unit: 'pH',    meta: { name: 'pH센서',   value: 6.8,  status: 'active' }, created_at: new Date().toISOString() },
-      { id: 'sensor-004', device_id: 'bed-001', type: 'ec',          unit: 'mS/cm', meta: { name: 'EC센서',   value: 1.8,  status: 'active' }, created_at: new Date().toISOString() },
-    ];
-
-    const fallbackReadings = [
-      { id: 1, sensor_id: 'sensor-001', value: 24.5, ts: new Date().toISOString(), quality: 1 },
-      { id: 2, sensor_id: 'sensor-002', value: 65.2, ts: new Date().toISOString(), quality: 1 },
-      { id: 3, sensor_id: 'sensor-003', value: 6.8,  ts: new Date().toISOString(), quality: 1 },
-      { id: 4, sensor_id: 'sensor-004', value: 1.8,  ts: new Date().toISOString(), quality: 1 },
-    ];
-
+    // Supabase 데이터만 사용 (Mock 데이터 완전 제거)
     const result = {
       success: true,
-      teams:          teams && teams.length > 0 ? teams : fallbackTeams,
-      devices:        devices && devices.length > 0 ? devices : fallbackDevices,
-      sensors:        sensors && sensors.length > 0 ? sensors : fallbackSensors,
-      sensorReadings: sensorReadings && sensorReadings.length > 0 ? sensorReadings : fallbackReadings,
+      teams: teams || [],
+      devices: devices || [],
+      sensors: sensors || [],
+      sensorReadings: sensorReadings || [],
     };
 
     console.log('🔍 getTeams 최종 반환값:', {

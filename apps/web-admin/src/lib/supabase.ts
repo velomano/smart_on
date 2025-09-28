@@ -100,177 +100,91 @@ export const getFarms = async (): Promise<Farm[]> => {
 };
 
 export const getDevices = async (): Promise<Device[]> => {
-  // Mock 데이터 반환 - 베드 정보
-  return [
-    {
-      id: 'bed-001',
-      name: '1농장 A베드',
-      type: 'sensor_gateway',
-      status: { online: true, brightness: 80 },
-      farm_id: '00000000-0000-0000-0000-000000000001',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'bed-002',
-      name: '1농장 B베드',
-      type: 'sensor_gateway',
-      status: { online: true, brightness: 60 },
-      farm_id: '00000000-0000-0000-0000-000000000001',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'bed-003',
-      name: '2농장 A베드',
-      type: 'sensor_gateway',
-      status: { online: false, brightness: 0 },
-      farm_id: '00000000-0000-0000-0000-000000000002',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'bed-004',
-      name: '2농장 B베드',
-      type: 'sensor_gateway',
-      status: { online: true, brightness: 70 },
-      farm_id: '00000000-0000-0000-0000-000000000002',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'bed-005',
-      name: '3농장 A베드',
-      type: 'sensor_gateway',
-      status: { online: true, brightness: 90 },
-      farm_id: '00000000-0000-0000-0000-000000000003',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'bed-006',
-      name: '3농장 B베드',
-      type: 'sensor_gateway',
-      status: { online: true, brightness: 50 },
-      farm_id: '00000000-0000-0000-0000-000000000003',
-      created_at: new Date().toISOString()
+  // Supabase에서 실제 데이터 조회
+  try {
+    const supabase = getSupabaseClient();
+    const { data: devices, error } = await supabase
+      .from('devices')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('devices 테이블 조회 실패:', error);
+      return [];
     }
-  ];
+
+    console.log('✅ Supabase devices 데이터 조회 성공:', devices?.length || 0, '개');
+    return devices || [];
+  } catch (error) {
+    console.error('getDevices 오류:', error);
+    return [];
+  }
 };
 
 export const getSensors = async (): Promise<Sensor[]> => {
-  // Mock 데이터 반환 - 센서 정보
-  return [
-    {
-      id: 'sensor-001',
-      name: '온도센서',
-      type: 'temperature',
-      unit: '°C',
-      device_id: 'bed-001',
-      value: 24.5,
-      status: 'active',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'sensor-002',
-      name: '습도센서',
-      type: 'humidity',
-      unit: '%',
-      device_id: 'bed-001',
-      value: 65.2,
-      status: 'active',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'sensor-003',
-      name: 'pH센서',
-      type: 'ph',
-      unit: 'pH',
-      device_id: 'bed-001',
-      value: 6.8,
-      status: 'active',
-      created_at: new Date().toISOString()
-    },
-    {
-      id: 'sensor-004',
-      name: 'EC센서',
-      type: 'ec',
-      unit: 'mS/cm',
-      device_id: 'bed-001',
-      value: 1.8,
-      status: 'active',
-      created_at: new Date().toISOString()
+  // Supabase에서 실제 데이터 조회
+  try {
+    const supabase = getSupabaseClient();
+    const { data: sensors, error } = await supabase
+      .from('sensors')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('sensors 테이블 조회 실패:', error);
+      return [];
     }
-  ];
+
+    console.log('✅ Supabase sensors 데이터 조회 성공:', sensors?.length || 0, '개');
+    return sensors || [];
+  } catch (error) {
+    console.error('getSensors 오류:', error);
+    return [];
+  }
 };
 
 export const getSensorReadings = async (): Promise<SensorReading[]> => {
-  // Mock 데이터 반환 - 센서 읽기 데이터
-  return [
-    {
-      id: 'reading-001',
-      sensor_id: 'sensor-001',
-      value: 24.5,
-      unit: '°C',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    },
-    {
-      id: 'reading-002',
-      sensor_id: 'sensor-002',
-      value: 65.2,
-      unit: '%',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    },
-    {
-      id: 'reading-003',
-      sensor_id: 'sensor-003',
-      value: 6.8,
-      unit: 'pH',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    },
-    {
-      id: 'reading-004',
-      sensor_id: 'sensor-004',
-      value: 1.8,
-      unit: 'mS/cm',
-      timestamp: new Date().toISOString(),
-      metadata: {}
+  // Supabase에서 실제 데이터 조회
+  try {
+    const supabase = getSupabaseClient();
+    const { data: readings, error } = await supabase
+      .from('sensor_readings')
+      .select('*')
+      .order('ts', { ascending: false })
+      .limit(1000); // 최근 1000개만
+
+    if (error) {
+      console.error('sensor_readings 테이블 조회 실패:', error);
+      return [];
     }
-  ];
+
+    console.log('✅ Supabase sensor_readings 데이터 조회 성공:', readings?.length || 0, '개');
+    return readings || [];
+  } catch (error) {
+    console.error('getSensorReadings 오류:', error);
+    return [];
+  }
 };
 
 export const getLatestSensorReadings = async (): Promise<SensorReading[]> => {
-  // Mock 데이터 반환 - 최신 센서 읽기 데이터
-  return [
-    {
-      id: 'reading-001',
-      sensor_id: 'sensor-001',
-      value: 24.5,
-      unit: '°C',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    },
-    {
-      id: 'reading-002',
-      sensor_id: 'sensor-002',
-      value: 65.2,
-      unit: '%',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    },
-    {
-      id: 'reading-003',
-      sensor_id: 'sensor-003',
-      value: 6.8,
-      unit: 'pH',
-      timestamp: new Date().toISOString(),
-      metadata: {}
-    },
-    {
-      id: 'reading-004',
-      sensor_id: 'sensor-004',
-      value: 1.8,
-      unit: 'mS/cm',
-      timestamp: new Date().toISOString(),
-      metadata: {}
+  // Supabase에서 최신 센서 읽기 데이터 조회
+  try {
+    const supabase = getSupabaseClient();
+    const { data: readings, error } = await supabase
+      .from('sensor_readings')
+      .select('*')
+      .order('ts', { ascending: false })
+      .limit(100); // 최신 100개만
+
+    if (error) {
+      console.error('sensor_readings 최신 데이터 조회 실패:', error);
+      return [];
     }
-  ];
+
+    console.log('✅ Supabase 최신 sensor_readings 데이터 조회 성공:', readings?.length || 0, '개');
+    return readings || [];
+  } catch (error) {
+    console.error('getLatestSensorReadings 오류:', error);
+    return [];
+  }
 };
