@@ -324,6 +324,64 @@ BEGIN
 END $$;
 
 -- =============================================
+-- 농장 정책
+-- =============================================
+
+-- farms 테이블이 존재하는 경우에만 정책 생성
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'farms') THEN
+        -- 모든 인증된 사용자가 농장 조회 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'farms' AND policyname = 'Authenticated users can view farms') THEN
+            CREATE POLICY "Authenticated users can view farms" ON farms
+                FOR SELECT USING (auth.role() = 'authenticated');
+        END IF;
+
+        -- 시스템 관리자만 농장 생성/수정/삭제 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'farms' AND policyname = 'System admins can manage farms') THEN
+            CREATE POLICY "System admins can manage farms" ON farms
+                FOR ALL USING (
+                    EXISTS (
+                        SELECT 1 FROM users 
+                        WHERE id = auth.uid() 
+                        AND role = 'system_admin' 
+                        AND is_active = true
+                    )
+                );
+        END IF;
+    END IF;
+END $$;
+
+-- =============================================
+-- 디바이스 정책
+-- =============================================
+
+-- devices 테이블이 존재하는 경우에만 정책 생성
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'devices') THEN
+        -- 모든 인증된 사용자가 디바이스 조회 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'devices' AND policyname = 'Authenticated users can view devices') THEN
+            CREATE POLICY "Authenticated users can view devices" ON devices
+                FOR SELECT USING (auth.role() = 'authenticated');
+        END IF;
+
+        -- 시스템 관리자와 농장장만 디바이스 생성/수정/삭제 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'devices' AND policyname = 'Admins and leaders can manage devices') THEN
+            CREATE POLICY "Admins and leaders can manage devices" ON devices
+                FOR ALL USING (
+                    EXISTS (
+                        SELECT 1 FROM users 
+                        WHERE id = auth.uid() 
+                        AND role IN ('system_admin', 'team_leader') 
+                        AND is_active = true
+                    )
+                );
+        END IF;
+    END IF;
+END $$;
+
+-- =============================================
 -- 센서 정책
 -- =============================================
 
@@ -331,22 +389,23 @@ END $$;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'sensors') THEN
-        -- 모든 사용자가 센서 목록 조회 가능
-        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensors' AND policyname = 'Anyone can view sensors') THEN
-            CREATE POLICY "Anyone can view sensors" ON sensors
-                FOR SELECT USING (true);
+        -- 모든 인증된 사용자가 센서 조회 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensors' AND policyname = 'Authenticated users can view sensors') THEN
+            CREATE POLICY "Authenticated users can view sensors" ON sensors
+                FOR SELECT USING (auth.role() = 'authenticated');
         END IF;
 
-        -- 인증된 사용자만 센서 생성 가능
-        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensors' AND policyname = 'Authenticated users can create sensors') THEN
-            CREATE POLICY "Authenticated users can create sensors" ON sensors
-                FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-        END IF;
-
-        -- 인증된 사용자만 센서 수정 가능
-        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensors' AND policyname = 'Authenticated users can update sensors') THEN
-            CREATE POLICY "Authenticated users can update sensors" ON sensors
-                FOR UPDATE USING (auth.role() = 'authenticated');
+        -- 시스템 관리자와 농장장만 센서 생성/수정/삭제 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensors' AND policyname = 'Admins and leaders can manage sensors') THEN
+            CREATE POLICY "Admins and leaders can manage sensors" ON sensors
+                FOR ALL USING (
+                    EXISTS (
+                        SELECT 1 FROM users 
+                        WHERE id = auth.uid() 
+                        AND role IN ('system_admin', 'team_leader') 
+                        AND is_active = true
+                    )
+                );
         END IF;
     END IF;
 END $$;
@@ -355,7 +414,25 @@ END $$;
 -- 센서 데이터 정책
 -- =============================================
 
--- sensor_data 테이블이 존재하는 경우에만 정책 생성
+-- sensor_readings 테이블이 존재하는 경우에만 정책 생성
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'sensor_readings') THEN
+        -- 모든 인증된 사용자가 센서 데이터 조회 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensor_readings' AND policyname = 'Authenticated users can view sensor readings') THEN
+            CREATE POLICY "Authenticated users can view sensor readings" ON sensor_readings
+                FOR SELECT USING (auth.role() = 'authenticated');
+        END IF;
+
+        -- 서비스 역할만 센서 데이터 삽입 가능
+        IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'sensor_readings' AND policyname = 'Service role can insert sensor readings') THEN
+            CREATE POLICY "Service role can insert sensor readings" ON sensor_readings
+                FOR INSERT WITH CHECK (auth.role() = 'service_role');
+        END IF;
+    END IF;
+END $$;
+
+-- sensor_data 테이블이 존재하는 경우에만 정책 생성 (기존 호환성)
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'sensor_data') THEN

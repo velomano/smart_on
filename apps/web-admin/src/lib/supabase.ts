@@ -6,8 +6,8 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key'
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // 싱글톤 클라이언트 인스턴스들
-let supabaseClient: ReturnType<typeof createClient> | null = null;
-let serviceClient: ReturnType<typeof createClient> | null = null;
+let supabaseClient: any = null;
+let serviceClient: any = null;
 
 // 일반 클라이언트 (싱글톤)
 export const getSupabaseClient = () => {
@@ -74,10 +74,14 @@ export interface SensorReading {
 export const getFarms = async (): Promise<Farm[]> => {
   try {
     const supabase = getSupabaseClient();
+    console.log('🔍 getFarms 시작 - Supabase 클라이언트:', !!supabase);
+    
     const { data: farms, error } = await supabase
       .from('farms')
       .select('id, name, location, tenant_id, created_at')
       .order('created_at', { ascending: true });
+
+    console.log('🔍 getFarms 쿼리 결과:', { data: farms, error });
 
     if (error) {
       console.error('getFarms 오류:', error);
@@ -85,6 +89,7 @@ export const getFarms = async (): Promise<Farm[]> => {
     }
 
     console.log('✅ getFarms 성공:', farms?.length || 0, '개 농장');
+    console.log('🔍 getFarms 상세 데이터:', farms);
     return farms || [];
   } catch (error) {
     console.error('getFarms 예외:', error);

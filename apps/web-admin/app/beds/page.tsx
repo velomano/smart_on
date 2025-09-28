@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../src/lib/auth';
-import { Farm, Device, Sensor, SensorReading } from '../../src/lib/supabase';
+import { Farm, Device, Sensor, SensorReading, getSupabaseClient, getFarms } from '../../src/lib/supabase';
 import { normalizeBedName, validateBedName } from '../../src/lib/bedNaming';
 import { BedTierConfig, initializeBedTiers, updateBedTierCount } from '../../src/lib/bedTierStructure';
 import BedTierVisualization from '../../src/components/BedTierVisualization';
@@ -47,10 +47,12 @@ function BedsManagementContent() {
   const [showEditBedModal, setShowEditBedModal] = useState(false);
   const [showEditFarmModal, setShowEditFarmModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [showDeleteFarmModal, setShowDeleteFarmModal] = useState(false);
   const [targetFarm, setTargetFarm] = useState<Farm | null>(null);
   const [editingBed, setEditingBed] = useState<Device | null>(null);
   const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
   const [deletingBed, setDeletingBed] = useState<Device | null>(null);
+  const [deletingFarm, setDeletingFarm] = useState<Farm | null>(null);
   const [newFarmData, setNewFarmData] = useState({
     name: '',
     description: '',
@@ -59,7 +61,8 @@ function BedsManagementContent() {
   const [newBedData, setNewBedData] = useState({
     name: '',
     cropName: '',
-    growingMethod: '담액식'
+    growingMethod: '담액식',
+    totalTiers: 1
   });
   const [editBedData, setEditBedData] = useState({
     name: '',
@@ -72,86 +75,88 @@ function BedsManagementContent() {
     location: ''
   });
 
+  // 데이터 로드 함수
+  const loadData = useCallback(async () => {
+    try {
+      console.log('📊 실제 Supabase 데이터 로드 중...');
+
+      // 먼저 현재 로그인된 사용자 확인
+      const currentUser = await getCurrentUser();
+      if (!currentUser || !currentUser.is_approved) {
+        router.push('/login');
+        return;
+      }
+      setUser(currentUser);
+
+      const [farmsResult, usersResult, devicesResult, sensorsResult, sensorReadingsResult] = await Promise.all([
+        getFarms(),
+        getApprovedUsers(),
+        getSupabaseClient().from('devices').select('*').eq('type', 'sensor_gateway'),
+        getSupabaseClient().from('sensors').select('*'),
+        getSupabaseClient().from('sensor_readings').select('*').order('ts', { ascending: false }).limit(1000)
+      ]);
+
+      console.log('🔍 loadData Promise.all 결과:');
+      console.log('  - farmsResult:', farmsResult);
+      console.log('  - devicesResult:', devicesResult);
+      console.log('  - sensorsResult:', sensorsResult);
+      console.log('  - sensorReadingsResult:', sensorReadingsResult);
+
+      setFarms(farmsResult as Farm[]);
+      
+      // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
+      console.log('✅ Supabase 베드 데이터 사용:', devicesResult.data?.length || 0, '개');
+      setDevices(Array.isArray(devicesResult.data) ? devicesResult.data as Device[] : []);
+      
+      setSensors(Array.isArray(sensorsResult.data) ? sensorsResult.data as Sensor[] : []);
+      setSensorReadings(Array.isArray(sensorReadingsResult.data) ? sensorReadingsResult.data as SensorReading[] : []);
+      
+      // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
+      const farmId = searchParams.get('farm');
+      console.log('URL 파라미터 farm:', farmId);
+      if (!farmId && currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member') && currentUser.team_id) {
+        setSelectedFarmTab(currentUser.team_id);
+      } else if (farmId) {
+        // URL 파라미터가 있으면 우선 적용
+        console.log('URL 파라미터로 농장 탭 설정:', farmId);
+        setSelectedFarmTab(farmId);
+      }
+      
+      console.log('농장관리 페이지 - 현재 사용자:', currentUser);
+      console.log('농장관리 페이지 - 농장 목록:', farmsResult);
+      console.log('농장관리 페이지 - 디바이스 목록:', devicesResult.data);
+      console.log('농장관리 페이지 - 디바이스 개수:', devicesResult.data?.length || 0);
+      
+      // 디바이스와 농장 ID 매칭 디버깅
+      if (devicesResult.data && farmsResult) {
+        console.log('🔍 디바이스 farm_id 분석:');
+        devicesResult.data.forEach((d: any) => {
+          console.log(`  - 디바이스 ${d.id}: farm_id=${d.farm_id}, type=${d.type}`);
+        });
+        console.log('🔍 농장 ID 분석:');
+        farmsResult.forEach((farm: any) => {
+          console.log(`  - 농장 ${farm.id}: name=${farm.name}`);
+        });
+      }
+
+      // 24시간 차트 데이터 초기화
+      const initialChartData = generateChartData();
+      console.log('📊 초기 차트 데이터 생성:', initialChartData.length, '개 데이터 포인트');
+      setSensorChartData(initialChartData);
+
+      // MQTT 연동 전까지 자동 업데이트 비활성화
+      console.log('⏸️ 자동 센서 데이터 업데이트 비활성화 중 (MQTT 대기 상태)');
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [router, searchParams]);
+
   // 데이터 로드
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        console.log('📊 실제 Supabase 데이터 로드 중...');
-
-        // 초기 데이터 로드
-        console.log('📊 실제 데이터 로드 완료');
-
-        // 24시간 차트 데이터 초기화
-        const initialChartData = generateChartData();
-        console.log('📊 초기 차트 데이터 생성:', initialChartData.length, '개 데이터 포인트');
-        setSensorChartData(initialChartData);
-
-        // MQTT 연동 전까지 자동 업데이트 비활성화
-        console.log('⏸️ 자동 센서 데이터 업데이트 비활성화 중 (MQTT 대기 상태)');
-
-        // 먼저 현재 로그인된 사용자 확인
-        const currentUser = await getCurrentUser();
-        if (!currentUser || !currentUser.is_approved) {
-          router.push('/login');
-          return;
-        }
-        setUser(currentUser);
-
-        const [teamsResult, usersResult] = await Promise.all([
-          getTeams(),
-          getApprovedUsers()
-        ]);
-
-        setFarms(teamsResult.teams as Farm[]);
-        
-        // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
-        console.log('✅ Supabase 베드 데이터 사용:', teamsResult.devices?.length || 0, '개');
-        setDevices(Array.isArray(teamsResult.devices) ? teamsResult.devices as Device[] : []);
-        
-        setSensors(Array.isArray(teamsResult.sensors) ? teamsResult.sensors as Sensor[] : []);
-        setSensorReadings(Array.isArray(teamsResult.sensorReadings) ? teamsResult.sensorReadings as SensorReading[] : []);
-        
-        // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
-        const farmId = searchParams.get('farm');
-        console.log('URL 파라미터 farm:', farmId);
-        if (!farmId && currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member') && currentUser.team_id) {
-          setSelectedFarmTab(currentUser.team_id);
-        } else if (farmId) {
-          // URL 파라미터가 있으면 우선 적용
-          console.log('URL 파라미터로 농장 탭 설정:', farmId);
-          setSelectedFarmTab(farmId);
-        }
-        
-        console.log('농장관리 페이지 - 현재 사용자:', currentUser);
-        console.log('농장관리 페이지 - 농장 목록:', teamsResult.teams);
-        console.log('농장관리 페이지 - 디바이스 목록:', teamsResult.devices);
-        console.log('농장관리 페이지 - 디바이스 개수:', teamsResult.devices?.length || 0);
-        
-        // 디바이스와 농장 ID 매칭 디버깅
-        if (teamsResult.devices && teamsResult.teams) {
-          console.log('🔍 디바이스 farm_id 분석:');
-          teamsResult.devices.forEach(d => {
-            console.log(`  - 디바이스 ${d.id}: farm_id=${d.farm_id}, type=${d.type}`);
-          });
-          console.log('🔍 농장 ID 분석:');
-          teamsResult.teams.forEach(farm => {
-            console.log(`  - 농장 ${farm.id}: name=${farm.name}`);
-          });
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadData();
-
-    // 컴포넌트 언마운트 시 Mock 시스템 정리
-    return () => {
-      // 정리 작업 (필요시 추가)
-    };
-  }, [router]);
+  }, [loadData]);
 
   // 농장 데이터 로드 후 초기 탭 설정
   useEffect(() => {
@@ -185,7 +190,7 @@ function BedsManagementContent() {
     return beds.sort((a, b) => {
       // 1. 베드 이름에서 숫자 추출하여 정렬
       const getBedNumber = (device: Device) => {
-        const location = device.meta?.location || '';
+        const location = (device.meta as any)?.location || '';
         
         // 베드-1, 베드-2 형태에서 숫자 추출
         const bedMatch = location.match(/베드-?(\d+)/);
@@ -412,18 +417,9 @@ function BedsManagementContent() {
 
     try {
       // Supabase에 새 농장 저장
-      const { createClient } = await import('@supabase/supabase-js');
-      
-      console.log('환경변수 확인:');
-      console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '없음');
-      console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '설정됨' : '없음');
-      
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('farms')
         .insert([
           {
@@ -445,11 +441,12 @@ function BedsManagementContent() {
       }
 
       const newFarm = data[0];
-    setFarms(prev => [...prev, newFarm]);
-    setSelectedFarmTab(newFarm.id);
-    setNewFarmData({ name: '', description: '', location: '' });
-    setShowAddFarmModal(false);
-    alert(`새 농장 "${newFarm.name}"이 추가되었습니다!`);
+      console.log('🔄 농장 추가 완료, 데이터 다시 로드 중...');
+      await loadData(); // Reload data after adding farm
+      setSelectedFarmTab(newFarm.id);
+      setNewFarmData({ name: '', description: '', location: '' });
+      setShowAddFarmModal(false);
+      alert(`새 농장 "${newFarm.name}"이 추가되었습니다!`);
     } catch (error) {
       console.error('농장 생성 오류:', error);
       alert('농장 생성에 실패했습니다.');
@@ -480,13 +477,9 @@ function BedsManagementContent() {
 
     try {
       // Supabase에 새 베드 저장
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('devices')
         .insert([
           {
@@ -512,9 +505,10 @@ function BedsManagementContent() {
       }
 
       const newBed = data[0];
-      setDevices(prev => [...prev, newBed]);
-    setNewBedData({ name: '', cropName: '', growingMethod: '담액식' });
-    setShowAddBedModal(false);
+      console.log('🔄 베드 추가 완료, 데이터 다시 로드 중...');
+      await loadData(); // Reload data after adding bed
+      setNewBedData({ name: '', cropName: '', growingMethod: '담액식', totalTiers: 1 });
+      setShowAddBedModal(false);
       alert(`새 베드 "${normalizedBedName}"가 ${targetFarm?.name || '농장'}에 추가되었습니다!`);
     } catch (error) {
       console.error('베드 생성 오류:', error);
@@ -529,10 +523,10 @@ function BedsManagementContent() {
     
     // 기존 상태 초기화 후 새로운 데이터 설정
     const editData = {
-      name: bed.meta?.location || '',
-      cropName: bed.meta?.crop_name || '',
-      growingMethod: bed.meta?.growing_method || '담액식',
-      totalTiers: bed.meta?.total_tiers || 1
+      name: (bed.meta as any)?.location || '',
+      cropName: (bed.meta as any)?.crop_name || '',
+      growingMethod: (bed.meta as any)?.growing_method || '담액식',
+      totalTiers: (bed.meta as any)?.total_tiers || 1
     };
     
     console.log('📝 편집 폼에 설정할 데이터:', editData);
@@ -568,11 +562,7 @@ function BedsManagementContent() {
       console.log('📝 업데이트할 데이터:', editBedData);
       
       // Supabase에 베드 정보 업데이트
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
       const updateData = {
         meta: {
@@ -589,7 +579,7 @@ function BedsManagementContent() {
         data: updateData
       });
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('devices')
         .update(updateData)
         .eq('id', editingBed.id)
@@ -614,22 +604,8 @@ function BedsManagementContent() {
       }
 
       console.log('✅ 베드 업데이트 성공:', data[0]);
-
-      // 로컬 상태 업데이트
-      setDevices(prev => prev.map(device => 
-        device.id === editingBed.id 
-          ? {
-              ...device,
-              meta: {
-                location: normalizedBedName, // 정규화된 이름 저장
-                crop_name: editBedData.cropName,
-                growing_method: editBedData.growingMethod,
-                total_tiers: editBedData.totalTiers
-              }
-            }
-          : device
-      ));
-
+      console.log('🔄 베드 업데이트 완료, 데이터 다시 로드 중...');
+      await loadData(); // Reload data after updating bed
       setShowEditBedModal(false);
       setEditingBed(null);
       alert('베드 정보가 성공적으로 업데이트되었습니다!');
@@ -653,11 +629,7 @@ function BedsManagementContent() {
       console.log('🗑️ 베드 삭제 시작:', deletingBed.id);
       
       // Supabase에서 베드 삭제
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
       console.log('🗑️ Supabase DELETE 요청:', {
         table: 'devices',
@@ -669,7 +641,7 @@ function BedsManagementContent() {
         }
       });
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('devices')
         .delete()
         .eq('id', deletingBed.id)
@@ -696,34 +668,8 @@ function BedsManagementContent() {
       }
 
       console.log('✅ 베드 삭제 성공:', data);
-
-      // 로컬 상태에서 제거
-      setDevices(prev => prev.filter(device => device.id !== deletingBed.id));
-      
-      // 삭제 후 데이터 재로드 (동기화 보장)
-      setTimeout(async () => {
-        try {
-          console.log('🔄 베드 삭제 후 데이터 재로드 중...');
-          const { createClient } = await import('@supabase/supabase-js');
-          const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-          );
-          
-          const { data: updatedDevices, error: reloadError } = await supabase
-            .from('devices')
-            .select('*')
-            .eq('type', 'sensor_gateway');
-          
-          if (!reloadError && updatedDevices) {
-            setDevices(updatedDevices);
-            console.log('✅ 데이터 재로드 완료:', updatedDevices.length, '개 베드');
-          }
-        } catch (reloadError) {
-          console.error('❌ 데이터 재로드 실패:', reloadError);
-        }
-      }, 500);
-      
+      console.log('🔄 베드 삭제 완료, 데이터 다시 로드 중...');
+      await loadData(); // Reload data after deleting bed
       setShowDeleteConfirmModal(false);
       setDeletingBed(null);
       alert('베드가 성공적으로 삭제되었습니다!');
@@ -752,13 +698,9 @@ function BedsManagementContent() {
 
     try {
       // Supabase에 농장 정보 업데이트
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('farms')
         .update({
           name: editFarmData.name,
@@ -773,22 +715,71 @@ function BedsManagementContent() {
       }
 
       // 로컬 상태 업데이트
-      setFarms(prev => prev.map(farm => 
-        farm.id === editingFarm.id 
-          ? {
-              ...farm,
-              name: editFarmData.name,
-              location: editFarmData.location
-            }
-          : farm
-      ));
-
+      console.log('🔄 농장 업데이트 완료, 데이터 다시 로드 중...');
+      await loadData(); // Reload data after updating farm
       setShowEditFarmModal(false);
       setEditingFarm(null);
       alert('농장 정보가 성공적으로 업데이트되었습니다!');
     } catch (error) {
       console.error('농장 업데이트 오류:', error);
       alert('농장 업데이트에 실패했습니다.');
+    }
+  };
+
+  // 농장 삭제 함수
+  const handleDeleteFarm = async (farm: Farm) => {
+    if (!farm) return;
+
+    try {
+      const supabase = getSupabaseClient();
+      
+      // 1. 해당 농장에 배정된 사용자들의 farm_memberships 삭제
+      const { error: fmError } = await supabase
+        .from('farm_memberships')
+        .delete()
+        .eq('farm_id', farm.id);
+
+      if (fmError) {
+        console.error('사용자 배정 해제(삭제) 오류:', fmError);
+        alert('사용자 배정 해제에 실패했습니다.');
+        return;
+      }
+
+      // 2. 해당 농장의 모든 디바이스 삭제
+      const { error: devicesError } = await supabase
+        .from('devices')
+        .delete()
+        .eq('farm_id', farm.id);
+
+      if (devicesError) {
+        console.error('농장 디바이스 삭제 오류:', devicesError);
+        alert('농장 디바이스 삭제에 실패했습니다.');
+        return;
+      }
+
+      // 3. 농장 삭제
+      const { error: farmError } = await supabase
+        .from('farms')
+        .delete()
+        .eq('id', farm.id);
+
+      if (farmError) {
+        console.error('농장 삭제 오류:', farmError);
+        alert('농장 삭제에 실패했습니다.');
+        return;
+      }
+
+      // 4. 데이터 새로고침
+      console.log('🔄 농장 삭제 완료, 데이터 다시 로드 중...');
+      await loadData(); // Reload data after deleting farm
+      
+      // 모달 닫기
+      setShowDeleteFarmModal(false);
+      setDeletingFarm(null);
+      alert('농장이 성공적으로 삭제되었습니다!');
+    } catch (error) {
+      console.error('농장 삭제 오류:', error);
+      alert('농장 삭제에 실패했습니다.');
     }
   };
 
@@ -843,15 +834,32 @@ function BedsManagementContent() {
             <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-lg font-semibold text-gray-700">농장별 보기</h4>
-              {user && (user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com') && (
-                <button
-                  onClick={() => setShowAddFarmModal(true)}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
-                >
-                  <span>+</span>
-                  <span>새 농장 추가</span>
-                </button>
-              )}
+              <div className="flex items-center space-x-3">
+                {/* MQTT 설정 - 관리자와 농장장 모두 접근 가능 */}
+                {user && (user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com') && selectedFarmTab && selectedFarmTab !== 'all' && (
+                  <button
+                    onClick={() => router.push(`/farms/${selectedFarmTab}/settings/mqtt`)}
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>MQTT 설정</span>
+                  </button>
+                )}
+                
+                {/* 농장 추가 - 관리자만 가능 */}
+                {user && (user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com') && (
+                  <button
+                    onClick={() => setShowAddFarmModal(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
+                  >
+                    <span>+</span>
+                    <span>새 농장 추가</span>
+                  </button>
+                )}
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               {/* 시스템 관리자인 경우에만 전체 농장 탭 표시 */}
@@ -1012,7 +1020,7 @@ function BedsManagementContent() {
                         </div>
                       </div>
                     </div>
-                    {/* 농장 편집 및 MQTT 설정 버튼 */}
+                    {/* 농장 편집 버튼 */}
                     {user && user.role !== 'team_member' && (
                       <div className="flex items-center space-x-3">
                         <button
@@ -1021,13 +1029,6 @@ function BedsManagementContent() {
                         >
                           <span>✏️</span>
                           <span>농장 편집</span>
-                        </button>
-                        <button
-                          onClick={() => router.push(`/farms/${farm.id}/settings/mqtt`)}
-                          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
-                        >
-                          <span>📡</span>
-                          <span>MQTT 설정</span>
                         </button>
                       </div>
                     )}
@@ -1926,7 +1927,7 @@ function BedsManagementContent() {
                   <div>
                     <p className="text-red-800 font-semibold">정말로 이 베드를 삭제하시겠습니까?</p>
                     <p className="text-red-600 text-sm mt-1">
-                      베드: <span className="font-medium">{deletingBed.meta?.location || '알 수 없음'}</span>
+                      베드: <span className="font-medium">{(deletingBed.meta as any)?.location || '알 수 없음'}</span>
                     </p>
                   </div>
                 </div>
@@ -2014,6 +2015,54 @@ function BedsManagementContent() {
                 >
                   저장
                 </button>
+              </div>
+
+              {/* 농장 삭제 섹션 */}
+              <div className="border-t border-gray-200 pt-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className="text-red-500 text-xl">⚠️</div>
+                    <div>
+                      <h4 className="font-semibold text-red-800">위험 구역</h4>
+                      <p className="text-sm text-red-600">이 작업은 되돌릴 수 없습니다</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-red-700 mb-4">
+                    농장을 삭제하면 해당 농장의 모든 베드와 사용자 배정이 함께 삭제됩니다.
+                  </p>
+                  <div className="space-y-3">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="text-yellow-600 text-lg">⚠️</div>
+                        <span className="font-semibold text-yellow-800">주의사항</span>
+                      </div>
+                      <ul className="text-sm text-yellow-700 space-y-1">
+                        <li>• 이 작업은 되돌릴 수 없습니다</li>
+                        <li>• 해당 농장의 모든 베드가 삭제됩니다</li>
+                        <li>• 사용자 배정이 모두 해제됩니다</li>
+                        <li>• 센서 데이터도 함께 삭제됩니다</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setShowEditFarmModal(false)}
+                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowEditFarmModal(false);
+                          handleDeleteFarm(editingFarm);
+                        }}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        🗑️ 삭제 확인
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

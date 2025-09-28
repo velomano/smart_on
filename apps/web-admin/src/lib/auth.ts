@@ -1,18 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { getFarms } from './supabase';
-
-// Supabase 클라이언트 설정
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-let supabaseClient: any = null;
-
-export const getSupabaseClient = () => {
-  if (!supabaseClient) {
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-  }
-  return supabaseClient;
-};
+import { getSupabaseClient, getFarms } from './supabase';
 
 // 데이터베이스 사용자 타입
 export interface DatabaseUser {
@@ -113,7 +99,7 @@ export const signIn = async (data: SignInData) => {
 
     if (authData.user) {
       // Supabase users 테이블에서 사용자 정보 조회
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await (supabase as any)
         .from('users')
         .select('*')
         .eq('id', authData.user.id)
@@ -180,7 +166,7 @@ export const signUp = async (data: SignUpData) => {
 
     if (authData.user) {
       // users 테이블에 사용자 정보 저장
-      const { error: userError } = await supabase
+      const { error: userError } = await (supabase as any)
         .from('users')
         .insert({
           id: authData.user.id,
@@ -213,14 +199,14 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
     const supabase = getSupabaseClient();
     
-    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    const { data: { user: authUser }, error: authError } = await (supabase as any).auth.getUser();
     
     if (authError || !authUser) {
       return null;
     }
 
     // 사용자 기본 정보 조회
-    const { data: userData, error: userError } = await supabase
+    const { data: userData, error: userError } = await (supabase as any)
       .from('users')
       .select('*')
       .eq('id', authUser.id)
@@ -232,7 +218,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
 
     // 팀 정보 조회 (memberships 테이블에서)
     console.log('🔍 getCurrentUser authUser.id:', authUser.id);
-    const { data: membershipData, error: membershipError } = await supabase
+    const { data: membershipData, error: membershipError } = await (supabase as any)
       .from('memberships')
       .select('role, tenant_id, team_id')
       .eq('user_id', authUser.id)
@@ -255,7 +241,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       
       // team_id가 있으면 teams 테이블에서 팀 이름 조회
       if (teamId) {
-        const { data: teamData } = await supabase
+        const { data: teamData } = await (supabase as any)
           .from('teams')
           .select('name')
           .eq('id', teamId)
@@ -300,7 +286,7 @@ export const getApprovedUsers = async () => {
     console.log('🚀 getApprovedUsers 함수 시작');
     const supabase = getSupabaseClient();
     
-    const { data: approvedUsers, error } = await supabase
+    const { data: approvedUsers, error } = await (supabase as any)
       .from('users')
       .select('*')
       .eq('is_approved', true)
@@ -325,7 +311,7 @@ export const getApprovedUsers = async () => {
     // 각 사용자의 팀 정보 조회
     const usersWithTeamInfo = await Promise.all(
       approvedUsers.map(async (user) => {
-        const { data: membershipData, error: membershipError } = await supabase
+        const { data: membershipData, error: membershipError } = await (supabase as any)
           .from('memberships')
           .select('role, tenant_id, team_id') // Simplified select
           .eq('user_id', user.id)
@@ -349,7 +335,7 @@ export const getApprovedUsers = async () => {
           
           // team_id가 있으면 teams 테이블에서 팀 이름 조회
           if (teamId) {
-            const { data: teamData } = await supabase
+            const { data: teamData } = await (supabase as any)
               .from('teams')
               .select('name')
               .eq('id', teamId)
@@ -437,7 +423,7 @@ export const assignUserToFarm = async (
     }
 
     // 2) upsert 시 select()를 붙여야 에러/결과가 명확
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('farm_memberships')
       .upsert(
         [{ tenant_id: tenantId, farm_id: farmId, user_id: userId, role }],
@@ -462,7 +448,7 @@ export const getUserFarmMemberships = async (userId: string) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('farm_memberships')
       .select(`
         id,
@@ -659,7 +645,7 @@ export const approveUser = async (userId: string) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .update({ 
         is_approved: true,
@@ -682,7 +668,7 @@ export const rejectUser = async (userId: string) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .update({ 
         is_active: false,
@@ -726,7 +712,7 @@ export const deleteUser = async (userId: string) => {
   try {
     const supabase = getSupabaseClient();
     
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .update({ is_active: false })
       .eq('id', userId);
