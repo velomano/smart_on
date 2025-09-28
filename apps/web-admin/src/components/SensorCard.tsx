@@ -207,7 +207,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
 
       {/* 확대 모달 */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4"
              onClick={() => setIsModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] max-w-4xl w-full max-h-[90vh] overflow-hidden"
                onClick={(e) => e.stopPropagation()}>

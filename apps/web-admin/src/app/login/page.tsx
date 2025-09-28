@@ -369,7 +369,7 @@ export default function LoginPage() {
 
           {/* 비밀번호 찾기 모달 */}
           {showForgotPassword && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
               <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">비밀번호 재설정</h3>
                 <p className="text-sm text-gray-600 mb-6">
