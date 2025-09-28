@@ -44,6 +44,14 @@ export interface AuthUser {
   phone?: string;
 }
 
+export interface Farm {
+  id: string;
+  name: string;
+  location?: string | null;
+  tenant_id: string;
+  created_at?: string | null;
+}
+
 export interface SignUpData {
   email: string;
   password: string;
@@ -408,7 +416,7 @@ export const getFarms = async () => {
 
     console.log('🔍 getFarms 결과:', {
       farmsCount: farms?.length || 0,
-      farms: farms?.map(f => ({ id: f.id, name: f.name })) || []
+      farms: (farms || []).map((f: Farm) => ({ id: f.id, name: f.name }))
     });
 
     return { success: true, farms: farms || [] };

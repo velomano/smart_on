@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/auth';
+import { AuthUser, getFarms, getApprovedUsers, getCurrentUser } from '../../lib/auth';
 import { getSupabaseClient } from '../../lib/supabase';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
 import { normalizeBedName, validateBedName } from '../../lib/bedNaming';
@@ -100,13 +100,19 @@ function BedsManagementContent() {
         }
         setUser(currentUser);
 
-        const [teamsResult, usersResult] = await Promise.all([
-          getTeams(),
-          getApprovedUsers()
+        const supabase = getSupabaseClient();
+        
+        // 각 테이블을 직접 쿼리
+        const [farmsResult, usersResult, devicesRes, sensorsRes, readingsRes] = await Promise.all([
+          getFarms(),
+          getApprovedUsers(),
+          supabase.from('devices').select('*').eq('type', 'sensor_gateway'),
+          supabase.from('sensors').select('*'),
+          supabase.from('sensor_readings').select('*').order('ts', { ascending: false }).limit(1000)
         ]);
 
         // team_leader인 경우 자신이 관리하는 농장만 표시
-        let filteredFarms = teamsResult.teams as Farm[];
+        let filteredFarms = farmsResult.farms as Farm[];
         if (currentUser && currentUser.role === 'team_leader') {
           // test4@test.com은 2조 농장을 관리하도록 하드코딩 (임시)
           if (currentUser.email === 'test4@test.com') {
@@ -118,7 +124,7 @@ function BedsManagementContent() {
             userRole: currentUser.role,
             userEmail: currentUser.email,
             teamId: currentUser.team_id,
-            originalFarms: teamsResult.teams.length,
+            originalFarms: farmsResult.farms.length,
             filteredFarms: filteredFarms.length
           });
         }
@@ -126,11 +132,11 @@ function BedsManagementContent() {
         setFarms(filteredFarms);
         
         // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
-        console.log('✅ Supabase 베드 데이터 사용:', teamsResult.devices?.length || 0, '개');
-        setDevices(teamsResult.devices as Device[]);
+        console.log('✅ Supabase 베드 데이터 사용:', devicesRes.data?.length || 0, '개');
+        setDevices((devicesRes.data || []) as Device[]);
         
-        setSensors(teamsResult.sensors as Sensor[]);
-        setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
+        setSensors((sensorsRes.data || []) as Sensor[]);
+        setSensorReadings((readingsRes.data || []) as SensorReading[]);
         
         // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
         const farmId = searchParams.get('farm');
@@ -144,18 +150,18 @@ function BedsManagementContent() {
         }
         
         console.log('농장관리 페이지 - 현재 사용자:', currentUser);
-        console.log('농장관리 페이지 - 농장 목록:', teamsResult.teams);
-        console.log('농장관리 페이지 - 디바이스 목록:', teamsResult.devices);
-        console.log('농장관리 페이지 - 디바이스 개수:', teamsResult.devices?.length || 0);
+        console.log('농장관리 페이지 - 농장 목록:', farmsResult.farms);
+        console.log('농장관리 페이지 - 디바이스 목록:', devicesRes.data);
+        console.log('농장관리 페이지 - 디바이스 개수:', devicesRes.data?.length || 0);
         
         // 디바이스와 농장 ID 매칭 디버깅
-        if (teamsResult.devices && teamsResult.teams) {
+        if (devicesRes.data && farmsResult.farms) {
           console.log('🔍 디바이스 farm_id 분석:');
-          teamsResult.devices.forEach((d: any) => {
+          (devicesRes.data as any[]).forEach(d => {
             console.log(`  - 디바이스 ${d.id}: farm_id=${d.farm_id}, type=${d.type}`);
           });
           console.log('🔍 농장 ID 분석:');
-          teamsResult.teams.forEach((farm: any) => {
+          (farmsResult.farms as any[]).forEach(farm => {
             console.log(`  - 농장 ${farm.id}: name=${farm.name}`);
           });
         }
@@ -775,14 +781,14 @@ function BedsManagementContent() {
     try {
       const supabase = getSupabaseClient();
       
-      // 1. 해당 농장에 배정된 사용자들의 역할을 viewer로 변경
-      const { error: membershipError } = await (supabase as any)
-        .from('memberships')
-        .update({ role: 'viewer' })
-        .eq('team_id', deletingFarm.id);
+      // 1. 해당 농장에 배정된 사용자들의 farm_memberships 삭제
+      const { error: fmError } = await supabase
+        .from('farm_memberships')
+        .delete()
+        .eq('farm_id', deletingFarm.id);
 
-      if (membershipError) {
-        console.error('사용자 배정 해제 오류:', membershipError);
+      if (fmError) {
+        console.error('사용자 배정 해제(삭제) 오류:', fmError);
         alert('사용자 배정 해제에 실패했습니다.');
         return;
       }
@@ -812,14 +818,17 @@ function BedsManagementContent() {
       }
 
       // 4. 데이터 새로고침
-      const [teamsResult] = await Promise.all([
-        getTeams()
+      const [fr, dr, sr, rr] = await Promise.all([
+        getFarms(),
+        supabase.from('devices').select('*').eq('type', 'sensor_gateway'),
+        supabase.from('sensors').select('*'),
+        supabase.from('sensor_readings').select('*').order('ts', { ascending: false }).limit(1000)
       ]);
 
-      setFarms(teamsResult.teams as Farm[]);
-      setDevices(teamsResult.devices as Device[]);
-      setSensors(teamsResult.sensors as Sensor[]);
-      setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
+      setFarms(fr.farms as Farm[]);
+      setDevices((dr.data || []) as Device[]);
+      setSensors((sr.data || []) as Sensor[]);
+      setSensorReadings((rr.data || []) as SensorReading[]);
 
       alert(`"${deletingFarm.name}" 농장이 성공적으로 삭제되었습니다.\n해당 농장에 배정된 사용자들이 미배정 상태로 변경되었습니다.`);
       

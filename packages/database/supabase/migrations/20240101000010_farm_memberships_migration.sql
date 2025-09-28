@@ -16,15 +16,21 @@ CREATE TABLE IF NOT EXISTS farm_memberships(
 -- 2. 과거 users.team_id/teams 사용 흔적 정리
 DO $$
 BEGIN
+  -- users.tenant_id가 null인 경우 기본 테넌트로 설정
+  UPDATE users 
+  SET tenant_id = '00000000-0000-0000-0000-000000000001'::UUID
+  WHERE tenant_id IS NULL;
+
   -- users.team_id가 있으면 farm_memberships로 이관
   IF EXISTS (
     SELECT 1 FROM information_schema.columns 
     WHERE table_name='users' AND column_name='team_id'
   ) THEN
     -- 기존 team_id를 farm_id로 사용하여 farm_memberships에 이관
+    -- tenant_id가 null인 경우 기본 테넌트 사용
     INSERT INTO farm_memberships(tenant_id, farm_id, user_id, role)
     SELECT 
-      u.tenant_id, 
+      COALESCE(u.tenant_id, '00000000-0000-0000-0000-000000000001'::UUID), 
       u.team_id as farm_id, 
       u.id as user_id, 
       CASE 
@@ -36,8 +42,8 @@ BEGIN
     WHERE u.team_id IS NOT NULL
     ON CONFLICT (tenant_id, farm_id, user_id) DO NOTHING;
 
-    -- users.team_id 컬럼 제거
-    ALTER TABLE users DROP COLUMN IF EXISTS team_id;
+    -- users.team_id 컬럼 제거 (의존하는 정책들도 함께 제거)
+    ALTER TABLE users DROP COLUMN IF EXISTS team_id CASCADE;
   END IF;
 END$$;
 
