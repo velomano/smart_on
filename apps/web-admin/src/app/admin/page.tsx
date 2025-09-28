@@ -579,22 +579,22 @@ export default function AdminPage() {
                                 </span>
                               </div>
                               
-                              {/* 두 번째 행: 역할, 농장, 소속, 최근 접속일 */}
+                              {/* 두 번째 행: 소속, 농장, 등급, 최근 접속일 */}
                               <div className="flex items-center space-x-4 mb-3">
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                  {u.role === 'system_admin' ? '시스템 관리자' :
-                                   u.role === 'team_leader' ? '농장장' : '팀원'}
-                                </span>
-                                {u.team_name && (
-                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                                    {u.team_name}
-                                  </span>
-                                )}
                                 {u.company && (
                                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                                     🏢 {u.company}
                                   </span>
                                 )}
+                                {u.team_name && (
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                    {u.team_name}
+                                  </span>
+                                )}
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                  {u.role === 'system_admin' ? '시스템 관리자' :
+                                   u.role === 'team_leader' ? '농장장' : '팀원'}
+                                </span>
                                 {u.updated_at && (
                                   <span className="flex items-center text-sm text-gray-500">
                                     <span className="mr-1">🕒</span>
