@@ -579,16 +579,15 @@ export default function AdminPage() {
                                     {u.team_name}
                                   </span>
                                 )}
-                              </div>
-                              
-                              {/* 추가 정보 행 */}
-                              <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 {u.company && (
-                                  <span className="flex items-center">
-                                    <span className="mr-1">🏢</span>
-                                    {u.company}
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                    🏢 {u.company}
                                   </span>
                                 )}
+                              </div>
+                              
+                              {/* 연락처 및 날짜 정보 행 */}
+                              <div className="flex items-center space-x-6 text-xs text-gray-500">
                                 {u.phone && (
                                   <span className="flex items-center">
                                     <span className="mr-1">📞</span>
@@ -599,6 +598,12 @@ export default function AdminPage() {
                                   <span className="mr-1">📅</span>
                                   가입: {new Date(u.created_at).toLocaleDateString('ko-KR')}
                                 </span>
+                                {u.updated_at && (
+                                  <span className="flex items-center">
+                                    <span className="mr-1">🕒</span>
+                                    최근 접속: {new Date(u.updated_at).toLocaleDateString('ko-KR')}
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>
