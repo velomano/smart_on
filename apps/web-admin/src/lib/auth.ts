@@ -437,39 +437,49 @@ export const getTeams = async () => {
 };
 
 // 사용자를 농장에 배정 (farm_memberships 사용)
-export const assignUserToFarm = async (userId: string, farmId: string, tenantId: string, role: 'owner' | 'operator' | 'viewer' = 'operator') => {
+export const assignUserToFarm = async (
+  userId: string,
+  farmId: string,
+  tenantId: string,
+  role: 'owner' | 'operator' | 'viewer' = 'operator'
+) => {
   try {
     const supabase = getSupabaseClient();
-    
-    console.log('🔍 assignUserToFarm 호출:', { userId, farmId, tenantId, role });
 
-    const { error } = await supabase
-      .from('farm_memberships')
-      .upsert([{ 
-        tenant_id: tenantId, 
-        user_id: userId, 
-        farm_id: farmId, 
-        role: role 
-      }], { 
-        onConflict: 'tenant_id, farm_id, user_id' 
-      });
+    // 1) 농장 유효성 + 테넌트 일치 검증
+    const { data: farm, error: farmErr } = await supabase
+      .from('farms')
+      .select('id, tenant_id')
+      .eq('id', farmId)
+      .maybeSingle();
 
-    if (error) {
-      console.error('❌ assignUserToFarm 오류:', error);
-      return { 
-        success: false, 
-        error: `사용자 농장 배정에 실패했습니다: ${error.message}` 
-      };
+    if (farmErr) {
+      logPgError('assignUserToFarm: 농장 조회 오류', farmErr);
+      return { success: false, error: `농장 조회 실패: ${(farmErr as any).message || '원인 미상'}` };
+    }
+    if (!farm) return { success: false, error: '선택한 농장이 존재하지 않습니다.' };
+    if (farm.tenant_id !== tenantId) {
+      return { success: false, error: '선택한 농장은 현재 테넌트와 다릅니다.' };
     }
 
-    console.log('✅ assignUserToFarm 성공');
+    // 2) upsert 시 select()를 붙여야 에러/결과가 명확
+    const { error } = await supabase
+      .from('farm_memberships')
+      .upsert(
+        [{ tenant_id: tenantId, farm_id: farmId, user_id: userId, role }],
+        { onConflict: 'tenant_id,farm_id,user_id', ignoreDuplicates: false }
+      )
+      .select('id'); // ★ 중요
+
+    if (error) {
+      logPgError('assignUserToFarm upsert 오류', error);
+      return { success: false, error: `사용자 농장 배정에 실패했습니다: ${(error as any).message || '원인 미상'}` };
+    }
+
     return { success: true };
-  } catch (error: any) {
-    console.error('❌ assignUserToFarm 예외:', error);
-    return { 
-      success: false, 
-      error: `사용자 농장 배정 중 오류가 발생했습니다: ${error.message}` 
-    };
+  } catch (e: any) {
+    logPgError('assignUserToFarm 예외', e);
+    return { success: false, error: `배정 중 예외: ${e?.message || e}` };
   }
 };
 

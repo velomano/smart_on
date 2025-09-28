@@ -105,18 +105,26 @@ export default function AdminPage() {
           return;
         }
 
-        // 승인 대기 사용자, 승인된 사용자, 팀 목록을 동시에 로드
-        const [pendingResult, approvedResult, teamsResult] = await Promise.all([
+        // 승인 대기 사용자, 승인된 사용자, 팀 목록, farm_memberships을 동시에 로드
+        const supabase = getSupabaseClient();
+        const [pendingResult, approvedResult, teamsResult, fmResult] = await Promise.all([
         getPendingUsers(),
         getApprovedUsers(),
-        getTeams()
+        getTeams(),
+        supabase.from('farm_memberships').select('user_id, farm_id')
       ]);
 
         console.log('🔍 admin 페이지 - 데이터 로드 결과:', {
           pending: Array.isArray(pendingResult) ? pendingResult.length : pendingResult,
           approved: Array.isArray(approvedResult) ? approvedResult.length : approvedResult,
-          teams: teamsResult?.teams?.length || 0
+          teams: teamsResult?.teams?.length || 0,
+          farmMemberships: fmResult.data?.length || 0
         });
+
+        // farm_memberships 데이터를 전역 변수로 저장
+        if (fmResult.data) {
+          (window as any).farmMembershipsData = fmResult.data;
+        }
 
         if (!alive) return;
         setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
@@ -386,23 +394,38 @@ export default function AdminPage() {
 
     // farms 데이터를 기준으로 그룹 생성
     if (teams && teams.length > 0) {
-      // 모든 농장을 먼저 그룹으로 생성
+      // 모든 농장을 먼저 그룹으로 생성 (배정자 없어도 농장은 보여야 함)
       teams.forEach(team => {
         farmGroups[team.name] = [];
       });
 
       // farm_memberships 기반으로 사용자 배정 확인
-      // (실제로는 서버에서 farm_memberships 데이터를 가져와야 하지만, 
-      // 현재는 기존 로직을 유지하면서 구조만 개선)
+      const membershipsByUser = new Map<string, string>(); // user_id -> farm_id
+      
+      // farm_memberships 데이터가 있으면 사용
+      if (window.farmMembershipsData) {
+        window.farmMembershipsData.forEach((r: any) => {
+          membershipsByUser.set(r.user_id, r.farm_id);
+        });
+      }
+
+      // 사용자들을 해당 농장에 배정
       approvedUsers.forEach(user => {
         let farmKey = '농장 미배정';
 
-        // 기존 team_id 기반 로직 유지 (임시)
-        if (user.team_id) {
-          const teamName = teams.find(t => t.id === user.team_id)?.name;
-          farmKey = teamName || `농장 ID: ${user.team_id}`;
-        } else if (user.team_name) {
-          farmKey = user.team_name;
+        // farm_memberships 기반 배정 확인
+        const assignedFarmId = membershipsByUser.get(user.id);
+        if (assignedFarmId) {
+          const teamName = teams.find(t => t.id === assignedFarmId)?.name;
+          farmKey = teamName || `농장 ID: ${assignedFarmId}`;
+        } else {
+          // 기존 team_id 기반 로직 (fallback)
+          if (user.team_id) {
+            const teamName = teams.find(t => t.id === user.team_id)?.name;
+            farmKey = teamName || `농장 ID: ${user.team_id}`;
+          } else if (user.team_name) {
+            farmKey = user.team_name;
+          }
         }
 
         if (!farmGroups[farmKey]) {
