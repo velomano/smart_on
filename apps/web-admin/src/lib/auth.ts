@@ -507,7 +507,8 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
     
     console.log('🔍 updateUser 호출:', { userId, data });
     
-    // team_id가 변경되는 경우 해당 농장이 존재하는지 확인
+    // team_id가 변경되는 경우 farm_memberships 테이블을 통해 처리
+    let farmIdToAssign = null;
     if (data.team_id && data.team_id !== '') {
       console.log('🔍 농장 존재 여부 확인:', data.team_id);
       const { data: farmData, error: farmError } = await supabase
@@ -535,10 +536,11 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
       }
 
       console.log('✅ 농장 확인 완료:', farmData);
-    } else if (data.team_id === '') {
-      // 빈 문자열인 경우 null로 설정
-      data.team_id = null;
+      farmIdToAssign = data.team_id;
     }
+    
+    // team_id는 users 테이블에서 제거되었으므로 제거
+    delete data.team_id;
     
     const { error, data: result } = await supabase
       .from('users')
@@ -548,36 +550,74 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
 
     if (error) {
       console.error('❌ updateUser 오류:', error);
-      console.error('❌ 오류 코드:', error.code);
-      console.error('❌ 오류 메시지:', error.message);
-      console.error('❌ 오류 세부사항:', error.details);
-      console.error('❌ 오류 힌트:', error.hint);
+      console.error('❌ 오류 타입:', typeof error);
+      console.error('❌ 오류 객체 키들:', Object.keys(error || {}));
+      
+      // 오류 객체의 속성들을 안전하게 접근
+      const errorCode = error?.code || 'UNKNOWN';
+      const errorMessage = error?.message || '알 수 없는 오류';
+      const errorDetails = error?.details || null;
+      const errorHint = error?.hint || null;
+      
+      console.error('❌ 오류 코드:', errorCode);
+      console.error('❌ 오류 메시지:', errorMessage);
+      console.error('❌ 오류 세부사항:', errorDetails);
+      console.error('❌ 오류 힌트:', errorHint);
       
       // 409 Conflict 오류의 경우 더 구체적인 메시지 제공
-      if (error.code === '409') {
-        if (error.message.includes('duplicate key')) {
+      if (errorCode === '409') {
+        if (errorMessage.includes('duplicate key')) {
           return { 
             success: false, 
             error: '이미 사용 중인 이메일입니다. 다른 이메일을 사용해주세요.',
             details: error
           };
-        } else if (error.message.includes('foreign key')) {
+        } else if (errorMessage.includes('foreign key')) {
           return { 
             success: false, 
-            error: '선택한 팀이 존재하지 않습니다. 올바른 팀을 선택해주세요.',
+            error: '선택한 농장이 존재하지 않습니다. 올바른 농장을 선택해주세요.',
             details: error
           };
         }
       }
-      
-      return { 
-        success: false, 
-        error: `사용자 정보 업데이트에 실패했습니다: ${error.message || '알 수 없는 오류'}`,
+
+      return {
+        success: false,
+        error: `사용자 정보 업데이트에 실패했습니다: ${errorMessage}`,
         details: error
       };
     }
 
     console.log('✅ updateUser 성공:', result);
+    
+    // farm_memberships 처리
+    if (farmIdToAssign !== null) {
+      console.log('🔍 farm_memberships 처리:', { userId, farmId: farmIdToAssign });
+      
+      // 기존 farm_memberships 삭제
+      await supabase
+        .from('farm_memberships')
+        .delete()
+        .eq('user_id', userId);
+      
+      // 새로운 farm_memberships 추가
+      const { error: fmError } = await supabase
+        .from('farm_memberships')
+        .insert([{
+          user_id: userId,
+          farm_id: farmIdToAssign,
+          tenant_id: result?.[0]?.tenant_id || '00000000-0000-0000-0000-000000000001',
+          role: 'operator'
+        }]);
+      
+      if (fmError) {
+        console.error('❌ farm_memberships 처리 오류:', fmError);
+        // farm_memberships 오류는 경고만 출력하고 사용자 업데이트는 성공으로 처리
+      } else {
+        console.log('✅ farm_memberships 처리 성공');
+      }
+    }
+    
     return { success: true, data: result };
   } catch (error: any) {
     console.error('❌ updateUser 예외:', error);
