@@ -397,12 +397,12 @@ export const getTeams = async () => {
 
     // 병렬 조회 - 실제 Supabase 스키마에 맞게 수정
     const [
-      { data: teams, error: teamsError },
+      { data: farms, error: farmsError },
       { data: devices, error: devicesError },
       { data: sensors, error: sensorsError },
       { data: sensorReadings, error: readingsError },
     ] = await Promise.all([
-      supabase.from('teams').select('*').order('name'),
+      supabase.from('farms').select('*').order('name'),
       supabase.from('devices').select('*'), // name 컬럼이 없으므로 정렬 제거
       supabase.from('sensors').select('*'), // name 컬럼이 없으므로 정렬 제거
       supabase.from('sensor_readings')
@@ -411,13 +411,13 @@ export const getTeams = async () => {
         .limit(1000),
     ]);
 
-    if (teamsError)   console.log('teams 테이블 조회 실패:', teamsError.message);
+    if (farmsError)   console.log('farms 테이블 조회 실패:', farmsError.message);
     if (devicesError) console.log('devices 테이블 조회 실패:', devicesError.message);
     if (sensorsError) console.log('sensors 테이블 조회 실패:', sensorsError.message);
     if (readingsError)console.log('sensor_readings 테이블 조회 실패:', readingsError.message);
 
     console.log('🔍 Supabase 데이터 조회 결과:', {
-      teams: teams?.length || 0,
+      farms: farms?.length || 0,
       devices: devices?.length || 0,
       sensors: sensors?.length || 0,
       readings: sensorReadings?.length || 0
@@ -426,7 +426,7 @@ export const getTeams = async () => {
     // Supabase 데이터만 사용 (Mock 데이터 완전 제거)
     const result = {
       success: true,
-      teams: teams || [],
+      teams: farms || [], // farms 데이터를 teams로 매핑
       devices: devices || [],
       sensors: sensors || [],
       sensorReadings: sensorReadings || [],

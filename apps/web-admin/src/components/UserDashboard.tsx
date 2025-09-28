@@ -32,6 +32,46 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ user, farms, devices, sensors, sensorReadings }: UserDashboardProps) {
+  
+  // 베드 정렬 함수 (농장관리 페이지와 동일)
+  const sortBeds = (beds: Device[]) => {
+    return beds.sort((a, b) => {
+      // 1. 베드 이름에서 숫자 추출하여 정렬
+      const getBedNumber = (device: Device) => {
+        const location = device.meta?.location || '';
+        
+        // 베드-1, 베드-2 형태에서 숫자 추출
+        const bedMatch = location.match(/베드-?(\d+)/);
+        if (bedMatch) {
+          return parseInt(bedMatch[1], 10);
+        }
+        
+        // 조1-베드1, 농장1-베드2 형태에서 베드 번호 추출
+        const joMatch = location.match(/조\d+-베드(\d+)/);
+        if (joMatch) {
+          return parseInt(joMatch[1], 10);
+        }
+        
+        const farmMatch = location.match(/농장\d+-베드(\d+)/);
+        if (farmMatch) {
+          return parseInt(farmMatch[1], 10);
+        }
+        
+        // 숫자가 없으면 생성일로 정렬
+        return new Date(device.created_at || '').getTime();
+      };
+      
+      const aNumber = getBedNumber(a);
+      const bNumber = getBedNumber(b);
+      
+      // 숫자로 정렬, 같으면 생성일로 정렬
+      if (aNumber !== bNumber) {
+        return aNumber - bNumber;
+      }
+      
+      return new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime();
+    });
+  };
   const router = useRouter();
   const [teams, setTeams] = useState<any[]>([]);
   const [approvedUsers, setApprovedUsers] = useState<AuthUser[]>([]);
@@ -172,24 +212,20 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     };
   }, [sensorReadings, sensors, devices, farms]);
   
-  // 팀 데이터 로드
+  // 대시보드 데이터 초기화 - props로 받은 데이터만 사용 (읽기 전용)
   useEffect(() => {
-    const loadData = async () => {
+    const initializeDashboard = async () => {
       setTeamsLoading(true);
       try {
-        console.log('📊 실제 Supabase 데이터 로드 중...');
-        console.log('🔧 실제 Supabase 데이터 로드 완료');
-        console.log('⏸️ 자동 센서 데이터 업데이트가 임시 중지됨 (MQTT 대기 상태)');
+        console.log('📊 대시보드 - 농장관리 페이지 데이터 요약 표시');
+        console.log('🏠 농장 수:', farms?.length || 0);
+        console.log('📡 베드 수:', devices?.filter(d => d.type === 'sensor_gateway').length || 0);
 
-        const [teamsResult, usersResult] = await Promise.all([
-          getTeams(),
-          getApprovedUsers()
-        ]);
+        // props로 받은 farms 데이터를 teams로 설정 (읽기 전용)
+        setTeams(farms || []);
 
-        if (teamsResult.success) {
-          setTeams(teamsResult.teams);
-        }
-
+        // 사용자 목록은 별도로 로드 (대시보드용)
+        const usersResult = await getApprovedUsers();
         setApprovedUsers(usersResult as AuthUser[]);
 
         // 사용자 설정 로드
@@ -206,18 +242,18 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           }
         }
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error initializing dashboard:', error);
       } finally {
         setTeamsLoading(false);
       }
     };
 
-    loadData();
+    initializeDashboard();
 
     return () => {
       // 정리 작업 (필요시 추가)
     };
-  }, [user.id]);
+  }, [user.id, farms, devices]); // farms, devices 변경 시 대시보드 업데이트
   
   // 통계 계산
   const totalFarms = farms?.length || 0;
@@ -369,7 +405,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 </div>
                 <div>
                   <h1 className="text-4xl font-bold text-white mb-2">농장 현황</h1>
-                  <p className="text-white/90 text-lg">관리 중인 농장과 베드의 실시간 상태를 확인하세요</p>
+                  <p className="text-white/90 text-lg">농장관리에서 대시보드 노출을 허용한 농장만 표시 됩니다.</p>
                 </div>
               </div>
                 
@@ -437,9 +473,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     return showOnDashboard; // 팀원도 베드별 설정에 따라 표시
                   });
                   
+                  // 베드 정렬 적용
+                  const sortedVisibleDevices = sortBeds([...visibleDevices]);
+                  
                   return {
                     ...farm,
-                    visibleDevices
+                    visibleDevices: sortedVisibleDevices
                   };
                 }); // 모든 농장 표시 (베드가 없어도 농장은 표시)
 
@@ -545,7 +584,41 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               </div>
                               <div>
                                     <span className="font-bold text-gray-900 text-lg">
-                                      {String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')}
+                                      {(() => {
+                                        const location = String(device.meta?.location ?? '센서 게이트웨이');
+                                        
+                                        // 조1-베드1 형태인 경우 → 베드-1
+                                        const joMatch = location.match(/^조(\d+)-베드(\d+)/);
+                                        if (joMatch) {
+                                          const [, joNumber, bedNumber] = joMatch;
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 농장1-베드2 형태인 경우 → 베드-2
+                                        const farmMatch = location.match(/^농장(\d+)-베드(\d+)/);
+                                        if (farmMatch) {
+                                          const [, farmNumber, bedNumber] = farmMatch;
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 베드-1, 베드-2 형태인 경우 → 베드-1, 베드-2 (하이픈 포함)
+                                        const bedWithDashMatch = location.match(/^베드-(\d+)/);
+                                        if (bedWithDashMatch) {
+                                          const bedNumber = bedWithDashMatch[1];
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 베드1, 베드2 형태인 경우 → 베드-1, 베드-2 (하이픈 없음)
+                                        const bedOnlyMatch = location.match(/^베드(\d+)/);
+                                        if (bedOnlyMatch) {
+                                          const bedNumber = bedOnlyMatch[1];
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 매칭되지 않는 경우 디바이스 ID의 마지막 4자리 사용
+                                        const deviceIdSuffix = device.id.slice(-4);
+                                        return `베드-${deviceIdSuffix}`;
+                                      })()}
                                     </span>
                                     <div className="text-sm text-gray-500">📊 센서 {deviceSensors.length}개</div>
                                     {/* 작물명과 재배 방식 표시 */}
@@ -623,7 +696,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                       // 실제 센서 데이터 사용
                                       const tempSensor = deviceSensors.find(s => s.type === 'temperature');
                                       const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
-                                      return reading ? `${reading.value}°C` : '--°C';
+                                      return reading ? `${parseFloat(reading.value).toFixed(2)}°C` : '--°C';
                                     })()}
                                   </span>
                                 </div>
@@ -638,7 +711,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                       // 실제 센서 데이터 사용
                                       const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
                                       const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
-                                      return reading ? `${reading.value}%` : '--%';
+                                      return reading ? `${parseFloat(reading.value).toFixed(2)}%` : '--%';
                                     })()}
                                   </span>
                                 </div>
@@ -653,7 +726,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                       // 실제 센서 데이터 사용
                                       const ecSensor = deviceSensors.find(s => s.type === 'ec');
                                       const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
-                                      return reading ? `${reading.value}` : '--';
+                                      return reading ? `${parseFloat(reading.value).toFixed(2)}` : '--';
                                     })()}
                             </span>
                           </div>
@@ -668,7 +741,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                       // 실제 센서 데이터 사용
                                       const phSensor = deviceSensors.find(s => s.type === 'ph');
                                       const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
-                                      return reading ? `${reading.value}` : '--';
+                                      return reading ? `${parseFloat(reading.value).toFixed(2)}` : '--';
                                     })()}
                             </span>
                                 </div>

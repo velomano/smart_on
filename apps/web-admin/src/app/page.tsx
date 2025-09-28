@@ -34,25 +34,27 @@ export default function WebAdminDashboard() {
 
     const loadData = async () => {
       try {
-        const [teamsResult, devicesData, sensorsData, readingsData] = await Promise.all([
-          getTeams(),
-          getDevices(),
-          getSensors(),
-          getLatestSensorReadings()
-        ]);
-
-        if (teamsResult.success) {
-          setFarms(teamsResult.teams as Farm[]);
+        console.log('📊 대시보드 - 농장관리 페이지 데이터 읽기 전용 로드');
+        
+        // 농장관리 페이지와 동일한 데이터 소스 사용 (읽기 전용)
+        const farmsResult = await getTeams();
+        
+        if (farmsResult.success) {
+          setFarms(farmsResult.teams); // getTeams는 teams 필드 반환
+          setDevices(farmsResult.devices);
+          setSensors(farmsResult.sensors);
+          setSensorReadings(farmsResult.sensorReadings);
           
-          // Supabase에서 실제 베드 데이터 사용 (localStorage 제거)
-          console.log('✅ 대시보드 - Supabase 베드 데이터 사용:', teamsResult.devices?.length || 0, '개');
-          setDevices(teamsResult.devices as Device[]);
-          
-          setSensors(teamsResult.sensors as Sensor[]);
-          setSensorReadings(teamsResult.sensorReadings as SensorReading[]);
+          console.log('✅ 대시보드 - 농장관리 데이터 동기화 완료:');
+          console.log('  - 농장:', farmsResult.teams.length, '개');
+          console.log('  - 베드:', farmsResult.devices.filter(d => d.type === 'sensor_gateway').length, '개');
+          console.log('  - 센서:', farmsResult.sensors.length, '개');
+          console.log('  - 센서값:', farmsResult.sensorReadings.length, '개');
+        } else {
+          console.error('농장 데이터 로드 실패');
         }
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading dashboard data:', error);
       } finally {
         setLoading(false);
       }

@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/auth';
 import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
+import { normalizeBedName, validateBedName } from '../../lib/bedNaming';
 // Mock 시스템 제거됨 - 실제 Supabase 데이터 사용
 import AppHeader from '../../components/AppHeader';
 import ActuatorControlModal from '../../components/ActuatorControlModal';
@@ -41,7 +42,13 @@ function BedsManagementContent() {
   const [sensorChartData, setSensorChartData] = useState<any[]>([]);
   const [showAddFarmModal, setShowAddFarmModal] = useState(false);
   const [showAddBedModal, setShowAddBedModal] = useState(false);
+  const [showEditBedModal, setShowEditBedModal] = useState(false);
+  const [showEditFarmModal, setShowEditFarmModal] = useState(false);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [targetFarm, setTargetFarm] = useState<Farm | null>(null);
+  const [editingBed, setEditingBed] = useState<Device | null>(null);
+  const [editingFarm, setEditingFarm] = useState<Farm | null>(null);
+  const [deletingBed, setDeletingBed] = useState<Device | null>(null);
   const [newFarmData, setNewFarmData] = useState({
     name: '',
     description: '',
@@ -51,6 +58,15 @@ function BedsManagementContent() {
     name: '',
     cropName: '',
     growingMethod: '담액식'
+  });
+  const [editBedData, setEditBedData] = useState({
+    name: '',
+    cropName: '',
+    growingMethod: '담액식'
+  });
+  const [editFarmData, setEditFarmData] = useState({
+    name: '',
+    location: ''
   });
 
   // 데이터 로드
@@ -161,6 +177,46 @@ function BedsManagementContent() {
     }
   }, [searchParams, farms, selectedFarmTab]);
 
+  // 베드 정렬 함수
+  const sortBeds = (beds: Device[]) => {
+    return beds.sort((a, b) => {
+      // 1. 베드 이름에서 숫자 추출하여 정렬
+      const getBedNumber = (device: Device) => {
+        const location = device.meta?.location || '';
+        
+        // 베드-1, 베드-2 형태에서 숫자 추출
+        const bedMatch = location.match(/베드-?(\d+)/);
+        if (bedMatch) {
+          return parseInt(bedMatch[1], 10);
+        }
+        
+        // 조1-베드1, 농장1-베드2 형태에서 베드 번호 추출
+        const joMatch = location.match(/조\d+-베드(\d+)/);
+        if (joMatch) {
+          return parseInt(joMatch[1], 10);
+        }
+        
+        const farmMatch = location.match(/농장\d+-베드(\d+)/);
+        if (farmMatch) {
+          return parseInt(farmMatch[1], 10);
+        }
+        
+        // 숫자가 없으면 생성일로 정렬
+        return new Date(device.created_at || '').getTime();
+      };
+      
+      const aNumber = getBedNumber(a);
+      const bNumber = getBedNumber(b);
+      
+      // 숫자로 정렬, 같으면 생성일로 정렬
+      if (aNumber !== bNumber) {
+        return aNumber - bNumber;
+      }
+      
+      return new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime();
+    });
+  };
+
   // 필터링된 디바이스
   const getFilteredDevices = () => {
     let filteredDevices = devices.filter(device => device.type === 'sensor_gateway');
@@ -175,12 +231,12 @@ function BedsManagementContent() {
     
     if (selectedFarmTab === 'all') {
       console.log('전체 농장 선택 - 모든 베드 반환:', filteredDevices);
-      return filteredDevices;
+      return sortBeds(filteredDevices);
     }
     
     const selectedFarmDevices = filteredDevices.filter(device => device.farm_id === selectedFarmTab);
     console.log(`선택된 농장 ${selectedFarmTab}의 베드:`, selectedFarmDevices);
-    return selectedFarmDevices;
+    return sortBeds(selectedFarmDevices);
   };
 
   const filteredDevices = getFilteredDevices();
@@ -344,29 +400,60 @@ function BedsManagementContent() {
   };
 
   // 새 농장 추가
-  const handleAddFarm = () => {
+  const handleAddFarm = async () => {
     if (!newFarmData.name.trim()) {
       alert('농장 이름을 입력해주세요.');
       return;
     }
 
-    const newFarm: Farm = {
-      id: `farm-${Date.now()}`,
+    try {
+      // Supabase에 새 농장 저장
+      const { createClient } = await import('@supabase/supabase-js');
+      
+      console.log('환경변수 확인:');
+      console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '없음');
+      console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '설정됨' : '없음');
+      
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { data, error } = await supabase
+        .from('farms')
+        .insert([
+          {
       name: newFarmData.name,
       location: newFarmData.location,
-      tenant_id: user?.tenant_id || '00000000-0000-0000-0000-000000000001',
-      created_at: new Date().toISOString()
-    };
+            tenant_id: user?.tenant_id || '550e8400-e29b-41d4-a716-446655440000'
+          }
+        ])
+        .select();
 
+      if (error) {
+        console.error('농장 생성 오류:', error);
+        console.error('에러 코드:', error.code);
+        console.error('에러 메시지:', error.message);
+        console.error('에러 세부사항:', error.details);
+        console.error('에러 힌트:', error.hint);
+        alert(`농장 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      const newFarm = data[0];
     setFarms(prev => [...prev, newFarm]);
     setSelectedFarmTab(newFarm.id);
     setNewFarmData({ name: '', description: '', location: '' });
     setShowAddFarmModal(false);
     alert(`새 농장 "${newFarm.name}"이 추가되었습니다!`);
+    } catch (error) {
+      console.error('농장 생성 오류:', error);
+      alert('농장 생성에 실패했습니다.');
+    }
   };
 
   // 새 베드 추가
-  const handleAddBed = () => {
+  const handleAddBed = async () => {
     if (!newBedData.name.trim() || !newBedData.cropName.trim()) {
       alert('베드 이름과 작물 이름을 입력해주세요.');
       return;
@@ -377,27 +464,325 @@ function BedsManagementContent() {
       return;
     }
 
-    const newBed: Device = {
-      id: `bed-${Date.now()}`,
+    // 베드 이름 검증 및 정규화
+    const validation = validateBedName(newBedData.name);
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
+
+    const normalizedBedName = normalizeBedName(newBedData.name);
+    console.log('🔄 베드 이름 정규화:', newBedData.name, '→', normalizedBedName);
+
+    try {
+      // Supabase에 새 베드 저장
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { data, error } = await supabase
+        .from('devices')
+        .insert([
+          {
       farm_id: targetFarm.id,
+            bed_id: null, // 베드는 bed_id가 null (베드 자체가 디바이스)
       type: 'sensor_gateway',
       status: { online: true },
       meta: {
-        location: `${targetFarm?.name || '농장'}-${newBedData.name}`,
+              location: normalizedBedName, // 정규화된 이름 저장
         crop_name: newBedData.cropName,
         growing_method: newBedData.growingMethod
-      },
-      created_at: new Date().toISOString()
-    };
+            }
+          }
+        ])
+        .select();
 
-    setDevices(prev => [...prev, newBed]);
-    
-    // 새 베드는 Supabase에 저장 (localStorage 제거)
-    // TODO: 실제 Supabase INSERT 구현 필요
-    
+      if (error) {
+        console.error('베드 생성 오류:', error);
+        console.error('에러 코드:', error.code);
+        console.error('에러 메시지:', error.message);
+        alert(`베드 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      const newBed = data[0];
+      setDevices(prev => [...prev, newBed]);
     setNewBedData({ name: '', cropName: '', growingMethod: '담액식' });
     setShowAddBedModal(false);
-    alert(`새 베드가 ${targetFarm?.name || '농장'}에 추가되었습니다!`);
+      alert(`새 베드 "${normalizedBedName}"가 ${targetFarm?.name || '농장'}에 추가되었습니다!`);
+    } catch (error) {
+      console.error('베드 생성 오류:', error);
+      alert('베드 생성에 실패했습니다.');
+    }
+  };
+
+  // 베드 편집 모달 열기
+  const handleEditBed = (bed: Device) => {
+    console.log('🔄 베드 편집 모달 열기:', bed);
+    console.log('📝 베드 메타 정보:', bed.meta);
+    
+    // 기존 상태 초기화 후 새로운 데이터 설정
+    const editData = {
+      name: bed.meta?.location || '',
+      cropName: bed.meta?.crop_name || '',
+      growingMethod: bed.meta?.growing_method || '담액식'
+    };
+    
+    console.log('📝 편집 폼에 설정할 데이터:', editData);
+    console.log('📝 기존 editBedData 상태:', editBedData);
+    
+    // 즉시 올바른 데이터로 설정
+    setEditBedData(editData);
+    console.log('📝 최종 설정된 editBedData:', editData);
+    
+    setEditingBed(bed);
+    setShowEditBedModal(true);
+  };
+
+  // 베드 정보 업데이트
+  const handleUpdateBed = async () => {
+    if (!editingBed || !editBedData.name.trim() || !editBedData.cropName.trim()) {
+      alert('베드 이름과 작물 이름을 입력해주세요.');
+      return;
+    }
+
+    // 베드 이름 검증 및 정규화
+    const validation = validateBedName(editBedData.name);
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
+
+    const normalizedBedName = normalizeBedName(editBedData.name);
+    console.log('🔄 베드 편집 - 이름 정규화:', editBedData.name, '→', normalizedBedName);
+
+    try {
+      console.log('🔄 베드 업데이트 시작:', editingBed.id);
+      console.log('📝 업데이트할 데이터:', editBedData);
+      
+      // Supabase에 베드 정보 업데이트
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const updateData = {
+        meta: {
+          location: normalizedBedName, // 정규화된 이름 저장
+          crop_name: editBedData.cropName,
+          growing_method: editBedData.growingMethod
+        }
+      };
+
+      console.log('🗄️ Supabase UPDATE 요청:', {
+        table: 'devices',
+        id: editingBed.id,
+        data: updateData
+      });
+
+      const { data, error } = await supabase
+        .from('devices')
+        .update(updateData)
+        .eq('id', editingBed.id)
+        .select();
+
+      console.log('🗄️ Supabase UPDATE 응답:', { data, error });
+
+      if (error) {
+        console.error('베드 업데이트 오류:', error);
+        console.error('에러 코드:', error.code);
+        console.error('에러 메시지:', error.message);
+        alert(`베드 업데이트에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      if (data && data.length === 0) {
+        console.warn('⚠️ 업데이트된 데이터가 없습니다.');
+        alert('베드를 찾을 수 없거나 권한이 없습니다.');
+        setShowEditBedModal(false);
+        setEditingBed(null);
+        return;
+      }
+
+      console.log('✅ 베드 업데이트 성공:', data[0]);
+
+      // 로컬 상태 업데이트
+      setDevices(prev => prev.map(device => 
+        device.id === editingBed.id 
+          ? {
+              ...device,
+              meta: {
+                location: normalizedBedName, // 정규화된 이름 저장
+                crop_name: editBedData.cropName,
+                growing_method: editBedData.growingMethod
+              }
+            }
+          : device
+      ));
+
+      setShowEditBedModal(false);
+      setEditingBed(null);
+      alert('베드 정보가 성공적으로 업데이트되었습니다!');
+    } catch (error) {
+      console.error('베드 업데이트 오류:', error);
+      alert('베드 업데이트에 실패했습니다.');
+    }
+  };
+
+  // 베드 삭제 확인 모달 열기
+  const handleDeleteBed = (bed: Device) => {
+    setDeletingBed(bed);
+    setShowDeleteConfirmModal(true);
+  };
+
+  // 베드 실제 삭제
+  const confirmDeleteBed = async () => {
+    if (!deletingBed) return;
+
+    try {
+      console.log('🗑️ 베드 삭제 시작:', deletingBed.id);
+      
+      // Supabase에서 베드 삭제
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      console.log('🗑️ Supabase DELETE 요청:', {
+        table: 'devices',
+        id: deletingBed.id,
+        deviceInfo: {
+          name: deletingBed.meta?.location,
+          type: deletingBed.type,
+          farm_id: deletingBed.farm_id
+        }
+      });
+
+      const { data, error } = await supabase
+        .from('devices')
+        .delete()
+        .eq('id', deletingBed.id)
+        .select(); // 삭제된 데이터 반환
+
+      console.log('🗑️ Supabase DELETE 응답:', { data, error });
+
+      if (error) {
+        console.error('베드 삭제 오류:', error);
+        console.error('에러 코드:', error.code);
+        console.error('에러 메시지:', error.message);
+        console.error('에러 세부사항:', error.details);
+        console.error('에러 힌트:', error.hint);
+        alert(`베드 삭제에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      if (data && data.length === 0) {
+        console.warn('⚠️ 삭제된 데이터가 없습니다. 베드가 이미 삭제되었거나 권한이 없을 수 있습니다.');
+        alert('베드를 찾을 수 없거나 이미 삭제되었습니다.');
+        setShowDeleteConfirmModal(false);
+        setDeletingBed(null);
+        return;
+      }
+
+      console.log('✅ 베드 삭제 성공:', data);
+
+      // 로컬 상태에서 제거
+      setDevices(prev => prev.filter(device => device.id !== deletingBed.id));
+      
+      // 삭제 후 데이터 재로드 (동기화 보장)
+      setTimeout(async () => {
+        try {
+          console.log('🔄 베드 삭제 후 데이터 재로드 중...');
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          );
+          
+          const { data: updatedDevices, error: reloadError } = await supabase
+            .from('devices')
+            .select('*')
+            .eq('type', 'sensor_gateway');
+          
+          if (!reloadError && updatedDevices) {
+            setDevices(updatedDevices);
+            console.log('✅ 데이터 재로드 완료:', updatedDevices.length, '개 베드');
+          }
+        } catch (reloadError) {
+          console.error('❌ 데이터 재로드 실패:', reloadError);
+        }
+      }, 500);
+      
+      setShowDeleteConfirmModal(false);
+      setDeletingBed(null);
+      alert('베드가 성공적으로 삭제되었습니다!');
+    } catch (error) {
+      console.error('베드 삭제 오류:', error);
+      alert('베드 삭제에 실패했습니다.');
+    }
+  };
+
+  // 농장 편집 모달 열기
+  const handleEditFarm = (farm: Farm) => {
+    setEditingFarm(farm);
+    setEditFarmData({
+      name: farm.name || '',
+      location: farm.location || ''
+    });
+    setShowEditFarmModal(true);
+  };
+
+  // 농장 정보 업데이트
+  const handleUpdateFarm = async () => {
+    if (!editingFarm || !editFarmData.name.trim()) {
+      alert('농장 이름을 입력해주세요.');
+      return;
+    }
+
+    try {
+      // Supabase에 농장 정보 업데이트
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { error } = await supabase
+        .from('farms')
+        .update({
+          name: editFarmData.name,
+          location: editFarmData.location
+        })
+        .eq('id', editingFarm.id);
+
+      if (error) {
+        console.error('농장 업데이트 오류:', error);
+        alert(`농장 업데이트에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      // 로컬 상태 업데이트
+      setFarms(prev => prev.map(farm => 
+        farm.id === editingFarm.id 
+          ? {
+              ...farm,
+              name: editFarmData.name,
+              location: editFarmData.location
+            }
+          : farm
+      ));
+
+      setShowEditFarmModal(false);
+      setEditingFarm(null);
+      alert('농장 정보가 성공적으로 업데이트되었습니다!');
+    } catch (error) {
+      console.error('농장 업데이트 오류:', error);
+      alert('농장 업데이트에 실패했습니다.');
+    }
   };
 
   if (loading) {
@@ -562,7 +947,7 @@ function BedsManagementContent() {
                 );
                 const farmDevices = filteredDevices.filter(device => device.farm_id === farm.id);
                 console.log(`최종 농장 ${farm.id} (${farm.name})의 베드들:`, farmDevices);
-                return { farm, devices: farmDevices };
+                return { farm, devices: sortBeds(farmDevices) };
               });
 
               if (farmGroups.length === 0) {
@@ -620,9 +1005,16 @@ function BedsManagementContent() {
                         </div>
                       </div>
                     </div>
-                    <span className="text-sm px-4 py-2 bg-green-100 text-green-700 rounded-full font-bold border border-green-200">
-                      🟢 온라인
-                    </span>
+                    {/* 농장 편집 버튼 */}
+                    {user && user.role !== 'team_member' && (
+                      <button
+                        onClick={() => handleEditFarm(farm)}
+                        className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+                      >
+                        <span>✏️</span>
+                        <span>농장 편집</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* 농장에 속한 베드들 */}
@@ -655,7 +1047,41 @@ function BedsManagementContent() {
                                 </div>
                                 <div>
                                   <span className="font-bold text-gray-900 text-lg">
-                                    {String(device.meta?.location || '센서 게이트웨이').replace(/^농장\d+-/, '')}
+                                    {(() => {
+                                      const location = String(device.meta?.location || '센서 게이트웨이');
+                                      
+                                      // 조1-베드1 형태인 경우 → 베드-1
+                                      const joMatch = location.match(/^조(\d+)-베드(\d+)/);
+                                      if (joMatch) {
+                                        const [, joNumber, bedNumber] = joMatch;
+                                        return `베드-${bedNumber}`;
+                                      }
+                                      
+                                      // 농장1-베드2 형태인 경우 → 베드-2
+                                      const farmMatch = location.match(/^농장(\d+)-베드(\d+)/);
+                                      if (farmMatch) {
+                                        const [, farmNumber, bedNumber] = farmMatch;
+                                        return `베드-${bedNumber}`;
+                                      }
+                                      
+                                      // 베드-1, 베드-2 형태인 경우 → 베드-1, 베드-2 (하이픈 포함)
+                                      const bedWithDashMatch = location.match(/^베드-(\d+)/);
+                                      if (bedWithDashMatch) {
+                                        const bedNumber = bedWithDashMatch[1];
+                                        return `베드-${bedNumber}`;
+                                      }
+                                      
+                                      // 베드1, 베드2 형태인 경우 → 베드-1, 베드-2 (하이픈 없음)
+                                      const bedOnlyMatch = location.match(/^베드(\d+)/);
+                                      if (bedOnlyMatch) {
+                                        const bedNumber = bedOnlyMatch[1];
+                                        return `베드-${bedNumber}`;
+                                      }
+                                      
+                                      // 매칭되지 않는 경우 디바이스 ID의 마지막 4자리 사용
+                                      const deviceIdSuffix = device.id.slice(-4);
+                                      return `베드-${deviceIdSuffix}`;
+                                    })()}
                                   </span>
                                   <div className="text-sm text-gray-500">📊 센서 {deviceSensors.length}개</div>
                                   {/* 작물명과 재배 방식 표시 */}
@@ -885,7 +1311,41 @@ function BedsManagementContent() {
                                   onClick={() => {
                                     setSelectedBed({
                                       id: device.id,
-                                      name: String((device.meta?.location ?? '센서 게이트웨이')).replace(/^농장\d+-/, '')
+                                      name: (() => {
+                                        const location = String(device.meta?.location || '센서 게이트웨이');
+                                        
+                                        // 조1-베드1 형태인 경우 → 베드-1
+                                        const joMatch = location.match(/^조(\d+)-베드(\d+)/);
+                                        if (joMatch) {
+                                          const [, joNumber, bedNumber] = joMatch;
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 농장1-베드2 형태인 경우 → 베드-2
+                                        const farmMatch = location.match(/^농장(\d+)-베드(\d+)/);
+                                        if (farmMatch) {
+                                          const [, farmNumber, bedNumber] = farmMatch;
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 베드-1, 베드-2 형태인 경우 → 베드-1, 베드-2 (하이픈 포함)
+                                        const bedWithDashMatch = location.match(/^베드-(\d+)/);
+                                        if (bedWithDashMatch) {
+                                          const bedNumber = bedWithDashMatch[1];
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 베드1, 베드2 형태인 경우 → 베드-1, 베드-2 (하이픈 없음)
+                                        const bedOnlyMatch = location.match(/^베드(\d+)/);
+                                        if (bedOnlyMatch) {
+                                          const bedNumber = bedOnlyMatch[1];
+                                          return `베드-${bedNumber}`;
+                                        }
+                                        
+                                        // 매칭되지 않는 경우 디바이스 ID의 마지막 4자리 사용
+                                        const deviceIdSuffix = device.id.slice(-4);
+                                        return `베드-${deviceIdSuffix}`;
+                                      })()
                                     });
                                     setNoteModalOpen(true);
                                   }}
@@ -992,16 +1452,25 @@ function BedsManagementContent() {
                                 >
                                   📝 생육 노트
                                 </button>
-                                {/* 관리자와 농장장만 편집 버튼 표시 */}
+                                {/* 베드 편집 버튼 */}
                                 {user && user.role !== 'team_member' && (
                                   <button 
                                     onClick={() => {
-                                      // 편집 기능 구현
-                                      alert('베드 편집 기능은 추후 구현 예정입니다.');
+                                      console.log('🖱️ 베드 편집 버튼 클릭됨:', device);
+                                      handleEditBed(device);
                                     }}
                                     className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                                   >
-                                    편집
+                                    ✏️ 편집
+                                  </button>
+                                )}
+                                {/* 베드 삭제 버튼 */}
+                                {user && user.role !== 'team_member' && (
+                                  <button
+                                    onClick={() => handleDeleteBed(device)}
+                                    className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                                  >
+                                    🗑️ 삭제
                                   </button>
                                 )}
                               </div>
@@ -1059,7 +1528,7 @@ function BedsManagementContent() {
                   type="text"
                   value={newFarmData.name}
                   onChange={(e) => setNewFarmData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   placeholder="예: 스마트팜 A, 토마토 농장"
                 />
               </div>
@@ -1071,7 +1540,7 @@ function BedsManagementContent() {
                 <textarea
                   value={newFarmData.description}
                   onChange={(e) => setNewFarmData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   rows={3}
                   placeholder="농장에 대한 간단한 설명을 입력하세요"
                 />
@@ -1085,7 +1554,7 @@ function BedsManagementContent() {
                   type="text"
                   value={newFarmData.location}
                   onChange={(e) => setNewFarmData(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   placeholder="예: 경기도 수원시, 서울시 강남구"
                 />
               </div>
@@ -1133,8 +1602,23 @@ function BedsManagementContent() {
                   value={newBedData.name}
                   onChange={(e) => setNewBedData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-                  placeholder="예: 베드1, A구역"
+                  placeholder="예: 베드2, 3, A구역"
                 />
+                {/* 베드 이름 규칙 안내 */}
+                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-blue-500 text-sm">💡</span>
+                    <div className="text-sm text-blue-700">
+                      <p className="font-medium mb-1">베드 이름 규칙:</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• <code className="bg-blue-100 px-1 rounded">베드2</code> → 베드-2</li>
+                        <li>• <code className="bg-blue-100 px-1 rounded">3</code> → 베드-3</li>
+                        <li>• <code className="bg-blue-100 px-1 rounded">베드-2</code> → 베드-2</li>
+                        <li>• <code className="bg-blue-100 px-1 rounded">A구역</code> → 베드-A구역</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -1245,6 +1729,211 @@ function BedsManagementContent() {
           authorId={user?.id || 'unknown'}
           authorName={user?.name || 'Unknown User'}
         />
+      )}
+
+      {/* 베드 편집 모달 */}
+      {showEditBedModal && editingBed && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">베드 정보 편집</h3>
+              <button
+                onClick={() => setShowEditBedModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  베드 이름 *
+                </label>
+                <input
+                  type="text"
+                  value={editBedData.name}
+                  onChange={(e) => setEditBedData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="예: 베드2, 3, A구역"
+                />
+                {/* 베드 이름 규칙 안내 */}
+                <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-purple-500 text-sm">💡</span>
+                    <div className="text-sm text-purple-700">
+                      <p className="font-medium mb-1">베드 이름 규칙:</p>
+                      <ul className="text-xs space-y-1">
+                        <li>• <code className="bg-purple-100 px-1 rounded">베드2</code> → 베드-2</li>
+                        <li>• <code className="bg-purple-100 px-1 rounded">3</code> → 베드-3</li>
+                        <li>• <code className="bg-purple-100 px-1 rounded">베드-2</code> → 베드-2</li>
+                        <li>• <code className="bg-purple-100 px-1 rounded">A구역</code> → 베드-A구역</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  작물 이름 *
+                </label>
+                <input
+                  type="text"
+                  value={editBedData.cropName}
+                  onChange={(e) => setEditBedData(prev => ({ ...prev, cropName: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="예: 토마토, 상추"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  재배 방법
+                </label>
+                <select
+                  value={editBedData.growingMethod}
+                  onChange={(e) => setEditBedData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                >
+                  <option value="담액식">담액식</option>
+                  <option value="토경재배">토경재배</option>
+                  <option value="수경재배">수경재배</option>
+                  <option value="복합재배">복합재배</option>
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4">
+                <button
+                  onClick={() => setShowEditBedModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleUpdateBed}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 베드 삭제 확인 모달 */}
+      {showDeleteConfirmModal && deletingBed && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-red-600">베드 삭제 확인</h3>
+              <button
+                onClick={() => setShowDeleteConfirmModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-red-600 text-xl">⚠️</span>
+                  </div>
+                  <div>
+                    <p className="text-red-800 font-semibold">정말로 이 베드를 삭제하시겠습니까?</p>
+                    <p className="text-red-600 text-sm mt-1">
+                      베드: <span className="font-medium">{deletingBed.meta?.location || '알 수 없음'}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-yellow-800 text-sm">
+                  <strong>주의:</strong> 이 작업은 되돌릴 수 없습니다. 베드와 관련된 모든 데이터가 삭제됩니다.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4">
+                <button
+                  onClick={() => setShowDeleteConfirmModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={confirmDeleteBed}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  삭제
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 농장 편집 모달 */}
+      {showEditFarmModal && editingFarm && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white/30 backdrop-blur-sm rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">농장 정보 편집</h3>
+              <button
+                onClick={() => setShowEditFarmModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  농장 이름 *
+                </label>
+                <input
+                  type="text"
+                  value={editFarmData.name}
+                  onChange={(e) => setEditFarmData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="예: 메인 팜, 토마토 농장"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  농장 위치
+                </label>
+                <input
+                  type="text"
+                  value={editFarmData.location}
+                  onChange={(e) => setEditFarmData(prev => ({ ...prev, location: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="예: 서울시 강남구, 경기도 수원시"
+                />
+              </div>
+
+              <div className="flex items-center space-x-4 pt-4">
+                <button
+                  onClick={() => setShowEditFarmModal(false)}
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleUpdateFarm}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
