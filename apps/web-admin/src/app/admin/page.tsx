@@ -340,63 +340,43 @@ export default function AdminPage() {
   // 농장별로 사용자 그룹화
   const getUsersByFarm = () => {
     const farmGroups: { [key: string]: AuthUser[] } = {};
-    
+
     console.log('🔍 getUsersByFarm 디버깅:', {
       teamsLength: teams.length,
       approvedUsersLength: approvedUsers.length,
       teams: teams.map(t => ({ id: t.id, name: t.name })),
       users: approvedUsers.map(u => ({ email: u.email, team_id: u.team_id, team_name: u.team_name }))
     });
-    
-    // 1. teams 데이터가 있으면 teams 사용, 없으면 빈 배열로 처리
+
+    // farms 데이터를 기준으로 그룹 생성
     if (teams && teams.length > 0) {
-      // teams 데이터가 있는 경우
-      const teamMap = new Map();
+      // 모든 농장을 먼저 그룹으로 생성
       teams.forEach(team => {
-        teamMap.set(team.id, team.name);
-        farmGroups[team.name] = []; // 모든 팀을 먼저 그룹으로 생성
+        farmGroups[team.name] = [];
       });
-      
-      // 사용자들을 해당 팀에 배정
+
+      // 사용자들을 해당 농장에 배정
       approvedUsers.forEach(user => {
-        let farmKey = '팀 미배정';
-        
+        let farmKey = '농장 미배정';
+
         if (user.team_id) {
-          const teamName = teamMap.get(user.team_id);
-          farmKey = teamName || `팀 ID: ${user.team_id}`;
+          const teamName = teams.find(t => t.id === user.team_id)?.name;
+          farmKey = teamName || `농장 ID: ${user.team_id}`;
         } else if (user.team_name) {
           farmKey = user.team_name;
         }
-        
+
         if (!farmGroups[farmKey]) {
           farmGroups[farmKey] = [];
         }
         farmGroups[farmKey].push(user);
       });
     } else {
-      // teams 데이터가 없는 경우 - 하드코딩된 농장 그룹 생성
-      console.log('⚠️ teams 데이터가 없음. 하드코딩된 농장 그룹 생성');
-      farmGroups['1조'] = [];
-      farmGroups['2조 농장'] = [];
-      farmGroups['3조'] = [];
-      
-      // 사용자들을 해당 팀에 배정
-      approvedUsers.forEach(user => {
-        let farmKey = '팀 미배정';
-        
-        if (user.team_name) {
-          farmKey = user.team_name;
-        } else if (user.team_id) {
-          farmKey = `팀 ID: ${user.team_id}`;
-        }
-        
-        if (!farmGroups[farmKey]) {
-          farmGroups[farmKey] = [];
-        }
-        farmGroups[farmKey].push(user);
-      });
+      // 농장이 없는 경우
+      console.log('⚠️ 농장 데이터가 없음. 빈 그룹 생성');
+      farmGroups['농장이 없습니다'] = [];
     }
-    
+
     console.log('🔍 농장별 사용자 그룹화 최종 결과:', farmGroups);
     return farmGroups;
   };

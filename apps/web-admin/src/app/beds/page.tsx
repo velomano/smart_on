@@ -443,7 +443,7 @@ function BedsManagementContent() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      // 1. farms 테이블에 농장 추가
+      // 농장 생성 (teams 동기화 제거)
       const { data: farmData, error: farmError } = await supabase
         .from('farms')
         .insert([
@@ -453,7 +453,8 @@ function BedsManagementContent() {
             tenant_id: user?.tenant_id || '550e8400-e29b-41d4-a716-446655440000'
           }
         ])
-        .select();
+        .select()
+        .single();
 
       if (farmError) {
         console.error('농장 생성 오류:', farmError);
@@ -461,24 +462,7 @@ function BedsManagementContent() {
         return;
       }
 
-      const newFarm = farmData[0];
-
-      // 2. teams 테이블에도 동일한 데이터 추가 (자동 동기화)
-      const { error: teamError } = await supabase
-        .from('teams')
-        .insert([
-          {
-            id: newFarm.id,  // 같은 ID 사용
-            name: newFarm.name,
-            description: newFarm.location,
-            tenant_id: newFarm.tenant_id
-          }
-        ]);
-
-      if (teamError) {
-        console.error('팀 동기화 오류:', teamError);
-        // 팀 동기화 실패해도 농장은 생성되었으므로 계속 진행
-      }
+      const newFarm = farmData;
 
     setFarms(prev => [...prev, newFarm]);
     setSelectedFarmTab(newFarm.id);

@@ -390,73 +390,105 @@ export const getApprovedUsers = async () => {
   }
 };
 
-// 팀 목록 조회
-export const getTeams = async () => {
+// 농장 목록 조회 (farms 기반)
+export const getFarms = async () => {
   try {
     const supabase = getSupabaseClient();
+    
+    // farms 테이블에서 직접 조회
+    const { data: farms, error } = await supabase
+      .from('farms')
+      .select('id, name, location, tenant_id, created_at')
+      .order('created_at', { ascending: true });
 
-    // 병렬 조회 - teams와 farms 테이블 모두 조회
-    const [
-      { data: teams, error: teamsError },
-      { data: farms, error: farmsError },
-      { data: devices, error: devicesError },
-      { data: sensors, error: sensorsError },
-      { data: sensorReadings, error: readingsError },
-    ] = await Promise.all([
-      supabase.from('teams').select('*').order('name'),
-      supabase.from('farms').select('*').order('name'),
-      supabase.from('devices').select('*'),
-      supabase.from('sensors').select('*'),
-      supabase.from('sensor_readings')
-        .select('*')
-        .order('ts', { ascending: false })
-        .limit(1000),
-    ]);
+    if (error) {
+      console.error('❌ getFarms 오류:', error);
+      return { success: false, error: error.message, farms: [] };
+    }
 
-    if (teamsError)   console.log('teams 테이블 조회 실패:', teamsError.message);
-    if (farmsError)   console.log('farms 테이블 조회 실패:', farmsError.message);
-    if (devicesError) console.log('devices 테이블 조회 실패:', devicesError.message);
-    if (sensorsError) console.log('sensors 테이블 조회 실패:', sensorsError.message);
-    if (readingsError)console.log('sensor_readings 테이블 조회 실패:', readingsError.message);
-
-    console.log('🔍 Supabase 데이터 조회 결과:', {
-      teams: teams?.length || 0,
-      farms: farms?.length || 0,
-      devices: devices?.length || 0,
-      sensors: sensors?.length || 0,
-      readings: sensorReadings?.length || 0
+    console.log('🔍 getFarms 결과:', {
+      farmsCount: farms?.length || 0,
+      farms: farms?.map(f => ({ id: f.id, name: f.name })) || []
     });
 
-    // teams와 farms를 매핑하여 통합된 데이터 반환
-    const teamsWithFarms = (teams || []).map((team: any) => {
-      const farm = (farms || []).find((f: any) => f.id === team.id);
-      return {
-        ...team,
-        location: farm?.location || team.description,
-        // teams 테이블의 정보를 우선 사용하되, farms 테이블의 location 정보도 포함
+    return { success: true, farms: farms || [] };
+  } catch (error: any) {
+    console.error('❌ getFarms 오류:', error);
+    return { success: false, error: error.message, farms: [] };
+  }
+};
+
+// 기존 getTeams 호환성을 위한 래퍼 함수
+export const getTeams = async () => {
+  const result = await getFarms();
+  return {
+    success: result.success,
+    error: result.error,
+    teams: result.farms // farms를 teams로 매핑
+  };
+};
+
+// 사용자를 농장에 배정 (farm_memberships 사용)
+export const assignUserToFarm = async (userId: string, farmId: string, tenantId: string, role: 'owner' | 'operator' | 'viewer' = 'operator') => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    console.log('🔍 assignUserToFarm 호출:', { userId, farmId, tenantId, role });
+
+    const { error } = await supabase
+      .from('farm_memberships')
+      .upsert([{ 
+        tenant_id: tenantId, 
+        user_id: userId, 
+        farm_id: farmId, 
+        role: role 
+      }], { 
+        onConflict: 'tenant_id, farm_id, user_id' 
+      });
+
+    if (error) {
+      console.error('❌ assignUserToFarm 오류:', error);
+      return { 
+        success: false, 
+        error: `사용자 농장 배정에 실패했습니다: ${error.message}` 
       };
-    });
+    }
 
-    const result = {
-      success: true,
-      teams: teamsWithFarms, // teams와 farms가 매핑된 데이터
-      devices: devices || [],
-      sensors: sensors || [],
-      sensorReadings: sensorReadings || [],
+    console.log('✅ assignUserToFarm 성공');
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ assignUserToFarm 예외:', error);
+    return { 
+      success: false, 
+      error: `사용자 농장 배정 중 오류가 발생했습니다: ${error.message}` 
     };
+  }
+};
 
-    console.log('🔍 getTeams 최종 반환값:', {
-      success: result.success,
-      teamsCount: result.teams.length,
-      devicesCount: result.devices.length,
-      sensorsCount: result.sensors.length,
-      readingsCount: result.sensorReadings.length
-    });
+// 사용자의 농장 배정 조회
+export const getUserFarmMemberships = async (userId: string) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    const { data, error } = await supabase
+      .from('farm_memberships')
+      .select(`
+        id,
+        farm_id,
+        role,
+        farms!inner(id, name, location)
+      `)
+      .eq('user_id', userId);
 
-    return result;
-  } catch (error) {
-    console.error('팀 조회 오류:', error);
-    return { success: false, teams: [], devices: [], sensors: [], sensorReadings: [] };
+    if (error) {
+      console.error('❌ getUserFarmMemberships 오류:', error);
+      return { success: false, error: error.message, memberships: [] };
+    }
+
+    return { success: true, memberships: data || [] };
+  } catch (error: any) {
+    console.error('❌ getUserFarmMemberships 예외:', error);
+    return { success: false, error: error.message, memberships: [] };
   }
 };
 
@@ -467,34 +499,34 @@ export const updateUser = async (userId: string, data: Partial<AuthUser>) => {
     
     console.log('🔍 updateUser 호출:', { userId, data });
     
-    // team_id가 변경되는 경우 해당 팀이 존재하는지 확인
+    // team_id가 변경되는 경우 해당 농장이 존재하는지 확인
     if (data.team_id && data.team_id !== '') {
-      console.log('🔍 팀 존재 여부 확인:', data.team_id);
-      const { data: teamData, error: teamError } = await supabase
-        .from('teams')
+      console.log('🔍 농장 존재 여부 확인:', data.team_id);
+      const { data: farmData, error: farmError } = await supabase
+        .from('farms')
         .select('id, name')
         .eq('id', data.team_id)
         .maybeSingle();
-      
-      if (teamError) {
-        console.error('❌ 팀 조회 오류:', teamError);
-        return { 
-          success: false, 
-          error: `팀 조회에 실패했습니다: ${teamError.message}`, 
-          details: teamError
+
+      if (farmError) {
+        console.error('❌ 농장 조회 오류:', farmError);
+        return {
+          success: false,
+          error: `농장 조회에 실패했습니다: ${farmError.message}`,
+          details: farmError
         };
       }
-      
-      if (!teamData) {
-        console.error('❌ 팀이 존재하지 않음:', data.team_id);
-        return { 
-          success: false, 
-          error: `선택한 팀이 존재하지 않습니다. 팀 ID: ${data.team_id}`, 
-          details: { team_id: data.team_id }
+
+      if (!farmData) {
+        console.error('❌ 농장이 존재하지 않음:', data.team_id);
+        return {
+          success: false,
+          error: `선택한 농장이 존재하지 않습니다. 농장 ID: ${data.team_id}`,
+          details: { farm_id: data.team_id }
         };
       }
-      
-      console.log('✅ 팀 확인 완료:', teamData);
+
+      console.log('✅ 농장 확인 완료:', farmData);
     } else if (data.team_id === '') {
       // 빈 문자열인 경우 null로 설정
       data.team_id = null;
