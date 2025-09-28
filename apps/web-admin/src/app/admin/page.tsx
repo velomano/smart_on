@@ -371,7 +371,7 @@ export default function AdminPage() {
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
-                  🏢 농장별 정리
+                  🏢 농장별 보기
               </button>
             </div>
                   </div>
@@ -410,12 +410,12 @@ export default function AdminPage() {
                             <div>
                   <h1 className="text-4xl font-bold text-white mb-2">
                     {activeTab === 'pending' ? '승인 대기 사용자' :
-                     activeTab === 'approved' ? '승인된 사용자' : '농장별 사용자 정리'}
+                     activeTab === 'approved' ? '승인된 사용자' : '농장별 사용자 보기'}
                   </h1>
                   <p className="text-white/90 text-lg">
                     {activeTab === 'pending' ? '승인을 기다리는 사용자들을 관리합니다' :
                      activeTab === 'approved' ? '시스템에 등록된 모든 승인된 사용자를 관리합니다' :
-                     '농장별로 정리된 사용자 목록을 확인합니다'}
+                     '농장별로 분류된 사용자 목록을 확인합니다'}
                   </p>
                             </div>
                           </div>
@@ -644,10 +644,10 @@ export default function AdminPage() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h3 className="text-2xl font-black text-gray-900 mb-2">
-                        🏢 농장별 사용자 정리
+                        🏢 농장별 사용자 보기
                     </h3>
                       <p className="text-gray-600">
-                        농장별로 정리된 사용자 목록을 확인할 수 있습니다
+                        농장별로 분류된 사용자 목록을 확인할 수 있습니다
                       </p>
                                   </div>
                     <div className="text-sm text-gray-500">
