@@ -2,7 +2,7 @@
 
 ## 📋 개요
 
-스마트팜 시스템의 사용자 권한 시스템은 3단계 역할 기반으로 구성되어 있으며, 각 역할별로 다른 권한과 접근 범위를 제공합니다.
+스마트팜 시스템의 사용자 권한 시스템은 4단계 역할 기반으로 구성되어 있으며, 각 역할별로 다른 권한과 접근 범위를 제공합니다.
 
 ## 🔐 역할 정의
 
@@ -43,7 +43,7 @@ CREATE TABLE users (
     approved_at TIMESTAMPTZ,                         -- 승인 일시
     approved_by UUID REFERENCES users(id),           -- 승인자
     is_active BOOLEAN DEFAULT true,                  -- 활성 상태
-    role TEXT,                                       -- 역할 (system_admin, team_leader, team_member)
+    role TEXT CHECK (role IN ('super_admin', 'system_admin', 'team_leader', 'team_member')), -- 4단계 권한 체계
     team_name TEXT,                                  -- 팀명
     team_id UUID REFERENCES teams(id),              -- 소속 팀 ID
     tenant_id UUID DEFAULT '00000000-0000-0000-0000-000000000001'::UUID,

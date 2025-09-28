@@ -6,7 +6,7 @@
 - **Supabase 클라이언트**: 모바일 앱 및 웹 어드민에서 직접 사용
 - **실시간 데이터**: `sensor_readings` 테이블에서 센서 데이터 조회
 - **디바이스 관리**: `devices` 테이블에서 베드 및 센서게이트웨이 관리
-- **사용자 권한 시스템**: 3단계 역할 기반 권한 관리 (system_admin, team_leader, team_member)
+- **사용자 권한 시스템**: 4단계 역할 기반 권한 관리 (super_admin, system_admin, team_leader, team_member)
 - **농장 관리**: 농장 생성, 편집, 삭제 및 베드 관리
 - **베드 관리**: 베드 생성, 편집, 삭제 및 다단 구조 지원
 - **센서 데이터**: 실시간 센서 데이터 수집 및 표시
@@ -42,7 +42,7 @@
     "id": "uuid",
     "email": "user@example.com",
     "name": "사용자명",
-    "role": "team_leader",
+    "role": "super_admin" | "system_admin" | "team_leader" | "team_member",
     "team_id": "farm_uuid",
     "is_approved": true,
     "is_active": true
@@ -66,7 +66,7 @@
       "id": "uuid",
       "email": "user@example.com",
       "name": "사용자명",
-      "role": "team_leader",
+      "role": "super_admin" | "system_admin" | "team_leader" | "team_member",
       "team_id": "farm_uuid",
       "is_active": true
     }

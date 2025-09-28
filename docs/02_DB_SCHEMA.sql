@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
     approved_at TIMESTAMPTZ,
     approved_by UUID REFERENCES users(id),
     is_active BOOLEAN DEFAULT true,                   -- 활성 상태
-    role TEXT,                                        -- 역할
+    role TEXT CHECK (role IN ('super_admin', 'system_admin', 'team_leader', 'team_member')), -- 4단계 권한 체계
     team_name TEXT,
     team_id UUID REFERENCES teams(id),
     tenant_id UUID DEFAULT '00000000-0000-0000-0000-000000000001'::UUID,
@@ -375,9 +375,9 @@ CHECK (type IN ('temp', 'humidity', 'ec', 'ph', 'lux', 'water_temp'));
 ALTER TABLE devices ADD CONSTRAINT IF NOT EXISTS check_device_type 
 CHECK (type IN ('switch', 'pump', 'fan', 'light', 'motor', 'sensor_gateway'));
 
--- 멤버십 역할 체크 제약조건
+-- 멤버십 역할 체크 제약조건 (4단계 권한 체계)
 ALTER TABLE memberships ADD CONSTRAINT IF NOT EXISTS check_membership_role 
-CHECK (role IN ('owner', 'operator', 'viewer'));
+CHECK (role IN ('super_admin', 'system_admin', 'team_leader', 'team_member'));
 
 -- 알림 심각도 체크 제약조건
 ALTER TABLE alerts ADD CONSTRAINT IF NOT EXISTS check_alert_severity 
