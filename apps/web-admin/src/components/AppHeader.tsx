@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AuthUser } from '../lib/auth';
 
 interface AppHeaderProps {
-  user: AuthUser;
+  user?: AuthUser;
   title: string;
   subtitle: string;
   showBackButton?: boolean;
@@ -28,6 +28,16 @@ export default function AppHeader({
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  
+  // user가 없을 때 기본값 사용
+  const safeUser = user || {
+    id: '',
+    email: '',
+    name: '게스트',
+    role: 'team_member' as const,
+    is_approved: false,
+    is_active: false
+  };
 
   // 외부 클릭 감지
   useEffect(() => {
@@ -48,58 +58,58 @@ export default function AppHeader({
 
   // 사용자 역할에 따른 권한 확인
   // 시스템 관리자는 모든 권한 가짐
-  const canManageUsers = user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
-  const canManageTeamMembers = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member';
-  const canManageFarms = user.role === 'system_admin' || user.role === 'team_leader' || user.role === 'team_member' || user.email === 'sky3rain7@gmail.com';
-  const canManageMyTeamMembers = user.role === 'team_leader'; // 농장장은 자신의 팀원만 관리
+  const canManageUsers = safeUser.role === 'system_admin' || safeUser.email === 'sky3rain7@gmail.com';
+  const canManageTeamMembers = safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member';
+  const canManageFarms = safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member' || safeUser.email === 'sky3rain7@gmail.com';
+  const canManageMyTeamMembers = safeUser.role === 'team_leader'; // 농장장은 자신의 팀원만 관리
 
   // 팀원 보기 메뉴 조건 - 시스템 관리자는 항상 볼 수 있음
-  const canViewTeamMembers = user.role === 'system_admin' || user.email === 'velomano@naver.com' || 
-                            (user.role === 'team_leader' && user.team_id) ||
-                            (user.role === 'team_member' && user.team_id);
+  const canViewTeamMembers = safeUser.role === 'system_admin' || safeUser.email === 'velomano@naver.com' || 
+                            (safeUser.role === 'team_leader' && safeUser.team_id) ||
+                            (safeUser.role === 'team_member' && safeUser.team_id);
   
   // 강제 수정: velomano@naver.com은 항상 true
-  const finalCanViewTeamMembers = user.email === 'velomano@naver.com' ? true : canViewTeamMembers;
+  const finalCanViewTeamMembers = safeUser.email === 'velomano@naver.com' ? true : canViewTeamMembers;
   
   // 디버깅: canViewTeamMembers 계산 과정
   console.log('🔍 canViewTeamMembers 계산:', {
-    'user.role': user.role,
-    'user.role === system_admin': user.role === 'system_admin',
-    'user.team_id': user.team_id,
-    'user.role === team_leader': user.role === 'team_leader',
-    'user.role === team_member': user.role === 'team_member',
-    'team_leader && team_id': (user.role === 'team_leader' && user.team_id),
-    'team_member && team_id': (user.role === 'team_member' && user.team_id),
+    'safeUser.role': safeUser.role,
+    'safeUser.role === system_admin': safeUser.role === 'system_admin',
+    'safeUser.team_id': safeUser.team_id,
+    'safeUser.role === team_leader': safeUser.role === 'team_leader',
+    'safeUser.role === team_member': safeUser.role === 'team_member',
+    'team_leader && team_id': (safeUser.role === 'team_leader' && safeUser.team_id),
+    'team_member && team_id': (safeUser.role === 'team_member' && safeUser.team_id),
     '최종 canViewTeamMembers': canViewTeamMembers
   });
   
   // 디버깅: 사용자 정보와 권한 상태 출력
   console.log('🔍 AppHeader 디버깅:', {
-    role: user.role,
-    email: user.email,
+    role: safeUser.role,
+    email: safeUser.email,
     canManageUsers,
     canManageTeamMembers,
     canManageFarms,
     canManageMyTeamMembers,
     canViewTeamMembers,
-    teamId: user.team_id,
-    teamName: user.team_name,
+    teamId: safeUser.team_id,
+    teamName: safeUser.team_name,
     conditions: {
       condition1: canManageTeamMembers,
       condition2: !canManageUsers,
-      condition3: user.role !== 'team_leader',
+      condition3: safeUser.role !== 'team_leader',
       final: canViewTeamMembers
     },
-    fullUser: user
+    fullUser: safeUser
   });
   
   // 추가 디버깅: 각 조건별 상세 분석
   console.log('🔍 상세 조건 분석:', {
-    'user.role': user.role,
-    'user.role === "team_member"': user.role === 'team_member',
+    'safeUser.role': safeUser.role,
+    'safeUser.role === "team_member"': safeUser.role === 'team_member',
     'canManageTeamMembers': canManageTeamMembers,
     '!canManageUsers': !canManageUsers,
-    'user.role !== "team_leader"': user.role !== 'team_leader',
+    'safeUser.role !== "team_leader"': safeUser.role !== 'team_leader',
     '최종 canViewTeamMembers': canViewTeamMembers
   });
 
@@ -151,7 +161,7 @@ export default function AppHeader({
       color: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
     }] : []),
     ...(canManageFarms ? [{
-      label: user.role === 'team_member' ? '농장 보기' : '농장 관리',
+      label: safeUser.role === 'team_member' ? '농장 보기' : '농장 관리',
       path: '/beds',
       color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
     }] : []),
@@ -179,6 +189,11 @@ export default function AppHeader({
       label: '알림설정',
       path: '/notifications',
       color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
+    },
+    {
+      label: '배양액 제조',
+      path: '/nutrient',
+      color: 'from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700'
     }
   ];
 
@@ -239,19 +254,19 @@ export default function AppHeader({
                 <div className="text-gray-400">|</div>
                 <div className="flex items-center space-x-3">
                   <span className="text-gray-600 font-semibold">
-                    {user.name} ({user.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
-                     user.role === 'system_admin' ? '시스템 관리자' : 
-                     user.role === 'team_leader' ? '농장장' : '팀원'})
+                    {safeUser.name} ({safeUser.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
+                     safeUser.role === 'system_admin' ? '시스템 관리자' : 
+                     safeUser.role === 'team_leader' ? '농장장' : '팀원'})
                   </span>
-                  {user.team_name && (
+                  {safeUser.team_name && (
                     <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {user.team_name}
+                      {safeUser.team_name}
                     </span>
                   )}
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    safeUser.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
-                    {user.is_active ? '활성' : '비활성'}
+                    {safeUser.is_active ? '활성' : '비활성'}
                   </span>
                 </div>
               </div>
@@ -270,7 +285,7 @@ export default function AppHeader({
                   onClick={() => router.push('/beds')}
                   className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                 >
-                  {user.role === 'team_member' ? '농장 보기' : '농장 관리'}
+                  {safeUser.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>
               )}
 
@@ -300,9 +315,9 @@ export default function AppHeader({
                   <div>
                     <h3 className="text-sm font-bold text-gray-900">메뉴</h3>
                     <p className="text-xs text-gray-500">
-                      {user.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
-                       user.role === 'system_admin' ? '시스템 관리자' : 
-                       user.role === 'team_leader' ? '농장장' : '팀원'}
+                      {safeUser.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
+                       safeUser.role === 'system_admin' ? '시스템 관리자' : 
+                       safeUser.role === 'team_leader' ? '농장장' : '팀원'}
                     </p>
                   </div>
                 </div>

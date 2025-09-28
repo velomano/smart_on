@@ -38,7 +38,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     return beds.sort((a, b) => {
       // 1. 베드 이름에서 숫자 추출하여 정렬
       const getBedNumber = (device: Device) => {
-        const location = device.meta?.location || '';
+        const location = String(device.meta?.location || '');
         
         // 베드-1, 베드-2 형태에서 숫자 추출
         const bedMatch = location.match(/베드-?(\d+)/);

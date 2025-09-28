@@ -1,0 +1,257 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import FarmMqttSettingsForm from '@/components/FarmMqttSettingsForm';
+import BridgeStatusBadge from '@/components/BridgeStatusBadge';
+import AppHeader from '@/components/AppHeader';
+import { getCurrentUser, type AuthUser } from '@/lib/auth';
+
+interface MqttConfig {
+  farm_id: string;
+  broker_url: string;
+  port: number;
+  auth_mode: 'api_key' | 'user_pass';
+  username?: string;
+  client_id_prefix: string;
+  ws_path?: string;
+  qos_default: number;
+  last_test_at?: string;
+  last_test_ok?: boolean;
+  is_active: boolean;
+}
+
+export default function FarmMqttSettingsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const farmId = params.farmId as string;
+  
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [config, setConfig] = useState<MqttConfig | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [farmName, setFarmName] = useState<string>('');
+
+  // 사용자 인증 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || !currentUser.is_approved || !currentUser.is_active) {
+        router.push('/login');
+        return;
+      }
+      setUser(currentUser);
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, [router]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // 농장 정보 로드
+        const farmResponse = await fetch(`/api/farms/${farmId}`);
+        if (farmResponse.ok) {
+          const farmData = await farmResponse.json();
+          setFarmName(farmData.name || '알 수 없는 농장');
+        }
+
+        // MQTT 설정 로드
+        const configResponse = await fetch(`/api/farms/${farmId}/mqtt-config`);
+        if (configResponse.ok) {
+          const configData = await configResponse.json();
+          setConfig(configData);
+        }
+      } catch (error) {
+        console.error('데이터 로드 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (farmId) {
+      loadData();
+    }
+  }, [farmId]);
+
+  const handleSave = async (configData: any) => {
+    const response = await fetch(`/api/farms/${farmId}/mqtt-config`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(configData),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || '저장에 실패했습니다.');
+    }
+
+    // 설정 업데이트
+    setConfig(prev => ({
+      ...prev,
+      ...configData,
+      farm_id: farmId
+    }));
+  };
+
+  const handleTest = async (): Promise<boolean> => {
+    const response = await fetch(`/api/farms/${farmId}/mqtt-test`, {
+      method: 'POST',
+    });
+
+    const result = await response.json();
+    return result.success;
+  };
+
+  // 로그인/권한 체크 완료
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">인증 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AppHeader 
+          user={user}
+          title="MQTT 설정"
+          subtitle="설정을 불러오는 중..."
+        />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">설정을 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader 
+        user={user}
+        title="MQTT 설정"
+        subtitle={`${farmName} - ${farmId}`}
+      />
+      
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* 헤더 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                MQTT 브로커 설정
+              </h1>
+              <p className="mt-2 text-gray-600">
+                {farmName} - {farmId}
+              </p>
+            </div>
+            <BridgeStatusBadge farmId={farmId} />
+          </div>
+        </div>
+
+        {/* 설정 폼 */}
+        <FarmMqttSettingsForm
+          farmId={farmId}
+          farmName={farmName}
+          initialConfig={config}
+          onSave={handleSave}
+          onTest={handleTest}
+        />
+
+        {/* 현재 설정 상태 */}
+        {config && (
+          <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              현재 설정 상태
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">브로커 URL:</span>
+                <span className="ml-2 text-gray-900">{config.broker_url}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">포트:</span>
+                <span className="ml-2 text-gray-900">{config.port}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">인증 방식:</span>
+                <span className="ml-2 text-gray-900">
+                  {config.auth_mode === 'api_key' ? 'API 키' : '사용자명/비밀번호'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">활성 상태:</span>
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                  config.is_active 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                }`}>
+                  {config.is_active ? '활성' : '비활성'}
+                </span>
+              </div>
+              {config.last_test_at && (
+                <>
+                  <div>
+                    <span className="font-medium text-gray-700">마지막 테스트:</span>
+                    <span className="ml-2 text-gray-900">
+                      {new Date(config.last_test_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">테스트 결과:</span>
+                    <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+                      config.last_test_ok 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {config.last_test_ok ? '성공' : '실패'}
+                    </span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 도움말 */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+            설정 도움말
+          </h3>
+          <div className="space-y-2 text-sm text-blue-800">
+            <p>
+              • <strong>브로커 URL:</strong> MQTT 브로커의 주소 (예: mqtts://your-broker.com)
+            </p>
+            <p>
+              • <strong>포트:</strong> 일반적으로 1883 (비암호화), 8883 (SSL/TLS)
+            </p>
+            <p>
+              • <strong>인증 방식:</strong> API 키 또는 사용자명/비밀번호 중 선택
+            </p>
+            <p>
+              • <strong>연결 테스트:</strong> 설정 저장 후 반드시 연결 테스트를 수행하세요
+            </p>
+            <p>
+              • <strong>보안:</strong> 프로덕션 환경에서는 SSL/TLS 연결을 권장합니다
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

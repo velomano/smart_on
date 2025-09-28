@@ -2,20 +2,20 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../lib/auth';
-import { Farm, Device, Sensor, SensorReading } from '../../lib/supabase';
-import { normalizeBedName, validateBedName } from '../../lib/bedNaming';
-import { BedTierConfig, initializeBedTiers, updateBedTierCount } from '../../lib/bedTierStructure';
-import BedTierVisualization from '../../components/BedTierVisualization';
+import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../src/lib/auth';
+import { Farm, Device, Sensor, SensorReading } from '../../src/lib/supabase';
+import { normalizeBedName, validateBedName } from '../../src/lib/bedNaming';
+import { BedTierConfig, initializeBedTiers, updateBedTierCount } from '../../src/lib/bedTierStructure';
+import BedTierVisualization from '../../src/components/BedTierVisualization';
 // Mock 시스템 제거됨 - 실제 Supabase 데이터 사용
-import AppHeader from '../../components/AppHeader';
-import ActuatorControlModal from '../../components/ActuatorControlModal';
-import ScheduleModal from '../../components/ScheduleModal';
-import DualTimeModal from '../../components/DualTimeModal';
-import SensorChart from '../../components/SensorChart';
-import SensorCard from '../../components/SensorCard';
-import BedNoteModal from '../../components/BedNoteModal';
-import { getBedNoteStats, getTagColor } from '../../lib/bedNotes';
+import AppHeader from '../../src/components/AppHeader';
+import ActuatorControlModal from '../../src/components/ActuatorControlModal';
+import ScheduleModal from '../../src/components/ScheduleModal';
+import DualTimeModal from '../../src/components/DualTimeModal';
+import SensorChart from '../../src/components/SensorChart';
+import SensorCard from '../../src/components/SensorCard';
+import BedNoteModal from '../../src/components/BedNoteModal';
+import { getBedNoteStats, getTagColor } from '../../src/lib/bedNotes';
 
 function BedsManagementContent() {
   const router = useRouter();
@@ -1011,15 +1011,24 @@ function BedsManagementContent() {
                         </div>
                       </div>
                     </div>
-                    {/* 농장 편집 버튼 */}
+                    {/* 농장 편집 및 MQTT 설정 버튼 */}
                     {user && user.role !== 'team_member' && (
-                      <button
-                        onClick={() => handleEditFarm(farm)}
-                        className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
-                      >
-                        <span>✏️</span>
-                        <span>농장 편집</span>
-                      </button>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => handleEditFarm(farm)}
+                          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+                        >
+                          <span>✏️</span>
+                          <span>농장 편집</span>
+                        </button>
+                        <button
+                          onClick={() => router.push(`/farms/${farm.id}/settings/mqtt`)}
+                          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+                        >
+                          <span>📡</span>
+                          <span>MQTT 설정</span>
+                        </button>
+                      </div>
                     )}
                   </div>
 
