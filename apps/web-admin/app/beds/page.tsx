@@ -14,6 +14,7 @@ import ScheduleModal from '../../src/components/ScheduleModal';
 import DualTimeModal from '../../src/components/DualTimeModal';
 import SensorChart from '../../src/components/SensorChart';
 import SensorCard from '../../src/components/SensorCard';
+import WaterLevelSensorCard from '../../src/components/WaterLevelSensorCard';
 import BedNoteModal from '../../src/components/BedNoteModal';
 import { getBedNoteStats, getTagColor } from '../../src/lib/bedNotes';
 
@@ -1188,6 +1189,26 @@ function BedsManagementContent() {
                                   }}
                                   compact={true}
                                 />
+                                
+                                {/* 수위 상태 표시 - 시각화 아래 */}
+                                <div className="flex justify-center mt-4">
+                                  <div className="flex space-x-3 items-center">
+                                    {/* 고수위 (빨간색) */}
+                                    <div className="px-4 py-2 rounded-lg text-sm font-bold bg-red-500 text-white">
+                                      고수위
+                                    </div>
+                                    
+                                    {/* 정상수위 (파란색) */}
+                                    <div className="px-4 py-2 rounded-lg text-sm font-bold bg-blue-500 text-white">
+                                      정상
+                                    </div>
+                                    
+                                    {/* 저수위 (노란색) */}
+                                    <div className="px-4 py-2 rounded-lg text-sm font-bold bg-yellow-500 text-white">
+                                      저수위
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
 
                               {/* 센서 데이터와 원격 스위치 제어 */}
@@ -1199,7 +1220,7 @@ function BedsManagementContent() {
                                     <span className="text-lg mr-2">📊</span>
                                     센서 데이터
                                   </h6>
-                                  <div className="grid grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-3 gap-3">
                                 <SensorCard
                                   type="temperature"
                                   value={(() => {
@@ -1240,6 +1261,27 @@ function BedsManagementContent() {
                                   color="#10b981"
                                   chartData={sensorChartData}
                                   title="EC"
+                                />
+                                
+                                <WaterLevelSensorCard
+                                  level="normal"
+                                  percentage={75}
+                                  chartData={sensorChartData}
+                                  title="수위센서"
+                                />
+                                
+                                <SensorCard
+                                  type="light"
+                                  value={(() => {
+                                    const lightSensor = deviceSensors.find(s => s.type === 'light');
+                                    const reading = lightSensor && sensorReadings.find(r => r.sensor_id === lightSensor.id);
+                                    return reading ? reading.value : 0;
+                                  })()}
+                                  unit="lux"
+                                  icon="☀️"
+                                  color="#f59e0b"
+                                  chartData={sensorChartData}
+                                  title="조도"
                                 />
                                 
                                 <SensorCard

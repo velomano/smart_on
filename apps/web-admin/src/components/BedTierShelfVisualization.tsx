@@ -106,7 +106,7 @@ export default function BedTierShelfVisualization({
             
             {/* 1단 라벨 */}
             <text 
-              x="36" 
+              x="40" 
               y={15 + shelfHeight - 10} 
               fontSize="16" 
               fill="#6B7280" 
@@ -198,7 +198,7 @@ export default function BedTierShelfVisualization({
             
             {/* 2단 라벨 */}
             <text 
-              x="36" 
+              x="40" 
               y={15 + shelfHeight + shelfSpacing + shelfHeight - 10} 
               fontSize="16" 
               fill="#6B7280" 
@@ -290,7 +290,7 @@ export default function BedTierShelfVisualization({
             
             {/* 3단 라벨 */}
             <text 
-              x="36" 
+              x="40" 
               y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight - 10} 
               fontSize="16" 
               fill="#6B7280" 
@@ -369,7 +369,7 @@ export default function BedTierShelfVisualization({
             
             {/* 물탱크 아이콘 */}
             <text 
-              x={shelfWidth / 2 + 27} 
+              x="40" 
               y={15 + (3 * shelfHeight) + (3 * shelfSpacing) + 35} 
               fontSize="28" 
               fill="white" 
@@ -381,15 +381,17 @@ export default function BedTierShelfVisualization({
             
             {/* 물탱크 라벨 */}
             <text 
-              x="36" 
+              x={shelfWidth / 2 + 27} 
               y={15 + (3 * shelfHeight) + (3 * shelfSpacing) + 55} 
               fontSize="16" 
               fill="white" 
               fontWeight="bold"
+              textAnchor="middle"
             >
               저수조
             </text>
           </g>
+          
         </svg>
       </div>
     );
@@ -481,26 +483,6 @@ export default function BedTierShelfVisualization({
         })}
       </div>
       
-      {/* 저수조 상태 표시 */}
-      <div className="mt-4 pt-4 border-t-2 border-gray-300">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-gray-700">저수조 상태</span>
-          <div className="flex items-center space-x-2">
-            <div 
-              className={`w-4 h-4 rounded-full ${
-                waterLevelStatus === 'high' ? 'bg-red-500' :
-                waterLevelStatus === 'low' ? 'bg-yellow-500' :
-                waterLevelStatus === 'normal' ? 'bg-blue-500' : 'bg-gray-500'
-              }`} 
-            />
-            <span className="text-sm text-gray-600">
-              {waterLevelStatus === 'high' ? '고수위' :
-               waterLevelStatus === 'low' ? '저수위' :
-               waterLevelStatus === 'normal' ? '정상' : '연결 안됨'}
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

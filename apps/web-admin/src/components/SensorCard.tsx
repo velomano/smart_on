@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 interface SensorCardProps {
-  type: 'temperature' | 'humidity' | 'ec' | 'ph';
+  type: 'temperature' | 'humidity' | 'ec' | 'ph' | 'light';
   value: number | string;
   unit: string;
   icon: string;
@@ -25,6 +25,9 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     if (typeof val === 'string') return val;
     if (type === 'ph') {
       return val.toFixed(1);
+    }
+    if (type === 'light') {
+      return Math.round(val).toLocaleString();
     }
     return val.toFixed(1);
   };
