@@ -208,21 +208,21 @@ export default function AppHeader({
                 </div>
               </div>
 
-                  {/* 주요 메뉴 버튼들 - 모든 계정이 사용자 관리, 관리자는 추가로 관리자 페이지 */}
-                  {canAccessUserManagement && (
-                    <button
-                      onClick={() => router.push('/team')}
-                      className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      사용자 관리
-                    </button>
-                  )}
+                  {/* 주요 메뉴 버튼들 - 관리자는 관리자 페이지가 먼저, 모든 계정이 사용자 관리 */}
                   {canManageUsers && (
                     <button
                       onClick={() => router.push('/admin')}
                       className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                     >
                       관리자 페이지
+                    </button>
+                  )}
+                  {canAccessUserManagement && (
+                    <button
+                      onClick={() => router.push('/team')}
+                      className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                    >
+                      사용자 관리
                     </button>
                   )}
               {canManageFarms && (
