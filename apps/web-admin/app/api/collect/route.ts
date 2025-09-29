@@ -1,5 +1,25 @@
 import { NextResponse } from "next/server";
 
+// --- fetch timeout helper ---
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = 10000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('Timeout'), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function errMsg(e: unknown) {
+  return e instanceof Error ? e.message : typeof e === 'string' ? e : JSON.stringify(e);
+}
+// --- end helper ---
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -31,13 +51,12 @@ export async function POST(req: Request) {
     }
     
     // 워커에서 데이터 수집
-    const workerResponse = await fetch(`${workerUrl}${endpoint}`, {
+    const workerResponse = await fetchWithTimeout(`${workerUrl}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-      },
-      timeout: 60000 // 60초 타임아웃
-    });
+      }
+    }, 60000);
     
     if (!workerResponse.ok) {
       throw new Error(`워커 응답 실패: ${workerResponse.status} ${workerResponse.statusText}`);
@@ -53,15 +72,14 @@ export async function POST(req: Request) {
       throw new Error('Supabase 환경변수가 설정되지 않았습니다');
     }
     
-    const ingestResponse = await fetch(`${supabaseFnUrl}/ingest-nutrient`, {
+    const ingestResponse = await fetchWithTimeout(`${supabaseFnUrl}/ingest-nutrient`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${serviceRoleKey}`,
       },
-      body: JSON.stringify(workerData.data || []),
-      timeout: 30000
-    });
+      body: JSON.stringify(workerData.data || [])
+    }, 30000);
     
     if (!ingestResponse.ok) {
       const errorText = await ingestResponse.text();
@@ -85,11 +103,12 @@ export async function POST(req: Request) {
     });
     
   } catch (error) {
-    console.error('영양액 레시피 수집 실패:', error);
+    const message = errMsg(error);
+    console.error('영양액 레시피 수집 실패:', message);
     
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: message,
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
@@ -130,11 +149,12 @@ export async function GET(req: Request) {
     });
 
   } catch (error) {
-    console.error('수집 작업 조회 실패:', error);
+    const message = errMsg(error);
+    console.error('수집 작업 조회 실패:', message);
 
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: message
     }, { status: 500 });
   }
 }
