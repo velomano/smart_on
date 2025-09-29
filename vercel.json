@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "apps/web-admin/app/api/collect/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}

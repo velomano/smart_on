@@ -1,7 +1,5 @@
 -- =============================================
--- 스마트팜 데이터베이스 스키마 (실제 구조)
--- 업데이트: 2025.01.28
--- 최종 업데이트: 2025.01.28 (farm_memberships 테이블 도입, 권한 시스템 개선)
+-- 스마트팜 데이터베이스 스키마 (2025.01.01 기준)
 -- =============================================
 
 -- =============================================
@@ -11,235 +9,169 @@
 -- 테넌트 테이블
 CREATE TABLE IF NOT EXISTS tenants (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-  description TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 사용자 테이블 (Supabase auth.users와 연동)
+-- 사용자 정보 테이블
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY,                              -- auth.users.id와 동일
-    email TEXT UNIQUE,
-    name TEXT,
-    company TEXT,                                     -- 소속 (회사명)
-    phone TEXT,
-    is_approved BOOLEAN DEFAULT false,                -- 승인 여부
-    approved_at TIMESTAMPTZ,
-    approved_by UUID REFERENCES users(id),
-    is_active BOOLEAN DEFAULT true,                   -- 활성 상태
-    role TEXT CHECK (role IN ('super_admin', 'system_admin', 'team_leader', 'team_member')), -- 4단계 권한 체계
-    team_name TEXT,
-    team_id UUID REFERENCES teams(id),
-    tenant_id UUID DEFAULT '00000000-0000-0000-0000-000000000001'::UUID,
-    preferred_team TEXT DEFAULT 'admin_assign',
-    avatar_url TEXT,
-    last_login_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20),
+    company VARCHAR(100),
+    is_approved BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 팀 테이블
+-- 멤버십 (권한 관리)
+CREATE TABLE IF NOT EXISTS memberships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id),
+    role VARCHAR(50) NOT NULL CHECK (role IN ('super_admin', 'system_admin', 'team_leader', 'team_member')),
+    tenant_id UUID REFERENCES tenants(id),
+    team_id UUID,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 팀 관리
 CREATE TABLE IF NOT EXISTS teams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES tenants(id),
-  name TEXT NOT NULL,
-  description TEXT,
-    team_code TEXT UNIQUE,
-  is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    name VARCHAR(100) NOT NULL,
+    team_code VARCHAR(20) UNIQUE,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 멤버십 테이블 (사용자-테넌트 관계)
-CREATE TABLE IF NOT EXISTS memberships (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES tenants(id),
-    user_id UUID NOT NULL REFERENCES users(id),
-    role TEXT NOT NULL CHECK (role IN ('owner', 'operator', 'viewer')),
-    team_id UUID REFERENCES teams(id)
-);
-
--- 사용자 설정 테이블
+-- 사용자 설정
 CREATE TABLE IF NOT EXISTS user_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID UNIQUE REFERENCES users(id),
-  notification_preferences JSONB DEFAULT '{
-    "email": true,
-    "telegram": false,
-    "dashboard": true,
-        "ph_alerts": true,
-        "water_level": true,
-        "low_humidity": true,
-    "sensor_alerts": true,
-    "system_alerts": true,
-        "high_temperature": true
-    }'::jsonb,
-  ui_preferences JSONB DEFAULT '{
-    "theme": "light",
-    "language": "ko",
-    "dashboard_layout": "default",
-    "sidebar_collapsed": false,
-    "show_advanced_options": false
-    }'::jsonb,
-  dashboard_preferences JSONB DEFAULT '{
-        "auto_refresh": true,
-        "default_view": "grid",
-        "show_all_beds": false,
-    "show_team_beds": true,
-    "refresh_interval": 30,
-        "show_weather_info": true,
-        "show_sensor_charts": true
-    }'::jsonb,
-  telegram_chat_id TEXT,
-  telegram_bot_token TEXT,
-  telegram_notifications_enabled BOOLEAN DEFAULT false,
-  sensor_thresholds JSONB DEFAULT '{
-        "ph": {"max": 7.5, "min": 6.0},
-        "light": {"max": 1000, "min": 200},
-        "humidity": {"max": 80, "min": 40},
-        "temperature": {"max": 35, "min": 15},
-        "soil_moisture": {"max": 70, "min": 30}
-    }'::jsonb,
-  timezone TEXT DEFAULT 'Asia/Seoul',
-  date_format TEXT DEFAULT 'YYYY-MM-DD',
-  time_format TEXT DEFAULT '24h',
-  accessibility JSONB DEFAULT '{
-        "large_text": false,
-    "high_contrast": false,
-    "screen_reader": false,
-    "keyboard_navigation": true
-    }'::jsonb,
-  privacy JSONB DEFAULT '{
-    "share_analytics": true,
-        "allow_team_visibility": true,
-        "share_performance_data": false
-    }'::jsonb,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    user_id UUID REFERENCES users(id),
+    notification_preferences JSONB,
+    telegram_chat_id VARCHAR(100),
+    ui_preferences JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =============================================
 -- 2. 농장 및 베드 관리
 -- =============================================
 
--- 농장 테이블
+-- 농장 정보
 CREATE TABLE IF NOT EXISTS farms (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL REFERENCES tenants(id),
-  name TEXT NOT NULL,
-  location TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    tenant_id UUID REFERENCES tenants(id),
+    name VARCHAR(100) NOT NULL,
+    location VARCHAR(200),
+    description TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 농장 멤버십 테이블 (농장별 사용자 권한 관리)
-CREATE TABLE IF NOT EXISTS farm_memberships (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    farm_id UUID REFERENCES farms(id) ON DELETE CASCADE,
-    role TEXT CHECK (role IN ('owner', 'operator')) NOT NULL, -- 농장 내 역할
-    tenant_id UUID DEFAULT '00000000-0000-0000-0000-000000000001'::UUID,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, farm_id) -- 한 사용자는 한 농장에 하나의 멤버십만 가질 수 있음
-);
-
--- 베드 테이블
+-- 베드 정보
 CREATE TABLE IF NOT EXISTS beds (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    farm_id UUID NOT NULL REFERENCES farms(id),
-    name TEXT NOT NULL,
-    crop TEXT,                                        -- 작물명
-    target_temp NUMERIC,                             -- 목표 온도
-    target_humidity NUMERIC,                         -- 목표 습도
-    target_ec NUMERIC,                               -- 목표 EC
-    target_ph NUMERIC,                               -- 목표 pH
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    farm_id UUID REFERENCES farms(id),
+    name VARCHAR(100) NOT NULL,
+    crop VARCHAR(100),
+    target_temp DECIMAL(5,2),
+    target_humidity DECIMAL(5,2),
+    target_ec DECIMAL(5,2),
+    target_ph DECIMAL(4,2),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- =============================================
--- 3. 디바이스 및 센서 관리
--- =============================================
-
--- 디바이스 테이블
+-- 디바이스 (베드) 정보
 CREATE TABLE IF NOT EXISTS devices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    farm_id UUID NOT NULL REFERENCES farms(id),
-    bed_id UUID REFERENCES beds(id),                 -- 베드 연결 (선택적)
-    type TEXT NOT NULL CHECK (type IN (
-        'switch', 'pump', 'fan', 'light', 'motor', 'sensor_gateway'
-    )),
-    vendor TEXT,                                     -- 'custom', 'tuya'
-    tuya_device_id TEXT,                            -- Tuya 디바이스 ID
-    status JSONB,                                    -- {"online": true, "on": false}
-    meta JSONB,                                      -- {"pi_id": "pi-001", "location": "조1-베드1"}
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    farm_id UUID REFERENCES farms(id),
+    bed_id UUID REFERENCES beds(id),
+    type VARCHAR(50) NOT NULL CHECK (type IN ('switch', 'pump', 'fan', 'light', 'motor', 'sensor_gateway')),
+    vendor VARCHAR(50),
+    tuya_device_id VARCHAR(100),
+    status JSONB,
+    meta JSONB,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 센서 테이블
+-- =============================================
+-- 3. 센서 및 데이터 수집
+-- =============================================
+
+-- 센서 정보
 CREATE TABLE IF NOT EXISTS sensors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    device_id UUID NOT NULL REFERENCES devices(id),
-    type TEXT NOT NULL,                              -- 'temp', 'humidity', 'ec', 'ph', 'lux', 'water_temp'
-    unit TEXT,                                       -- '°C', '%', 'mS/cm', 'pH', 'lux'
-    meta JSONB,                                      -- {"pin": 2, "sensor_model": "DHT22"}
-    created_at TIMESTAMPTZ DEFAULT NOW()
+    device_id UUID REFERENCES devices(id),
+    sensor_type VARCHAR(50) NOT NULL CHECK (sensor_type IN ('temperature', 'humidity', 'ec', 'ph', 'lux', 'water_temp', 'co2')),
+    sensor_id VARCHAR(100),
+    tier_number INTEGER DEFAULT 1,
+    unit VARCHAR(20),
+    meta JSONB,
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 센서 데이터 테이블
-CREATE SEQUENCE IF NOT EXISTS sensor_readings_id_seq;
+-- 센서 측정값
 CREATE TABLE IF NOT EXISTS sensor_readings (
-    id BIGINT PRIMARY KEY DEFAULT nextval('sensor_readings_id_seq'),
-    sensor_id UUID NOT NULL REFERENCES sensors(id),
-    ts TIMESTAMPTZ NOT NULL,
-    value NUMERIC NOT NULL,
-    quality INTEGER DEFAULT 1
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    sensor_id UUID REFERENCES sensors(id),
+    value DECIMAL(10,2) NOT NULL,
+    unit VARCHAR(20) NOT NULL,
+    quality VARCHAR(20) DEFAULT 'good' CHECK (quality IN ('good', 'warning', 'error')),
+    raw_value DECIMAL(10,2),
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =============================================
--- 4. 제어 및 알림 시스템
+-- 4. 제어 및 자동화
 -- =============================================
 
--- 제어 명령 테이블
+-- 제어 명령
 CREATE TABLE IF NOT EXISTS commands (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    device_id UUID NOT NULL REFERENCES devices(id),
+    device_id UUID REFERENCES devices(id),
     issued_by UUID REFERENCES users(id),
-    ts TIMESTAMPTZ DEFAULT NOW(),
     command TEXT NOT NULL,
     payload JSONB,
-    status TEXT NOT NULL DEFAULT 'pending',
-    correlation_id TEXT UNIQUE
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'acked', 'failed')),
+    correlation_id VARCHAR(100),
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
--- 알림 테이블
-CREATE TABLE IF NOT EXISTS alerts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    farm_id UUID NOT NULL REFERENCES farms(id),
-    bed_id UUID REFERENCES beds(id),
-    severity TEXT CHECK (severity IN ('info', 'warning', 'critical')),
-    title TEXT,
-    detail TEXT,
-    ts TIMESTAMPTZ DEFAULT NOW(),
-    ack_by UUID REFERENCES users(id)
-);
-
--- 자동화 규칙 테이블
+-- 자동화 규칙
 CREATE TABLE IF NOT EXISTS rules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    farm_id UUID NOT NULL REFERENCES farms(id),
-  name TEXT NOT NULL,
+    farm_id UUID REFERENCES farms(id),
+    name VARCHAR(100) NOT NULL,
     trigger JSONB NOT NULL,
-    condition JSONB,
+    condition JSONB NOT NULL,
     action JSONB NOT NULL,
-    enabled BOOLEAN DEFAULT true,
-    version INTEGER DEFAULT 1,
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =============================================
--- 5. 감사 및 로깅
+-- 5. 알림 및 감사
 -- =============================================
+
+-- 알림/경고
+CREATE TABLE IF NOT EXISTS alerts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    farm_id UUID REFERENCES farms(id),
+    bed_id UUID REFERENCES beds(id),
+    severity VARCHAR(20) NOT NULL CHECK (severity IN ('info', 'warning', 'critical')),
+    title VARCHAR(200) NOT NULL,
+    detail TEXT,
+    ack_by UUID REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
 -- 감사 로그 테이블
 CREATE TABLE IF NOT EXISTS audits (
@@ -249,22 +181,41 @@ CREATE TABLE IF NOT EXISTS audits (
     entity_id UUID,
     action TEXT,
     diff JSONB,
-    ts TIMESTAMPTZ DEFAULT NOW()
+    ts TIMESTAMP DEFAULT NOW()
 );
 
 -- =============================================
--- 6. 영양액 관리 (향후 확장)
+-- 6. 영양액 관리 (기존)
 -- =============================================
 
--- 작물 프로필 테이블
+-- 영양 이온 테이블
+CREATE TABLE IF NOT EXISTS nutrient_ions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    symbol TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    valence INTEGER
+);
+
+-- 염류 테이블
+CREATE TABLE IF NOT EXISTS salts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT UNIQUE NOT NULL,
+    formula TEXT,
+    purity_pct NUMERIC DEFAULT 100,
+    density_kg_per_l NUMERIC,
+    ion_contributions JSONB NOT NULL
+);
+
+-- 작물 프로필 테이블 (기존)
 CREATE TABLE IF NOT EXISTS crop_profiles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     crop_key TEXT NOT NULL,
     crop_name TEXT NOT NULL,
-    stage TEXT NOT NULL,
+    stage TEXT NOT NULL CHECK (stage IN ('seedling', 'vegetative', 'flowering', 'fruiting', 'ripening')),
     target_ppm JSONB NOT NULL,
     target_ec NUMERIC,
-    target_ph NUMERIC
+    target_ph NUMERIC,
+    metadata JSONB -- 원수 보정식 등 추가 메타데이터
 );
 
 -- 물 프로필 테이블
@@ -277,25 +228,7 @@ CREATE TABLE IF NOT EXISTS water_profiles (
     existing_ions JSONB NOT NULL DEFAULT '{}'::jsonb
 );
 
--- 염류 테이블
-CREATE TABLE IF NOT EXISTS salts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL UNIQUE,
-    formula TEXT,
-    purity_pct NUMERIC DEFAULT 100,
-    density_kg_per_l NUMERIC,
-    ion_contributions JSONB NOT NULL
-);
-
--- 영양 이온 테이블
-CREATE TABLE IF NOT EXISTS nutrient_ions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    symbol TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    valence INTEGER
-);
-
--- 영양액 레시피 테이블
+-- 영양액 레시피 테이블 (기존)
 CREATE TABLE IF NOT EXISTS recipes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID REFERENCES tenants(id),
@@ -309,8 +242,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     warnings JSONB,
     status TEXT DEFAULT 'draft',
     created_by UUID REFERENCES users(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    name TEXT
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- 레시피 라인 테이블
@@ -319,192 +251,171 @@ CREATE TABLE IF NOT EXISTS recipe_lines (
     recipe_id UUID REFERENCES recipes(id),
     salt_id UUID REFERENCES salts(id),
     grams NUMERIC NOT NULL,
-    tank TEXT DEFAULT 'none'
+    tank VARCHAR(20),
+    created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =============================================
--- 7. 인덱스 생성
+-- 7. 영양액 자동 수집 시스템 (신규)
 -- =============================================
 
--- 센서 데이터 인덱스 (시계열 데이터 최적화)
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_sensor_id_ts 
-ON sensor_readings(sensor_id, ts DESC);
+-- 영양액 데이터 소스 테이블
+CREATE TABLE IF NOT EXISTS nutrient_sources (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    url TEXT,
+    org_type TEXT NOT NULL CHECK (org_type IN ('government', 'academic', 'commercial', 'community')),
+    license TEXT,
+    reliability_default NUMERIC DEFAULT 0.5 CHECK (reliability_default >= 0 AND reliability_default <= 1),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-CREATE INDEX IF NOT EXISTS idx_sensor_readings_ts 
-ON sensor_readings(ts DESC);
+-- 영양액 레시피 테이블 (자동 수집용)
+CREATE TABLE IF NOT EXISTS nutrient_recipes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    crop_key TEXT NOT NULL,
+    stage TEXT NOT NULL CHECK (stage IN ('seedling', 'vegetative', 'flowering', 'fruiting', 'ripening')),
+    target_ec NUMERIC,
+    target_ph NUMERIC,
+    macro JSONB NOT NULL, -- 대량 영양소 {N, P, K, Ca, Mg, S}
+    micro JSONB NOT NULL, -- 미량 영양소 {Fe, Mn, B, Zn, Cu, Mo}
+    ions JSONB, -- 이온별 농도 {N_NO3, N_NH4, PO4, K, Ca, Mg, SO4}
+    source_id UUID REFERENCES nutrient_sources(id),
+    reliability NUMERIC DEFAULT 0.5 CHECK (reliability >= 0 AND reliability <= 1),
+    collected_at TIMESTAMP DEFAULT NOW(),
+    verified_by UUID REFERENCES users(id),
+    verified_at TIMESTAMP,
+    checksum TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
--- 디바이스 관련 인덱스
-CREATE INDEX IF NOT EXISTS idx_devices_farm_id 
-ON devices(farm_id);
+-- 영양액 레시피 별칭 테이블 (중복 데이터 관리용)
+CREATE TABLE IF NOT EXISTS nutrient_recipe_aliases (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    crop_key TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    alias TEXT NOT NULL,
+    source_id UUID REFERENCES nutrient_sources(id),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-CREATE INDEX IF NOT EXISTS idx_devices_bed_id 
-ON devices(bed_id);
+-- 영양액 수집 작업 테이블
+CREATE TABLE IF NOT EXISTS nutrient_jobs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    type TEXT NOT NULL CHECK (type IN ('crawl', 'api', 'ai')),
+    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'success', 'failed')),
+    payload JSONB,
+    started_at TIMESTAMP,
+    finished_at TIMESTAMP,
+    error TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
-CREATE INDEX IF NOT EXISTS idx_devices_type 
-ON devices(type);
-
--- 사용자 관련 인덱스
-CREATE INDEX IF NOT EXISTS idx_memberships_user_id 
-ON memberships(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_memberships_tenant_id 
-ON memberships(tenant_id);
-
--- 알림 관련 인덱스
-CREATE INDEX IF NOT EXISTS idx_alerts_farm_id 
-ON alerts(farm_id);
-
-CREATE INDEX IF NOT EXISTS idx_alerts_ts 
-ON alerts(ts DESC);
-
--- 명령 관련 인덱스
-CREATE INDEX IF NOT EXISTS idx_commands_device_id 
-ON commands(device_id);
-
-CREATE INDEX IF NOT EXISTS idx_commands_status 
-ON commands(status);
-
--- =============================================
--- 8. 제약조건 및 트리거
--- =============================================
-
--- 멤버십 유니크 제약조건
-CREATE UNIQUE INDEX IF NOT EXISTS idx_memberships_user_tenant 
-ON memberships(user_id, tenant_id);
-
--- 사용자 이메일 유니크 제약조건
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email 
-ON users(email);
-
--- 팀 코드 유니크 제약조건
-CREATE UNIQUE INDEX IF NOT EXISTS idx_teams_code 
-ON teams(team_code);
-
--- 센서 타입 체크 제약조건
-ALTER TABLE sensors ADD CONSTRAINT IF NOT EXISTS check_sensor_type 
-CHECK (type IN ('temp', 'humidity', 'ec', 'ph', 'lux', 'water_temp'));
-
--- 디바이스 타입 체크 제약조건
-ALTER TABLE devices ADD CONSTRAINT IF NOT EXISTS check_device_type 
-CHECK (type IN ('switch', 'pump', 'fan', 'light', 'motor', 'sensor_gateway'));
-
--- 멤버십 역할 체크 제약조건 (4단계 권한 체계)
-ALTER TABLE memberships ADD CONSTRAINT IF NOT EXISTS check_membership_role 
-CHECK (role IN ('super_admin', 'system_admin', 'team_leader', 'team_member'));
-
--- 알림 심각도 체크 제약조건
-ALTER TABLE alerts ADD CONSTRAINT IF NOT EXISTS check_alert_severity 
-CHECK (severity IN ('info', 'warning', 'critical'));
-
--- =============================================
--- 9. RLS (Row Level Security) 정책
--- =============================================
-
--- RLS 활성화
-ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE memberships ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE farms ENABLE ROW LEVEL SECURITY;
-ALTER TABLE beds ENABLE ROW LEVEL SECURITY;
-ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sensors ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sensor_readings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE commands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE alerts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE audits ENABLE ROW LEVEL SECURITY;
-ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
-
--- 기본 정책들 (세부 정책은 03_RLS_POLICIES.sql에서 관리)
+-- 데이터 수집 요청 테이블 (기존)
+CREATE TABLE IF NOT EXISTS data_collection_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    crop_name TEXT NOT NULL,
+    stage TEXT,
+    user_id UUID REFERENCES users(id),
+    user_email TEXT,
+    notes TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed', 'rejected')),
+    priority TEXT DEFAULT 'normal' CHECK (priority IN ('low', 'normal', 'high', 'urgent')),
+    assigned_to UUID REFERENCES users(id),
+    estimated_completion_date TIMESTAMP,
+    actual_completion_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
 
 -- =============================================
--- 10. 뷰 생성 (자주 사용되는 쿼리 최적화)
+-- 8. 인덱스 생성
 -- =============================================
 
--- 농장별 베드 및 디바이스 현황 뷰
-CREATE OR REPLACE VIEW farm_overview AS
-SELECT 
-    f.id as farm_id,
-    f.name as farm_name,
-    f.location as farm_location,
-    f.tenant_id,
-    COUNT(DISTINCT b.id) as bed_count,
-    COUNT(DISTINCT d.id) as device_count,
-    COUNT(DISTINCT CASE WHEN d.type = 'sensor_gateway' THEN d.id END) as sensor_gateway_count,
-    COUNT(DISTINCT s.id) as sensor_count
-FROM farms f
-LEFT JOIN beds b ON f.id = b.farm_id
-LEFT JOIN devices d ON f.id = d.farm_id
-LEFT JOIN sensors s ON d.id = s.device_id
-GROUP BY f.id, f.name, f.location, f.tenant_id;
+-- 기본 인덱스
+CREATE INDEX IF NOT EXISTS idx_sensor_readings_sensor_id_created_at ON sensor_readings(sensor_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_commands_device_id_created_at ON commands(device_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_alerts_farm_id_created_at ON alerts(farm_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships(user_id);
+CREATE INDEX IF NOT EXISTS idx_memberships_tenant_id ON memberships(tenant_id);
 
--- 베드별 센서 현황 뷰
-CREATE OR REPLACE VIEW bed_sensor_status AS
-SELECT 
-    b.id as bed_id,
-    b.name as bed_name,
-    b.farm_id,
-    d.id as device_id,
-    d.type as device_type,
-    d.status as device_status,
-    COUNT(s.id) as sensor_count,
-    STRING_AGG(s.type, ', ') as sensor_types
-FROM beds b
-LEFT JOIN devices d ON b.id = d.bed_id
-LEFT JOIN sensors s ON d.id = s.device_id
-GROUP BY b.id, b.name, b.farm_id, d.id, d.type, d.status;
-
--- 사용자별 권한 정보 뷰
-CREATE OR REPLACE VIEW user_permissions AS
-SELECT 
-    u.id as user_id,
-    u.email,
-    u.name,
-    u.is_approved,
-    u.is_active,
-    m.role,
-    t.id as tenant_id,
-    t.name as tenant_name,
-    tm.id as team_id,
-    tm.name as team_name
-FROM users u
-LEFT JOIN memberships m ON u.id = m.user_id
-LEFT JOIN tenants t ON m.tenant_id = t.id
-LEFT JOIN teams tm ON m.team_id = tm.id;
-
--- 최신 센서 데이터 뷰
-CREATE OR REPLACE VIEW latest_sensor_data AS
-SELECT DISTINCT ON (s.id)
-    s.id as sensor_id,
-    s.type as sensor_type,
-    s.unit,
-    d.id as device_id,
-    d.farm_id,
-    d.bed_id,
-    sr.value,
-    sr.ts as reading_time,
-    sr.quality
-FROM sensors s
-LEFT JOIN devices d ON s.device_id = d.id
-LEFT JOIN sensor_readings sr ON s.id = sr.sensor_id
-ORDER BY s.id, sr.ts DESC;
+-- 영양액 관련 인덱스
+CREATE INDEX IF NOT EXISTS idx_crop_profiles_key_stage ON crop_profiles(crop_key, stage);
+CREATE INDEX IF NOT EXISTS idx_nutrient_recipes_crop_stage ON nutrient_recipes(crop_key, stage);
+CREATE INDEX IF NOT EXISTS idx_nutrient_recipes_checksum ON nutrient_recipes(checksum);
+CREATE INDEX IF NOT EXISTS idx_nutrient_jobs_status ON nutrient_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_data_collection_requests_status ON data_collection_requests(status);
 
 -- =============================================
--- 스키마 생성 완료
+-- 9. 제약 조건
 -- =============================================
 
-COMMENT ON TABLE tenants IS '테넌트 관리 테이블 - 다중 고객 지원';
-COMMENT ON TABLE users IS '사용자 정보 테이블 - Supabase auth와 연동';
-COMMENT ON TABLE memberships IS '사용자-테넌트 관계 테이블 - 권한 관리';
-COMMENT ON TABLE teams IS '팀 관리 테이블 - 조직 구조';
-COMMENT ON TABLE farms IS '농장 정보 테이블 - 물리적 농장 단위';
-COMMENT ON TABLE beds IS '베드 정보 테이블 - 농장 내 재배 구역';
-COMMENT ON TABLE devices IS '디바이스 관리 테이블 - 센서게이트웨이 및 제어장치';
-COMMENT ON TABLE sensors IS '센서 정보 테이블 - 각종 측정 센서';
-COMMENT ON TABLE sensor_readings IS '센서 데이터 테이블 - 시계열 측정 데이터';
-COMMENT ON TABLE commands IS '제어 명령 테이블 - 디바이스 원격 제어';
-COMMENT ON TABLE alerts IS '알림 테이블 - 임계값 기반 알림 시스템';
-COMMENT ON TABLE rules IS '자동화 규칙 테이블 - 조건부 자동 제어';
-COMMENT ON TABLE audits IS '감사 로그 테이블 - 사용자 활동 추적';
-COMMENT ON TABLE user_settings IS '사용자 설정 테이블 - 개인화 설정';
+-- 영양액 레시피 중복 방지
+CREATE UNIQUE INDEX IF NOT EXISTS ux_nutrient_recipes_crop_stage_checksum 
+ON nutrient_recipes(crop_key, stage, checksum);
+
+-- =============================================
+-- 10. 뷰 생성
+-- =============================================
+
+-- 최신 영양액 레시피 뷰 (신뢰도 × 최신성 기준)
+CREATE OR REPLACE VIEW vw_crop_recipes_latest AS
+SELECT DISTINCT ON (crop_key, stage)
+    nr.*,
+    ns.name as source_name,
+    ns.org_type as source_type,
+    ns.url as source_url
+FROM nutrient_recipes nr
+LEFT JOIN nutrient_sources ns ON nr.source_id = ns.id
+ORDER BY crop_key, stage, (reliability * EXTRACT(EPOCH FROM collected_at)) DESC;
+
+-- =============================================
+-- 11. 초기 데이터 삽입
+-- =============================================
+
+-- 영양 이온 초기 데이터
+INSERT INTO nutrient_ions(symbol, name, valence) VALUES
+    ('N_NO3', 'Nitrate-N', -1),
+    ('N_NH4', 'Ammonium-N', 1),
+    ('P', 'Phosphorus', -3),
+    ('K', 'Potassium', 1),
+    ('Ca', 'Calcium', 2),
+    ('Mg', 'Magnesium', 2),
+    ('S', 'Sulfur', -2),
+    ('Fe', 'Iron', 2),
+    ('Mn', 'Manganese', 2),
+    ('B', 'Boron', 3),
+    ('Zn', 'Zinc', 2),
+    ('Cu', 'Copper', 2),
+    ('Mo', 'Molybdenum', 6)
+ON CONFLICT (symbol) DO NOTHING;
+
+-- 염류 초기 데이터
+INSERT INTO salts(name, formula, ion_contributions) VALUES
+    ('Calcium nitrate tetrahydrate', 'Ca(NO3)2·4H2O', '{"N_NO3":11.86,"Ca":16.98}'),
+    ('Potassium nitrate', 'KNO3', '{"N_NO3":13.86,"K":38.67}'),
+    ('Monopotassium phosphate', 'KH2PO4', '{"P":22.76,"K":28.73}'),
+    ('Magnesium sulfate heptahydrate', 'MgSO4·7H2O', '{"Mg":9.86,"S":13.01}')
+ON CONFLICT (name) DO NOTHING;
+
+-- 작물 프로필 초기 데이터
+INSERT INTO crop_profiles(crop_key, crop_name, stage, target_ppm, target_ec, target_ph) VALUES
+    ('lettuce', '상추', 'vegetative', '{"N_NO3":120,"P":30,"K":200,"Ca":150,"Mg":40,"S":60}', 1.6, 6.0),
+    ('tomato', '토마토', 'vegetative', '{"N_NO3":140,"P":40,"K":220,"Ca":150,"Mg":45,"S":70}', 2.2, 6.0),
+    ('cucumber', '오이', 'vegetative', '{"N_NO3":130,"P":35,"K":230,"Ca":150,"Mg":45,"S":70}', 2.0, 6.0),
+    ('strawberry', '딸기', 'vegetative', '{"N_NO3":110,"P":35,"K":180,"Ca":120,"Mg":40,"S":60}', 1.5, 5.8)
+ON CONFLICT DO NOTHING;
+
+-- 물 프로필 초기 데이터
+INSERT INTO water_profiles(name, alkalinity_mg_per_l_as_caco3, ph, existing_ions) VALUES
+    ('RO_Default', 0, 6.5, '{}'),
+    ('Well_Default', 80, 7.5, '{"Ca":20,"Mg":5,"S":10}')
+ON CONFLICT DO NOTHING;
+
+-- 영양액 데이터 소스 초기 데이터
+INSERT INTO nutrient_sources(name, url, org_type, reliability_default) VALUES
+    ('Cornell CEA', 'https://hort.cornell.edu/greenhouse/crops/factsheets/hydroponic-recipes.pdf', 'academic', 0.9),
+    ('농촌진흥청', 'https://www.rda.go.kr', 'government', 0.95),
+    ('FAO Open Knowledge', 'https://www.fao.org', 'government', 0.95),
+    ('Community Database', 'https://community.example.com', 'community', 0.5)
+ON CONFLICT DO NOTHING;

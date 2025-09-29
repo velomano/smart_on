@@ -291,29 +291,29 @@ export default function NutrientPlanPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="px-8 py-8">
-            {/* 탭 메뉴 */}
+          {/* 탭 메뉴 */}
             <div className="border-b border-gray-200 mb-8">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('calculate')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'calculate'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('calculate')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'calculate'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
                   🧪 배양액 계산
-                </button>
-                <button
-                  onClick={() => setActiveTab('recipes')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'recipes'
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
+              </button>
+              <button
+                onClick={() => setActiveTab('recipes')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'recipes'
+                    ? 'border-green-500 text-green-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
                   📚 레시피 브라우징
                 </button>
                 <button
@@ -325,9 +325,9 @@ export default function NutrientPlanPage() {
                   }`}
                 >
                   💾 저장된 레시피
-                </button>
-              </nav>
-            </div>
+              </button>
+            </nav>
+          </div>
 
             {/* 배양액 계산 탭 */}
             {activeTab === 'calculate' && (
@@ -342,8 +342,8 @@ export default function NutrientPlanPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">작물 선택</label>
                       <select
-                        value={crop}
-                        onChange={(e) => setCrop(e.target.value)}
+                      value={crop}
+                      onChange={(e) => setCrop(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                       >
                         <option value="상추">상추</option>
@@ -354,26 +354,26 @@ export default function NutrientPlanPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">용량 (L)</label>
-                      <input
-                        type="number"
-                        value={volume}
-                        onChange={(e) => setVolume(Number(e.target.value))}
+                    <input 
+                      type="number" 
+                      value={volume}
+                      onChange={(e) => setVolume(Number(e.target.value))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                        min="1"
-                        max="1000"
-                      />
-                    </div>
+                      min="1"
+                      max="1000"
+                    />
+                </div>
                     <div className="flex items-end">
-                      <button
-                        onClick={plan}
+                <button
+                  onClick={plan}
                         disabled={loading}
                         className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
+                >
                         {loading ? '계산 중...' : '계산하기'}
-                      </button>
-                    </div>
+                </button>
                   </div>
                 </div>
+              </div>
 
                 {/* 계산 결과 */}
                 {error && (
@@ -470,17 +470,17 @@ export default function NutrientPlanPage() {
                     
                     {/* 레시피 저장 버튼 */}
                     <div className="flex justify-center pt-4">
-                      <button
-                        onClick={() => setShowSaveModal(true)}
+                        <button
+                          onClick={() => setShowSaveModal(true)}
                         className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                      >
+                        >
                         💾 레시피 저장
-                      </button>
+                        </button>
                     </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
 
             {/* 레시피 브라우징 탭 */}
             {activeTab === 'recipes' && (
@@ -586,8 +586,8 @@ export default function NutrientPlanPage() {
                             {recipe.source_title}
                             {recipe.source_year && ` (${recipe.source_year})`}
                           </p>
-                        </div>
-                      )}
+                  </div>
+                )}
 
                       <div className="mt-4 flex space-x-2">
                         <button 
@@ -609,8 +609,8 @@ export default function NutrientPlanPage() {
                         >
                           상세 보기
                         </button>
-                      </div>
-                    </div>
+              </div>
+            </div>
                   ))}
                 </div>
 
@@ -633,7 +633,7 @@ export default function NutrientPlanPage() {
                           <p className="text-blue-800 text-sm mb-3">
                             해당 작물의 레시피를 데이터 자동 수집 대기목록에 등록하고, 빠른 시간 안에 정보를 업데이트하겠습니다.
                           </p>
-                          <button 
+                <button
                             onClick={async () => {
                               const cropName = selectedCrop || searchTerm || '요청된 작물';
                               const stageName = selectedStage || '해당 단계';
@@ -666,7 +666,7 @@ export default function NutrientPlanPage() {
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
                           >
                             📋 수집 요청 등록
-                          </button>
+                </button>
                         </div>
                       </div>
                     </div>
@@ -690,14 +690,14 @@ export default function NutrientPlanPage() {
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">저장된 레시피</h2>
                   <p className="text-gray-600">내가 저장한 배양액 레시피를 관리할 수 있습니다.</p>
-                </div>
+              </div>
 
-                {loadingRecipes ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
-                    <p className="text-gray-600 mt-2">레시피를 불러오는 중...</p>
-                  </div>
-                ) : savedRecipes.length === 0 ? (
+              {loadingRecipes ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+                  <p className="text-gray-600 mt-2">레시피를 불러오는 중...</p>
+                </div>
+              ) : savedRecipes.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl text-gray-400">💾</span>
@@ -708,120 +708,120 @@ export default function NutrientPlanPage() {
                     <p className="text-gray-600">
                       배양액 계산 후 레시피를 저장해보세요.
                     </p>
-                  </div>
-                ) : (
+                </div>
+              ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {savedRecipes.map((recipe) => (
                       <div key={recipe.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                         <div className="flex items-start justify-between mb-4">
-                          <div>
+                        <div>
                             <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                              {recipe.crop_profiles.crop_name} ({recipe.crop_profiles.stage})
-                            </h3>
+                            {recipe.crop_profiles.crop_name} ({recipe.crop_profiles.stage})
+                          </h3>
                             <p className="text-sm text-gray-600">
-                              {recipe.target_volume_l}L • {recipe.water_profiles.name}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => deleteRecipe(recipe.id)}
-                            className="text-red-500 hover:text-red-700 text-sm"
-                          >
-                            🗑️
-                          </button>
+                            {recipe.target_volume_l}L • {recipe.water_profiles.name}
+                          </p>
                         </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-800">추정 EC:</span>
-                            <span className="font-medium text-gray-900">{recipe.ec_est || '-'} mS/cm</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-800">추정 pH:</span>
-                            <span className="font-medium text-gray-900">{recipe.ph_est || '-'}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-800">생성일:</span>
-                            <span className="text-xs text-gray-700">
-                              {new Date(recipe.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
+                        <button
+                          onClick={() => deleteRecipe(recipe.id)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-800">추정 EC:</span>
+                          <span className="font-medium text-gray-900">{recipe.ec_est || '-'} mS/cm</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-800">추정 pH:</span>
+                          <span className="font-medium text-gray-900">{recipe.ph_est || '-'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-800">생성일:</span>
+                          <span className="text-xs text-gray-700">
+                            {new Date(recipe.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
 
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <div className="text-xs text-gray-800">
-                            <div className="font-medium mb-1 text-gray-900">사용 염류:</div>
-                            <div className="space-y-1">
-                              {recipe.lines.slice(0, 2).map((line: any, i: number) => (
-                                <div key={i} className="flex justify-between">
-                                  <span className="text-gray-800">{line.salt}:</span>
-                                  <span className="text-gray-900 font-medium">{line.grams}g</span>
-                                </div>
-                              ))}
-                              {recipe.lines.length > 2 && (
-                                <div className="text-gray-600">+{recipe.lines.length - 2}개 더...</div>
-                              )}
-                            </div>
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="text-xs text-gray-800">
+                          <div className="font-medium mb-1 text-gray-900">사용 염류:</div>
+                          <div className="space-y-1">
+                            {recipe.lines.slice(0, 2).map((line: any, i: number) => (
+                              <div key={i} className="flex justify-between">
+                                <span className="text-gray-800">{line.salt}:</span>
+                                <span className="text-gray-900 font-medium">{line.grams}g</span>
+                              </div>
+                            ))}
+                            {recipe.lines.length > 2 && (
+                              <div className="text-gray-600">+{recipe.lines.length - 2}개 더...</div>
+                            )}
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </main>
-
-      {/* 레시피 저장 모달 */}
-      {showSaveModal && (
-        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">레시피 저장</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-900 mb-2">
-                  레시피 이름
-                </label>
-                <input
-                  type="text"
-                  value={recipeName}
-                  onChange={(e) => setRecipeName(e.target.value)}
-                  placeholder="예: 상추_영양생장기_100L"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 placeholder-gray-500"
-                />
-              </div>
-              
-              {res && (
-                <div className="bg-gray-50 rounded-lg p-3 text-sm">
-                  <div className="font-medium text-gray-900 mb-2">저장할 레시피:</div>
-                  <div className="text-gray-700">
-                    <div>{res.cropKey} ({res.stage}) • {res.target.volumeL}L</div>
-                    <div>추정 EC: {res.qc.ec_est} mS/cm</div>
-                  </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          )}
+        </div>
+        </div>
+      </main>
 
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={() => setShowSaveModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-              >
-                취소
-              </button>
-              <button
-                onClick={saveRecipe}
-                disabled={saving || !recipeName.trim()}
-                className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving ? '저장 중...' : '저장'}
-              </button>
+        {/* 레시피 저장 모달 */}
+        {showSaveModal && (
+          <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">레시피 저장</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    레시피 이름
+                  </label>
+                  <input
+                    type="text"
+                    value={recipeName}
+                    onChange={(e) => setRecipeName(e.target.value)}
+                    placeholder="예: 상추_영양생장기_100L"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white text-gray-900 placeholder-gray-500"
+                  />
+                </div>
+                
+                {res && (
+                  <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                    <div className="font-medium text-gray-900 mb-2">저장할 레시피:</div>
+                    <div className="text-gray-700">
+                      <div>{res.cropKey} ({res.stage}) • {res.target.volumeL}L</div>
+                      <div>추정 EC: {res.qc.ec_est} mS/cm</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={() => setShowSaveModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={saveRecipe}
+                  disabled={saving || !recipeName.trim()}
+                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? '저장 중...' : '저장'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* 레시피 상세 보기 모달 */}
       {showDetailModal && selectedRecipe && (
@@ -1048,14 +1048,16 @@ export default function NutrientPlanPage() {
       )}
 
       {/* 레시피 업데이트 푸터 */}
-      <RecipeUpdatesFooter />
+      <RecipeUpdatesFooter 
+        onViewAllRecipes={() => setActiveTab('recipes')}
+      />
 
       {/* 법적 고지 */}
       <div className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <LegalNotice compact />
         </div>
-      </div>
+        </div>
     </div>
   );
 }

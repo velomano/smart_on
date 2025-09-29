@@ -22,7 +22,11 @@ interface RecipeUpdatesData {
   updates_log: RecipeUpdatesLog[];
 }
 
-export default function RecipeUpdatesFooter() {
+interface RecipeUpdatesFooterProps {
+  onViewAllRecipes?: () => void;
+}
+
+export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesFooterProps) {
   const [data, setData] = useState<RecipeUpdatesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +35,47 @@ export default function RecipeUpdatesFooter() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // 실제로는 /api/recipes/recent 엔드포인트를 호출해야 함
-        // 현재는 목 데이터로 시뮬레이션
+        
+        // 실제 API에서 최근 레시피 데이터 가져오기
+        const response = await fetch('/api/nutrients/browse?limit=6');
+        const result = await response.json();
+        
+        if (result.ok && result.recipes) {
+          const recentRecipes = result.recipes.map((recipe: any) => ({
+            id: recipe.id,
+            crop: recipe.crop,
+            stage: recipe.stage,
+            volume_l: recipe.volume_l,
+            created_at: recipe.created_at,
+            source_title: recipe.source_title,
+            source_year: recipe.source_year,
+            license: recipe.license
+          }));
+          
+          const today = new Date().toISOString().split('T')[0];
+          const todayRecipes = recentRecipes.filter((recipe: any) => 
+            recipe.created_at.startsWith(today)
+          );
+          
+          const data: RecipeUpdatesData = {
+            recent_recipes: recentRecipes,
+            updates_log: [
+              {
+                day: today,
+                added_count: todayRecipes.length,
+                last_update: recentRecipes[0]?.created_at || new Date().toISOString()
+              }
+            ]
+          };
+          
+          setData(data);
+          setError(null);
+        } else {
+          throw new Error('API 응답 오류');
+        }
+      } catch (err) {
+        console.error('Failed to fetch recipe updates:', err);
+        // API 실패 시 목 데이터 사용
         const mockData: RecipeUpdatesData = {
           recent_recipes: [
             {
@@ -67,9 +110,6 @@ export default function RecipeUpdatesFooter() {
         
         setData(mockData);
         setError(null);
-      } catch (err) {
-        setError('데이터 로드 실패');
-        console.error('Failed to fetch recipe updates:', err);
       } finally {
         setLoading(false);
       }
@@ -172,7 +212,10 @@ export default function RecipeUpdatesFooter() {
 
         {/* 전체 보기 링크 */}
         <div className="mt-4 text-center">
-          <button className="text-blue-600 hover:text-blue-800 font-medium text-sm">
+          <button 
+            onClick={onViewAllRecipes}
+            className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
+          >
             전체 레시피 보기 →
           </button>
         </div>
