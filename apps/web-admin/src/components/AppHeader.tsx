@@ -125,7 +125,7 @@ export default function AppHeader({
     {
       label: '양액계산',
       path: '/nutrients/plan',
-      color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
+      color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
     },
     {
       label: '시세정보',
