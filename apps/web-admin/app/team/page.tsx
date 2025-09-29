@@ -282,14 +282,22 @@ export default function TeamPage() {
                         </span>
                       </div>
                       <div>
-                        <div>
-                          <h4 className="text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
-                          <p className="text-gray-600 font-medium">{member.email}</p>
+                        <div className="flex items-center space-x-6">
+                          <div>
+                            <h4 className="text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
+                            <p className="text-gray-600 font-medium">{member.email}</p>
+                          </div>
                           {(member as any).company && (
-                            <p className="text-sm text-gray-500">🏢 {(member as any).company}</p>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-gray-500">🏢</span>
+                              <span className="text-sm text-gray-700 font-medium">{(member as any).company}</span>
+                            </div>
                           )}
                           {(member as any).phone && (
-                            <p className="text-sm text-gray-500">📞 {(member as any).phone}</p>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-gray-500">📞</span>
+                              <span className="text-sm text-gray-700 font-medium">{(member as any).phone}</span>
+                            </div>
                           )}
                         </div>
                       </div>
