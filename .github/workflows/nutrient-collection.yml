@@ -46,10 +46,10 @@ jobs:
         
     - name: 환경변수 설정
       run: |
-        echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> apps/web-admin/.env.local
-        echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> apps/web-admin/.env.local
-        echo "SUPABASE_FN_URL=${{ secrets.SUPABASE_FN_URL }}" >> apps/web-admin/.env.local
-        echo "WORKER_URL=${{ secrets.WORKER_URL }}" >> apps/web-admin/.env.local
+        echo "SUPABASE_URL=${{ secrets.SUPABASE_URL || 'https://kkrcwdybrsppbsufrrdg.supabase.co' }}" >> apps/web-admin/.env.local
+        echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY || 'test-key' }}" >> apps/web-admin/.env.local
+        echo "SUPABASE_FN_URL=${{ secrets.SUPABASE_FN_URL || 'https://kkrcwdybrsppbsufrrdg.supabase.co/functions/v1' }}" >> apps/web-admin/.env.local
+        echo "WORKER_URL=${{ secrets.WORKER_URL || 'http://localhost:3003' }}" >> apps/web-admin/.env.local
         
     - name: 영양액 레시피 수집 실행 (배치 처리)
       run: |
