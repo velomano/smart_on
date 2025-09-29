@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../src/lib/auth';
+import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getTeams } from '../../src/lib/auth';
 import AppHeader from '../../src/components/AppHeader';
 
 interface TeamMember extends AuthUser {
@@ -16,6 +16,7 @@ interface TeamMember extends AuthUser {
 export default function TeamPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [teamMembers, setTeamMembers] = useState<AuthUser[]>([]);
+  const [farms, setFarms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -54,8 +55,21 @@ export default function TeamPage() {
   useEffect(() => {
     if (user) {
       loadTeamMembers();
+      // 관리자 계정만 농장 목록 로드
+      if (user.role === 'system_admin' || user.role === 'super_admin') {
+        loadFarms();
+      }
     }
   }, [user]);
+
+  const loadFarms = async () => {
+    try {
+      const farmsResult = await getTeams();
+      setFarms(farmsResult || []);
+    } catch (error) {
+      console.error('Error loading farms:', error);
+    }
+  };
 
   const loadTeamMembers = async () => {
     try {
@@ -108,16 +122,64 @@ export default function TeamPage() {
   const handleSaveEdit = async (memberId: string) => {
     setActionLoading(memberId);
     try {
-      // 농장장 계정은 기본 정보만 수정 가능 (역할, 농장 배정 제외)
-      const { team_id, role, ...userData } = editFormData;
-      const result = await updateUser(memberId, {
-        ...userData,
-        role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member'
-      });
-      
-      if (!result.success) {
-        alert(`사용자 정보 업데이트에 실패했습니다: ${result.error}`);
-        return;
+      // 관리자 계정은 역할과 농장 배정 포함, 농장장은 기본 정보만
+      if (user?.role === 'system_admin' || user?.role === 'super_admin') {
+        // 1) 사용자 속성 업데이트
+        const { team_id: selectedFarmId, ...userData } = editFormData;
+        const result = await updateUser(memberId, {
+          ...userData,
+          role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member' | 'super_admin'
+        });
+        
+        if (!result.success) {
+          alert(`사용자 정보 업데이트에 실패했습니다: ${result.error}`);
+          return;
+        }
+
+        // 2) 농장 배정 처리 (관리자 계정만)
+        if (selectedFarmId !== undefined) {
+          const { getSupabaseClient } = await import('../../src/lib/supabase');
+          const supabase = getSupabaseClient();
+          const tenantId = '00000000-0000-0000-0000-000000000001';
+          
+          if (selectedFarmId) {
+            // 농장 배정
+            const farmRole = editFormData.role === 'team_leader' ? 'owner' : 'operator';
+            const { error: fmError } = await supabase
+              .from('farm_memberships')
+              .upsert([{
+                tenant_id: tenantId,
+                user_id: memberId,
+                farm_id: selectedFarmId,
+                role: farmRole
+              }], { onConflict: 'tenant_id, farm_id, user_id' });
+            
+            if (fmError) {
+              console.warn('농장 배정 실패:', fmError);
+            }
+          } else {
+            // 배정 해제
+            const { error: delErr } = await supabase
+              .from('farm_memberships')
+              .delete()
+              .eq('user_id', memberId);
+            if (delErr) {
+              console.warn('농장 배정 해제 실패:', delErr);
+            }
+          }
+        }
+      } else {
+        // 농장장 계정은 기본 정보만 수정 가능
+        const { team_id, role, ...userData } = editFormData;
+        const result = await updateUser(memberId, {
+          ...userData,
+          role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member'
+        });
+        
+        if (!result.success) {
+          alert(`사용자 정보 업데이트에 실패했습니다: ${result.error}`);
+          return;
+        }
       }
 
       alert('팀원 정보가 업데이트되었습니다.');
@@ -315,7 +377,7 @@ export default function TeamPage() {
                           {(member.is_active ?? true) ? '활성' : '비활성'}
                         </div>
                       </div>
-                      {user?.role === 'team_leader' && (
+                      {(user?.role === 'team_leader' || user?.role === 'system_admin' || user?.role === 'super_admin') && (
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleEditUser(member)}
@@ -426,7 +488,47 @@ export default function TeamPage() {
                   />
                 </div>
 
-                {/* 역할과 농장 배정은 농장장 계정에서는 제거 - 기본 정보만 수정 가능 */}
+                {/* 역할 - 관리자 계정만 표시 */}
+                {(user?.role === 'system_admin' || user?.role === 'super_admin') && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      역할 *
+                    </label>
+                    <select
+                      value={editFormData.role}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="team_member">팀원</option>
+                      <option value="team_leader">농장장</option>
+                      <option value="system_admin">시스템 관리자</option>
+                      {user?.role === 'super_admin' && (
+                        <option value="super_admin">최고관리자</option>
+                      )}
+                    </select>
+                  </div>
+                )}
+
+                {/* 농장 배정 - 관리자 계정만 표시 */}
+                {(user?.role === 'system_admin' || user?.role === 'super_admin') && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      농장
+                    </label>
+                    <select
+                      value={editFormData.team_id}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, team_id: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="">농장 미배정</option>
+                      {Array.isArray(farms) && farms.map((farm) => (
+                        <option key={farm.id} value={farm.id}>
+                          {farm.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* 활성 상태 */}
                 <div className="md:col-span-2">
