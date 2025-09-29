@@ -252,16 +252,19 @@ function BedsManagementContent() {
     loadData();
   }, []);
 
-  // 농장 데이터 로드 후 초기 탭 설정
+  // 농장 데이터 로드 후 초기 탭 설정 (URL 파라미터가 없을 때만)
   useEffect(() => {
-    if (farms.length > 0 && !selectedFarmTab) {
-      if (user && user.role === 'system_admin') {
+    const farmId = searchParams.get('farm');
+    if (farms.length > 0 && !selectedFarmTab && !farmId) {
+      if (user && (user.role === 'system_admin' || user.role === 'super_admin')) {
+        console.log('농장 데이터 로드 후 - 관리자: 전체 농장 탭 설정');
         setSelectedFarmTab('all');
       } else {
+        console.log('농장 데이터 로드 후 - 일반 사용자: 첫 번째 농장 설정');
         setSelectedFarmTab(farms[0].id);
       }
     }
-  }, [farms, user, selectedFarmTab]);
+  }, [farms, user, selectedFarmTab, searchParams]);
 
   // URL 파라미터 처리 (대시보드에서 특정 농장으로 이동)
   useEffect(() => {
@@ -269,15 +272,22 @@ function BedsManagementContent() {
     console.log('농장 ID 파라미터:', farmId);
     console.log('사용 가능한 농장 수:', farms.length);
     console.log('현재 선택된 농장 탭:', selectedFarmTab);
+    console.log('현재 사용자 역할:', user?.role);
+    
     if (farmId && farms.length > 0) {
-      console.log('농장 탭 설정:', farmId);
+      console.log('URL 파라미터로 농장 탭 설정:', farmId);
       setSelectedFarmTab(farmId);
     } else if (!farmId && !selectedFarmTab && farms.length > 0) {
-      // URL 파라미터가 없고 선택된 농장도 없으면 첫 번째 농장 선택
-      setSelectedFarmTab(farms[0].id);
-      console.log('기본 농장 선택:', farms[0].id);
+      // URL 파라미터가 없고 선택된 농장도 없으면 사용자 역할에 따라 기본 탭 설정
+      if (user && (user.role === 'system_admin' || user.role === 'super_admin')) {
+        console.log('관리자 - 전체 농장 탭으로 설정');
+        setSelectedFarmTab('all');
+      } else {
+        console.log('일반 사용자 - 첫 번째 농장 선택:', farms[0].id);
+        setSelectedFarmTab(farms[0].id);
+      }
     }
-  }, [searchParams, farms, selectedFarmTab]);
+  }, [searchParams, farms, selectedFarmTab, user]);
 
   // 베드 정렬 함수
   const sortBeds = (beds: Device[]) => {
@@ -996,8 +1006,8 @@ function BedsManagementContent() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              {/* 시스템 관리자인 경우에만 전체 농장 탭 표시 */}
-              {user && user.role === 'system_admin' && (
+              {/* 관리자인 경우에만 전체 농장 탭 표시 */}
+              {user && (user.role === 'system_admin' || user.role === 'super_admin') && (
                 <button
                   onClick={() => setSelectedFarmTab('all')}
                   className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
