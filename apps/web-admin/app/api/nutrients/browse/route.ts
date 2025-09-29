@@ -1,6 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSbServer } from '@/lib/db';
 
+// 생장 단계 한글 번역 함수
+function translateStage(stage: string): string {
+  const stageMap: { [key: string]: string } = {
+    'vegetative': '생장기',
+    'flowering': '개화기', 
+    'fruiting': '결실기',
+    'germination': '발아기',
+    'mature': '성숙기',
+    'seedling': '묘목기',
+    'harvest': '수확기'
+  };
+  return stageMap[stage] || stage;
+}
+
+// 한글 생장 단계를 영어로 역변환하는 함수
+function translateStageToEnglish(stage: string): string {
+  const reverseStageMap: { [key: string]: string } = {
+    '생장기': 'vegetative',
+    '개화기': 'flowering',
+    '결실기': 'fruiting', 
+    '발아기': 'germination',
+    '성숙기': 'mature',
+    '묘목기': 'seedling',
+    '수확기': 'harvest'
+  };
+  return reverseStageMap[stage] || stage;
+}
+
 export async function GET(req: NextRequest) {
   try {
     console.log('🔍 API 호출 시작:', req.url);
@@ -40,7 +68,9 @@ export async function GET(req: NextRequest) {
       query = query.eq('crop_name', crop);
     }
     if (stage) {
-      query = query.eq('stage', stage);
+      // 한글 단계명을 영어로 변환하여 필터링
+      const englishStage = translateStageToEnglish(stage);
+      query = query.eq('stage', englishStage);
     }
     if (search) {
       query = query.or(`crop_name.ilike.%${search}%,stage.ilike.%${search}%`);
@@ -71,7 +101,7 @@ export async function GET(req: NextRequest) {
       return {
         id: profile.id,
         crop: profile.crop_name,
-        stage: profile.stage,
+        stage: translateStage(profile.stage),
         volume_l: 100, // 기본값
         ec_target: profile.target_ec,
         ph_target: profile.target_ph,
@@ -80,7 +110,7 @@ export async function GET(req: NextRequest) {
         source_title: '스마트팜 데이터베이스',
         source_year: 2024,
         license: 'CC BY 4.0',
-        description: `${profile.crop_name} ${profile.stage}에 최적화된 배양액 레시피입니다.`,
+        description: `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
         growing_conditions: {
           temperature: getTemperatureRange(profile.crop_name),
           humidity: getHumidityRange(profile.crop_name),
