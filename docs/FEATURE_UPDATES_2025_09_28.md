@@ -131,6 +131,46 @@
 #### 관련 파일
 - `apps/web-admin/src/app/team/page.tsx` - UI 텍스트 수정
 
+### 11. 🎨 사용자 인터페이스 개선 (2025.09.29 추가)
+
+#### 메뉴 구조 최적화
+- **사용자 관리 메뉴 상단 이동**: 모든 계정이 상단에서 "사용자 관리" 접근 가능
+- **시스템관리자 메뉴 확장**: 상단에 "관리자 페이지" + "사용자 관리" + "농장 관리" (3개)
+- **일반 사용자 메뉴**: 상단에 "사용자 관리" + "농장 관리" (2개)
+- **햄버거 메뉴 통일**: 모든 계정이 동일한 메뉴 구조 유지
+
+#### 색상 및 가시성 개선
+- **햄버거 메뉴 색상 중복 해결**: 농장관리(초록) vs 양액계산(파란)으로 구분
+- **사용자 편집 모달 텍스트 개선**: 활성/비활성 텍스트 가시성 향상
+- **폰트 굵기 조정**: `font-medium` → `font-semibold`로 가독성 향상
+
+#### 프로젝트 구조 정리
+- **중복 디렉토리 제거**: `src/app/` 디렉토리 삭제로 혼선 해결
+- **Next.js 표준 구조**: `app/` 디렉토리만 사용하여 App Router 통일
+- **컴포넌트 구조 유지**: `src/components/`와 `src/lib/` 보존
+
+#### 관련 파일
+- `apps/web-admin/src/components/AppHeader.tsx` - 메뉴 구조 개선
+- `apps/web-admin/app/admin/page.tsx` - 사용자 편집 모달 개선
+- `apps/web-admin/src/app/admin/page.tsx` - 사용자 편집 모달 개선
+
+### 12. 🔧 GitHub Actions 워크플로우 개선 (2025.09.29 추가)
+
+#### YAML 문법 오류 해결
+- **secrets 컨텍스트 정리**: `env` 변수로 통일하여 문법 오류 해결
+- **조건문 수정**: 올바른 GitHub Actions 표현식 사용
+- **환경변수 기본값**: 안정적인 실행을 위한 기본값 제공
+- **Node.js 20 최적화**: 내장 fetch API 사용으로 의존성 최적화
+
+#### 배양액 레시피 수집 시스템
+- **중복 제거 로직**: 완전히 동일한 레시피 자동 제거
+- **부분 저장 지원**: 중복 제외하고 나머지 레시피 저장
+- **데이터베이스 정리**: 기존 중복 데이터 10건 제거 완료
+
+#### 관련 파일
+- `.github/workflows/nutrient-collection.yml` - 워크플로우 수정
+- `apps/worker/src/server.ts` - 중복 체크 로직 추가
+
 ## 🔧 기술적 개선사항
 
 ### 1. 타입 안전성 향상
@@ -203,6 +243,10 @@
 - `apps/web-admin/src/components/AppHeader.tsx`
 - `apps/web-admin/src/app/team/page.tsx`
 - `apps/web-admin/src/app/beds/page.tsx`
+- `apps/web-admin/app/admin/page.tsx` - 사용자 편집 모달 개선
+- `apps/web-admin/src/app/admin/page.tsx` - 사용자 편집 모달 개선
+- `.github/workflows/nutrient-collection.yml` - 워크플로우 수정
+- `apps/worker/src/server.ts` - 중복 체크 로직 추가
 - `docs/00_README.md`
 - `docs/01_ENV.md`
 - `docs/02_DB_SCHEMA.sql`
@@ -217,18 +261,22 @@
 - `apps/web-admin/src/lib/mockAuth.ts` (Supabase 전용으로 전환)
 - `apps/web-admin/src/lib/migrateUsers.ts` (불필요한 파일)
 - `init_supabase_users.sql` (일회성 스크립트)
+- `apps/web-admin/src/app/` (중복 디렉토리 제거)
 
 ## 🎯 성과 지표
 
 - **버그 수정**: 7개 주요 런타임 오류 해결
-- **기능 추가**: 10개 새로운 기능 구현
+- **기능 추가**: 12개 새로운 기능 구현
 - **보안 강화**: RLS 정책 최적화로 보안 수준 향상
 - **사용자 경험**: 한글화 및 직관적 UI로 UX 개선
 - **시스템 통합**: Supabase 완전 통합으로 데이터 일관성 확보
 - **권한 관리**: 팀 기반 접근 제어로 보안 강화
+- **UI/UX 개선**: 메뉴 구조 최적화 및 가시성 향상
+- **프로젝트 구조**: 중복 디렉토리 제거로 개발 효율성 향상
+- **CI/CD 개선**: GitHub Actions 워크플로우 안정성 향상
 
 ---
 
-**문서 작성일**: 2025.09.28  
+**문서 작성일**: 2025.09.29 (최종 업데이트)  
 **작성자**: 스마트팜 개발팀  
-**버전**: v1.1
+**버전**: v1.2
