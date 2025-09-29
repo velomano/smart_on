@@ -129,7 +129,7 @@ export const signIn = async (data: SignInData) => {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: (userData.role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
+        role: (userData.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
         tenant_id: userData.tenant_id,
         is_approved: userData.is_approved,
         is_active: userData.is_active,
@@ -260,60 +260,29 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     let teamName = userData.team_name; // users 테이블의 team_name을 기본값으로 사용
     let role = userData.role;
 
-    // farm_memberships 테이블에서 농장 정보 우선 조회
-    if (farmMembershipError) {
-      console.error('farm_memberships 로드 오류:', farmMembershipError);
-    } else if (farmMembershipData) {
-      console.log('🔍 getCurrentUser farmMembershipData:', farmMembershipData);
-      
-      // farm_memberships에서 farm_id를 team_id로 사용
-      if (farmMembershipData.farm_id) {
-        teamId = farmMembershipData.farm_id;
-        console.log('🔍 getCurrentUser teamId를 farm_memberships에서 설정:', teamId);
-        
-        // farm_id로 농장 이름 조회
-        console.log('🔍 getCurrentUser - 농장 이름 조회 시도:', teamId);
-        const { data: farmData } = await (supabase as any)
-          .from('farms')
-          .select('name')
-          .eq('id', teamId)
-          .maybeSingle();
-        
-        console.log('🔍 getCurrentUser - 농장 이름 조회 결과:', farmData);
-        if (farmData) {
-          teamName = farmData.name;
-          console.log('🔍 getCurrentUser - 농장 이름 설정:', teamName);
-        }
-      }
-      
-      // farm_memberships의 role을 users 테이블의 role과 매핑
-      if (farmMembershipData.role) {
-        role = farmMembershipData.role === 'owner' ? 'team_leader' :
-               farmMembershipData.role === 'operator' ? 'team_member' :
-               farmMembershipData.role === 'viewer' ? 'team_member' :
-               userData.role; // 기본값은 users 테이블의 role
-        console.log('🔍 getCurrentUser role을 farm_memberships에서 매핑:', {
-          farmRole: farmMembershipData.role,
-          mappedRole: role
-        });
-      }
+    // 슈퍼 관리자와 시스템 관리자는 farm_memberships에 관계없이 최고 권한 유지
+    if (userData.role === 'super_admin' || userData.role === 'system_admin') {
+      console.log('🔍 getCurrentUser - 관리자 감지:', {
+        email: userData.email,
+        role: userData.role
+      });
+      // 관리자는 모든 농장에 접근 가능하므로 team_id는 null로 유지
+      teamId = null;
+      teamName = null;
+      role = userData.role;
     } else {
-      console.log('🔍 getCurrentUser farmMembershipData가 null입니다, 기존 로직 사용');
-      
-      // 기존 memberships 테이블 로직 (호환성을 위해)
-      if (membershipError) {
-        console.error('memberships 로드 오류:', membershipError);
-      } else if (membershipData) {
-        console.log('🔍 getCurrentUser membershipData:', membershipData);
+      // 일반 사용자만 farm_memberships 테이블에서 농장 정보 조회
+      if (farmMembershipError) {
+        console.error('farm_memberships 로드 오류:', farmMembershipError);
+      } else if (farmMembershipData) {
+        console.log('🔍 getCurrentUser farmMembershipData:', farmMembershipData);
         
-        // users 테이블에 team_id가 없으면 memberships에서 가져오기
-        if (!teamId && membershipData.team_id) {
-          teamId = membershipData.team_id;
-          console.log('🔍 getCurrentUser teamId를 memberships에서 설정:', teamId);
-        }
-        
-        // team_id가 있으면 farms 테이블에서 농장 이름 조회 (teamName이 없는 경우만)
-        if (teamId && !teamName) {
+        // farm_memberships에서 farm_id를 team_id로 사용
+        if (farmMembershipData.farm_id) {
+          teamId = farmMembershipData.farm_id;
+          console.log('🔍 getCurrentUser teamId를 farm_memberships에서 설정:', teamId);
+          
+          // farm_id로 농장 이름 조회
           console.log('🔍 getCurrentUser - 농장 이름 조회 시도:', teamId);
           const { data: farmData } = await (supabase as any)
             .from('farms')
@@ -325,6 +294,49 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
           if (farmData) {
             teamName = farmData.name;
             console.log('🔍 getCurrentUser - 농장 이름 설정:', teamName);
+          }
+        }
+        
+        // farm_memberships의 role을 users 테이블의 role과 매핑
+        if (farmMembershipData.role) {
+          role = farmMembershipData.role === 'owner' ? 'team_leader' :
+                 farmMembershipData.role === 'operator' ? 'team_member' :
+                 farmMembershipData.role === 'viewer' ? 'team_member' :
+                 userData.role; // 기본값은 users 테이블의 role
+          console.log('🔍 getCurrentUser role을 farm_memberships에서 매핑:', {
+            farmRole: farmMembershipData.role,
+            mappedRole: role
+          });
+        }
+      } else {
+        console.log('🔍 getCurrentUser farmMembershipData가 null입니다, 기존 로직 사용');
+        
+        // 기존 memberships 테이블 로직 (호환성을 위해)
+        if (membershipError) {
+          console.error('memberships 로드 오류:', membershipError);
+        } else if (membershipData) {
+          console.log('🔍 getCurrentUser membershipData:', membershipData);
+          
+          // users 테이블에 team_id가 없으면 memberships에서 가져오기
+          if (!teamId && membershipData.team_id) {
+            teamId = membershipData.team_id;
+            console.log('🔍 getCurrentUser teamId를 memberships에서 설정:', teamId);
+          }
+          
+          // team_id가 있으면 farms 테이블에서 농장 이름 조회 (teamName이 없는 경우만)
+          if (teamId && !teamName) {
+            console.log('🔍 getCurrentUser - 농장 이름 조회 시도:', teamId);
+            const { data: farmData } = await (supabase as any)
+              .from('farms')
+              .select('name')
+              .eq('id', teamId)
+              .maybeSingle();
+            
+            console.log('🔍 getCurrentUser - 농장 이름 조회 결과:', farmData);
+            if (farmData) {
+              teamName = farmData.name;
+              console.log('🔍 getCurrentUser - 농장 이름 설정:', teamName);
+            }
           }
         }
       }
@@ -417,11 +429,11 @@ export const getApprovedUsers = async () => {
         let teamName = null;
         let role = user.role;
 
-        // system_admin은 farm_memberships에 관계없이 최고 권한 유지
-        if (user.role === 'system_admin') {
-          console.log(`🔍 system_admin 감지: ${user.email}, role: ${user.role}`);
-          role = 'system_admin';
-          // system_admin은 모든 농장에 접근 가능하므로 teamId는 null로 유지
+        // system_admin과 super_admin은 farm_memberships에 관계없이 최고 권한 유지
+        if (user.role === 'system_admin' || user.role === 'super_admin') {
+          console.log(`🔍 관리자 감지: ${user.email}, role: ${user.role}`);
+          role = user.role;
+          // 관리자는 모든 농장에 접근 가능하므로 teamId는 null로 유지
         } else if (membershipError) {
           console.error(`사용자 ${user.email} farm_memberships 로드 오류:`, membershipError);
           // membership이 없는 경우 기본값 사용
