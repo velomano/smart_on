@@ -622,9 +622,54 @@ export default function NutrientPlanPage() {
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       검색 결과가 없습니다
                     </h3>
-                    <p className="text-gray-600">
-                      다른 검색어나 필터를 시도해보세요.
+                    <p className="text-gray-600 mb-4">
+                      요청하신 작물이나 생장 단계에 대한 레시피를 찾을 수 없습니다.
                     </p>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+                      <div className="flex items-start">
+                        <span className="text-blue-600 text-lg mr-3">📝</span>
+                        <div className="text-left">
+                          <h4 className="text-blue-900 font-medium mb-1">데이터 수집 요청</h4>
+                          <p className="text-blue-800 text-sm mb-3">
+                            해당 작물의 레시피를 데이터 자동 수집 대기목록에 등록하고, 빠른 시간 안에 정보를 업데이트하겠습니다.
+                          </p>
+                          <button 
+                            onClick={async () => {
+                              const cropName = selectedCrop || searchTerm || '요청된 작물';
+                              const stageName = selectedStage || '해당 단계';
+                              
+                              try {
+                                const response = await fetch('/api/data-collection/requests', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    crop: cropName,
+                                    stage: stageName,
+                                    user_id: user?.id,
+                                    user_email: user?.email,
+                                    notes: `사용자 요청: ${cropName} ${stageName} 레시피`
+                                  })
+                                });
+                                
+                                const result = await response.json();
+                                
+                                if (result.ok) {
+                                  alert(`✅ "${cropName} - ${stageName}" 레시피가 데이터 수집 대기목록에 등록되었습니다.\n\n빠른 시일 내에 업데이트해드리겠습니다.`);
+                                } else {
+                                  alert(`❌ 요청 등록에 실패했습니다: ${result.error}`);
+                                }
+                              } catch (error) {
+                                console.error('데이터 수집 요청 에러:', error);
+                                alert('❌ 요청 등록 중 오류가 발생했습니다.');
+                              }
+                            }}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          >
+                            📋 수집 요청 등록
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
