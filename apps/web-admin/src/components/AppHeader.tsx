@@ -217,7 +217,7 @@ export default function AppHeader({
                       onClick={() => router.push(canManageUsers ? '/admin' : '/team')}
                       className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                     >
-                      {canManageUsers ? '관리자 페이지' : '사용자 관리'}
+                      사용자 관리
                     </button>
                   )}
               {canManageFarms && (
