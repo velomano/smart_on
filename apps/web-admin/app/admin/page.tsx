@@ -1032,7 +1032,7 @@ export default function AdminPage() {
                       활성 상태
                     </label>
                     <div className="flex space-x-6">
-                      <label className="flex items-center">
+                      <label className="flex items-center text-gray-800 font-semibold">
                         <input
                           type="radio"
                           name="is_active"
@@ -1042,7 +1042,7 @@ export default function AdminPage() {
                         />
                         활성
                       </label>
-                      <label className="flex items-center">
+                      <label className="flex items-center text-gray-800 font-semibold">
                         <input
                           type="radio"
                           name="is_active"
