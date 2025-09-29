@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../lib/auth';
+import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getFarms } from '../../lib/auth';
 import AppHeader from '../../components/AppHeader';
 
 interface TeamMember extends AuthUser {
@@ -16,6 +16,7 @@ interface TeamMember extends AuthUser {
 export default function TeamPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [teamMembers, setTeamMembers] = useState<AuthUser[]>([]);
+  const [farms, setFarms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -26,13 +27,15 @@ export default function TeamPage() {
     is_active: boolean;
     company?: string;
     phone?: string;
+    team_id?: string;
   }>({
     name: '',
     email: '',
     role: 'team_member',
     is_active: true,
     company: '',
-    phone: ''
+    phone: '',
+    team_id: ''
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const router = useRouter();
@@ -52,8 +55,18 @@ export default function TeamPage() {
   useEffect(() => {
     if (user) {
       loadTeamMembers();
+      loadFarms();
     }
   }, [user]);
+
+  const loadFarms = async () => {
+    try {
+      const farmsResult = await getFarms();
+      setFarms(farmsResult || []);
+    } catch (error) {
+      console.error('Error loading farms:', error);
+    }
+  };
 
   const loadTeamMembers = async () => {
     try {
@@ -131,7 +144,8 @@ export default function TeamPage() {
       role: member.role || 'team_member',
       is_active: member.is_active ?? true,
       company: (member as any).company || '',
-      phone: (member as any).phone || ''
+      phone: (member as any).phone || '',
+      team_id: member.team_id || ''
     });
     setIsEditModalOpen(true);
     console.log('🔧 모달 상태 설정 완료');
@@ -140,29 +154,63 @@ export default function TeamPage() {
   const handleSaveEdit = async (memberId: string) => {
     setActionLoading(memberId);
     try {
-      const updates = {
-        name: editFormData.name,
-        email: editFormData.email,
-        role: editFormData.role,
-        is_active: editFormData.is_active,
-        company: editFormData.company,
-        phone: editFormData.phone
-      };
-
-      const result = await updateUser(memberId, updates as Partial<AuthUser>);
-      if (result.success) {
-        setTeamMembers(prev =>
-          prev.map(member =>
-            member.id === memberId ? { ...member, ...updates } as AuthUser : member
-          )
-        );
-        setEditingUser(null);
-        setIsEditModalOpen(false);
-        alert('팀원 정보가 업데이트되었습니다.');
-      } else {
-        alert('업데이트에 실패했습니다.');
+      // 1) 사용자 속성만 업데이트 (team_id 제외)
+      const { team_id: selectedFarmId, ...userData } = editFormData;
+      const result = await updateUser(memberId, {
+        ...userData,
+        role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member'
+      });
+      
+      if (!result.success) {
+        alert(`사용자 정보 업데이트에 실패했습니다: ${result.error}`);
+        return;
       }
-    } catch {
+
+      // 2) 농장 배정 처리 (별도) - 농장장(팀) 계정만 가능
+      if (user?.role === 'team_leader' && selectedFarmId !== undefined) {
+        const { getSupabaseClient } = await import('../../lib/supabase');
+        const supabase = getSupabaseClient();
+        const tenantId = '00000000-0000-0000-0000-000000000001';
+        
+        if (selectedFarmId) {
+          // 농장 배정
+          const farmRole = editFormData.role === 'team_leader' ? 'owner' : 'operator';
+          const { error: fmError } = await supabase
+            .from('farm_memberships')
+            .upsert([{
+              tenant_id: tenantId,
+              user_id: memberId,
+              farm_id: selectedFarmId,
+              role: farmRole
+            }], { onConflict: 'tenant_id, farm_id, user_id' });
+          
+          if (fmError) {
+            console.warn('농장 배정 실패:', fmError);
+            // 농장 배정 실패해도 사용자 업데이트는 성공으로 처리
+          }
+        } else {
+          // 배정 해제
+          const { error: delErr } = await supabase
+            .from('farm_memberships')
+            .delete()
+            .eq('user_id', memberId);
+          if (delErr) {
+            console.warn('농장 배정 해제 실패:', delErr);
+          }
+        }
+      }
+
+      alert('팀원 정보가 업데이트되었습니다.');
+      
+      // 데이터 다시 로드
+      if (user) {
+        await loadTeamMembers();
+      }
+      
+      setEditingUser(null);
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('팀원 정보 업데이트 오류:', error);
       alert('오류가 발생했습니다.');
     } finally {
       setActionLoading(null);
@@ -178,7 +226,8 @@ export default function TeamPage() {
       role: 'team_member',
       is_active: true,
       company: '',
-      phone: ''
+      phone: '',
+      team_id: ''
     });
   };
 
@@ -265,24 +314,6 @@ export default function TeamPage() {
           <div className="mb-6 text-center">
             <div className="flex items-center justify-center space-x-4">
               <h2 className="text-3xl font-bold text-gray-900 mb-2">팀 정보</h2>
-              <button
-                onClick={() => {
-                  console.log('🚨 임시 모달 버튼 클릭됨!');
-                  setIsEditModalOpen(true);
-                  setEditingUser('temp-user-id');
-                  setEditFormData({
-                    name: '임시 사용자',
-                    email: 'temp@example.com',
-                    role: 'team_member',
-                    is_active: true,
-                    company: '임시 회사',
-                    phone: '010-0000-0000'
-                  });
-                }}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors"
-              >
-                🚨 임시 모달
-              </button>
             </div>
             <p className="text-lg text-gray-600">팀의 정보를 볼 수 있습니다</p>
           </div>
@@ -488,6 +519,44 @@ export default function TeamPage() {
                     placeholder="010-1234-5678"
                   />
                 </div>
+
+                {/* 역할 - 농장장(팀) 계정만 표시 */}
+                {user?.role === 'team_leader' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      역할 *
+                    </label>
+                    <select
+                      value={editFormData.role}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="team_member">팀원</option>
+                      <option value="team_leader">농장장</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* 농장 배정 - 농장장(팀) 계정만 표시 */}
+                {user?.role === 'team_leader' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      농장
+                    </label>
+                    <select
+                      value={editFormData.team_id}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, team_id: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="">농장 미배정</option>
+                      {farms.filter(farm => farm.id === user.team_id).map((farm) => (
+                        <option key={farm.id} value={farm.id}>
+                          {farm.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 {/* 활성 상태 */}
                 <div className="md:col-span-2">
