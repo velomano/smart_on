@@ -50,7 +50,7 @@ export default function MyPage() {
           const supabaseAuth = await UserService.getCurrentSupabaseUser();
           if (supabaseAuth?.id) {
             try {
-              setSupabaseUser(supabaseAuth);
+              setSupabaseUser(supabaseAuth as any);
               
               // 실제 Supabase 데이터 로드
               const pageData = await UserService.getMyPageData(supabaseAuth.id);

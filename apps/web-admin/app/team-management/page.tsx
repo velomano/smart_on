@@ -31,8 +31,7 @@ export default function TeamManagementPage() {
   // 팀원 데이터 로드
   const loadTeamMembers = async () => {
     try {
-      const usersResult = await getApprovedUsers();
-      const allUsers = usersResult.users || [];
+      const allUsers = await getApprovedUsers();
       // 자신의 농장에 속한 모든 멤버들 필터링 (농장장 자신 포함)
       const myTeamMembers = allUsers.filter(member => 
         member.team_id === user?.team_id

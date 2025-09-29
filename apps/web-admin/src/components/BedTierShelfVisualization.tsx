@@ -1,47 +1,63 @@
 import React from 'react';
 
 interface BedTierShelfVisualizationProps {
-  totalTiers: number;
-  activeTiers: number;
+  activeTiers: number; // 1~3 중 활성화할 단수
   tierStatuses: Array<{
-    tierNumber: number;
-    isActive: boolean;
-    status: 'active' | 'inactive';
-    plantCount: number;
+    tierNumber: number; // 1, 2, 3
     hasPlants: boolean;
+    cropName?: string;
+    growingMethod?: string;
+    plantType?: 'seed' | 'seedling'; // 파종/육묘
+    startDate?: string; // 생육 시작일자
   }>;
+  waterLevelStatus?: 'high' | 'low' | 'normal' | 'disconnected';
   onTierClick?: (tierNumber: number) => void;
   compact?: boolean;
-  showPlants?: boolean;
 }
 
 export default function BedTierShelfVisualization({
-  totalTiers,
   activeTiers,
   tierStatuses,
+  waterLevelStatus = 'normal',
   onTierClick,
-  compact = false,
-  showPlants = true
+  compact = false
 }: BedTierShelfVisualizationProps) {
   
-  // 선반 SVG 컴포넌트
-  const ShelfSVG = ({ tierNumber, isActive, hasPlants, plantCount }: {
-    tierNumber: number;
-    isActive: boolean;
-    hasPlants: boolean;
-    plantCount: number;
-  }) => {
-    const shelfHeight = 60;  // 20 -> 60 (3배 증가)
-    const shelfWidth = 180;  // 60 -> 180 (3배 증가)
-    const shelfSpacing = 75; // 25 -> 75 (3배 증가)
-    const totalHeight = (tierNumber * shelfHeight) + ((tierNumber - 1) * shelfSpacing) + 30;
+  // 고정된 3단 + 저수조 SVG 컴포넌트
+  const FixedBedSVG = () => {
+    const shelfHeight = 80;  // 모든 선반 높이 (40 -> 80)
+    const waterTankHeight = 100;  // 저수조 높이 (60 -> 100)
+    const shelfWidth = 300;  // 선반 너비 (180 -> 300)
+    const shelfSpacing = 80; // 선반 간격 (60 -> 80)
+    const totalHeight = (3 * shelfHeight) + (2 * shelfSpacing) + waterTankHeight + shelfSpacing + 30;
+    
+    // 저수조 색상 결정
+    const getWaterTankColor = () => {
+      switch (waterLevelStatus) {
+        case 'high': return '#EF4444'; // 빨간색
+        case 'low': return '#F59E0B';  // 노란색
+        case 'normal': return '#0EA5E9'; // 파란색
+        case 'disconnected': return '#6B7280'; // 회색
+        default: return '#0EA5E9';
+      }
+    };
+    
+    // 단별 색상 결정
+    const getTierColor = (tierNumber: number) => {
+      const tier = tierStatuses.find(t => t.tierNumber === tierNumber);
+      const isActive = tierNumber <= activeTiers;
+      
+      if (!isActive) return '#D1D5DB'; // 비활성 - 어두운 회색
+      if (tier?.hasPlants) return '#86EFAC'; // 작물 있음 - 연한 녹색
+      return '#E5E7EB'; // 기본 - 회색
+    };
     
     return (
       <div className="relative inline-block">
         <svg 
           width={shelfWidth + 60} 
-          height={totalHeight + 30} 
-          viewBox={`0 0 ${shelfWidth + 60} ${totalHeight + 30}`}
+          height={totalHeight} 
+          viewBox={`0 0 ${shelfWidth + 60} ${totalHeight}`}
           className="drop-shadow-lg"
         >
           {/* 베드 프레임 (좌우 지지대) */}
@@ -49,213 +65,442 @@ export default function BedTierShelfVisualization({
             x="15" 
             y="15" 
             width="12" 
-            height={totalHeight} 
-            fill={isActive ? "#8B5CF6" : "#D1D5DB"} 
+            height={totalHeight - 30} 
+            fill="#8B5CF6" 
             rx="6"
           />
           <rect 
             x={shelfWidth + 27} 
             y="15" 
             width="12" 
-            height={totalHeight} 
-            fill={isActive ? "#8B5CF6" : "#D1D5DB"} 
+            height={totalHeight - 30} 
+            fill="#8B5CF6" 
             rx="6"
           />
           
-          {/* 선반들 */}
-          {Array.from({ length: tierNumber }, (_, i) => {
-            const y = 15 + (i * (shelfHeight + shelfSpacing));
-            const isTierActive = i < activeTiers;
+          {/* 1단 (맨 위) */}
+          <g 
+            className={onTierClick ? 'cursor-pointer' : ''}
+            onClick={() => onTierClick?.(1)}
+          >
+            <rect 
+              x="27" 
+              y="15" 
+              width={shelfWidth} 
+              height={shelfHeight} 
+              fill={getTierColor(1)} 
+              stroke="#8B5CF6" 
+              strokeWidth="2"
+              rx="6"
+            />
             
-            return (
-              <g key={i}>
-                {/* 선반 판 */}
-                <rect 
-                  x="27" 
-                  y={y} 
-                  width={shelfWidth} 
-                  height={shelfHeight} 
-                  fill={isTierActive ? "#F3F4F6" : "#E5E7EB"} 
-                  stroke={isTierActive ? "#8B5CF6" : "#9CA3AF"} 
-                  strokeWidth="3"
-                  rx="6"
-                />
-                
-                {/* 선반 앞쪽 가장자리 */}
-                <rect 
-                  x="27" 
-                  y={y + shelfHeight - 9} 
-                  width={shelfWidth} 
-                  height="9" 
-                  fill={isTierActive ? "#8B5CF6" : "#9CA3AF"} 
-                  rx="3"
-                />
-                
-                {/* 식물 표시 */}
-                {showPlants && isTierActive && hasPlants && (
+            {/* 1단 앞쪽 가장자리 */}
+            <rect 
+              x="27" 
+              y={15 + shelfHeight - 6} 
+              width={shelfWidth} 
+              height="6" 
+              fill="#8B5CF6" 
+              rx="3"
+            />
+            
+            {/* 1단 라벨 */}
+            <text 
+              x="36" 
+              y={15 + shelfHeight - 10} 
+              fontSize="16" 
+              fill="#6B7280" 
+              fontWeight="bold"
+            >
+              1단
+            </text>
+            
+            {/* 작물 정보 표시 */}
+            {(() => {
+              const tier = tierStatuses.find(t => t.tierNumber === 1);
+              if (tier?.hasPlants && tier.cropName) {
+                return (
                   <g>
-                    {/* 식물 아이콘들 */}
-                    {Array.from({ length: Math.min(plantCount, 6) }, (_, plantIndex) => {
-                      const plantX = 45 + (plantIndex * 24);
-                      const plantY = y + 15;
-                      
-                      return (
-                        <g key={plantIndex}>
-                          {/* 식물 줄기 */}
-                          <rect 
-                            x={plantX + 6} 
-                            y={plantY} 
-                            width="6" 
-                            height="24" 
-                            fill="#10B981" 
-                            rx="3"
-                          />
-                          {/* 식물 잎 */}
-                          <circle 
-                            cx={plantX + 9} 
-                            cy={plantY + 6} 
-                            r="9" 
-                            fill="#34D399" 
-                          />
-                        </g>
-                      );
-                    })}
-                    
-                    {/* 식물 개수 표시 (7개 이상일 때) */}
-                    {plantCount > 6 && (
+                    {/* 작물 이름 (중앙) */}
+                    <text 
+                      x="120" 
+                      y={15 + shelfHeight / 2 - 5} 
+                      fontSize="16" 
+                      fill="#374151" 
+                      fontWeight="bold"
+                    >
+                      {tier.cropName}
+                    </text>
+                    {/* 재배 방법 (중앙) */}
+                    {tier.growingMethod && (
                       <text 
-                        x={shelfWidth + 15} 
-                        y={y + 36} 
-                        fontSize="24" 
-                        fill="#6B7280" 
-                        textAnchor="end"
-                        fontWeight="bold"
+                        x="120" 
+                        y={15 + shelfHeight / 2 + 15} 
+                        fontSize="12" 
+                        fill="#6B7280"
                       >
-                        +{plantCount - 6}
+                        {tier.growingMethod}
+                      </text>
+                    )}
+                    {/* 작물 유형과 시작일자 (오른쪽) */}
+                    <text 
+                      x={shelfWidth - 20} 
+                      y={15 + shelfHeight / 2 - 5} 
+                      fontSize="12" 
+                      fill="#6B7280"
+                      textAnchor="end"
+                    >
+                      {tier.plantType === 'seed' ? '파종' : '육묘'}
+                    </text>
+                    {tier.startDate && (
+                      <text 
+                        x={shelfWidth - 20} 
+                        y={15 + shelfHeight / 2 + 15} 
+                        fontSize="11" 
+                        fill="#9CA3AF"
+                        textAnchor="end"
+                      >
+                        {tier.startDate}
                       </text>
                     )}
                   </g>
-                )}
-                
-                {/* 단 번호 표시 */}
-                <text 
-                  x="36" 
-                  y={y + 42} 
-                  fontSize="24" 
-                  fill={isTierActive ? "#6B7280" : "#9CA3AF"} 
-                  fontWeight="bold"
-                >
-                  {i + 1}단
-                </text>
-              </g>
-            );
-          })}
+                );
+              }
+              return null;
+            })()}
+          </g>
+
+          {/* 2단 */}
+          <g 
+            className={onTierClick ? 'cursor-pointer' : ''}
+            onClick={() => onTierClick?.(2)}
+          >
+            <rect 
+              x="27" 
+              y={15 + shelfHeight + shelfSpacing} 
+              width={shelfWidth} 
+              height={shelfHeight} 
+              fill={getTierColor(2)} 
+              stroke="#8B5CF6" 
+              strokeWidth="2"
+              rx="6"
+            />
+            
+            {/* 2단 앞쪽 가장자리 */}
+            <rect 
+              x="27" 
+              y={15 + shelfHeight + shelfSpacing + shelfHeight - 6} 
+              width={shelfWidth} 
+              height="6" 
+              fill="#8B5CF6" 
+              rx="3"
+            />
+            
+            {/* 2단 라벨 */}
+            <text 
+              x="36" 
+              y={15 + shelfHeight + shelfSpacing + shelfHeight - 10} 
+              fontSize="16" 
+              fill="#6B7280" 
+              fontWeight="bold"
+            >
+              2단
+            </text>
+            
+            {/* 작물 정보 표시 */}
+            {(() => {
+              const tier = tierStatuses.find(t => t.tierNumber === 2);
+              if (tier?.hasPlants && tier.cropName) {
+                return (
+                  <g>
+                    {/* 작물 이름 (중앙) */}
+                    <text 
+                      x="120" 
+                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 - 5} 
+                      fontSize="16" 
+                      fill="#374151" 
+                      fontWeight="bold"
+                    >
+                      {tier.cropName}
+                    </text>
+                    {/* 재배 방법 (중앙) */}
+                    {tier.growingMethod && (
+                      <text 
+                        x="120" 
+                        y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 + 15} 
+                        fontSize="12" 
+                        fill="#6B7280"
+                      >
+                        {tier.growingMethod}
+                      </text>
+                    )}
+                    {/* 작물 유형과 시작일자 (오른쪽) */}
+                    <text 
+                      x={shelfWidth - 20} 
+                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 - 5} 
+                      fontSize="12" 
+                      fill="#6B7280"
+                      textAnchor="end"
+                    >
+                      {tier.plantType === 'seed' ? '파종' : '육묘'}
+                    </text>
+                    {tier.startDate && (
+                      <text 
+                        x={shelfWidth - 20} 
+                        y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 + 15} 
+                        fontSize="11" 
+                        fill="#9CA3AF"
+                        textAnchor="end"
+                      >
+                        {tier.startDate}
+                      </text>
+                    )}
+                  </g>
+                );
+              }
+              return null;
+            })()}
+          </g>
+
+          {/* 3단 */}
+          <g 
+            className={onTierClick ? 'cursor-pointer' : ''}
+            onClick={() => onTierClick?.(3)}
+          >
+            <rect 
+              x="27" 
+              y={15 + (2 * shelfHeight) + (2 * shelfSpacing)} 
+              width={shelfWidth} 
+              height={shelfHeight} 
+              fill={getTierColor(3)} 
+              stroke="#8B5CF6" 
+              strokeWidth="2"
+              rx="6"
+            />
+            
+            {/* 3단 앞쪽 가장자리 */}
+            <rect 
+              x="27" 
+              y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight - 6} 
+              width={shelfWidth} 
+              height="6" 
+              fill="#8B5CF6" 
+              rx="3"
+            />
+            
+            {/* 3단 라벨 */}
+            <text 
+              x="36" 
+              y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight - 10} 
+              fontSize="16" 
+              fill="#6B7280" 
+              fontWeight="bold"
+            >
+              3단
+            </text>
+            
+            {/* 작물 정보 표시 */}
+            {(() => {
+              const tier = tierStatuses.find(t => t.tierNumber === 3);
+              if (tier?.hasPlants && tier.cropName) {
+                return (
+                  <g>
+                    {/* 작물 이름 (중앙) */}
+                    <text 
+                      x="120" 
+                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 - 5} 
+                      fontSize="16" 
+                      fill="#374151" 
+                      fontWeight="bold"
+                    >
+                      {tier.cropName}
+                    </text>
+                    {/* 재배 방법 (중앙) */}
+                    {tier.growingMethod && (
+                      <text 
+                        x="120" 
+                        y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 + 15} 
+                        fontSize="12" 
+                        fill="#6B7280"
+                      >
+                        {tier.growingMethod}
+                      </text>
+                    )}
+                    {/* 작물 유형과 시작일자 (오른쪽) */}
+                    <text 
+                      x={shelfWidth - 20} 
+                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 - 5} 
+                      fontSize="12" 
+                      fill="#6B7280"
+                      textAnchor="end"
+                    >
+                      {tier.plantType === 'seed' ? '파종' : '육묘'}
+                    </text>
+                    {tier.startDate && (
+                      <text 
+                        x={shelfWidth - 20} 
+                        y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 + 15} 
+                        fontSize="11" 
+                        fill="#9CA3AF"
+                        textAnchor="end"
+                      >
+                        {tier.startDate}
+                      </text>
+                    )}
+                  </g>
+                );
+              }
+              return null;
+            })()}
+          </g>
+
+          {/* 저수조 (맨 아래, 항상 표시) */}
+          <g>
+            <rect 
+              x="27" 
+              y={15 + (3 * shelfHeight) + (3 * shelfSpacing)} 
+              width={shelfWidth} 
+              height={waterTankHeight} 
+              fill={getWaterTankColor()} 
+              stroke={getWaterTankColor()} 
+              strokeWidth="2"
+              rx="6"
+            />
+            
+            {/* 물탱크 아이콘 */}
+            <text 
+              x={shelfWidth / 2 + 27} 
+              y={15 + (3 * shelfHeight) + (3 * shelfSpacing) + 35} 
+              fontSize="28" 
+              fill="white" 
+              textAnchor="middle"
+              fontWeight="bold"
+            >
+              💧
+            </text>
+            
+            {/* 물탱크 라벨 */}
+            <text 
+              x="36" 
+              y={15 + (3 * shelfHeight) + (3 * shelfSpacing) + 55} 
+              fontSize="16" 
+              fill="white" 
+              fontWeight="bold"
+            >
+              저수조
+            </text>
+          </g>
         </svg>
       </div>
     );
   };
 
   if (compact) {
+    const activeCropCount = tierStatuses.filter(tier => tier.hasPlants).length;
     return (
       <div className="flex items-center space-x-2">
-        <ShelfSVG 
-          tierNumber={totalTiers}
-          isActive={activeTiers > 0}
-          hasPlants={tierStatuses.some(tier => tier.hasPlants)}
-          plantCount={tierStatuses.reduce((sum, tier) => sum + tier.plantCount, 0)}
-        />
+        <FixedBedSVG />
         <div className="text-xs text-gray-600">
-          <span className="font-semibold">{activeTiers}/{totalTiers}단</span>
-          {tierStatuses.some(tier => tier.hasPlants) && (
-            <span className="ml-1">🌱 {tierStatuses.reduce((sum, tier) => sum + tier.plantCount, 0)}</span>
+          {activeCropCount > 0 && (
+            <span className="font-semibold">🌱 {activeCropCount}개 작물</span>
           )}
         </div>
       </div>
     );
   }
 
+  const activeCropCount = tierStatuses.filter(tier => tier.hasPlants).length;
+  
   return (
-    <div className="bg-white/90 backdrop-blur-sm border-2 border-gray-300 rounded-xl p-6 shadow-lg">
+    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-lg font-bold text-gray-800">베드 단 구조</h4>
-        <span className="text-sm text-gray-600 bg-purple-100 px-3 py-2 rounded-full font-semibold">
-          {activeTiers}/{totalTiers}단 활성
-        </span>
+        {activeCropCount > 0 && (
+          <span className="text-sm text-gray-600 bg-green-100 px-3 py-2 rounded-full font-semibold">
+            🌱 {activeCropCount}개 작물 활성
+          </span>
+        )}
       </div>
       
       <div className="flex items-center justify-center mb-6">
-        <ShelfSVG 
-          tierNumber={totalTiers}
-          isActive={activeTiers > 0}
-          hasPlants={tierStatuses.some(tier => tier.hasPlants)}
-          plantCount={tierStatuses.reduce((sum, tier) => sum + tier.plantCount, 0)}
-        />
+        <FixedBedSVG />
       </div>
       
       {/* 단별 상세 정보 */}
       <div className="space-y-3">
-        {tierStatuses.map((tier) => (
-          <div
-            key={tier.tierNumber}
-            className={`flex items-center justify-between p-4 rounded-xl transition-all duration-200 ${
-              tier.isActive 
-                ? 'bg-green-50 border-2 border-green-200' 
-                : 'bg-gray-50 border-2 border-gray-200'
-            } ${onTierClick ? 'cursor-pointer hover:shadow-md' : ''}`}
-            onClick={() => onTierClick?.(tier.tierNumber)}
-          >
-            <div className="flex items-center space-x-3">
-              <div className={`w-4 h-4 rounded-full ${
-                tier.isActive 
-                  ? tier.hasPlants 
-                    ? 'bg-green-500' 
-                    : 'bg-blue-400'
-                  : 'bg-gray-300'
-              }`} />
-              <span className={`text-base font-semibold ${
-                tier.isActive ? 'text-gray-800' : 'text-gray-500'
-              }`}>
-                {tier.tierNumber}단
-              </span>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              {tier.isActive && (
-                <span className="text-sm text-gray-600 font-medium">
-                  {tier.hasPlants ? `🌱 ${tier.plantCount}개` : '🔄 대기'}
+        {[1, 2, 3].map((tierNumber) => {
+          const tier = tierStatuses.find(t => t.tierNumber === tierNumber);
+          const isActive = tierNumber <= activeTiers;
+          
+          return (
+            <div
+              key={tierNumber}
+              className={`flex items-center justify-between p-4 rounded-xl transition-all duration-200 ${
+                isActive 
+                  ? tier?.hasPlants 
+                    ? 'bg-green-50 border-2 border-green-200' 
+                    : 'bg-blue-50 border-2 border-blue-200'
+                  : 'bg-gray-50 border-2 border-gray-200'
+              } ${onTierClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+              onClick={() => onTierClick?.(tierNumber)}
+            >
+              <div className="flex items-center space-x-3">
+                <div className={`w-4 h-4 rounded-full ${
+                  isActive 
+                    ? tier?.hasPlants 
+                      ? 'bg-green-500' 
+                      : 'bg-blue-400'
+                    : 'bg-gray-300'
+                }`} />
+                <span className={`text-base font-semibold ${
+                  isActive ? 'text-gray-800' : 'text-gray-500'
+                }`}>
+                  {tierNumber}단
                 </span>
-              )}
-              <span className={`text-sm px-3 py-2 rounded-full font-semibold ${
-                tier.isActive 
-                  ? 'bg-green-100 text-green-700' 
-                  : 'bg-gray-100 text-gray-500'
-              }`}>
-                {tier.isActive ? '활성' : '비활성'}
-              </span>
+                {tier?.cropName && (
+                  <span className="text-sm text-gray-600">({tier.cropName})</span>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                {isActive && (
+                  <span className="text-sm text-gray-600 font-medium">
+                    {tier?.hasPlants ? '🌱 작물 있음' : '🔄 대기'}
+                  </span>
+                )}
+                <span className={`text-sm px-3 py-2 rounded-full font-semibold ${
+                  isActive 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {isActive ? '활성' : '비활성'}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       
-      {/* 범례 */}
-      {activeTiers > 0 && (
-        <div className="mt-4 pt-4 border-t-2 border-gray-300">
-          <div className="flex items-center justify-center space-x-6 text-sm text-gray-600">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full" />
-              <span className="font-semibold">식물 있음</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-blue-400 rounded-full" />
-              <span className="font-semibold">식물 없음</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-300 rounded-full" />
-              <span className="font-semibold">비활성</span>
-            </div>
+      {/* 저수조 상태 표시 */}
+      <div className="mt-4 pt-4 border-t-2 border-gray-300">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-gray-700">저수조 상태</span>
+          <div className="flex items-center space-x-2">
+            <div 
+              className={`w-4 h-4 rounded-full ${
+                waterLevelStatus === 'high' ? 'bg-red-500' :
+                waterLevelStatus === 'low' ? 'bg-yellow-500' :
+                waterLevelStatus === 'normal' ? 'bg-blue-500' : 'bg-gray-500'
+              }`} 
+            />
+            <span className="text-sm text-gray-600">
+              {waterLevelStatus === 'high' ? '고수위' :
+               waterLevelStatus === 'low' ? '저수위' :
+               waterLevelStatus === 'normal' ? '정상' : '연결 안됨'}
+            </span>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

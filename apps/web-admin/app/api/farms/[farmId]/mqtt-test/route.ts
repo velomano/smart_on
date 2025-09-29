@@ -28,7 +28,7 @@ export async function POST(
 
     // MQTT 연결 테스트 (실제 구현에서는 mqtt 라이브러리 사용)
     // 여기서는 간단한 시뮬레이션
-    const connectionTest = await testMqttConnection(cfg, secret);
+    const connectionTest = await testMqttConnection(cfg, secret || null);
 
     // 테스트 결과 저장
     await supa

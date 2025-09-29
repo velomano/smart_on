@@ -60,7 +60,7 @@ export default function WebAdminDashboard() {
           
           console.log('✅ 대시보드 - 농장관리 데이터 동기화 완료:');
           console.log('  - 농장:', farmsList.length, '개');
-          console.log('  - 베드:', devicesList.filter(d => d?.type === 'sensor_gateway').length, '개');
+          console.log('  - 베드:', devicesList.filter(d => (d as any)?.type === 'sensor_gateway').length, '개');
           console.log('  - 센서:', sensorsList.length, '개');
           console.log('  - 센서값:', readingsList.length, '개');
         } else {

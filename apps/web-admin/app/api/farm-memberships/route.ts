@@ -4,6 +4,10 @@ import { createSbServer } from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const supabase = createSbServer();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase 클라이언트 초기화 실패' }, { status: 500 });
+    }
+    
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'check';
     

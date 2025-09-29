@@ -1,5 +1,19 @@
 import { NextResponse } from "next/server";
 
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = 10000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort('Timeout'), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -56,15 +70,14 @@ export async function POST(req: Request) {
       try {
         console.log('💾 Supabase에 테스트 데이터 저장 시도...');
         
-        const ingestResponse = await fetch(`${supabaseFnUrl}/ingest-nutrient`, {
+        const ingestResponse = await fetchWithTimeout(`${supabaseFnUrl}/ingest-nutrient`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${serviceRoleKey}`,
           },
           body: JSON.stringify(testRecipes),
-          timeout: 30000
-        });
+        }, 30000);
         
         if (ingestResponse.ok) {
           const ingestResult = await ingestResponse.json();
@@ -76,7 +89,7 @@ export async function POST(req: Request) {
           console.error(`❌ ${errorMessage}`);
         }
       } catch (error) {
-        errorMessage = `Supabase 연결 실패: ${error.message}`;
+        errorMessage = `Supabase 연결 실패: ${error instanceof Error ? error.message : String(error)}`;
         console.error(`❌ ${errorMessage}`);
       }
     } else {
@@ -109,7 +122,7 @@ export async function POST(req: Request) {
     
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : String(error),
       timestamp: new Date().toISOString(),
       test_mode: true
     }, { status: 500 });
@@ -131,7 +144,7 @@ export async function GET(req: Request) {
   } catch (error) {
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }

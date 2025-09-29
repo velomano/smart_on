@@ -7,8 +7,6 @@ import AppHeader from '../../src/components/AppHeader';
 
 interface TeamMember extends AuthUser {
   team_name?: string;
-  is_active?: boolean;
-  role?: 'system_admin' | 'team_leader' | 'team_member';
   company?: string;
   phone?: string;
 }

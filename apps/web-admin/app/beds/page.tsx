@@ -66,10 +66,51 @@ function BedsManagementContent() {
   });
   const [editBedData, setEditBedData] = useState({
     name: '',
-    cropName: '',
     growingMethod: '담액식',
     totalTiers: 1
   });
+  
+  // 작물 입력 모달 상태
+  const [showCropInputModal, setShowCropInputModal] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const [selectedDevice, setSelectedDevice] = useState<any>(null);
+  const [cropInputData, setCropInputData] = useState({
+    cropName: '',
+    growingMethod: '담액식',
+    plantType: 'seed' as 'seed' | 'seedling',
+    startDate: ''
+  });
+  
+  // 각 베드의 작물 정보 저장 (deviceId -> tier -> cropInfo)
+  const [bedCropData, setBedCropData] = useState<Record<string, Record<number, any>>>({});
+  
+  // 작물 정보 로드 함수
+  const loadCropData = async (deviceId: string) => {
+    try {
+      const response = await fetch(`/api/bed-crop-data?deviceId=${deviceId}`);
+      const result = await response.json();
+      
+      if (result.data) {
+        const cropDataMap: Record<number, any> = {};
+        result.data.forEach((item: any) => {
+          cropDataMap[item.tier_number] = {
+            cropName: item.crop_name,
+            growingMethod: item.growing_method,
+            plantType: item.plant_type,
+            startDate: item.start_date,
+            savedAt: item.created_at
+          };
+        });
+        
+        setBedCropData(prev => ({
+          ...prev,
+          [deviceId]: cropDataMap
+        }));
+      }
+    } catch (error) {
+      console.error('작물 정보 로드 오류:', error);
+    }
+  };
   const [editFarmData, setEditFarmData] = useState({
     name: '',
     location: ''
@@ -110,6 +151,13 @@ function BedsManagementContent() {
       
       setSensors(Array.isArray(sensorsResult.data) ? sensorsResult.data as Sensor[] : []);
       setSensorReadings(Array.isArray(sensorReadingsResult.data) ? sensorReadingsResult.data as SensorReading[] : []);
+      
+      // 각 디바이스의 작물 정보 로드
+      if (Array.isArray(devicesResult.data)) {
+        devicesResult.data.forEach((device: any) => {
+          loadCropData(device.id);
+        });
+      }
       
       // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
       const farmId = searchParams.get('farm');
@@ -526,7 +574,6 @@ function BedsManagementContent() {
     // 기존 상태 초기화 후 새로운 데이터 설정
     const editData = {
       name: (bed.meta as any)?.location || '',
-      cropName: (bed.meta as any)?.crop_name || '',
       growingMethod: (bed.meta as any)?.growing_method || '담액식',
       totalTiers: (bed.meta as any)?.total_tiers || 1
     };
@@ -544,8 +591,8 @@ function BedsManagementContent() {
 
   // 베드 정보 업데이트
   const handleUpdateBed = async () => {
-    if (!editingBed || !editBedData.name.trim() || !editBedData.cropName.trim()) {
-      alert('베드 이름과 작물 이름을 입력해주세요.');
+    if (!editingBed || !editBedData.name.trim()) {
+      alert('베드 이름을 입력해주세요.');
       return;
     }
 
@@ -569,7 +616,6 @@ function BedsManagementContent() {
       const updateData = {
         meta: {
           location: normalizedBedName, // 정규화된 이름 저장
-          crop_name: editBedData.cropName,
           growing_method: editBedData.growingMethod,
           total_tiers: editBedData.totalTiers
         }
@@ -1103,15 +1149,6 @@ function BedsManagementContent() {
                                     })()}
                                   </span>
                                   <div className="text-sm text-gray-500">📊 센서 {deviceSensors.length}개</div>
-                                  {/* 작물명과 재배 방식 표시 */}
-                                  <div className="mt-1 flex items-center space-x-3">
-                                    <span className="text-sm text-green-600 font-medium">
-                                      🌱 {(device.meta as any)?.crop_name || '미설정'}
-                                    </span>
-                                    <span className="text-sm text-blue-600 font-medium">
-                                      🔧 {(device.meta as any)?.growing_method || '미설정'}
-                                    </span>
-                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1121,15 +1158,34 @@ function BedsManagementContent() {
                               {/* 베드 시각화 */}
                               <div className="flex-shrink-0">
                                 <BedTierShelfVisualization
-                                  totalTiers={(device.meta as any)?.total_tiers || 1}
                                   activeTiers={(device.meta as any)?.total_tiers || 1}
-                                  tierStatuses={Array.from({ length: 5 }, (_, i) => ({
-                                    tierNumber: i + 1,
-                                    isActive: i < ((device.meta as any)?.total_tiers || 1),
-                                    status: i < ((device.meta as any)?.total_tiers || 1) ? 'active' : 'inactive',
-                                    plantCount: 0,
-                                    hasPlants: false
-                                  }))}
+                                  tierStatuses={[1, 2, 3].map(tierNumber => {
+                                    const cropInfo = bedCropData[device.id]?.[tierNumber];
+                                    return {
+                                      tierNumber,
+                                      hasPlants: !!cropInfo?.cropName,
+                                      cropName: cropInfo?.cropName,
+                                      growingMethod: cropInfo?.growingMethod,
+                                      plantType: cropInfo?.plantType,
+                                      startDate: cropInfo?.startDate
+                                    };
+                                  })}
+                                  waterLevelStatus="normal"
+                                  onTierClick={(tierNumber) => {
+                                    console.log(`${tierNumber}단 클릭됨`);
+                                    setSelectedTier(tierNumber);
+                                    setSelectedDevice(device);
+                                    
+                                    // 기존 작물 정보가 있으면 불러오기
+                                    const existingCrop = bedCropData[device.id]?.[tierNumber];
+                                    setCropInputData({
+                                      cropName: existingCrop?.cropName || '',
+                                      growingMethod: existingCrop?.growingMethod || '담액식',
+                                      plantType: existingCrop?.plantType || 'seed',
+                                      startDate: existingCrop?.startDate || ''
+                                    });
+                                    setShowCropInputModal(true);
+                                  }}
                                   compact={true}
                                 />
                               </div>
@@ -1832,18 +1888,6 @@ function BedsManagementContent() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  작물 이름 *
-                </label>
-                <input
-                  type="text"
-                  value={editBedData.cropName}
-                  onChange={(e) => setEditBedData(prev => ({ ...prev, cropName: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                  placeholder="예: 토마토, 상추"
-                />
-              </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -1861,43 +1905,6 @@ function BedsManagementContent() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  운영 단 수
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={editBedData.totalTiers}
-                    onChange={(e) => setEditBedData(prev => ({ ...prev, totalTiers: parseInt(e.target.value) }))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <span className="text-lg font-bold text-purple-600 min-w-[3rem] text-center">
-                    {editBedData.totalTiers}단
-                  </span>
-                </div>
-                <div className="mt-2 text-xs text-gray-600">
-                  <span>🏗️ 베드에 {editBedData.totalTiers}단 구조로 운영됩니다</span>
-                </div>
-                
-                {/* 단 구조 미리보기 */}
-                <div className="mt-3">
-                  <BedTierShelfVisualization
-                    totalTiers={editBedData.totalTiers}
-                    activeTiers={editBedData.totalTiers}
-                    tierStatuses={Array.from({ length: 5 }, (_, i) => ({
-                      tierNumber: i + 1,
-                      isActive: i < editBedData.totalTiers,
-                      status: i < editBedData.totalTiers ? 'active' : 'inactive',
-                      plantCount: 0,
-                      hasPlants: false
-                    }))}
-                    compact={true}
-                  />
-                </div>
-              </div>
             </div>
 
             {/* 모달 푸터 */}
@@ -2083,6 +2090,167 @@ function BedsManagementContent() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 작물 입력 모달 */}
+      {showCropInputModal && selectedTier && selectedDevice && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          {/* 배경 오버레이 */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          {/* 모달창 */}
+          <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {selectedTier}단 작물 정보 입력
+              </h3>
+              <button
+                onClick={() => setShowCropInputModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  작물 이름 *
+                </label>
+                <input
+                  type="text"
+                  value={cropInputData.cropName}
+                  onChange={(e) => setCropInputData(prev => ({ ...prev, cropName: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  placeholder="예: 토마토, 상추"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  재배 방법
+                </label>
+                <select
+                  value={cropInputData.growingMethod}
+                  onChange={(e) => setCropInputData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                >
+                  <option value="담액식">담액식</option>
+                  <option value="NFT식">NFT식</option>
+                  <option value="분무식">분무식</option>
+                  <option value="점적식">점적식</option>
+                  <option value="기타">기타</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  작물 유형
+                </label>
+                <div className="flex space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seed' }))}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                      cropInputData.plantType === 'seed'
+                        ? 'bg-green-500 text-white shadow-md'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    파종
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seedling' }))}
+                    className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+                      cropInputData.plantType === 'seedling'
+                        ? 'bg-green-500 text-white shadow-md'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    육묘
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  생육 시작일자
+                </label>
+                <input
+                  type="date"
+                  value={cropInputData.startDate}
+                  onChange={(e) => setCropInputData(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                />
+              </div>
+
+              <div className="flex space-x-4 pt-4">
+                <button
+                  onClick={() => setShowCropInputModal(false)}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!cropInputData.cropName.trim()) {
+                      alert('작물 이름을 입력해주세요.');
+                      return;
+                    }
+                    
+                    try {
+                      // Supabase에 작물 정보 저장
+                      const response = await fetch('/api/bed-crop-data', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          deviceId: selectedDevice.id,
+                          tierNumber: selectedTier,
+                          cropData: cropInputData
+                        })
+                      });
+                      
+                      const result = await response.json();
+                      
+                      if (result.success) {
+                        // 로컬 상태도 업데이트
+                        setBedCropData(prev => ({
+                          ...prev,
+                          [selectedDevice.id]: {
+                            ...prev[selectedDevice.id],
+                            [selectedTier]: {
+                              ...cropInputData,
+                              savedAt: new Date().toISOString()
+                            }
+                          }
+                        }));
+                        
+                        console.log('작물 정보 저장 성공:', {
+                          deviceId: selectedDevice.id,
+                          tier: selectedTier,
+                          cropData: cropInputData
+                        });
+                        
+                        setShowCropInputModal(false);
+                        alert(`${selectedTier}단에 ${cropInputData.cropName} 작물 정보가 저장되었습니다!`);
+                      } else {
+                        throw new Error(result.error || '저장 실패');
+                      }
+                    } catch (error) {
+                      console.error('작물 정보 저장 오류:', error);
+                      alert('작물 정보 저장에 실패했습니다. 다시 시도해주세요.');
+                    }
+                  }}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-200 font-semibold"
+                >
+                  저장
+                </button>
               </div>
             </div>
           </div>

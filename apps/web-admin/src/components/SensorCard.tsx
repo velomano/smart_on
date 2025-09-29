@@ -102,72 +102,23 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
     );
   };
 
-  // 심플 차트 - 데이터 그냥 잇기 (작은 크기)
-  const createSimpleChart = () => {
-    if (!chartData || chartData.length === 0) return null;
-    
-    const recentData = chartData.slice(-24);
-    const values = recentData.map(d => Number(d[type]) || 0);
-    const maxVal = Math.max(...values);
-    const minVal = Math.min(...values);
-    const range = maxVal - minVal || 1;
-    
-    const coords = values.map((value, index) => ({
-      x: 20 + (index / 23) * 260,
-      y: 0 + ((maxVal - value) / range) * 30,
-      value
-    }));
-    
-    const path = coords.map((p, i) => i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`).join('');
-    
-    return (
-      <div className="w-full h-16 bg-gray-50 rounded overflow-hidden p-1">
-        <svg viewBox="0 0 300 60" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-          <rect width="290" height="35" fill="#f8f9fa" x="5" y="5"/>
-          
-          {coords.map(({ x, y, value }, index) => (
-            <circle 
-              key={index} 
-              cx={x} cy={y} r="2" 
-              fill={color} 
-              onMouseEnter={() => setHoveredPoint(index)}
-              onMouseLeave={() => setHoveredPoint(null)}
-              style={{ cursor: 'pointer' }}
-            />
-          ))}
-          
-          <path d={path} stroke={color} strokeWidth="2.5" fill="none"/>
-          
-          <text x="10" y="47" fontSize="4" fill="#666">0시</text>
-          <text x="70" y="47" fontSize="4" fill="#666">6시</text>
-          <text x="130" y="47" fontSize="4" fill="#666">12시</text>
-          <text x="190" y="47" fontSize="4" fill="#666">18시</text>
-          <text x="250" y="47" fontSize="4" fill="#666">24시</text>
-        </svg>
-        
-        {hoveredPoint !== null && coords[hoveredPoint] && (
-          <div className="absolute bg-gray-800 text-white px-2 py-1 rounded text-xs z-10"
-               style={{
-                 left: '50%',
-                 top: '-25px',
-                 transform: 'translateX(-50%)'
-               }}>
-            {formatValue(coords[hoveredPoint].value)}{unit}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
-    <div className="bg-white rounded-xl p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-64 flex flex-col cursor-pointer" 
-         onClick={() => setIsModalOpen(true)}>
+    <div className="bg-white rounded-xl p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-64 flex flex-col">
       {/* 헤더 섹션 */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <span className="text-2xl">{icon}</span>
           <span className="text-sm font-bold text-gray-800">{title}</span>
         </div>
+        {/* 그래프 아이콘 버튼 */}
+        <button 
+          onClick={() => setIsModalOpen(true)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          title="그래프 보기"
+        >
+          <span className="text-lg">📊</span>
+        </button>
       </div>
 
       {/* 대형 센서 값 표시 */}
@@ -184,11 +135,6 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
         >
           {unit}
         </div>
-      </div>
-
-      {/* 심플한 선 그래프 (시간-값 축) */}
-      <div className="h-12 bg-gray-50 rounded-lg p-1 mb-3">
-        {createSimpleChart()}
       </div>
 
       {/* 상태 표시 */}
