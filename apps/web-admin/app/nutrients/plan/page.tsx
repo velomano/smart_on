@@ -113,194 +113,41 @@ export default function NutrientPlanPage() {
   useEffect(() => {
     if (user) {
       loadSavedRecipes();
-      loadMockRecipes();
+      loadRecipes();
     }
   }, [user]);
 
-  // Mock 레시피 로드 (향후 API로 교체)
-  async function loadMockRecipes() {
+  // 필터 변경 시 레시피 다시 로드
+  useEffect(() => {
+    if (user) {
+      loadRecipes();
+    }
+  }, [searchTerm, selectedCrop, selectedStage, user]);
+
+  // 실제 Supabase에서 레시피 브라우징 데이터 로드
+  async function loadRecipes() {
     try {
-      const mockRecipes: Recipe[] = [
-        {
-          id: '1',
-          crop: '토마토',
-          stage: '성장기',
-          volume_l: 100,
-          ec_target: 2.5,
-          ph_target: 6.0,
-          npk_ratio: '3:1:3',
-          created_at: '2024-09-28T10:00:00Z',
-          source_title: '수경재배 가이드',
-          source_year: 2024,
-          license: 'CC BY 4.0',
-          description: '토마토 성장기에 최적화된 배양액 레시피입니다. 강건한 줄기와 잎 발달을 위한 균형잡힌 영양소 조성을 제공합니다.',
-          growing_conditions: {
-            temperature: '18-25°C',
-            humidity: '60-70%',
-            light_hours: '14-16시간',
-            co2_level: '800-1200ppm'
-          },
-          nutrients_detail: {
-            nitrogen: 180,
-            phosphorus: 60,
-            potassium: 180,
-            calcium: 120,
-            magnesium: 50,
-            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
-          },
-          usage_notes: [
-            '주 1회 EC 측정 권장',
-            'pH는 6.0-6.5 범위 유지',
-            '온도가 높을 때는 EC를 낮춰 사용',
-            '물갈이는 2주마다 실시'
-          ],
-          warnings: [
-            '칼슘 결핍 시 꽃끝썩음병 발생 가능',
-            '과도한 질소는 과번무 유발',
-            '칼륨 부족 시 과실 품질 저하'
-          ],
-          author: '농업연구원',
-          last_updated: '2024-09-15'
-        },
-        {
-          id: '2',
-          crop: '상추',
-          stage: '발아기',
-          volume_l: 50,
-          ec_target: 1.2,
-          ph_target: 6.5,
-          npk_ratio: '2:1:2',
-          created_at: '2024-09-28T09:30:00Z',
-          source_title: 'LED 조명 재배',
-          source_year: 2024,
-          license: 'CC BY-SA 4.0',
-          description: '상추 발아기에 특화된 저농도 배양액입니다. 연한 잎과 부드러운 질감을 위한 최적화된 조성입니다.',
-          growing_conditions: {
-            temperature: '15-20°C',
-            humidity: '70-80%',
-            light_hours: '12-14시간'
-          },
-          nutrients_detail: {
-            nitrogen: 120,
-            phosphorus: 60,
-            potassium: 120,
-            calcium: 80,
-            magnesium: 30,
-            trace_elements: ['Fe', 'Mn', 'Zn', 'B']
-          },
-          usage_notes: [
-            '발아 후 3-4일부터 사용',
-            'EC는 1.0-1.5 범위 유지',
-            'pH는 6.0-6.8 범위 권장',
-            '일주일마다 배양액 교체'
-          ],
-          warnings: [
-            '높은 EC는 잎 가장자리 타짐 유발',
-            '칼슘 부족 시 잎 끝 갈변 현상',
-            '과도한 질소는 질감 악화'
-          ],
-          author: 'LED재배연구소',
-          last_updated: '2024-09-20'
-        },
-        {
-          id: '3',
-          crop: '오이',
-          stage: '개화기',
-          volume_l: 150,
-          ec_target: 2.0,
-          ph_target: 6.2,
-          npk_ratio: '2:1:3',
-          created_at: '2024-09-28T08:15:00Z',
-          source_title: '온실 재배 매뉴얼',
-          source_year: 2024,
-          license: 'CC BY 4.0',
-          description: '오이 개화기와 결실기에 최적화된 배양액입니다. 꽃가루 활성화와 과실 발달을 위한 특별한 조성입니다.',
-          growing_conditions: {
-            temperature: '20-28°C',
-            humidity: '65-75%',
-            light_hours: '12-14시간',
-            co2_level: '1000-1500ppm'
-          },
-          nutrients_detail: {
-            nitrogen: 160,
-            phosphorus: 80,
-            potassium: 240,
-            calcium: 140,
-            magnesium: 60,
-            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
-          },
-          usage_notes: [
-            '개화 시작과 동시에 사용',
-            '칼륨 비율을 높게 유지',
-            '수분 스트레스 시 EC 조정',
-            '과실 비대기에는 칼슘 강화'
-          ],
-          warnings: [
-            '칼륨 부족 시 과실 변형 발생',
-            '칼슘 결핍은 과실 품질 저하',
-            '과도한 질소는 꽃가루 활성 저하'
-          ],
-          author: '온실재배협회',
-          last_updated: '2024-09-10'
-        },
-        {
-          id: '4',
-          crop: '딸기',
-          stage: '결실기',
-          volume_l: 80,
-          ec_target: 1.8,
-          ph_target: 6.3,
-          npk_ratio: '2:1:2',
-          created_at: '2024-09-28T07:45:00Z',
-          source_title: '베리류 재배법',
-          source_year: 2024,
-          license: 'CC BY 4.0',
-          description: '딸기 결실기에 특화된 배양액입니다. 당도 향상과 과실 품질 개선을 위한 균형잡힌 영양소 조성입니다.',
-          growing_conditions: {
-            temperature: '15-22°C',
-            humidity: '60-70%',
-            light_hours: '10-12시간'
-          },
-          nutrients_detail: {
-            nitrogen: 140,
-            phosphorus: 70,
-            potassium: 140,
-            calcium: 100,
-            magnesium: 40,
-            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu']
-          },
-          usage_notes: [
-            '결실 시작 2주 전부터 사용',
-            '당도 향상을 위해 칼륨 강화',
-            '과실 비대기에는 칼슘 보충',
-            '수확 전 1주일은 EC 낮춤'
-          ],
-          warnings: [
-            '칼슘 부족 시 과실 연화',
-            '과도한 질소는 당도 저하',
-            '칼륨 부족은 과실 크기 감소'
-          ],
-          author: '베리연구센터',
-          last_updated: '2024-09-05'
-        }
-      ];
-      setRecipes(mockRecipes);
+      const params = new URLSearchParams();
+      if (selectedCrop) params.append('crop', selectedCrop);
+      if (selectedStage) params.append('stage', selectedStage);
+      if (searchTerm) params.append('search', searchTerm);
+      
+      const r = await fetch(`/api/nutrients/browse?${params.toString()}`);
+      const j = await r.json();
+      if (j.ok) {
+        setRecipes(j.recipes);
+      } else {
+        console.error('레시피 로드 실패:', j.error);
+        // 에러 시 빈 배열로 설정
+        setRecipes([]);
+      }
     } catch (error) {
       console.error('레시피 로드 실패:', error);
+      setRecipes([]);
     }
   }
 
-  // 필터링된 레시피
-  const filteredRecipes = recipes.filter(recipe => {
-    const matchesSearch = recipe.crop.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         recipe.stage.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCrop = !selectedCrop || recipe.crop === selectedCrop;
-    const matchesStage = !selectedStage || recipe.stage === selectedStage;
-    
-    return matchesSearch && matchesCrop && matchesStage;
-  });
-
-  // 작물 목록 (중복 제거)
+  // 작물 목록 (중복 제거) - 서버에서 받은 데이터 기반
   const crops = [...new Set(recipes.map(r => r.crop))];
   const stages = [...new Set(recipes.map(r => r.stage))];
 
@@ -691,7 +538,7 @@ export default function NutrientPlanPage() {
 
                 {/* 레시피 목록 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredRecipes.map((recipe) => (
+                  {recipes.map((recipe) => (
                     <div key={recipe.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                       <div className="flex items-start justify-between mb-4">
                         <div>
@@ -759,7 +606,7 @@ export default function NutrientPlanPage() {
                   ))}
                 </div>
 
-                {filteredRecipes.length === 0 && (
+                {recipes.length === 0 && (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl text-gray-400">🔍</span>
@@ -774,10 +621,10 @@ export default function NutrientPlanPage() {
                 )}
 
                 {/* 결과 통계 */}
-                {filteredRecipes.length > 0 && (
+                {recipes.length > 0 && (
                   <div className="text-center">
                     <p className="text-gray-600">
-                      총 <span className="font-semibold text-gray-900">{filteredRecipes.length}</span>개의 레시피를 찾았습니다.
+                      총 <span className="font-semibold text-gray-900">{recipes.length}</span>개의 레시피를 찾았습니다.
                     </p>
                   </div>
                 )}
