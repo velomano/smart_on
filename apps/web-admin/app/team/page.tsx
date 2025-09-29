@@ -294,8 +294,8 @@ export default function TeamPage() {
         {/* Overview Section */}
         <div className="mb-8">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">팀 정보</h2>
-            <p className="text-lg text-gray-600">팀의 정보를 볼 수 있습니다</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">사용자 정보</h2>
+            <p className="text-lg text-gray-600">사용자의 정보를 볼 수 있습니다</p>
           </div>
         </div>
 
