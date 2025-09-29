@@ -212,17 +212,6 @@ function BedsManagementContent() {
         setSensors(asArray(sensorsRes?.data) as Sensor[]);
         setSensorReadings(asArray(readingsRes?.data) as SensorReading[]);
         
-        // 농장장과 팀원인 경우 자기 농장 탭으로 자동 설정 (URL 파라미터가 없을 때만)
-        const farmId = searchParams.get('farm');
-        console.log('URL 파라미터 farm:', farmId);
-        if (!farmId && currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member') && currentUser.team_id) {
-          setSelectedFarmTab(currentUser.team_id);
-        } else if (farmId) {
-          // URL 파라미터가 있으면 우선 적용
-          console.log('URL 파라미터로 농장 탭 설정:', farmId);
-          setSelectedFarmTab(farmId);
-        }
-        
         console.log('농장관리 페이지 - 현재 사용자:', currentUser);
         console.log('농장관리 페이지 - 농장 목록:', farmsResult);
         console.log('농장관리 페이지 - 디바이스 목록:', devicesRes.data);

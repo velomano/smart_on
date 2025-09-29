@@ -93,16 +93,15 @@ export default function AdminPage() {
       try {
         console.log('🔍 admin 페이지 - 데이터 로드 시작');
         
+        // 관리자만 접근 가능
         const canView =
           user.role === 'super_admin' ||
           user.role === 'system_admin' ||
           user.email === 'sky3rain7@gmail.com';
 
         if (!canView) {
-          console.warn('🚫 admin 페이지 - 권한 없음. 대체 UI 노출.');
-          setPendingUsers([]);
-          setApprovedUsers([]);
-      setLoading(false);
+          console.warn('🚫 admin 페이지 - 권한 없음. 로그인 페이지로 리다이렉트.');
+          window.location.href = '/login';
           return;
         }
 
@@ -129,22 +128,9 @@ export default function AdminPage() {
 
         if (!alive) return;
         
-        // 농장장(팀)인 경우 자신의 팀원만 필터링
+        // 관리자: 모든 사용자 표시
         let filteredPendingUsers = Array.isArray(pendingResult) ? pendingResult : [];
         let filteredApprovedUsers = Array.isArray(approvedResult) ? approvedResult : [];
-        
-        if (user.role === 'team_leader' && user.team_id) {
-          filteredPendingUsers = filteredPendingUsers.filter(u => u.team_id === user.team_id);
-          filteredApprovedUsers = filteredApprovedUsers.filter(u => u.team_id === user.team_id);
-          console.log('🔍 농장장 필터링 적용:', {
-            userRole: user.role,
-            userTeamId: user.team_id,
-            originalPending: Array.isArray(pendingResult) ? pendingResult.length : 0,
-            filteredPending: filteredPendingUsers.length,
-            originalApproved: Array.isArray(approvedResult) ? approvedResult.length : 0,
-            filteredApproved: filteredApprovedUsers.length
-          });
-        }
         
         setPendingUsers(filteredPendingUsers.map(user => ({ ...user, role: user.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member' })));
         setApprovedUsers(filteredApprovedUsers.map(user => ({ ...user, role: user.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member' })));

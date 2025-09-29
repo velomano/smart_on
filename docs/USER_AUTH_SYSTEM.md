@@ -261,6 +261,34 @@ LIMIT 10;
 - **400 Bad Request**: Supabase 인증 오류 해결
 - **500 Internal Server Error**: RLS 정책 충돌 해결
 
+### 🔄 최신 업데이트 (2025-01-28)
+
+#### 주요 변경사항
+1. **farm_memberships 테이블 도입**: 농장별 멤버십 관리
+2. **역할 매핑 시스템**: farm_memberships의 role을 users 테이블의 role로 매핑
+3. **권한 필터링 개선**: 사용자별 농장 접근 권한 정확한 제어
+4. **테스트 계정 정리**: 모든 테스트 계정이 올바른 농장에 배정됨
+5. **팀 페이지 모달 편집 시스템**: 인라인 편집을 모달 기반 편집으로 변경
+6. **네비게이션 통합**: 모든 사용자가 "사용자 관리" 버튼으로 팀 페이지 접근
+
+#### 테스트 계정 현황
+- `test1@test.com`: 1조 농장장 (team_leader)
+- `test2@test.com`: 1조 팀원 (team_member)  
+- `test3@test.com`: 2조 농장장 (team_leader)
+- `test4@test.com`: 2조 팀원 (team_member)
+- `test5@test.com`: 3조 농장장 (team_leader)
+- `test6@test.com`: 3조 팀원 (team_member)
+- `test7@test.com`: 미배정 (team_member)
+- `sky3rain7@gmail.com`: 시스템관리자 (system_admin)
+- `admin@smartfarm.com`: 시스템관리자 (system_admin)
+- `velomano@naver.com`: 시스템관리자 (system_admin)
+
+#### UI/UX 개선사항
+- **팀 페이지 편집 모달**: 관리자 페이지와 동일한 모달 디자인 적용
+- **역할/농장 배정 제거**: 비관리자 사용자는 역할과 농장 배정 불가
+- **텍스트 가시성 개선**: 편집 폼 내 텍스트 색상 및 대비 향상
+- **네비게이션 메뉴 정리**: "팀원 관리" 메뉴 제거, "사용자 관리" 통합
+
 ---
 
 **최종 업데이트**: 2025.09.28  

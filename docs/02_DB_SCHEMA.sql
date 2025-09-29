@@ -1,7 +1,7 @@
 -- =============================================
 -- 스마트팜 데이터베이스 스키마 (실제 구조)
--- 업데이트: 2025.01.01
--- 최종 업데이트: 2025.01.01 (권한 시스템 및 농장 관리 기능 완성)
+-- 업데이트: 2025.01.28
+-- 최종 업데이트: 2025.01.28 (farm_memberships 테이블 도입, 권한 시스템 개선)
 -- =============================================
 
 -- =============================================
@@ -129,6 +129,19 @@ CREATE TABLE IF NOT EXISTS farms (
   name TEXT NOT NULL,
   location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 농장 멤버십 테이블 (농장별 사용자 권한 관리)
+CREATE TABLE IF NOT EXISTS farm_memberships (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    farm_id UUID REFERENCES farms(id) ON DELETE CASCADE,
+    role TEXT CHECK (role IN ('owner', 'operator')) NOT NULL, -- 농장 내 역할
+    tenant_id UUID DEFAULT '00000000-0000-0000-0000-000000000001'::UUID,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, farm_id) -- 한 사용자는 한 농장에 하나의 멤버십만 가질 수 있음
 );
 
 -- 베드 테이블

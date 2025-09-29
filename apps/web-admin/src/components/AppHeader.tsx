@@ -57,60 +57,11 @@ export default function AppHeader({
   }, [isMenuOpen]);
 
   // 사용자 역할에 따른 권한 확인
-  // 슈퍼 어드민과 시스템 어드민만 사용자 관리 가능
+  // 모든 사용자가 사용자 관리 페이지에 접근 가능 (내용만 다름)
+  const canAccessUserManagement = true; // 모든 계정이 접근 가능
   const canManageUsers = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || safeUser.email === 'sky3rain7@gmail.com';
-  const canManageTeamMembers = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member';
   const canManageFarms = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member' || safeUser.email === 'sky3rain7@gmail.com';
-  const canManageMyTeamMembers = safeUser.role === 'super_admin' || safeUser.role === 'team_leader'; // 슈퍼 어드민과 농장장은 자신의 팀원만 관리
-
-  // 팀원 보기 메뉴 조건 - 모든 사용자가 볼 수 있음 (자신의 팀원만)
-  const canViewTeamMembers = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || 
-                            safeUser.role === 'team_leader' || safeUser.role === 'team_member';
   
-  // 강제 수정: velomano@naver.com은 항상 true
-  const finalCanViewTeamMembers = safeUser.email === 'velomano@naver.com' ? true : canViewTeamMembers;
-  
-  // 디버깅: canViewTeamMembers 계산 과정
-  console.log('🔍 canViewTeamMembers 계산:', {
-    'safeUser.role': safeUser.role,
-    'safeUser.role === system_admin': safeUser.role === 'system_admin',
-    'safeUser.team_id': safeUser.team_id,
-    'safeUser.role === team_leader': safeUser.role === 'team_leader',
-    'safeUser.role === team_member': safeUser.role === 'team_member',
-    'team_leader && team_id': (safeUser.role === 'team_leader' && safeUser.team_id),
-    'team_member && team_id': (safeUser.role === 'team_member' && safeUser.team_id),
-    '최종 canViewTeamMembers': canViewTeamMembers
-  });
-  
-  // 디버깅: 사용자 정보와 권한 상태 출력
-  console.log('🔍 AppHeader 디버깅:', {
-    role: safeUser.role,
-    email: safeUser.email,
-    canManageUsers,
-    canManageTeamMembers,
-    canManageFarms,
-    canManageMyTeamMembers,
-    canViewTeamMembers,
-    teamId: safeUser.team_id,
-    teamName: safeUser.team_name,
-    conditions: {
-      condition1: canManageTeamMembers,
-      condition2: !canManageUsers,
-      condition3: safeUser.role !== 'team_leader',
-      final: canViewTeamMembers
-    },
-    fullUser: safeUser
-  });
-  
-  // 추가 디버깅: 각 조건별 상세 분석
-  console.log('🔍 상세 조건 분석:', {
-    'safeUser.role': safeUser.role,
-    'safeUser.role === "team_member"': safeUser.role === 'team_member',
-    'canManageTeamMembers': canManageTeamMembers,
-    '!canManageUsers': !canManageUsers,
-    'safeUser.role !== "team_leader"': safeUser.role !== 'team_leader',
-    '최종 canViewTeamMembers': canViewTeamMembers
-  });
 
   const handleBackClick = () => {
     if (onBackClick) {
@@ -149,25 +100,20 @@ export default function AppHeader({
 
   // 햄버거 메뉴용 메뉴 아이템들 (모바일에서는 모든 메뉴 포함)
   const menuItems = [
-    ...(canManageUsers ? [{
+    ...(canAccessUserManagement ? [{
       label: '사용자 관리',
-      path: '/admin',
+      path: '/team', // 모든 계정이 /team으로 이동
       color: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
     }] : []),
-    ...(canManageMyTeamMembers ? [{
-      label: '팀원 관리',
-      path: '/team-management',
-      color: 'from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
+    ...(canManageUsers ? [{
+      label: '관리자 페이지',
+      path: '/admin', // 관리자만 접근 가능
+      color: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
     }] : []),
     ...(canManageFarms ? [{
       label: safeUser.role === 'team_member' ? '농장 보기' : '농장 관리',
       path: '/beds',
       color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-    }] : []),
-    ...(finalCanViewTeamMembers ? [{
-      label: '팀원 보기',
-      path: '/team',
-      color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
     }] : []),
     {
       label: '양액계산',
@@ -196,11 +142,6 @@ export default function AppHeader({
     }
   ];
 
-  // 메뉴 아이템 디버깅
-  console.log('🔍 AppHeader menuItems:', menuItems);
-  console.log('🔍 AppHeader menuItems 길이:', menuItems.length);
-  console.log('🔍 AppHeader menuItems 상세:', menuItems.map(item => ({ label: item.label, path: item.path })));
-  console.log('🔍 AppHeader canViewTeamMembers 최종값:', finalCanViewTeamMembers);
 
   return (
     <>
@@ -270,15 +211,15 @@ export default function AppHeader({
                 </div>
               </div>
 
-              {/* 주요 메뉴 버튼들 */}
-              {canManageUsers && (
-                <button
-                  onClick={() => router.push('/admin')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
-                >
-                  사용자 관리
-                </button>
-              )}
+                  {/* 주요 메뉴 버튼들 - 모든 계정이 사용자 관리와 농장 관리 버튼 표시 */}
+                  {canAccessUserManagement && (
+                    <button
+                      onClick={() => router.push(canManageUsers ? '/admin' : '/team')}
+                      className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                    >
+                      {canManageUsers ? '관리자 페이지' : '사용자 관리'}
+                    </button>
+                  )}
               {canManageFarms && (
                 <button
                   onClick={() => router.push('/beds')}

@@ -18,16 +18,21 @@ export default function TeamPage() {
   const [teamMembers, setTeamMembers] = useState<AuthUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<{
     name: string;
     email: string;
     role: string;
     is_active: boolean;
+    company?: string;
+    phone?: string;
   }>({
     name: '',
     email: '',
     role: 'team_member',
-    is_active: true
+    is_active: true,
+    company: '',
+    phone: ''
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const router = useRouter();
@@ -117,13 +122,19 @@ export default function TeamPage() {
   };
 
   const handleEditUser = (member: TeamMember) => {
+    console.log('🔧 handleEditUser 호출됨:', member.email);
+    console.log('🔧 모달 열기 시도');
     setEditingUser(member.id);
     setEditFormData({
       name: member.name || '',
       email: member.email,
       role: member.role || 'team_member',
-      is_active: member.is_active ?? true
+      is_active: member.is_active ?? true,
+      company: (member as any).company || '',
+      phone: (member as any).phone || ''
     });
+    setIsEditModalOpen(true);
+    console.log('🔧 모달 상태 설정 완료');
   };
 
   const handleSaveEdit = async (memberId: string) => {
@@ -133,7 +144,9 @@ export default function TeamPage() {
         name: editFormData.name,
         email: editFormData.email,
         role: editFormData.role,
-        is_active: editFormData.is_active
+        is_active: editFormData.is_active,
+        company: editFormData.company,
+        phone: editFormData.phone
       };
 
       const result = await updateUser(memberId, updates as Partial<AuthUser>);
@@ -144,6 +157,7 @@ export default function TeamPage() {
           )
         );
         setEditingUser(null);
+        setIsEditModalOpen(false);
         alert('팀원 정보가 업데이트되었습니다.');
       } else {
         alert('업데이트에 실패했습니다.');
@@ -157,11 +171,14 @@ export default function TeamPage() {
 
   const handleCancelEdit = () => {
     setEditingUser(null);
+    setIsEditModalOpen(false);
     setEditFormData({
       name: '',
       email: '',
       role: 'team_member',
-      is_active: true
+      is_active: true,
+      company: '',
+      phone: ''
     });
   };
 
@@ -246,7 +263,27 @@ export default function TeamPage() {
         {/* Overview Section */}
         <div className="mb-8">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">팀 정보</h2>
+            <div className="flex items-center justify-center space-x-4">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">팀 정보</h2>
+              <button
+                onClick={() => {
+                  console.log('🚨 임시 모달 버튼 클릭됨!');
+                  setIsEditModalOpen(true);
+                  setEditingUser('temp-user-id');
+                  setEditFormData({
+                    name: '임시 사용자',
+                    email: 'temp@example.com',
+                    role: 'team_member',
+                    is_active: true,
+                    company: '임시 회사',
+                    phone: '010-0000-0000'
+                  });
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition-colors"
+              >
+                🚨 임시 모달
+              </button>
+            </div>
             <p className="text-lg text-gray-600">팀의 정보를 볼 수 있습니다</p>
           </div>
         </div>
@@ -277,8 +314,29 @@ export default function TeamPage() {
                    '농장의 멤버들을 관리합니다'}
                 </p>
               </div>
-              <div className="text-sm text-gray-500">
-                총 {teamMembers.length}명
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-500">
+                  총 {teamMembers.length}명
+                </div>
+                {/* 테스트용 모달 버튼 */}
+                <button
+                  onClick={() => {
+                    console.log('🧪 테스트 모달 버튼 클릭됨');
+                    setIsEditModalOpen(true);
+                    setEditingUser('test-user-id');
+                    setEditFormData({
+                      name: '테스트 사용자',
+                      email: 'test@example.com',
+                      role: 'team_member',
+                      is_active: true,
+                      company: '테스트 회사',
+                      phone: '010-1234-5678'
+                    });
+                  }}
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
+                >
+                  🧪 테스트 모달
+                </button>
               </div>
             </div>
 
@@ -296,40 +354,19 @@ export default function TeamPage() {
                         </span>
                       </div>
                       <div>
-                        {editingUser === member.id ? (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              value={editFormData.name || ''}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="이름"
-                            />
-                            <input
-                              type="email"
-                              value={editFormData.email || ''}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="이메일"
-                            />
-                          </div>
-                        ) : (
-                          <div>
-                            <h4 className="text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
-                            <p className="text-gray-600 font-medium">{member.email}</p>
-                            {(member as any).company && (
-                              <p className="text-sm text-gray-500">🏢 {(member as any).company}</p>
-                            )}
-                            {(member as any).phone && (
-                              <p className="text-sm text-gray-500">📞 {(member as any).phone}</p>
-                            )}
-                          </div>
+                        <h4 className="text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
+                        <p className="text-gray-700 font-medium">{member.email}</p>
+                        {(member as any).company && (
+                          <p className="text-sm text-gray-600">🏢 {(member as any).company}</p>
+                        )}
+                        {(member as any).phone && (
+                          <p className="text-sm text-gray-600">📞 {(member as any).phone}</p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
                       <div className="text-right">
-                        <div className="text-sm text-gray-500 font-medium">
+                        <div className="text-sm text-gray-700 font-medium">
                           {(member.role || 'team_member') === 'team_leader' ? '농장장' : '팀원'}
                         </div>
                         <div className={`text-xs px-2 py-1 rounded-full ${
@@ -340,70 +377,19 @@ export default function TeamPage() {
                           {(member.is_active ?? true) ? '활성' : '비활성'}
                         </div>
                       </div>
-                      {user?.role === 'team_leader' && (
+                      {(user?.role === 'super_admin' || user?.role === 'system_admin' || user?.role === 'team_leader') && (
                         <div className="flex space-x-2">
-                          {editingUser === member.id ? (
-                            <>
-                              <button
-                                onClick={() => handleCancelEdit()}
-                                className="bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition-colors"
-                              >
-                                취소
-                              </button>
-                              <button
-                                onClick={() => handleSaveEdit(member.id)}
-                                disabled={actionLoading === member.id}
-                                className="bg-green-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
-                              >
-                                {actionLoading === member.id ? '저장 중...' : '저장'}
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => handleEditUser(member)}
-                              className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
-                            >
-                              편집
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleEditUser(member)}
+                            className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+                          >
+                            편집
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {editingUser === member.id && (
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            상태
-                          </label>
-                          <div className="flex space-x-4">
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`status-${member.id}`}
-                                checked={editFormData.is_active === true}
-                                onChange={() => setEditFormData(prev => ({ ...prev, is_active: true }))}
-                                className="mr-2"
-                              />
-                              활성
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`status-${member.id}`}
-                                checked={editFormData.is_active === false}
-                                onChange={() => setEditFormData(prev => ({ ...prev, is_active: false }))}
-                                className="mr-2"
-                              />
-                              비활성
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               ))}
 
@@ -425,6 +411,134 @@ export default function TeamPage() {
           </div>
         </div>
       </main>
+
+      {/* 편집 모달 */}
+      {isEditModalOpen && editingUser && (
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">팀원 정보 편집</h2>
+                  <p className="text-white/90">팀원의 정보를 수정할 수 있습니다</p>
+                </div>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-white/80 hover:text-white text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="px-8 py-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 이름 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    이름 *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="사용자 이름"
+                  />
+                </div>
+
+                {/* 이메일 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    이메일 *
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="user@example.com"
+                  />
+                </div>
+
+                {/* 회사 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    회사
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.company || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, company: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="회사명"
+                  />
+                </div>
+
+                {/* 전화번호 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    전화번호
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="010-1234-5678"
+                  />
+                </div>
+
+                {/* 활성 상태 */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    계정 상태
+                  </label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center text-gray-900 font-medium">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        checked={editFormData.is_active === true}
+                        onChange={() => setEditFormData(prev => ({ ...prev, is_active: true }))}
+                        className="mr-2"
+                      />
+                      활성
+                    </label>
+                    <label className="flex items-center text-gray-900 font-medium">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        checked={editFormData.is_active === false}
+                        onChange={() => setEditFormData(prev => ({ ...prev, is_active: false }))}
+                        className="mr-2"
+                      />
+                      비활성
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* 버튼들 */}
+              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-semibold"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => handleSaveEdit(editingUser)}
+                  disabled={actionLoading === editingUser}
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold disabled:opacity-50"
+                >
+                  {actionLoading === editingUser ? '저장 중...' : '✏️ 정보 수정'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
