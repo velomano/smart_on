@@ -18,6 +18,26 @@ interface Recipe {
   source_title?: string;
   source_year?: number;
   license?: string;
+  // 상세 정보 추가
+  description?: string;
+  growing_conditions?: {
+    temperature: string;
+    humidity: string;
+    light_hours: string;
+    co2_level?: string;
+  };
+  nutrients_detail?: {
+    nitrogen: number;
+    phosphorus: number;
+    potassium: number;
+    calcium?: number;
+    magnesium?: number;
+    trace_elements?: string[];
+  };
+  usage_notes?: string[];
+  warnings?: string[];
+  author?: string;
+  last_updated?: string;
 }
 
 interface SavedRecipe {
@@ -62,6 +82,10 @@ export default function NutrientPlanPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCrop, setSelectedCrop] = useState('');
   const [selectedStage, setSelectedStage] = useState('');
+  
+  // 레시피 상세 보기 관련 상태
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   
   // 탭 상태
   const [activeTab, setActiveTab] = useState<'calculate' | 'recipes' | 'saved'>('calculate');
@@ -108,7 +132,35 @@ export default function NutrientPlanPage() {
           created_at: '2024-09-28T10:00:00Z',
           source_title: '수경재배 가이드',
           source_year: 2024,
-          license: 'CC BY 4.0'
+          license: 'CC BY 4.0',
+          description: '토마토 성장기에 최적화된 배양액 레시피입니다. 강건한 줄기와 잎 발달을 위한 균형잡힌 영양소 조성을 제공합니다.',
+          growing_conditions: {
+            temperature: '18-25°C',
+            humidity: '60-70%',
+            light_hours: '14-16시간',
+            co2_level: '800-1200ppm'
+          },
+          nutrients_detail: {
+            nitrogen: 180,
+            phosphorus: 60,
+            potassium: 180,
+            calcium: 120,
+            magnesium: 50,
+            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
+          },
+          usage_notes: [
+            '주 1회 EC 측정 권장',
+            'pH는 6.0-6.5 범위 유지',
+            '온도가 높을 때는 EC를 낮춰 사용',
+            '물갈이는 2주마다 실시'
+          ],
+          warnings: [
+            '칼슘 결핍 시 꽃끝썩음병 발생 가능',
+            '과도한 질소는 과번무 유발',
+            '칼륨 부족 시 과실 품질 저하'
+          ],
+          author: '농업연구원',
+          last_updated: '2024-09-15'
         },
         {
           id: '2',
@@ -121,7 +173,34 @@ export default function NutrientPlanPage() {
           created_at: '2024-09-28T09:30:00Z',
           source_title: 'LED 조명 재배',
           source_year: 2024,
-          license: 'CC BY-SA 4.0'
+          license: 'CC BY-SA 4.0',
+          description: '상추 발아기에 특화된 저농도 배양액입니다. 연한 잎과 부드러운 질감을 위한 최적화된 조성입니다.',
+          growing_conditions: {
+            temperature: '15-20°C',
+            humidity: '70-80%',
+            light_hours: '12-14시간'
+          },
+          nutrients_detail: {
+            nitrogen: 120,
+            phosphorus: 60,
+            potassium: 120,
+            calcium: 80,
+            magnesium: 30,
+            trace_elements: ['Fe', 'Mn', 'Zn', 'B']
+          },
+          usage_notes: [
+            '발아 후 3-4일부터 사용',
+            'EC는 1.0-1.5 범위 유지',
+            'pH는 6.0-6.8 범위 권장',
+            '일주일마다 배양액 교체'
+          ],
+          warnings: [
+            '높은 EC는 잎 가장자리 타짐 유발',
+            '칼슘 부족 시 잎 끝 갈변 현상',
+            '과도한 질소는 질감 악화'
+          ],
+          author: 'LED재배연구소',
+          last_updated: '2024-09-20'
         },
         {
           id: '3',
@@ -134,7 +213,35 @@ export default function NutrientPlanPage() {
           created_at: '2024-09-28T08:15:00Z',
           source_title: '온실 재배 매뉴얼',
           source_year: 2024,
-          license: 'CC BY 4.0'
+          license: 'CC BY 4.0',
+          description: '오이 개화기와 결실기에 최적화된 배양액입니다. 꽃가루 활성화와 과실 발달을 위한 특별한 조성입니다.',
+          growing_conditions: {
+            temperature: '20-28°C',
+            humidity: '65-75%',
+            light_hours: '12-14시간',
+            co2_level: '1000-1500ppm'
+          },
+          nutrients_detail: {
+            nitrogen: 160,
+            phosphorus: 80,
+            potassium: 240,
+            calcium: 140,
+            magnesium: 60,
+            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
+          },
+          usage_notes: [
+            '개화 시작과 동시에 사용',
+            '칼륨 비율을 높게 유지',
+            '수분 스트레스 시 EC 조정',
+            '과실 비대기에는 칼슘 강화'
+          ],
+          warnings: [
+            '칼륨 부족 시 과실 변형 발생',
+            '칼슘 결핍은 과실 품질 저하',
+            '과도한 질소는 꽃가루 활성 저하'
+          ],
+          author: '온실재배협회',
+          last_updated: '2024-09-10'
         },
         {
           id: '4',
@@ -147,7 +254,34 @@ export default function NutrientPlanPage() {
           created_at: '2024-09-28T07:45:00Z',
           source_title: '베리류 재배법',
           source_year: 2024,
-          license: 'CC BY 4.0'
+          license: 'CC BY 4.0',
+          description: '딸기 결실기에 특화된 배양액입니다. 당도 향상과 과실 품질 개선을 위한 균형잡힌 영양소 조성입니다.',
+          growing_conditions: {
+            temperature: '15-22°C',
+            humidity: '60-70%',
+            light_hours: '10-12시간'
+          },
+          nutrients_detail: {
+            nitrogen: 140,
+            phosphorus: 70,
+            potassium: 140,
+            calcium: 100,
+            magnesium: 40,
+            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu']
+          },
+          usage_notes: [
+            '결실 시작 2주 전부터 사용',
+            '당도 향상을 위해 칼륨 강화',
+            '과실 비대기에는 칼슘 보충',
+            '수확 전 1주일은 EC 낮춤'
+          ],
+          warnings: [
+            '칼슘 부족 시 과실 연화',
+            '과도한 질소는 당도 저하',
+            '칼륨 부족은 과실 크기 감소'
+          ],
+          author: '베리연구센터',
+          last_updated: '2024-09-05'
         }
       ];
       setRecipes(mockRecipes);
@@ -611,7 +745,13 @@ export default function NutrientPlanPage() {
                         >
                           계산에 사용
                         </button>
-                        <button className="flex-1 px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors">
+                        <button 
+                          onClick={() => {
+                            setSelectedRecipe(recipe);
+                            setShowDetailModal(true);
+                          }}
+                          className="flex-1 px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                        >
                           상세 보기
                         </button>
                       </div>
@@ -777,6 +917,230 @@ export default function NutrientPlanPage() {
                 className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? '저장 중...' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 레시피 상세 보기 모달 */}
+      {showDetailModal && selectedRecipe && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* 모달 헤더 */}
+            <div className="bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mr-4">
+                    <span className="text-2xl">🌱</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {selectedRecipe.crop} - {selectedRecipe.stage}
+                    </h2>
+                    <p className="text-white/90">
+                      {selectedRecipe.volume_l}L • EC: {selectedRecipe.ec_target} mS/cm • pH: {selectedRecipe.ph_target}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-white/80 hover:text-white text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* 모달 내용 */}
+            <div className="p-6 space-y-6">
+              {/* 기본 정보 */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">📋 기본 정보</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">작물:</span>
+                    <span className="ml-2 font-medium text-gray-900">{selectedRecipe.crop}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">성장 단계:</span>
+                    <span className="ml-2 font-medium text-gray-900">{selectedRecipe.stage}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">용량:</span>
+                    <span className="ml-2 font-medium text-gray-900">{selectedRecipe.volume_l}L</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">NPK 비율:</span>
+                    <span className="ml-2 font-medium text-gray-900">{selectedRecipe.npk_ratio}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 설명 */}
+              {selectedRecipe.description && (
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-3">📝 레시피 설명</h3>
+                  <p className="text-blue-800">{selectedRecipe.description}</p>
+                </div>
+              )}
+
+              {/* 재배 환경 조건 */}
+              {selectedRecipe.growing_conditions && (
+                <div className="bg-green-50 rounded-xl p-4">
+                  <h3 className="text-lg font-semibold text-green-900 mb-3">🌡️ 재배 환경 조건</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-green-700">온도:</span>
+                      <span className="ml-2 font-medium text-green-900">{selectedRecipe.growing_conditions.temperature}</span>
+                    </div>
+                    <div>
+                      <span className="text-green-700">습도:</span>
+                      <span className="ml-2 font-medium text-green-900">{selectedRecipe.growing_conditions.humidity}</span>
+                    </div>
+                    <div>
+                      <span className="text-green-700">조명 시간:</span>
+                      <span className="ml-2 font-medium text-green-900">{selectedRecipe.growing_conditions.light_hours}</span>
+                    </div>
+                    {selectedRecipe.growing_conditions.co2_level && (
+                      <div>
+                        <span className="text-green-700">CO₂ 농도:</span>
+                        <span className="ml-2 font-medium text-green-900">{selectedRecipe.growing_conditions.co2_level}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 영양소 상세 정보 */}
+              {selectedRecipe.nutrients_detail && (
+                <div className="bg-purple-50 rounded-xl p-4">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-3">🧪 영양소 상세 정보 (ppm)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-purple-700">질소 (N):</span>
+                      <span className="ml-2 font-medium text-purple-900">{selectedRecipe.nutrients_detail.nitrogen}</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700">인산 (P):</span>
+                      <span className="ml-2 font-medium text-purple-900">{selectedRecipe.nutrients_detail.phosphorus}</span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700">칼륨 (K):</span>
+                      <span className="ml-2 font-medium text-purple-900">{selectedRecipe.nutrients_detail.potassium}</span>
+                    </div>
+                    {selectedRecipe.nutrients_detail.calcium && (
+                      <div>
+                        <span className="text-purple-700">칼슘 (Ca):</span>
+                        <span className="ml-2 font-medium text-purple-900">{selectedRecipe.nutrients_detail.calcium}</span>
+                      </div>
+                    )}
+                    {selectedRecipe.nutrients_detail.magnesium && (
+                      <div>
+                        <span className="text-purple-700">마그네슘 (Mg):</span>
+                        <span className="ml-2 font-medium text-purple-900">{selectedRecipe.nutrients_detail.magnesium}</span>
+                      </div>
+                    )}
+                  </div>
+                  {selectedRecipe.nutrients_detail.trace_elements && (
+                    <div className="mt-3">
+                      <span className="text-purple-700 text-sm">미량원소:</span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedRecipe.nutrients_detail.trace_elements.map((element, index) => (
+                          <span key={index} className="px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded">
+                            {element}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 사용법 및 주의사항 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {selectedRecipe.usage_notes && (
+                  <div className="bg-yellow-50 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-yellow-900 mb-3">📋 사용법</h3>
+                    <ul className="space-y-2 text-sm">
+                      {selectedRecipe.usage_notes.map((note, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-yellow-600 mr-2">•</span>
+                          <span className="text-yellow-800">{note}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedRecipe.warnings && (
+                  <div className="bg-red-50 rounded-xl p-4">
+                    <h3 className="text-lg font-semibold text-red-900 mb-3">⚠️ 주의사항</h3>
+                    <ul className="space-y-2 text-sm">
+                      {selectedRecipe.warnings.map((warning, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-red-600 mr-2">•</span>
+                          <span className="text-red-800">{warning}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* 출처 및 메타 정보 */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">📚 출처 및 메타 정보</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  {selectedRecipe.source_title && (
+                    <div>
+                      <span className="text-gray-600">출처:</span>
+                      <span className="ml-2 font-medium text-gray-900">
+                        {selectedRecipe.source_title}
+                        {selectedRecipe.source_year && ` (${selectedRecipe.source_year})`}
+                      </span>
+                    </div>
+                  )}
+                  {selectedRecipe.author && (
+                    <div>
+                      <span className="text-gray-600">작성자:</span>
+                      <span className="ml-2 font-medium text-gray-900">{selectedRecipe.author}</span>
+                    </div>
+                  )}
+                  {selectedRecipe.license && (
+                    <div>
+                      <span className="text-gray-600">라이선스:</span>
+                      <span className="ml-2 font-medium text-gray-900">{selectedRecipe.license}</span>
+                    </div>
+                  )}
+                  {selectedRecipe.last_updated && (
+                    <div>
+                      <span className="text-gray-600">최종 업데이트:</span>
+                      <span className="ml-2 font-medium text-gray-900">{selectedRecipe.last_updated}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 모달 푸터 */}
+            <div className="bg-gray-50 px-6 py-4 rounded-b-2xl flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setCrop(selectedRecipe.crop);
+                  setVolume(selectedRecipe.volume_l);
+                  setActiveTab('calculate');
+                  setShowDetailModal(false);
+                }}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                계산에 사용
+              </button>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                닫기
               </button>
             </div>
           </div>
