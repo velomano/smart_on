@@ -132,17 +132,25 @@ export default function NutrientPlanPage() {
       if (selectedStage) params.append('stage', selectedStage);
       if (searchTerm) params.append('search', searchTerm);
       
-      const r = await fetch(`/api/nutrients/browse?${params.toString()}`);
+      const url = `/api/nutrients/browse?${params.toString()}`;
+      console.log('🔍 API 호출:', url);
+      
+      const r = await fetch(url);
+      console.log('📡 응답 상태:', r.status, r.statusText);
+      
       const j = await r.json();
+      console.log('📋 응답 데이터:', j);
+      
       if (j.ok) {
+        console.log('✅ 레시피 로드 성공:', j.recipes.length, '개');
         setRecipes(j.recipes);
       } else {
-        console.error('레시피 로드 실패:', j.error);
+        console.error('❌ 레시피 로드 실패:', j.error, j.details);
         // 에러 시 빈 배열로 설정
         setRecipes([]);
       }
     } catch (error) {
-      console.error('레시피 로드 실패:', error);
+      console.error('❌ 레시피 로드 네트워크 에러:', error);
       setRecipes([]);
     }
   }

@@ -3,18 +3,24 @@ import { createSbServer } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   try {
+    console.log('🔍 API 호출 시작:', req.url);
     const { searchParams } = new URL(req.url);
     const crop = searchParams.get('crop');
     const stage = searchParams.get('stage');
     const search = searchParams.get('search');
+    
+    console.log('📋 요청 파라미터:', { crop, stage, search });
 
     const sb = createSbServer();
     if (!sb) {
+      console.error('❌ Supabase 연결 실패');
       return NextResponse.json({ 
         ok: false, 
         error: 'Supabase 연결이 필요합니다.' 
       }, { status: 500 });
     }
+    
+    console.log('✅ Supabase 연결 성공');
 
     // crop_profiles에서 레시피 브라우징용 데이터 조회
     let query = sb
@@ -40,18 +46,21 @@ export async function GET(req: NextRequest) {
       query = query.or(`crop_name.ilike.%${search}%,stage.ilike.%${search}%`);
     }
 
+    console.log('🔍 쿼리 실행 중...');
     const { data: profiles, error } = await query
       .order('crop_name', { ascending: true })
       .order('stage', { ascending: true });
 
     if (error) {
-      console.error('작물 프로필 조회 에러:', error);
+      console.error('❌ 작물 프로필 조회 에러:', error);
       return NextResponse.json({ 
         ok: false, 
         error: `작물 프로필 조회에 실패했습니다: ${error.message}`,
         details: error
       }, { status: 500 });
     }
+    
+    console.log('✅ 쿼리 성공, 프로필 개수:', profiles?.length || 0);
 
     // 프론트엔드에서 사용할 수 있도록 데이터 변환
     const recipes = profiles?.map(profile => {
