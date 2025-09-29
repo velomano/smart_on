@@ -100,6 +100,11 @@ export default function AppHeader({
 
   // 햄버거 메뉴용 메뉴 아이템들 (모바일에서는 모든 메뉴 포함)
   const menuItems = [
+    {
+      label: '알림설정',
+      path: '/notifications',
+      color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
+    },
     ...(canAccessUserManagement ? [{
       label: '사용자 관리',
       path: '/team', // 모든 계정이 /team으로 이동
@@ -124,11 +129,6 @@ export default function AppHeader({
       label: '시세정보',
       path: '/market',
       color: 'from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
-    },
-    {
-      label: '알림설정',
-      path: '/notifications',
-      color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
     },
     {
       label: '배양액 제조',
