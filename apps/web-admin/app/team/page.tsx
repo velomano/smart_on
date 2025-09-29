@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getApprovedUsers, updateUser, AuthUser } from '../../src/lib/auth';
+import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getFarms } from '../../src/lib/auth';
 import AppHeader from '../../src/components/AppHeader';
 
 interface TeamMember extends AuthUser {
@@ -16,18 +16,26 @@ interface TeamMember extends AuthUser {
 export default function TeamPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [teamMembers, setTeamMembers] = useState<AuthUser[]>([]);
+  const [farms, setFarms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState<{
     name: string;
     email: string;
     role: string;
     is_active: boolean;
+    company?: string;
+    phone?: string;
+    team_id?: string;
   }>({
     name: '',
     email: '',
     role: 'team_member',
-    is_active: true
+    is_active: true,
+    company: '',
+    phone: '',
+    team_id: ''
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const router = useRouter();
@@ -47,8 +55,18 @@ export default function TeamPage() {
   useEffect(() => {
     if (user) {
       loadTeamMembers();
+      loadFarms();
     }
   }, [user]);
+
+  const loadFarms = async () => {
+    try {
+      const farmsResult = await getFarms();
+      setFarms(farmsResult || []);
+    } catch (error) {
+      console.error('Error loading farms:', error);
+    }
+  };
 
   const loadTeamMembers = async () => {
     try {
@@ -82,38 +100,82 @@ export default function TeamPage() {
   };
 
   const handleEditUser = (member: TeamMember) => {
+    console.log('🔧 handleEditUser 호출됨:', member.email);
+    console.log('🔧 모달 열기 시도');
     setEditingUser(member.id);
     setEditFormData({
       name: member.name || '',
       email: member.email,
       role: member.role || 'team_member',
-      is_active: member.is_active ?? true
+      is_active: member.is_active ?? true,
+      company: (member as any).company || '',
+      phone: (member as any).phone || '',
+      team_id: member.team_id || ''
     });
+    setIsEditModalOpen(true);
+    console.log('🔧 모달 상태 설정 완료');
   };
 
   const handleSaveEdit = async (memberId: string) => {
     setActionLoading(memberId);
     try {
-      const updates = {
-        name: editFormData.name,
-        email: editFormData.email,
-        role: editFormData.role,
-        is_active: editFormData.is_active
-      };
-
-      const result = await updateUser(memberId, updates as Partial<AuthUser>);
-      if (result.success) {
-        setTeamMembers(prev =>
-          prev.map(member =>
-            member.id === memberId ? { ...member, ...updates } as AuthUser : member
-          )
-        );
-        setEditingUser(null);
-        alert('팀원 정보가 업데이트되었습니다.');
-      } else {
-        alert('업데이트에 실패했습니다.');
+      // 1) 사용자 속성만 업데이트 (team_id 제외)
+      const { team_id: selectedFarmId, ...userData } = editFormData;
+      const result = await updateUser(memberId, {
+        ...userData,
+        role: editFormData.role as 'system_admin' | 'team_leader' | 'team_member'
+      });
+      
+      if (!result.success) {
+        alert(`사용자 정보 업데이트에 실패했습니다: ${result.error}`);
+        return;
       }
-    } catch {
+
+      // 2) 농장 배정 처리 (별도) - 농장장(팀) 계정만 가능
+      if (user?.role === 'team_leader' && selectedFarmId !== undefined) {
+        const { getSupabaseClient } = await import('../../src/lib/supabase');
+        const supabase = getSupabaseClient();
+        const tenantId = '00000000-0000-0000-0000-000000000001';
+        
+        if (selectedFarmId) {
+          // 농장 배정
+          const farmRole = editFormData.role === 'team_leader' ? 'owner' : 'operator';
+          const { error: fmError } = await supabase
+            .from('farm_memberships')
+            .upsert([{
+              tenant_id: tenantId,
+              user_id: memberId,
+              farm_id: selectedFarmId,
+              role: farmRole
+            }], { onConflict: 'tenant_id, farm_id, user_id' });
+          
+          if (fmError) {
+            console.warn('농장 배정 실패:', fmError);
+            // 농장 배정 실패해도 사용자 업데이트는 성공으로 처리
+          }
+        } else {
+          // 배정 해제
+          const { error: delErr } = await supabase
+            .from('farm_memberships')
+            .delete()
+            .eq('user_id', memberId);
+          if (delErr) {
+            console.warn('농장 배정 해제 실패:', delErr);
+          }
+        }
+      }
+
+      alert('팀원 정보가 업데이트되었습니다.');
+      
+      // 데이터 다시 로드
+      if (user) {
+        await loadTeamMembers();
+      }
+      
+      setEditingUser(null);
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error('팀원 정보 업데이트 오류:', error);
       alert('오류가 발생했습니다.');
     } finally {
       setActionLoading(null);
@@ -122,11 +184,15 @@ export default function TeamPage() {
 
   const handleCancelEdit = () => {
     setEditingUser(null);
+    setIsEditModalOpen(false);
     setEditFormData({
       name: '',
       email: '',
       role: 'team_member',
-      is_active: true
+      is_active: true,
+      company: '',
+      phone: '',
+      team_id: ''
     });
   };
 
@@ -307,68 +373,18 @@ export default function TeamPage() {
                       </div>
                       {user?.role === 'team_leader' && (
                         <div className="flex space-x-2">
-                          {editingUser === member.id ? (
-                            <>
-                              <button
-                                onClick={() => handleCancelEdit()}
-                                className="bg-gray-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition-colors"
-                              >
-                                취소
-                              </button>
-                              <button
-                                onClick={() => handleSaveEdit(member.id)}
-                                disabled={actionLoading === member.id}
-                                className="bg-green-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors disabled:opacity-50"
-                              >
-                                {actionLoading === member.id ? '저장 중...' : '저장'}
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => handleEditUser(member)}
-                              className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
-                            >
-                              편집
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleEditUser(member)}
+                            className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+                          >
+                            편집
+                          </button>
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {editingUser === member.id && (
-                    <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            상태
-                          </label>
-                          <div className="flex space-x-4">
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`status-${member.id}`}
-                                checked={editFormData.is_active === true}
-                                onChange={() => setEditFormData(prev => ({ ...prev, is_active: true }))}
-                                className="mr-2"
-                              />
-                              활성
-                            </label>
-                            <label className="flex items-center">
-                              <input
-                                type="radio"
-                                name={`status-${member.id}`}
-                                checked={editFormData.is_active === false}
-                                onChange={() => setEditFormData(prev => ({ ...prev, is_active: false }))}
-                                className="mr-2"
-                              />
-                              비활성
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               ))}
 
@@ -390,6 +406,172 @@ export default function TeamPage() {
           </div>
         </div>
       </main>
+
+      {/* 편집 모달 */}
+      {isEditModalOpen && editingUser && (
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">팀원 정보 편집</h2>
+                  <p className="text-white/90">팀원의 정보를 수정할 수 있습니다</p>
+                </div>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-white/80 hover:text-white text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="px-8 py-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 이름 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    이름 *
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="사용자 이름"
+                  />
+                </div>
+
+                {/* 이메일 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    이메일 *
+                  </label>
+                  <input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="user@example.com"
+                  />
+                </div>
+
+                {/* 회사 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    회사
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.company || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, company: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="회사명"
+                  />
+                </div>
+
+                {/* 전화번호 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    전화번호
+                  </label>
+                  <input
+                    type="tel"
+                    value={editFormData.phone || ''}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    placeholder="010-1234-5678"
+                  />
+                </div>
+
+                {/* 역할 - 농장장(팀) 계정만 표시 */}
+                {user?.role === 'team_leader' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      역할 *
+                    </label>
+                    <select
+                      value={editFormData.role}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="team_member">팀원</option>
+                      <option value="team_leader">농장장</option>
+                    </select>
+                  </div>
+                )}
+
+                {/* 농장 배정 - 농장장(팀) 계정만 표시 */}
+                {user?.role === 'team_leader' && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      농장
+                    </label>
+                    <select
+                      value={editFormData.team_id}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, team_id: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    >
+                      <option value="">농장 미배정</option>
+                      {farms.filter(farm => farm.id === user.team_id).map((farm) => (
+                        <option key={farm.id} value={farm.id}>
+                          {farm.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* 활성 상태 */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    계정 상태
+                  </label>
+                  <div className="flex space-x-4">
+                    <label className="flex items-center text-gray-900 font-medium">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        checked={editFormData.is_active === true}
+                        onChange={() => setEditFormData(prev => ({ ...prev, is_active: true }))}
+                        className="mr-2"
+                      />
+                      활성
+                    </label>
+                    <label className="flex items-center text-gray-900 font-medium">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        checked={editFormData.is_active === false}
+                        onChange={() => setEditFormData(prev => ({ ...prev, is_active: false }))}
+                        className="mr-2"
+                      />
+                      비활성
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* 버튼들 */}
+              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => handleSaveEdit(editingUser)}
+                  disabled={actionLoading === editingUser}
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
+                >
+                  {actionLoading === editingUser ? '저장 중...' : '저장'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
