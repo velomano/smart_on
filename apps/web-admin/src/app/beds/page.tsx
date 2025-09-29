@@ -252,42 +252,34 @@ function BedsManagementContent() {
     loadData();
   }, []);
 
-  // 농장 데이터 로드 후 초기 탭 설정 (URL 파라미터가 없을 때만)
+  // 농장 탭 설정 통합 로직 (URL 파라미터 우선, 그 다음 사용자 역할)
   useEffect(() => {
     const farmId = searchParams.get('farm');
-    if (farms.length > 0 && !selectedFarmTab && !farmId) {
-      if (user && (user.role === 'system_admin' || user.role === 'super_admin')) {
-        console.log('농장 데이터 로드 후 - 관리자: 전체 농장 탭 설정');
-        setSelectedFarmTab('all');
+    console.log('🔍 농장 탭 설정 로직 시작:', {
+      farmId: farmId,
+      farmsLength: farms.length,
+      selectedFarmTab: selectedFarmTab,
+      userRole: user?.role,
+      userEmail: user?.email
+    });
+    
+    if (farms.length > 0 && !selectedFarmTab) {
+      if (farmId) {
+        // URL 파라미터가 있으면 해당 농장으로 설정
+        console.log('🔍 URL 파라미터로 농장 탭 설정:', farmId);
+        setSelectedFarmTab(farmId);
       } else {
-        console.log('농장 데이터 로드 후 - 일반 사용자: 첫 번째 농장 설정');
-        setSelectedFarmTab(farms[0].id);
+        // URL 파라미터가 없으면 사용자 역할에 따라 기본 탭 설정
+        if (user && (user.role === 'system_admin' || user.role === 'super_admin')) {
+          console.log('🔍 관리자 - 전체 농장 탭으로 설정');
+          setSelectedFarmTab('all');
+        } else {
+          console.log('🔍 일반 사용자 - 첫 번째 농장 선택:', farms[0].id);
+          setSelectedFarmTab(farms[0].id);
+        }
       }
     }
   }, [farms, user, selectedFarmTab, searchParams]);
-
-  // URL 파라미터 처리 (대시보드에서 특정 농장으로 이동)
-  useEffect(() => {
-    const farmId = searchParams.get('farm');
-    console.log('농장 ID 파라미터:', farmId);
-    console.log('사용 가능한 농장 수:', farms.length);
-    console.log('현재 선택된 농장 탭:', selectedFarmTab);
-    console.log('현재 사용자 역할:', user?.role);
-    
-    if (farmId && farms.length > 0) {
-      console.log('URL 파라미터로 농장 탭 설정:', farmId);
-      setSelectedFarmTab(farmId);
-    } else if (!farmId && !selectedFarmTab && farms.length > 0) {
-      // URL 파라미터가 없고 선택된 농장도 없으면 사용자 역할에 따라 기본 탭 설정
-      if (user && (user.role === 'system_admin' || user.role === 'super_admin')) {
-        console.log('관리자 - 전체 농장 탭으로 설정');
-        setSelectedFarmTab('all');
-      } else {
-        console.log('일반 사용자 - 첫 번째 농장 선택:', farms[0].id);
-        setSelectedFarmTab(farms[0].id);
-      }
-    }
-  }, [searchParams, farms, selectedFarmTab, user]);
 
   // 베드 정렬 함수
   const sortBeds = (beds: Device[]) => {
