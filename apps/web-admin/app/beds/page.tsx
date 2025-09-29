@@ -6,7 +6,7 @@ import { AuthUser, getTeams, getApprovedUsers, getCurrentUser } from '../../src/
 import { Farm, Device, Sensor, SensorReading, getSupabaseClient, getFarms } from '../../src/lib/supabase';
 import { normalizeBedName, validateBedName } from '../../src/lib/bedNaming';
 import { BedTierConfig, initializeBedTiers, updateBedTierCount } from '../../src/lib/bedTierStructure';
-import BedTierVisualization from '../../src/components/BedTierVisualization';
+import BedTierShelfVisualization from '../../src/components/BedTierShelfVisualization';
 // Mock 시스템 제거됨 - 실제 Supabase 데이터 사용
 import AppHeader from '../../src/components/AppHeader';
 import ActuatorControlModal from '../../src/components/ActuatorControlModal';
@@ -1112,7 +1112,7 @@ function BedsManagementContent() {
                                   </div>
                                   {/* 다단 구조 표시 */}
                                   <div className="mt-2">
-                                    <BedTierVisualization
+                                    <BedTierShelfVisualization
                                       totalTiers={(device.meta as any)?.total_tiers || 1}
                                       activeTiers={(device.meta as any)?.total_tiers || 1}
                                       tierStatuses={Array.from({ length: 5 }, (_, i) => ({
@@ -1771,12 +1771,13 @@ function BedsManagementContent() {
 
       {/* 베드 편집 모달 */}
       {showEditBedModal && editingBed && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           {/* 배경 오버레이 */}
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           {/* 모달창 */}
-          <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="relative bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl max-h-[90vh] flex flex-col">
+            {/* 모달 헤더 */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
               <h3 className="text-2xl font-bold text-gray-900">베드 정보 편집</h3>
               <button
                 onClick={() => setShowEditBedModal(false)}
@@ -1786,7 +1787,9 @@ function BedsManagementContent() {
               </button>
             </div>
 
-            <div className="space-y-6">
+            {/* 스크롤 가능한 내용 */}
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              <div className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
                   베드 이름 *
@@ -1867,7 +1870,7 @@ function BedsManagementContent() {
                 
                 {/* 단 구조 미리보기 */}
                 <div className="mt-3">
-                  <BedTierVisualization
+                  <BedTierShelfVisualization
                     totalTiers={editBedData.totalTiers}
                     activeTiers={editBedData.totalTiers}
                     tierStatuses={Array.from({ length: 5 }, (_, i) => ({
@@ -1882,7 +1885,11 @@ function BedsManagementContent() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 pt-4">
+            </div>
+
+            {/* 모달 푸터 */}
+            <div className="p-6 pt-4 border-t border-gray-200">
+              <div className="flex space-x-3">
                 <button
                   onClick={() => setShowEditBedModal(false)}
                   className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
