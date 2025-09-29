@@ -4,7 +4,7 @@ import { BedTierSystem, TierSensor, ControlSwitch } from '../lib/bedSystemArchit
 interface BedTierSystemCardProps {
   bedSystem: BedTierSystem;
   onSensorClick?: (tierNumber: number, sensor: TierSensor) => void;
-  onSwitchToggle?: (switch: ControlSwitch) => void;
+  onSwitchToggle?: (switchItem: ControlSwitch) => void;
   onAddSensor?: (tierNumber: number) => void;
   onAddSwitch?: () => void;
   onEditBed?: () => void;

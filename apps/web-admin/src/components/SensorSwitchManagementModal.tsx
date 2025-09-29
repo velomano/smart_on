@@ -7,7 +7,7 @@ interface SensorSwitchManagementModalProps {
   mode: 'sensor' | 'switch';
   tierNumber?: number;
   onAddSensor?: (sensor: Omit<TierSensor, 'lastReading'>) => void;
-  onAddSwitch?: (switch: Omit<ControlSwitch, 'lastCommand'>) => void;
+  onAddSwitch?: (switchItem: Omit<ControlSwitch, 'lastCommand'>) => void;
 }
 
 export default function SensorSwitchManagementModal({

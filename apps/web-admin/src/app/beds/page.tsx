@@ -136,9 +136,9 @@ function BedsManagementContent() {
           length: devicesList.length
         });
 
-        // team_leader인 경우 자신이 관리하는 농장만 표시
+        // team_leader와 team_member인 경우 자신이 관리하는 농장만 표시
         let filteredFarms = farmsResult as Farm[];
-        if (currentUser && currentUser.role === 'team_leader') {
+        if (currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member')) {
           // test4@test.com은 2조 농장을 관리하도록 하드코딩 (임시)
           if (currentUser.email === 'test4@test.com') {
             filteredFarms = filteredFarms.filter(farm => farm.id === '550e8400-e29b-41d4-a716-446655440002');

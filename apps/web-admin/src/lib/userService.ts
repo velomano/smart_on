@@ -1,7 +1,7 @@
 'use client';
 
 import { getSupabaseClient } from './supabase';
-import { supaAdmin } from './supabaseAdmin';
+// supaAdmin import 제거 - API 라우트를 통해 서버 사이드에서 처리
 import { AuthUser } from './auth';
 
 export interface UserProfile {
@@ -60,7 +60,7 @@ export class UserService {
   }
 
   /**
-   * 사용자 권한 정보 조회 (memberships 테이블)
+   * 사용자 권한 정보 조회 (users 테이블 우선, memberships 테이블 참고)
    */
   static async getUserRoleInfo(userId: string): Promise<{
     role?: string;
@@ -71,30 +71,38 @@ export class UserService {
     try {
       const supabase = getSupabaseClient();
       
-      const { data: membership, error } = await supabase
+      // users 테이블에서 기본 정보 조회 (최고관리자가 수정한 권한이 최종 권한)
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role, team_id, team_name, tenant_id')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (userError) {
+        console.warn('사용자 기본 정보 조회 실패:', userError);
+        return null;
+      }
+
+      if (!userData) {
+        console.warn('사용자 정보가 없습니다:', userId);
+        return null;
+      }
+
+      // memberships 테이블에서 추가 정보 조회 (참고용)
+      const { data: membership, error: membershipError } = await supabase
         .from('memberships')
         .select('role, tenant_id, team_id')
         .eq('user_id', userId)
         .maybeSingle();
 
-      if (error) {
-        console.warn('사용자 권한 정보 조회 실패:', error);
-        return null;
-      }
-
-      if (!membership) {
-        console.warn('사용자 membership 정보가 없습니다:', userId);
-        return null;
-      }
-
-      let teamName = null;
+      let teamName = userData.team_name;
       
       // team_id가 있으면 teams 테이블에서 팀 이름 조회
-      if (membership.team_id) {
+      if (userData.team_id) {
         const { data: teamData } = await supabase
           .from('teams')
           .select('name')
-          .eq('id', membership.team_id)
+          .eq('id', userData.team_id)
           .maybeSingle();
         
         if (teamData) {
@@ -103,9 +111,9 @@ export class UserService {
       }
 
       return {
-        role: membership.role,
-        tenant_id: membership.tenant_id,
-        team_id: membership.team_id,
+        role: userData.role, // users 테이블의 role이 최종 권한
+        tenant_id: userData.tenant_id,
+        team_id: userData.team_id,
         team_name: teamName
       };
     } catch (error) {
@@ -175,13 +183,20 @@ export class UserService {
         defaultSettings
       });
 
-      // 서비스 역할로 INSERT 시도
-      const supabaseAdmin = supaAdmin();
-      const { data: settings, error } = await supabaseAdmin
-        .from('user_settings')
-        .insert(defaultSettings)
-        .select()
-        .single();
+      // API 라우트를 통해 서버 사이드에서 처리
+      const response = await fetch('/api/user-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(defaultSettings),
+      });
+
+      if (!response.ok) {
+        throw new Error('사용자 설정 생성 실패');
+      }
+
+      const { data: settings, error } = await response.json();
 
       console.log('🔍 Supabase 응답:', {
         data: settings,

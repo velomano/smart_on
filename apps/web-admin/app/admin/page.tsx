@@ -56,7 +56,7 @@ export default function AdminPage() {
   const loadData = async (user: AuthUser) => {
     try {
       const canView =
-        user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com';
+        user.role === 'super_admin' || user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com';
 
       if (!canView) {
         setPendingUsers([]);
@@ -74,11 +74,28 @@ export default function AdminPage() {
         (supabase as any).from('farm_memberships').select('*'),
       ]);
 
+      // 농장장(팀)인 경우 자신의 팀원만 필터링
+      let filteredPendingUsers = asArray(pendingResult);
+      let filteredApprovedUsers = asArray(approvedResult);
+      
+      if (user.role === 'team_leader' && user.team_id) {
+        filteredPendingUsers = filteredPendingUsers.filter(u => u.team_id === user.team_id);
+        filteredApprovedUsers = filteredApprovedUsers.filter(u => u.team_id === user.team_id);
+        console.log('🔍 농장장 필터링 적용:', {
+          userRole: user.role,
+          userTeamId: user.team_id,
+          originalPending: asArray(pendingResult).length,
+          filteredPending: filteredPendingUsers.length,
+          originalApproved: asArray(approvedResult).length,
+          filteredApproved: filteredApprovedUsers.length
+        });
+      }
+      
       setPendingUsers(
-        asArray(pendingResult).map((u) => ({ ...u, role: (u.role as Role) ?? 'team_member' }))
+        filteredPendingUsers.map((u) => ({ ...u, role: (u.role as Role) ?? 'team_member' }))
       );
       setApprovedUsers(
-        asArray(approvedResult).map((u) => ({ ...u, role: (u.role as Role) ?? 'team_member' }))
+        filteredApprovedUsers.map((u) => ({ ...u, role: (u.role as Role) ?? 'team_member' }))
       );
       setTeams(teamsResult.success ? teamsResult.teams : []);
       setFarms(asArray(farmsResult));

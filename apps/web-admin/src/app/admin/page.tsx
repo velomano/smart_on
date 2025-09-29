@@ -94,8 +94,8 @@ export default function AdminPage() {
         console.log('🔍 admin 페이지 - 데이터 로드 시작');
         
         const canView =
+          user.role === 'super_admin' ||
           user.role === 'system_admin' ||
-          user.role === 'team_leader' ||
           user.email === 'sky3rain7@gmail.com';
 
         if (!canView) {
@@ -128,8 +128,26 @@ export default function AdminPage() {
         }
 
         if (!alive) return;
-        setPendingUsers(Array.isArray(pendingResult) ? pendingResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
-        setApprovedUsers(Array.isArray(approvedResult) ? approvedResult.map(user => ({ ...user, role: user.role as 'system_admin' | 'team_leader' | 'team_member' })) : []);
+        
+        // 농장장(팀)인 경우 자신의 팀원만 필터링
+        let filteredPendingUsers = Array.isArray(pendingResult) ? pendingResult : [];
+        let filteredApprovedUsers = Array.isArray(approvedResult) ? approvedResult : [];
+        
+        if (user.role === 'team_leader' && user.team_id) {
+          filteredPendingUsers = filteredPendingUsers.filter(u => u.team_id === user.team_id);
+          filteredApprovedUsers = filteredApprovedUsers.filter(u => u.team_id === user.team_id);
+          console.log('🔍 농장장 필터링 적용:', {
+            userRole: user.role,
+            userTeamId: user.team_id,
+            originalPending: Array.isArray(pendingResult) ? pendingResult.length : 0,
+            filteredPending: filteredPendingUsers.length,
+            originalApproved: Array.isArray(approvedResult) ? approvedResult.length : 0,
+            filteredApproved: filteredApprovedUsers.length
+          });
+        }
+        
+        setPendingUsers(filteredPendingUsers.map(user => ({ ...user, role: user.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member' })));
+        setApprovedUsers(filteredApprovedUsers.map(user => ({ ...user, role: user.role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member' })));
         
         // farms 데이터 설정
         if (teamsResult && teamsResult.success && Array.isArray(teamsResult.teams)) {
@@ -1039,10 +1057,25 @@ export default function AdminPage() {
                       value={editFormData.role}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      disabled={authUser?.role === 'team_leader'}
                     >
-                      <option value="team_member">팀원</option>
-                      <option value="team_leader">농장장</option>
-                      <option value="system_admin">시스템 관리자</option>
+                      {authUser?.role === 'team_leader' ? (
+                        // 농장장은 team_member와 team_leader만 부여 가능
+                        <>
+                          <option value="team_member">팀원</option>
+                          <option value="team_leader">농장장</option>
+                        </>
+                      ) : (
+                        // 슈퍼 어드민과 시스템 어드민은 모든 권한 부여 가능
+                        <>
+                          <option value="team_member">팀원</option>
+                          <option value="team_leader">농장장</option>
+                          <option value="system_admin">시스템 관리자</option>
+                          {authUser?.role === 'super_admin' && (
+                            <option value="super_admin">최고관리자</option>
+                          )}
+                        </>
+                      )}
                     </select>
                       </div>
 
@@ -1055,13 +1088,24 @@ export default function AdminPage() {
                       value={editFormData.team_id}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, team_id: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      disabled={authUser?.role === 'team_leader'}
                     >
                       <option value="">농장 미배정</option>
-                      {teams.map((team) => (
-                        <option key={team.id} value={team.id}>
-                          {team.name}
-                        </option>
-                      ))}
+                      {authUser?.role === 'team_leader' ? (
+                        // 농장장은 자신의 농장만 선택 가능
+                        teams.filter(team => team.id === authUser.team_id).map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))
+                      ) : (
+                        // 슈퍼 어드민과 시스템 어드민은 모든 농장 선택 가능
+                        teams.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))
+                      )}
                     </select>
                           </div>
 

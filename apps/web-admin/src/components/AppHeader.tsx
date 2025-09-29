@@ -57,16 +57,15 @@ export default function AppHeader({
   }, [isMenuOpen]);
 
   // 사용자 역할에 따른 권한 확인
-  // 시스템 관리자는 모든 권한 가짐
-  const canManageUsers = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.email === 'sky3rain7@gmail.com';
-  const canManageTeamMembers = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member';
-  const canManageFarms = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member' || safeUser.email === 'sky3rain7@gmail.com';
-  const canManageMyTeamMembers = safeUser.role === 'team_leader' || safeUser.role === 'super_admin'; // 농장장과 슈퍼 어드민은 자신의 팀원만 관리
+  // 슈퍼 어드민과 시스템 어드민만 사용자 관리 가능
+  const canManageUsers = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || safeUser.email === 'sky3rain7@gmail.com';
+  const canManageTeamMembers = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member';
+  const canManageFarms = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || safeUser.role === 'team_leader' || safeUser.role === 'team_member' || safeUser.email === 'sky3rain7@gmail.com';
+  const canManageMyTeamMembers = safeUser.role === 'super_admin' || safeUser.role === 'team_leader'; // 슈퍼 어드민과 농장장은 자신의 팀원만 관리
 
-  // 팀원 보기 메뉴 조건 - 시스템 관리자와 슈퍼 어드민은 항상 볼 수 있음
-  const canViewTeamMembers = safeUser.role === 'system_admin' || safeUser.role === 'super_admin' || safeUser.email === 'velomano@naver.com' || 
-                            (safeUser.role === 'team_leader' && safeUser.team_id) ||
-                            (safeUser.role === 'team_member' && safeUser.team_id);
+  // 팀원 보기 메뉴 조건 - 모든 사용자가 볼 수 있음 (자신의 팀원만)
+  const canViewTeamMembers = safeUser.role === 'super_admin' || safeUser.role === 'system_admin' || 
+                            safeUser.role === 'team_leader' || safeUser.role === 'team_member';
   
   // 강제 수정: velomano@naver.com은 항상 true
   const finalCanViewTeamMembers = safeUser.email === 'velomano@naver.com' ? true : canViewTeamMembers;

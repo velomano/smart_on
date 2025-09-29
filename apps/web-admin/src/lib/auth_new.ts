@@ -89,12 +89,9 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
         }
       }
       
-      // memberships 테이블의 role을 우선 사용 (더 정확함)
-      if (membershipData.role) {
-        role = membershipData.role === 'owner' ? 'system_admin' :
-               membershipData.role === 'operator' ? 'team_leader' :
-               membershipData.role === 'viewer' ? 'team_member' : userData.role;
-      }
+      // users 테이블의 role을 우선 사용 (최고관리자가 수정한 권한이 최종 권한)
+      // memberships 테이블의 role은 참고용으로만 사용
+      role = userData.role; // users 테이블의 role이 최종 권한
     } else {
       console.log('🔍 getCurrentUser membershipData가 null입니다');
     }
@@ -103,7 +100,7 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       id: userData.id,
       email: userData.email,
       name: userData.name,
-      role: (role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
+      role: (role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
       tenant_id: userData.tenant_id,
       team_id: teamId,
       team_name: teamName,
@@ -181,7 +178,7 @@ export const getApprovedUsers = async () => {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: (role as 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
+          role: (role as 'super_admin' | 'system_admin' | 'team_leader' | 'team_member') || 'team_member',
           tenant_id: user.tenant_id,
           team_id: teamId,
           team_name: teamName,
