@@ -98,20 +98,14 @@ export default function AppHeader({
     }
   };
 
-  // 햄버거 메뉴용 메뉴 아이템들 (모바일에서는 모든 메뉴 포함)
+  // 햄버거 메뉴용 메뉴 아이템들 (사용자 관리는 상단으로 이동)
   const menuItems = [
     {
       label: '알림설정',
       path: '/notifications',
       color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
     },
-    // 관리자는 사용자 관리가 먼저, 일반 사용자는 사용자 관리만
-    ...(canAccessUserManagement ? [{
-      label: '사용자 관리',
-      path: '/team',
-      color: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
-    }] : []),
-    // 관리자는 관리자 페이지가 나중에
+    // 관리자만 관리자 페이지 표시 (사용자 관리는 상단으로 이동)
     ...(canManageUsers ? [{
       label: '관리자 페이지',
       path: '/admin',
@@ -208,13 +202,21 @@ export default function AppHeader({
                 </div>
               </div>
 
-                  {/* 주요 메뉴 버튼들 - 관리자는 관리자 페이지, 일반 사용자는 사용자 관리 */}
+                  {/* 주요 메뉴 버튼들 - 모든 계정이 사용자 관리, 관리자는 추가로 관리자 페이지 */}
                   {canAccessUserManagement && (
                     <button
-                      onClick={() => router.push(canManageUsers ? '/admin' : '/team')}
+                      onClick={() => router.push('/team')}
                       className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                     >
-                      {canManageUsers ? '관리자 페이지' : '사용자 관리'}
+                      사용자 관리
+                    </button>
+                  )}
+                  {canManageUsers && (
+                    <button
+                      onClick={() => router.push('/admin')}
+                      className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                    >
+                      관리자 페이지
                     </button>
                   )}
               {canManageFarms && (
