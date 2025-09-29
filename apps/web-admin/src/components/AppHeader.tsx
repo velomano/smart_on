@@ -98,14 +98,20 @@ export default function AppHeader({
     }
   };
 
-  // 햄버거 메뉴용 메뉴 아이템들 (사용자 관리는 상단으로 이동)
+  // 햄버거 메뉴용 메뉴 아이템들 (모든 계정이 사용자 관리 포함)
   const menuItems = [
     {
       label: '알림설정',
       path: '/notifications',
       color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
     },
-    // 관리자만 관리자 페이지 표시 (사용자 관리는 상단으로 이동)
+    // 모든 계정이 사용자 관리 포함 (통일성)
+    ...(canAccessUserManagement ? [{
+      label: '사용자 관리',
+      path: '/team',
+      color: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+    }] : []),
+    // 관리자만 관리자 페이지 표시
     ...(canManageUsers ? [{
       label: '관리자 페이지',
       path: '/admin',
