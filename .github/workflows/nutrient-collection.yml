@@ -64,8 +64,8 @@ jobs:
             
             console.log(\`🚀 영양액 레시피 배치 수집 시작 (소스: \${source}, 배치크기: \${batchSize})\`);
             
-            // 1. 기존 레시피 수 확인 (중복 체크용)
-            const existingResponse = await fetch('${{ secrets.SUPABASE_URL }}/rest/v1/vw_crop_recipes_latest?select=count', {
+            // 1. 기존 레시피 수 확인
+            const existingResponse = await fetch('${{ secrets.SUPABASE_URL }}/rest/v1/crop_profiles?select=count', {
               headers: {
                 'apikey': '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}',
                 'Authorization': \`Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\`
@@ -75,7 +75,7 @@ jobs:
             const existingCount = await existingResponse.json();
             console.log(\`📊 기존 레시피 수: \${existingCount.length}건\`);
             
-            // 2. 워커에서 레시피 수집
+            // 2. 워커에서 레시피 수집 (워커가 직접 Supabase에 저장)
             const response = await fetch(\`${{ secrets.WORKER_URL }}/sources/\${source}\`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -87,58 +87,19 @@ jobs:
             }
             
             const data = await response.json();
-            const collectedRecipes = data.data || [];
-            console.log(\`✅ 수집 완료: \${collectedRecipes.length}건\`);
+            console.log(\`✅ 수집 완료: \${data.count || 0}건\`);
             
-            if (collectedRecipes.length === 0) {
-              console.log('⚠️ 수집된 레시피가 없습니다.');
-              return;
-            }
-            
-            // 3. 중복 체크 및 필터링
-            const uniqueRecipes = [];
-            const duplicates = [];
-            
-            for (const recipe of collectedRecipes) {
-              // 체크섬으로 중복 확인
-              const duplicateCheck = await fetch(\`${{ secrets.SUPABASE_URL }}/rest/v1/nutrient_recipes?checksum=eq.\${recipe.checksum}&select=id\`, {
-                headers: {
-                  'apikey': '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}',
-                  'Authorization': \`Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\`
-                }
-              });
-              
-              const existing = await duplicateCheck.json();
-              
-              if (existing.length === 0) {
-                uniqueRecipes.push(recipe);
-              } else {
-                duplicates.push(recipe);
+            // 3. 최종 레시피 수 확인
+            const finalResponse = await fetch('${{ secrets.SUPABASE_URL }}/rest/v1/crop_profiles?select=count', {
+              headers: {
+                'apikey': '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}',
+                'Authorization': \`Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\`
               }
-            }
+            });
             
-            console.log(\`🔄 중복 제거: \${uniqueRecipes.length}건 신규, \${duplicates.length}건 중복\`);
-            
-            // 4. 신규 레시피만 저장
-            if (uniqueRecipes.length > 0) {
-              const ingestResponse = await fetch('${{ secrets.SUPABASE_FN_URL }}/ingest-nutrient', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': \`Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}\`
-                },
-                body: JSON.stringify(uniqueRecipes)
-              });
-              
-              if (!ingestResponse.ok) {
-                throw new Error(\`저장 실패: \${ingestResponse.status}\`);
-              }
-              
-              const result = await ingestResponse.json();
-              console.log(\`💾 저장 완료: \${result.count || 0}건\`);
-            } else {
-              console.log('ℹ️ 저장할 신규 레시피가 없습니다.');
-            }
+            const finalCount = await finalResponse.json();
+            const addedCount = finalCount.length - existingCount.length;
+            console.log(\`💾 추가된 레시피: \${addedCount}건\`);
             
             console.log('🎉 영양액 레시피 배치 수집 완료!');
             
@@ -152,7 +113,7 @@ jobs:
         "
         
     - name: 수집 결과 알림 (선택사항)
-      if: always()
+      if: always() && secrets.SLACK_WEBHOOK_URL != ''
       uses: 8398a7/action-slack@v3
       with:
         status: ${{ job.status }}
