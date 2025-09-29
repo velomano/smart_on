@@ -131,11 +131,6 @@ export default function AppHeader({
       color: 'from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
     },
     {
-      label: '배양액 제조',
-      path: '/nutrient',
-      color: 'from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700'
-    },
-    {
       label: '마이페이지',
       path: '/my-page',
       color: 'from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
