@@ -327,35 +327,16 @@ export default function TeamPage() {
                         </span>
                       </div>
                       <div>
-                        {editingUser === member.id ? (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              value={editFormData.name || ''}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="이름"
-                            />
-                            <input
-                              type="email"
-                              value={editFormData.email || ''}
-                              onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="이메일"
-                            />
-                          </div>
-                        ) : (
-                          <div>
-                            <h4 className="text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
-                            <p className="text-gray-600 font-medium">{member.email}</p>
-                            {(member as any).company && (
-                              <p className="text-sm text-gray-500">🏢 {(member as any).company}</p>
-                            )}
-                            {(member as any).phone && (
-                              <p className="text-sm text-gray-500">📞 {(member as any).phone}</p>
-                            )}
-                          </div>
-                        )}
+                        <div>
+                          <h4 className="text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
+                          <p className="text-gray-600 font-medium">{member.email}</p>
+                          {(member as any).company && (
+                            <p className="text-sm text-gray-500">🏢 {(member as any).company}</p>
+                          )}
+                          {(member as any).phone && (
+                            <p className="text-sm text-gray-500">📞 {(member as any).phone}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
