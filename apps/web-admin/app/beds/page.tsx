@@ -1790,8 +1790,8 @@ function BedsManagementContent() {
             {/* 스크롤 가능한 내용 */}
             <div className="flex-1 overflow-y-auto p-6 pt-4">
               <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
                   베드 이름 *
                 </label>
                 <input
@@ -1884,8 +1884,6 @@ function BedsManagementContent() {
                   />
                 </div>
               </div>
-
-            </div>
 
             {/* 모달 푸터 */}
             <div className="p-6 pt-4 border-t border-gray-200">
