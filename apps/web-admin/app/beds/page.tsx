@@ -1112,32 +1112,38 @@ function BedsManagementContent() {
                                       🔧 {(device.meta as any)?.growing_method || '미설정'}
                                     </span>
                                   </div>
-                                  {/* 다단 구조 표시 */}
-                                  <div className="mt-2">
-                                    <BedTierShelfVisualization
-                                      totalTiers={(device.meta as any)?.total_tiers || 1}
-                                      activeTiers={(device.meta as any)?.total_tiers || 1}
-                                      tierStatuses={Array.from({ length: 5 }, (_, i) => ({
-                                        tierNumber: i + 1,
-                                        isActive: i < ((device.meta as any)?.total_tiers || 1),
-                                        status: i < ((device.meta as any)?.total_tiers || 1) ? 'active' : 'inactive',
-                                        plantCount: 0,
-                                        hasPlants: false
-                                      }))}
-                                      compact={true}
-                                    />
-                                  </div>
                                 </div>
                               </div>
                             </div>
 
-                            {/* 센서 데이터 */}
-                            <div className="mb-6">
-                              <h6 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                                <span className="text-xl mr-2">📊</span>
-                                센서 데이터
-                              </h6>
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                            {/* 베드 시각화와 센서/제어 데이터를 나란히 배치 */}
+                            <div className="flex gap-6">
+                              {/* 베드 시각화 */}
+                              <div className="flex-shrink-0">
+                                <BedTierShelfVisualization
+                                  totalTiers={(device.meta as any)?.total_tiers || 1}
+                                  activeTiers={(device.meta as any)?.total_tiers || 1}
+                                  tierStatuses={Array.from({ length: 5 }, (_, i) => ({
+                                    tierNumber: i + 1,
+                                    isActive: i < ((device.meta as any)?.total_tiers || 1),
+                                    status: i < ((device.meta as any)?.total_tiers || 1) ? 'active' : 'inactive',
+                                    plantCount: 0,
+                                    hasPlants: false
+                                  }))}
+                                  compact={true}
+                                />
+                              </div>
+
+                              {/* 센서 데이터와 원격 스위치 제어 */}
+                              <div className="flex-1 space-y-4">
+
+                                {/* 센서 데이터 */}
+                                <div>
+                                  <h6 className="text-base font-bold text-gray-800 mb-3 flex items-center">
+                                    <span className="text-lg mr-2">📊</span>
+                                    센서 데이터
+                                  </h6>
+                                  <div className="grid grid-cols-2 gap-3">
                                 <SensorCard
                                   type="temperature"
                                   value={(() => {
@@ -1193,13 +1199,16 @@ function BedsManagementContent() {
                                   chartData={sensorChartData}
                                   title="pH"
                                 />
-                              </div>
-                            </div>
+                                  </div>
+                                </div>
 
-                            {/* 제어 상태 - 원격 스위치 제어 */}
-                            <div className="mb-4">
-                              <h6 className="text-sm font-semibold text-gray-700 mb-3">🔌 원격 스위치 제어</h6>
-                              <div className="grid grid-cols-2 gap-3">
+                                {/* 제어 상태 - 원격 스위치 제어 */}
+                                <div>
+                                  <h6 className="text-base font-bold text-gray-800 mb-3 flex items-center">
+                                    <span className="text-lg mr-2">🔌</span>
+                                    원격 스위치 제어
+                                  </h6>
+                                  <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center space-x-2">
@@ -1329,6 +1338,8 @@ function BedsManagementContent() {
                                     >
                                       🔄 듀얼타임 설정
                                     </button>
+                                  </div>
+                                </div>
                                   </div>
                                 </div>
                               </div>
