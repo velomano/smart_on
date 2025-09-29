@@ -26,8 +26,7 @@ export async function GET(req: NextRequest) {
         stage,
         target_ppm,
         target_ec,
-        target_ph,
-        created_at
+        target_ph
       `);
 
     // 필터링 적용
@@ -49,7 +48,8 @@ export async function GET(req: NextRequest) {
       console.error('작물 프로필 조회 에러:', error);
       return NextResponse.json({ 
         ok: false, 
-        error: '작물 프로필 조회에 실패했습니다.' 
+        error: `작물 프로필 조회에 실패했습니다: ${error.message}`,
+        details: error
       }, { status: 500 });
     }
 
@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
         ec_target: profile.target_ec,
         ph_target: profile.target_ph,
         npk_ratio: npk_ratio,
-        created_at: profile.created_at,
+        created_at: new Date().toISOString(),
         source_title: '스마트팜 데이터베이스',
         source_year: 2024,
         license: 'CC BY 4.0',
