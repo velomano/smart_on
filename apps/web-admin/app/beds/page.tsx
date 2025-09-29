@@ -1794,27 +1794,28 @@ function BedsManagementContent() {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  베드 이름 *
-                </label>
-                <input
-                  type="text"
-                  value={editBedData.name}
-                  onChange={(e) => setEditBedData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
-                  placeholder="예: 베드2, 3, A구역"
-                />
-                {/* 베드 이름 규칙 안내 */}
-                <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                  <div className="flex items-start space-x-2">
-                    <span className="text-purple-500 text-sm">💡</span>
-                    <div className="text-sm text-purple-700">
-                      <p className="font-medium mb-1">베드 이름 규칙:</p>
-                      <ul className="text-xs space-y-1">
-                        <li>• <code className="bg-purple-100 px-1 rounded">베드2</code> → 베드-2</li>
-                        <li>• <code className="bg-purple-100 px-1 rounded">3</code> → 베드-3</li>
-                        <li>• <code className="bg-purple-100 px-1 rounded">베드-2</code> → 베드-2</li>
-                        <li>• <code className="bg-purple-100 px-1 rounded">A구역</code> → 베드-A구역</li>
-                      </ul>
+                    베드 이름 *
+                  </label>
+                  <input
+                    type="text"
+                    value={editBedData.name}
+                    onChange={(e) => setEditBedData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    placeholder="예: 베드2, 3, A구역"
+                  />
+                  {/* 베드 이름 규칙 안내 */}
+                  <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-purple-500 text-sm">💡</span>
+                      <div className="text-sm text-purple-700">
+                        <p className="font-medium mb-1">베드 이름 규칙:</p>
+                        <ul className="text-xs space-y-1">
+                          <li>• <code className="bg-purple-100 px-1 rounded">베드2</code> → 베드-2</li>
+                          <li>• <code className="bg-purple-100 px-1 rounded">3</code> → 베드-3</li>
+                          <li>• <code className="bg-purple-100 px-1 rounded">베드-2</code> → 베드-2</li>
+                          <li>• <code className="bg-purple-100 px-1 rounded">A구역</code> → 베드-A구역</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
