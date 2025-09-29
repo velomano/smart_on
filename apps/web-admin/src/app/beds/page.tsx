@@ -93,6 +93,15 @@ function BedsManagementContent() {
 
         // 먼저 현재 로그인된 사용자 확인
         const currentUser = await getCurrentUser();
+        console.log('🔍 베드 페이지 - 현재 사용자 정보:', {
+          id: currentUser?.id,
+          email: currentUser?.email,
+          role: currentUser?.role,
+          team_id: currentUser?.team_id,
+          team_name: currentUser?.team_name,
+          is_approved: currentUser?.is_approved
+        });
+        
         if (!currentUser || !currentUser.is_approved) {
           router.push('/login');
           return;
@@ -138,19 +147,39 @@ function BedsManagementContent() {
 
         // team_leader와 team_member인 경우 자신이 관리하는 농장만 표시
         let filteredFarms = farmsResult as Farm[];
+        console.log('🔍 농장 필터링 전 - 전체 농장:', farmsResult.map(f => ({ id: f.id, name: f.name })));
+        
         if (currentUser && (currentUser.role === 'team_leader' || currentUser.role === 'team_member')) {
-          // test4@test.com은 2조 농장을 관리하도록 하드코딩 (임시)
-          if (currentUser.email === 'test4@test.com') {
-            filteredFarms = filteredFarms.filter(farm => farm.id === '550e8400-e29b-41d4-a716-446655440002');
-          } else if (currentUser.team_id) {
+          console.log('🔍 농장 필터링 적용 - 사용자 권한:', {
+            role: currentUser.role,
+            email: currentUser.email,
+            team_id: currentUser.team_id,
+            team_name: currentUser.team_name
+          });
+          
+          // 농장장과 팀원은 자신의 농장만 조회 가능
+          if (currentUser.team_id) {
+            const beforeFilter = filteredFarms.length;
             filteredFarms = filteredFarms.filter(farm => farm.id === currentUser.team_id);
+            console.log('🔍 농장 필터링 결과:', {
+              필터링전_농장수: beforeFilter,
+              필터링후_농장수: filteredFarms.length,
+              사용자_팀ID: currentUser.team_id,
+              필터링된_농장: filteredFarms.map(f => ({ id: f.id, name: f.name }))
+            });
+          } else {
+            console.log('⚠️ 사용자에게 team_id가 설정되지 않았습니다:', {
+              email: currentUser.email,
+              role: currentUser.role
+            });
+            // team_id가 없는 경우 모든 농장을 숨김 (보안상 안전)
+            filteredFarms = [];
+            console.log('🔒 team_id가 없어서 모든 농장을 숨깁니다');
           }
-          console.log('🔍 team_leader 농장 필터링:', {
-            userRole: currentUser.role,
-            userEmail: currentUser.email,
-            teamId: currentUser.team_id,
-            originalFarms: farmsResult.length,
-            filteredFarms: filteredFarms.length
+        } else {
+          console.log('🔍 관리자 권한 - 모든 농장 표시:', {
+            role: currentUser?.role,
+            농장수: filteredFarms.length
           });
         }
         

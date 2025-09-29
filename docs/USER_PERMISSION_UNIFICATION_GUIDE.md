@@ -22,8 +22,8 @@
 - **팀 멤버**: `test3@test.com` - 1농장 팀원 (team_member)
 
 ### 2농장 팀
-- **팀 리더**: `test4@test.com` - 2농장 농장장 (team_leader)
-- **팀 멤버**: `test5@test.com` - 2농장 팀원 (team_member)
+- **팀 리더**: `test3@test.com` - 2농장 농장장 (team_leader)
+- **팀 멤버**: `test4@test.com` - 2농장 팀원 (team_member)
 
 ### 3농장 팀
 - **팀 리더**: `test7@test.com` - 3농장 농장장 (team_leader)

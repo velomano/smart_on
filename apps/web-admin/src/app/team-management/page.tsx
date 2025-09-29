@@ -21,7 +21,8 @@ export default function TeamManagementPage() {
   // 인증 확인
   const checkAuth = async () => {
     const currentUser = await getCurrentUser();
-    if (!currentUser || !currentUser.is_approved || currentUser.role !== 'team_leader') {
+    if (!currentUser || !currentUser.is_approved || 
+        (currentUser.role !== 'team_leader' && currentUser.role !== 'super_admin' && currentUser.role !== 'system_admin')) {
       router.push('/login');
       return;
     }
@@ -33,13 +34,33 @@ export default function TeamManagementPage() {
     try {
       const usersResult = await getApprovedUsers();
       const allUsers = usersResult.users || [];
-      // 자신의 농장에 속한 모든 멤버들 필터링 (농장장 자신 포함)
-      const myTeamMembers = allUsers.filter(member => 
-        member.team_id === user?.team_id
-      );
+      
+      let myTeamMembers: AuthUser[] = [];
+      
+      if (user?.role === 'super_admin' || user?.role === 'system_admin') {
+        // 최고관리자와 시스템 관리자는 모든 사용자 볼 수 있음
+        myTeamMembers = allUsers.filter(member => 
+          member.role !== 'super_admin' && member.role !== 'system_admin'
+        );
+      } else if (user?.team_id) {
+        // 농장장은 자신의 농장에 속한 모든 멤버들 필터링 (농장장 자신 포함)
+        myTeamMembers = allUsers.filter(member => 
+          member.team_id === user.team_id &&
+          member.role !== 'super_admin' && member.role !== 'system_admin'
+        );
+      } else {
+        // team_id가 없는 경우 빈 배열 반환 (보안상 안전)
+        console.log('⚠️ 팀원 관리 - team_id가 설정되지 않았습니다:', {
+          email: user?.email,
+          role: user?.role
+        });
+        myTeamMembers = [];
+        console.log('🔒 team_id가 없어서 팀원을 표시하지 않습니다');
+      }
+      
       setTeamMembers(myTeamMembers as AuthUser[]);
-      console.log('농장장 팀원 관리 - 현재 사용자:', user);
-      console.log('농장장 팀원 관리 - 팀원 목록:', myTeamMembers);
+      console.log('팀원 관리 - 현재 사용자:', user);
+      console.log('팀원 관리 - 팀원 목록:', myTeamMembers);
     } catch (error) {
       console.error('Error loading team members:', error);
     }

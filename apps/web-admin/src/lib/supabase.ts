@@ -81,7 +81,11 @@ export const getFarms = async (): Promise<Farm[]> => {
       .select('id, name, location, tenant_id, created_at')
       .order('created_at', { ascending: true });
 
-    console.log('🔍 getFarms 쿼리 결과:', { data: farms, error });
+    console.log('🔍 getFarms 쿼리 결과:', { 
+      data: farms?.map(f => ({ id: f.id, name: f.name, location: f.location })),
+      error: error,
+      dataLength: farms?.length || 0
+    });
 
     if (error) {
       console.error('getFarms 오류:', error);

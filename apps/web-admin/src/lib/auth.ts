@@ -13,6 +13,8 @@ export interface DatabaseUser {
   updated_at?: string;
   company?: string;
   phone?: string;
+  team_id?: string | null;
+  team_name?: string | null;
 }
 
 // 애플리케이션 사용자 타입
@@ -207,18 +209,44 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     }
 
     // 사용자 기본 정보 조회
+    console.log('🔍 getCurrentUser - 사용자 기본 정보 조회 시작:', authUser.id);
     const { data: userData, error: userError } = await (supabase as any)
       .from('users')
       .select('*')
       .eq('id', authUser.id)
       .single() as { data: DatabaseUser | null; error: any };
 
+    console.log('🔍 getCurrentUser - 사용자 기본 정보 조회 결과:', {
+      userData: userData ? {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+        team_id: userData.team_id,
+        team_name: userData.team_name,
+        is_approved: userData.is_approved,
+        is_active: userData.is_active
+      } : null,
+      userError: userError
+    });
+
     if (userError || !userData) {
+      console.error('🔴 getCurrentUser - 사용자 정보 조회 실패:', userError);
       return null;
     }
 
-    // 팀 정보 조회 (memberships 테이블에서)
+    // 농장 멤버십 정보 조회 (farm_memberships 테이블에서)
     console.log('🔍 getCurrentUser authUser.id:', authUser.id);
+    const { data: farmMembershipData, error: farmMembershipError } = await (supabase as any)
+      .from('farm_memberships')
+      .select('farm_id, role')
+      .eq('user_id', authUser.id)
+      .maybeSingle();
+
+    console.log('🔍 getCurrentUser farmMembershipData:', farmMembershipData);
+    console.log('🔍 getCurrentUser farmMembershipError:', farmMembershipError);
+
+    // 기존 memberships 테이블도 확인 (호환성을 위해)
     const { data: membershipData, error: membershipError } = await (supabase as any)
       .from('memberships')
       .select('role, tenant_id, team_id')
@@ -228,39 +256,81 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     console.log('🔍 getCurrentUser membershipData:', membershipData);
     console.log('🔍 getCurrentUser membershipError:', membershipError);
 
-    let teamId = null;
-    let teamName = null;
+    let teamId = userData.team_id; // users 테이블의 team_id를 기본값으로 사용
+    let teamName = userData.team_name; // users 테이블의 team_name을 기본값으로 사용
     let role = userData.role;
 
-    if (membershipError) {
-      console.error('memberships 로드 오류:', membershipError);
-      // membership이 없는 경우 기본값 사용
-    } else if (membershipData) {
-      console.log('🔍 getCurrentUser membershipData:', membershipData);
-      teamId = membershipData.team_id;
-      console.log('🔍 getCurrentUser teamId 설정:', teamId);
+    // farm_memberships 테이블에서 농장 정보 우선 조회
+    if (farmMembershipError) {
+      console.error('farm_memberships 로드 오류:', farmMembershipError);
+    } else if (farmMembershipData) {
+      console.log('🔍 getCurrentUser farmMembershipData:', farmMembershipData);
       
-      // team_id가 있으면 teams 테이블에서 팀 이름 조회
-      if (teamId) {
-        const { data: teamData } = await (supabase as any)
-          .from('teams')
+      // farm_memberships에서 farm_id를 team_id로 사용
+      if (farmMembershipData.farm_id) {
+        teamId = farmMembershipData.farm_id;
+        console.log('🔍 getCurrentUser teamId를 farm_memberships에서 설정:', teamId);
+        
+        // farm_id로 농장 이름 조회
+        console.log('🔍 getCurrentUser - 농장 이름 조회 시도:', teamId);
+        const { data: farmData } = await (supabase as any)
+          .from('farms')
           .select('name')
           .eq('id', teamId)
           .maybeSingle();
         
-        if (teamData) {
-          teamName = teamData.name;
+        console.log('🔍 getCurrentUser - 농장 이름 조회 결과:', farmData);
+        if (farmData) {
+          teamName = farmData.name;
+          console.log('🔍 getCurrentUser - 농장 이름 설정:', teamName);
         }
       }
       
-      // users 테이블의 role을 우선 사용 (최고관리자가 수정한 권한이 최종 권한)
-      // memberships 테이블의 role은 참고용으로만 사용
-      role = userData.role; // users 테이블의 role이 최종 권한
+      // farm_memberships의 role을 users 테이블의 role과 매핑
+      if (farmMembershipData.role) {
+        role = farmMembershipData.role === 'owner' ? 'team_leader' :
+               farmMembershipData.role === 'operator' ? 'team_member' :
+               farmMembershipData.role === 'viewer' ? 'team_member' :
+               userData.role; // 기본값은 users 테이블의 role
+        console.log('🔍 getCurrentUser role을 farm_memberships에서 매핑:', {
+          farmRole: farmMembershipData.role,
+          mappedRole: role
+        });
+      }
     } else {
-      console.log('🔍 getCurrentUser membershipData가 null입니다');
+      console.log('🔍 getCurrentUser farmMembershipData가 null입니다, 기존 로직 사용');
+      
+      // 기존 memberships 테이블 로직 (호환성을 위해)
+      if (membershipError) {
+        console.error('memberships 로드 오류:', membershipError);
+      } else if (membershipData) {
+        console.log('🔍 getCurrentUser membershipData:', membershipData);
+        
+        // users 테이블에 team_id가 없으면 memberships에서 가져오기
+        if (!teamId && membershipData.team_id) {
+          teamId = membershipData.team_id;
+          console.log('🔍 getCurrentUser teamId를 memberships에서 설정:', teamId);
+        }
+        
+        // team_id가 있으면 farms 테이블에서 농장 이름 조회 (teamName이 없는 경우만)
+        if (teamId && !teamName) {
+          console.log('🔍 getCurrentUser - 농장 이름 조회 시도:', teamId);
+          const { data: farmData } = await (supabase as any)
+            .from('farms')
+            .select('name')
+            .eq('id', teamId)
+            .maybeSingle();
+          
+          console.log('🔍 getCurrentUser - 농장 이름 조회 결과:', farmData);
+          if (farmData) {
+            teamName = farmData.name;
+            console.log('🔍 getCurrentUser - 농장 이름 설정:', teamName);
+          }
+        }
+      }
     }
 
-    return {
+    const finalUser = {
       id: userData.id,
       email: userData.email,
       name: userData.name,
@@ -270,8 +340,29 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       team_name: teamName,
       is_approved: userData.is_approved,
       is_active: userData.is_active,
-      created_at: userData.created_at
+      created_at: userData.created_at,
+      company: userData.company,
+      phone: userData.phone
     };
+
+    console.log('🔍 getCurrentUser 최종 반환값:', {
+      email: finalUser.email,
+      role: finalUser.role,
+      team_id: finalUser.team_id,
+      team_name: finalUser.team_name,
+      is_approved: finalUser.is_approved,
+      is_active: finalUser.is_active
+    });
+
+    // team_id가 없는 경우 경고 로그만 출력
+    if (!finalUser.team_id) {
+      console.warn('⚠️ 사용자에게 team_id가 설정되지 않았습니다:', {
+        email: finalUser.email,
+        role: finalUser.role
+      });
+    }
+
+    return finalUser;
   } catch (error: any) {
     console.error('Supabase 사용자 조회 오류:', error);
     return null;
@@ -318,7 +409,8 @@ export const getApprovedUsers = async () => {
         console.log(`🔍 getApprovedUsers - ${user.email}:`, {
           membershipData,
           membershipError,
-          userId: user.id
+          userId: user.id,
+          userRole: user.role
         });
 
         let teamId = null;
@@ -338,14 +430,17 @@ export const getApprovedUsers = async () => {
           
           // farm_id가 있으면 farms 테이블에서 농장 이름 조회
           if (teamId) {
+            console.log('🔍 getApprovedUsers - 농장 이름 조회 시도:', teamId);
             const { data: farmData } = await (supabase as any)
               .from('farms')
               .select('name')
               .eq('id', teamId)
               .maybeSingle(); // Use maybeSingle for defensive coding
             
+            console.log('🔍 getApprovedUsers - 농장 이름 조회 결과:', farmData);
             if (farmData) {
               teamName = farmData.name;
+              console.log('🔍 getApprovedUsers - 농장 이름 설정:', teamName);
             }
           }
           
@@ -357,7 +452,7 @@ export const getApprovedUsers = async () => {
           }
         }
 
-        return {
+        const result = {
           id: user.id,
           email: user.email,
           name: user.name,
@@ -371,6 +466,15 @@ export const getApprovedUsers = async () => {
           company: user.company,
           phone: user.phone
         } as AuthUser;
+        
+        console.log(`🔍 getApprovedUsers 최종 결과 - ${user.email}:`, {
+          email: result.email,
+          role: result.role,
+          team_id: result.team_id,
+          team_name: result.team_name
+        });
+        
+        return result;
       })
     );
 

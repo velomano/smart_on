@@ -59,16 +59,51 @@ export default function TeamPage() {
       
       console.log('현재 사용자:', user);
       console.log('전체 사용자:', allUsers);
+      console.log('전체 사용자 상세 정보:', allUsers.map(u => ({
+        email: u.email,
+        role: u.role,
+        team_id: u.team_id,
+        team_name: u.team_name
+      })));
       
-      if (user?.role === 'system_admin') {
-        // 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
+      if (user?.role === 'super_admin' || user?.role === 'system_admin') {
+        // 최고관리자와 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
         members = allUsers.filter(member => member.id !== user?.id) as AuthUser[];
       } else if (user?.team_id) {
         // 농장장/팀원은 자신의 농장 멤버들만 볼 수 있음 (자신 포함)
-        members = allUsers.filter(member => 
-          member.team_id === user.team_id && 
-          member.role !== 'system_admin' // 시스템 관리자는 제외
-        ) as AuthUser[];
+        console.log('🔍 팀원 필터링 시작:', {
+          userTeamId: user.team_id,
+          userRole: user.role,
+          userEmail: user.email
+        });
+        
+        const filteredMembers = allUsers.filter(member => {
+          const matchesTeam = member.team_id === user.team_id;
+          const isNotAdmin = member.role !== 'super_admin' && member.role !== 'system_admin';
+          const result = matchesTeam && isNotAdmin;
+          
+          console.log('🔍 멤버 필터링:', {
+            memberEmail: member.email,
+            memberTeamId: member.team_id,
+            memberRole: member.role,
+            matchesTeam: matchesTeam,
+            isNotAdmin: isNotAdmin,
+            result: result
+          });
+          
+          return result;
+        });
+        
+        members = filteredMembers as AuthUser[];
+        console.log('🔍 최종 필터링된 멤버들:', members.map(m => ({ email: m.email, role: m.role, team_id: m.team_id })));
+      } else {
+        // team_id가 없는 경우 빈 배열 반환 (보안상 안전)
+        console.log('⚠️ 팀 보기 - team_id가 설정되지 않았습니다:', {
+          email: user?.email,
+          role: user?.role
+        });
+        members = [];
+        console.log('🔒 team_id가 없어서 팀원을 표시하지 않습니다');
       }
       
       console.log('필터링된 멤버들:', members);
