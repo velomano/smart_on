@@ -90,7 +90,7 @@ export default function BedTierSystemCard({
             단별 센서 데이터
           </h6>
           <button
-            onClick={onAddSensor}
+            onClick={() => onAddSensor?.(1)}
             className="bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
           >
             + 센서 추가

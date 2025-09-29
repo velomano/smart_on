@@ -178,7 +178,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         targetFarmId: farmId,
         isDirectMatch: alert.deviceId === farmId,
         isRead: alert.isRead,
-        alertType: alert.alert_type,
+        alertType: alert.type,
         message: alert.message
       });
     });

@@ -255,15 +255,15 @@ export default function MqttIntegrationGuideModal({
                     </div>
 
                     {/* 완성된 MQTT 토픽 표시 */}
-                    {selectedFarm && selectedBed && (generatedDeviceId || generatedCustomId) && (
+                    {currentFarmId && selectedBed && (generatedDeviceId || generatedCustomId) && (
                       <div className="mt-4 p-4 bg-gray-900 rounded-lg">
                         <h5 className="text-white font-semibold mb-2">완성된 MQTT 토픽:</h5>
                         <div className="space-y-2">
                           <div className="text-green-400 text-sm">
                             <span className="text-gray-400">센서 데이터:</span><br/>
-                            <code>farms/{selectedFarm}/beds/{selectedBed}/devices/{generatedDeviceId || generatedCustomId}/sensors</code>
+                            <code>farms/{currentFarmId}/beds/{selectedBed}/devices/{generatedDeviceId || generatedCustomId}/sensors</code>
                             <button
-                              onClick={() => copyToClipboard(`farms/${selectedFarm}/beds/${selectedBed}/devices/${generatedDeviceId || generatedCustomId}/sensors`)}
+                              onClick={() => copyToClipboard(`farms/${currentFarmId}/beds/${selectedBed}/devices/${generatedDeviceId || generatedCustomId}/sensors`)}
                               className="ml-2 px-2 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 font-medium"
                             >
                               복사
@@ -271,9 +271,9 @@ export default function MqttIntegrationGuideModal({
                           </div>
                           <div className="text-blue-400 text-sm">
                             <span className="text-gray-400">디바이스 제어:</span><br/>
-                            <code>farms/{selectedFarm}/beds/{selectedBed}/devices/{generatedDeviceId || generatedCustomId}/commands</code>
+                            <code>farms/{currentFarmId}/beds/{selectedBed}/devices/{generatedDeviceId || generatedCustomId}/commands</code>
                             <button
-                              onClick={() => copyToClipboard(`farms/${selectedFarm}/beds/${selectedBed}/devices/${generatedDeviceId || generatedCustomId}/commands`)}
+                              onClick={() => copyToClipboard(`farms/${currentFarmId}/beds/${selectedBed}/devices/${generatedDeviceId || generatedCustomId}/commands`)}
                               className="ml-2 px-2 py-1 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 font-medium"
                             >
                               복사

@@ -36,7 +36,8 @@ export default function AppHeader({
     name: '게스트',
     role: 'team_member' as const,
     is_approved: false,
-    is_active: false
+    is_active: false,
+    team_name: null
   };
 
   // 외부 클릭 감지

@@ -6,7 +6,7 @@ import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getTeams } from
 import AppHeader from '../../src/components/AppHeader';
 
 interface TeamMember extends AuthUser {
-  team_name?: string;
+  team_name?: string | null;
   company?: string;
   phone?: string;
 }
@@ -63,7 +63,7 @@ export default function TeamPage() {
   const loadFarms = async () => {
     try {
       const farmsResult = await getTeams();
-      setFarms(farmsResult || []);
+      setFarms(farmsResult?.teams || []);
     } catch (error) {
       console.error('Error loading farms:', error);
     }
