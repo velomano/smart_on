@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getFarms } from '../../src/lib/auth';
+import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getTeams } from '../../src/lib/auth';
 import AppHeader from '../../src/components/AppHeader';
 
 interface TeamMember extends AuthUser {
@@ -61,7 +61,7 @@ export default function TeamPage() {
 
   const loadFarms = async () => {
     try {
-      const farmsResult = await getFarms();
+      const farmsResult = await getTeams();
       setFarms(farmsResult || []);
     } catch (error) {
       console.error('Error loading farms:', error);
