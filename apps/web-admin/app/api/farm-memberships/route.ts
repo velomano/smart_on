@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '../../../../src/lib/supabase';
+import { createSbServer } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
+    const supabase = createSbServer();
     const { searchParams } = new URL(request.url);
     const action = searchParams.get('action') || 'check';
     

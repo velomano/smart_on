@@ -225,8 +225,10 @@ function BedsManagementContent() {
     });
   };
 
-  // 안전 배열 헬퍼
-  const asArray = <T,>(v: T[] | null | undefined) => Array.isArray(v) ? v : [];
+  // 안전 배열 헬퍼 (TSX 친화적: 함수 선언식)
+  function asArray<T>(v: T[] | null | undefined): T[] {
+    return Array.isArray(v) ? v : [];
+  }
 
   // 필터링된 디바이스 (useMemo로 안전하게)
   const filteredDevices = React.useMemo(() => {
@@ -1884,6 +1886,7 @@ function BedsManagementContent() {
                   />
                 </div>
               </div>
+            </div>
 
             {/* 모달 푸터 */}
             <div className="p-6 pt-4 border-t border-gray-200">
