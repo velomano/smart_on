@@ -114,7 +114,8 @@ function BedsManagementContent() {
   };
   const [editFarmData, setEditFarmData] = useState({
     name: '',
-    location: ''
+    location: '',
+    is_hidden: false
   });
 
   // 데이터 로드 함수
@@ -733,7 +734,8 @@ function BedsManagementContent() {
     setEditingFarm(farm);
     setEditFarmData({
       name: farm.name || '',
-      location: farm.location || ''
+      location: farm.location || '',
+      is_hidden: farm.is_hidden || false
     });
     setShowEditFarmModal(true);
   };
@@ -753,7 +755,8 @@ function BedsManagementContent() {
         .from('farms')
         .update({
           name: editFarmData.name,
-          location: editFarmData.location
+          location: editFarmData.location,
+          is_hidden: editFarmData.is_hidden
         })
         .eq('id', editingFarm.id);
 
@@ -2069,6 +2072,31 @@ function BedsManagementContent() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                   placeholder="예: 서울시 강남구, 경기도 수원시"
                 />
+              </div>
+
+              {/* 농장 숨김 토글 */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1">
+                    대시보드에서 숨기기
+                  </label>
+                  <p className="text-xs text-gray-600">
+                    이 농장을 대시보드에서 숨깁니다. 시스템 관리자는 여전히 볼 수 있습니다.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setEditFarmData(prev => ({ ...prev, is_hidden: !prev.is_hidden }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
+                    editFarmData.is_hidden ? 'bg-red-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      editFarmData.is_hidden ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
               </div>
 
               <div className="flex items-center space-x-4 pt-4">

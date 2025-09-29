@@ -193,10 +193,17 @@ export class UserService {
       });
 
       if (!response.ok) {
-        throw new Error('사용자 설정 생성 실패');
+        const errorData = await response.json();
+        console.error('API 응답 오류:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: errorData
+        });
+        throw new Error(`사용자 설정 생성 실패: ${errorData.error || response.statusText}`);
       }
 
-      const { data: settings, error } = await response.json();
+      const responseData = await response.json();
+      const { data: settings, error } = responseData;
 
       console.log('🔍 Supabase 응답:', {
         data: settings,
@@ -207,7 +214,7 @@ export class UserService {
 
       if (error) {
         console.error('기본 사용자 설정 생성 오류:', {
-          error: error.message,
+          error: error.message || error,
           code: error.code,
           details: error.details,
           hint: error.hint,

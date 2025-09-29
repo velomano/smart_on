@@ -5,6 +5,7 @@ import { notificationTemplates } from '@/lib/notificationTemplates';
 import { getCurrentUser } from '@/lib/auth';
 import { AuthUser } from '@/lib/auth';
 import { UserService } from '@/lib/userService';
+import { getFarms } from '@/lib/supabase';
 
 export default function NotificationsPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -20,6 +21,8 @@ export default function NotificationsPage() {
   const [showBotInfoModal, setShowBotInfoModal] = useState(false);
   const [botInfo, setBotInfo] = useState<any>(null);
   const [botInfoLoading, setBotInfoLoading] = useState(false);
+  const [farms, setFarms] = useState<any[]>([]);
+  const [selectedFarmId, setSelectedFarmId] = useState<string>('');
 
   // 인증 확인
   useEffect(() => {
@@ -39,6 +42,22 @@ export default function NotificationsPage() {
       }
     };
     checkAuth();
+  }, []);
+
+  // 농장 목록 로드
+  useEffect(() => {
+    const loadFarms = async () => {
+      try {
+        const farmsData = await getFarms();
+        setFarms(farmsData);
+        if (farmsData.length > 0) {
+          setSelectedFarmId(farmsData[0].id);
+        }
+      } catch (error) {
+        console.error('농장 목록 로드 오류:', error);
+      }
+    };
+    loadFarms();
   }, []);
 
   // 알림 설정 로드 (Supabase 연동)
@@ -174,6 +193,20 @@ export default function NotificationsPage() {
         alert('텔레그램 채팅 ID를 입력해주세요.');
         return;
       }
+      
+      if (!selectedFarmId) {
+        alert('테스트할 농장을 선택해주세요.');
+        return;
+      }
+      
+      const selectedFarm = farms.find(f => f.id === selectedFarmId);
+      const farmName = selectedFarm?.name || '선택된 농장';
+      
+      console.log('🔍 선택된 농장 정보:', {
+        selectedFarmId,
+        farmName,
+        allFarms: farms.map(f => ({ id: f.id, name: f.name }))
+      });
 
       const thresholds = {
         temperature: { min: 15, max: 30 },
@@ -187,15 +220,27 @@ export default function NotificationsPage() {
       try {
         const { dashboardAlertManager } = await import('@/lib/dashboardAlerts');
         
-        dashboardAlertManager.checkSensorDataAndAlert(
+        console.log('🔍 알림 생성 파라미터:', {
           sensorType,
           value,
-          location || '조1-베드1',
-          `test_${sensorType}_${Date.now()}`,
-          'bed_test_001',
+          location: `${farmName} - ${location || '조1-베드1'}`,
+          deviceId: selectedFarmId,
+          sensorId: `test_${sensorType}_${Date.now()}`,
+          thresholds: { [sensorType]: thresholds[sensorType as keyof typeof thresholds] }
+        });
+        
+        const alert = dashboardAlertManager.checkSensorDataAndAlert(
+          sensorType,
+          value,
+          `${farmName} - ${location || '조1-베드1'}`,
+          selectedFarmId, // deviceId (농장 ID)
+          `test_${sensorType}_${Date.now()}`, // sensorId
           { [sensorType]: thresholds[sensorType as keyof typeof thresholds] }
         );
-        console.log(`✅ ${sensorType} 센서 대시보드 알림 추가 완료`);
+        
+        console.log('🔍 생성된 알림:', alert);
+        console.log('🔍 현재 모든 알림:', dashboardAlertManager.getAlerts());
+        console.log(`✅ ${sensorType} 센서 대시보드 알림 추가 완료 (농장: ${farmName})`);
       } catch (dashboardError) {
         console.error('대시보드 알림 추가 실패:', dashboardError);
       }
@@ -205,7 +250,7 @@ export default function NotificationsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `🧪 <b>${sensorType} 센서 알림 테스트</b>\n\n🎯 ${sensorType} 센서 테스트 값: ${value}\n📍 위치: ${
+          message: `🧪 <b>${sensorType} 센서 알림 테스트</b>\n\n🏢 농장: ${farmName}\n🎯 ${sensorType} 센서 테스트 값: ${value}\n📍 위치: ${
             location || '조1-베드1'
           }\n⏰ 시간: ${new Date().toLocaleString('ko-KR')}`,
           chatId: settings.telegramChatId
@@ -214,7 +259,7 @@ export default function NotificationsPage() {
       const result = await response.json();
       setTestResult(
         result.ok
-          ? `✅ ${sensorType} 센서 테스트 알림이 성공적으로 전송되었습니다!\n📱 텔레그램 알림 + 🚨 대시보드 알림\n값: ${value}, 위치: ${
+          ? `✅ ${sensorType} 센서 테스트 알림이 성공적으로 전송되었습니다!\n📱 텔레그램 알림 + 🚨 대시보드 알림\n🏢 농장: ${farmName}\n값: ${value}, 위치: ${
               location || '조1-베드1'
             }`
           : `❌ 센서 테스트 실패: ${result.error}\n(대시보드 알림은 추가됨)`
@@ -420,45 +465,67 @@ export default function NotificationsPage() {
 
                     <div className="border-t pt-4 mt-4">
                       <h3 className="text-lg font-medium text-gray-900 mb-3">🌡️ 센서 알림 테스트</h3>
+                      
+                      {/* 농장 선택 */}
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          🏢 테스트할 농장 선택
+                        </label>
+                        <select
+                          value={selectedFarmId}
+                          onChange={(e) => setSelectedFarmId(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
+                        >
+                          {farms.map((farm) => (
+                            <option key={farm.id} value={farm.id}>
+                              {farm.name}
+                            </option>
+                          ))}
+                        </select>
+                        {farms.length === 0 && (
+                          <p className="text-sm text-gray-500 mt-1">농장이 없습니다. 먼저 농장을 생성해주세요.</p>
+                        )}
+                      </div>
+                      
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => testSensorAlert('temperature', 12, '조1-베드1')}
-                          disabled={testing}
+                          disabled={testing || !selectedFarmId}
                           className="bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           ❄️ 저온 테스트 (12°C)
                         </button>
                         <button
                           onClick={() => testSensorAlert('temperature', 35, '조1-베드1')}
-                          disabled={testing}
+                          disabled={testing || !selectedFarmId}
                           className="bg-orange-500 text-white py-2 px-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           🌡️ 고온 테스트 (35°C)
                         </button>
                         <button
                           onClick={() => testSensorAlert('ec', 0.5, '조1-베드1')}
-                          disabled={testing}
+                          disabled={testing || !selectedFarmId}
                           className="bg-yellow-500 text-white py-2 px-3 rounded-lg hover:bg-yellow-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           💧 EC 부족 (0.5)
                         </button>
                         <button
                           onClick={() => testSensorAlert('ph', 4.5, '조1-베드1')}
-                          disabled={testing}
+                          disabled={testing || !selectedFarmId}
                           className="bg-purple-500 text-white py-2 px-3 rounded-lg hover:bg-purple-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           ⚗️ pH 이상 (4.5)
                         </button>
                         <button
                           onClick={() => testSensorAlert('water', 15, '조1-베드1')}
-                          disabled={testing}
+                          disabled={testing || !selectedFarmId}
                           className="bg-blue-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           💧 저수위 (15%)
                         </button>
                         <button
                           onClick={() => testSensorAlert('water', 95, '조1-베드1')}
-                          disabled={testing}
+                          disabled={testing || !selectedFarmId}
                           className="bg-cyan-500 text-white py-2 px-3 rounded-lg hover:bg-cyan-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           🌊 고수위 (95%)

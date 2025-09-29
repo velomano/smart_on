@@ -159,6 +159,70 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     }
     return 'bg-gray-100 text-gray-800 border-gray-300';
   };
+
+  // 농장에 알림이 있는지 확인하는 함수
+  const getFarmAlerts = (farmId: string): DashboardAlert[] => {
+    const allAlerts = dashboardAlertManager.getAlerts();
+    
+    console.log('🔍 농장 알림 확인:', {
+      farmId,
+      allAlerts: allAlerts.length,
+      alerts: allAlerts.map(a => ({ id: a.id, deviceId: a.deviceId, isRead: a.isRead }))
+    });
+    
+    // 각 알림에 대해 상세한 매칭 과정 로깅
+    allAlerts.forEach((alert, index) => {
+      console.log(`🔍 알림 ${index + 1} 분석:`, {
+        alertId: alert.id,
+        deviceId: alert.deviceId,
+        targetFarmId: farmId,
+        isDirectMatch: alert.deviceId === farmId,
+        isRead: alert.isRead,
+        alertType: alert.alert_type,
+        message: alert.message
+      });
+    });
+    
+    const farmAlerts = allAlerts.filter(alert => {
+      // deviceId가 농장 ID와 일치하는지 확인 (테스트 알림용)
+      if (alert.deviceId === farmId) {
+        console.log('✅ 테스트 알림 매치:', { alertId: alert.id, deviceId: alert.deviceId, farmId });
+        return !alert.isRead;
+      }
+      
+      // 기존 로직: deviceId가 해당 농장의 센서 게이트웨이 ID와 일치하는지 확인
+      const farmDevices = (devices || []).filter(d => d.farm_id === farmId && d.type === 'sensor_gateway');
+      console.log('🔍 센서 게이트웨이 확인:', {
+        farmId,
+        farmDevices: farmDevices.length,
+        sensorGateways: farmDevices.map(d => ({ id: d.id, type: d.type })),
+        alertDeviceId: alert.deviceId
+      });
+      
+      const device = farmDevices.find(d => d.id === alert.deviceId);
+      if (device) {
+        console.log('✅ 센서 알림 매치:', { alertId: alert.id, deviceId: alert.deviceId, farmId });
+        return !alert.isRead;
+      }
+      
+      console.log('❌ 알림 매치 실패:', { alertId: alert.id, deviceId: alert.deviceId, farmId });
+      return false;
+    });
+    
+    console.log('🔍 농장 알림 결과:', {
+      farmId,
+      farmAlerts: farmAlerts.length,
+      alerts: farmAlerts.map(a => ({ id: a.id, deviceId: a.deviceId }))
+    });
+    
+    return farmAlerts;
+  };
+
+
+  // 농장에 알림이 있는지 확인
+  const hasFarmAlerts = (farmId: string): boolean => {
+    return getFarmAlerts(farmId).length > 0;
+  };
   
   // 센서 데이터 모니터링 기능 추가 - 임시 차단 (MQTT 연결 전)
   useEffect(() => {
@@ -448,6 +512,17 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 });
                 
                 const filteredFarms = (farms || []).filter(farm => {
+                  // 시스템 관리자는 숨김 농장도 볼 수 있음
+                  if (user.role === 'system_admin' || user.role === 'super_admin' || user.email === 'sky3rain7@gmail.com') {
+                    return true; // 모든 농장 표시 (숨김 농장 포함)
+                  }
+                  
+                  // 숨김 농장은 제외 (시스템 관리자가 아닌 경우)
+                  if (farm.is_hidden) {
+                    console.log(`농장 ${farm.name} (${farm.id}) 숨김 처리됨`);
+                    return false;
+                  }
+                  
                   // 농장장/팀원인 경우 설정에 따라 필터링
                   if (user.role === 'team_leader' || user.role === 'team_member') {
                     if (userSettings.showOnlyMyFarm) {
@@ -505,13 +580,28 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   );
                 }
 
-                return filteredFarms.map((farm) => (
-                <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                return filteredFarms.map((farm) => {
+                  // 모든 사용자가 해당 농장의 알림만 확인
+                  const farmHasAlerts = hasFarmAlerts(farm.id);
+                  const farmAlerts = getFarmAlerts(farm.id);
+                  const criticalAlerts = farmAlerts.filter(alert => alert.level === 'critical').length;
+                  const highAlerts = farmAlerts.filter(alert => alert.level === 'high').length;
+                  
+                  return (
+                <div key={farm.id} className={`bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 ${
+                  farmHasAlerts 
+                    ? 'border-red-400 ring-2 ring-red-300 animate-pulse shadow-red-200' 
+                    : 'border-gray-200'
+                }`}>
                     {/* 농장 헤더 */}
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-                          <span className="text-3xl">🏠</span>
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
+                          farmHasAlerts 
+                            ? 'bg-gradient-to-br from-red-400 to-red-600 animate-bounce' 
+                            : 'bg-gradient-to-br from-green-400 to-blue-500'
+                        }`}>
+                          <span className="text-3xl">{farmHasAlerts ? '🚨' : '🏠'}</span>
                         </div>
                         <div>
                           <div className="flex items-center space-x-3 mb-2">
@@ -522,10 +612,23 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             <span className="text-sm text-blue-600 font-semibold">
                               📊 총 {farm.visibleDevices.length}개 베드
                             </span>
-                            <div className="flex items-center space-x-1">
-                              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                              <span className="text-xs text-gray-500">활성</span>
-                            </div>
+                            {farmHasAlerts ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="flex items-center space-x-1 px-2 py-1 bg-red-100 border border-red-300 rounded-full">
+                                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                  <span className="text-xs text-red-700 font-bold">
+                                    ⚠️ {farmAlerts.length}개 알림
+                                    {criticalAlerts > 0 && ` (긴급 ${criticalAlerts}개)`}
+                                    {highAlerts > 0 && ` (높음 ${highAlerts}개)`}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-1">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                <span className="text-xs text-gray-500">활성</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -755,7 +858,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   </div>
 
                 </div>
-                ));
+                  );
+                });
               })()}
             </div>
           </div>

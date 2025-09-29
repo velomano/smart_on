@@ -39,6 +39,7 @@ export interface Farm {
   tenant_id: string;
   name: string;
   location?: string;
+  is_hidden?: boolean;
   created_at: string;
 }
 
@@ -78,7 +79,7 @@ export const getFarms = async (): Promise<Farm[]> => {
     
     const { data: farms, error } = await supabase
       .from('farms')
-      .select('id, name, location, tenant_id, created_at')
+      .select('id, name, location, tenant_id, is_hidden, created_at')
       .order('created_at', { ascending: true });
 
     console.log('🔍 getFarms 쿼리 결과:', { 
