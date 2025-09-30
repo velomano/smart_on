@@ -59,7 +59,8 @@ export default function MqttIntegrationGuidePage() {
       
     } catch (error) {
       console.error('템플릿 다운로드 오류:', error);
-      alert('템플릿 다운로드 중 오류가 발생했습니다.');
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      alert(`템플릿 다운로드 중 오류가 발생했습니다: ${errorMessage}`);
     }
   };
 
