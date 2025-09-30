@@ -60,7 +60,8 @@ export async function GET(req: NextRequest) {
         stage,
         target_ppm,
         target_ec,
-        target_ph
+        target_ph,
+        metadata
       `);
 
     // 필터링 적용
@@ -98,6 +99,16 @@ export async function GET(req: NextRequest) {
       const ppm = profile.target_ppm || {};
       const npk_ratio = `${ppm.N_NO3 || 0}:${ppm.P || 0}:${ppm.K || 0}`;
       
+      // metadata에서 출처 정보 추출
+      const metadata = profile.metadata || {};
+      const sourceInfo = metadata.source || {};
+      
+      // 실제 출처 정보가 있으면 사용, 없으면 기본값
+      const sourceTitle = sourceInfo.title || metadata.source_title || '스마트팜 데이터베이스';
+      const sourceYear = sourceInfo.year || metadata.source_year || 2024;
+      const sourceUrl = sourceInfo.url || metadata.source_url || null;
+      const license = sourceInfo.license || metadata.license || 'CC BY 4.0';
+      
       return {
         id: profile.id,
         crop: profile.crop_name,
@@ -107,10 +118,10 @@ export async function GET(req: NextRequest) {
         ph_target: profile.target_ph,
         npk_ratio: npk_ratio,
         created_at: new Date().toISOString(),
-        source_title: '스마트팜 데이터베이스',
-        source_year: 2024,
-        source_url: 'https://smartfarm.tera-hub.com',
-        license: 'CC BY 4.0',
+        source_title: sourceTitle,
+        source_year: sourceYear,
+        source_url: sourceUrl,
+        license: license,
         description: `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
         growing_conditions: {
           temperature: getTemperatureRange(profile.crop_name),
