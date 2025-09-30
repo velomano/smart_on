@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger, LogContext } from './logger';
 import { withErrorHandler, createAuthError, createRateLimitError } from './errorHandler';
+import { 
+  setSecurityHeaders, 
+  maskSensitiveData, 
+  validateRequestSize, 
+  sanitizeInput,
+  advancedRateLimit,
+  getClientIP,
+  validateOrigin,
+  validateSessionSecurity
+} from './security';
+import { authenticateRequest, validateToken, hasPermission, canAccessResource } from './jwt';
 
 // 요청 ID 생성
 function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-// 클라이언트 IP 추출
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  
-  if (forwarded) {
-    return forwarded.split(',')[0].trim();
-  }
-  
-  if (realIP) {
-    return realIP;
-  }
-  
-  return 'unknown';
-}
+// 클라이언트 IP 추출 (security.ts에서 import)
 
 // 요청 컨텍스트 추출
 function extractRequestContext(request: NextRequest): LogContext {
@@ -34,34 +31,9 @@ function extractRequestContext(request: NextRequest): LogContext {
   };
 }
 
-// Rate Limiting (간단한 메모리 기반)
-const requestCounts = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1분
-const RATE_LIMIT_MAX_REQUESTS = 100; // 분당 100회
+// Rate Limiting은 security.ts의 advancedRateLimit 사용
 
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const key = ip;
-  
-  const current = requestCounts.get(key);
-  
-  if (!current || now > current.resetTime) {
-    requestCounts.set(key, {
-      count: 1,
-      resetTime: now + RATE_LIMIT_WINDOW
-    });
-    return true;
-  }
-  
-  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
-    return false;
-  }
-  
-  current.count++;
-  return true;
-}
-
-// API 미들웨어 래퍼
+// API 미들웨어 래퍼 (보안 강화)
 export function withApiMiddleware<T extends any[]>(
   handler: (...args: T) => Promise<NextResponse>,
   options: {
@@ -69,34 +41,85 @@ export function withApiMiddleware<T extends any[]>(
     rateLimit?: boolean;
     logRequest?: boolean;
     logResponse?: boolean;
+    maxRequestSize?: number;
+    allowedOrigins?: string[];
   } = {}
 ) {
   const {
     requireAuth = false,
     rateLimit = true,
     logRequest = true,
-    logResponse = true
+    logResponse = true,
+    maxRequestSize = 1024 * 1024, // 1MB
+    allowedOrigins = []
   } = options;
 
   return withErrorHandler(async (...args: T): Promise<NextResponse> => {
     const request = args[0] as NextRequest;
     const context = extractRequestContext(request);
 
-    // Rate Limiting 체크
-    if (rateLimit && !checkRateLimit(context.ip!)) {
-      logger.logSecurity('Rate limit exceeded', context);
-      throw createRateLimitError('요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.', context);
+    // 1. 보안 헤더 검증
+    const sessionValidation = validateSessionSecurity(request);
+    if (!sessionValidation.isValid) {
+      logger.logSecurity('Session security validation failed', {
+        ...context,
+        issues: sessionValidation.issues
+      });
+      throw createAuthError('보안 검증에 실패했습니다.', context);
     }
 
-    // 요청 로깅
+    // 2. Origin 검증
+    if (!validateOrigin(request, allowedOrigins)) {
+      logger.logSecurity('Invalid origin', context);
+      throw createAuthError('허용되지 않은 출처입니다.', context);
+    }
+
+    // 3. 요청 크기 검증
+    const contentLength = request.headers.get('content-length');
+    if (!validateRequestSize(contentLength, maxRequestSize)) {
+      logger.logSecurity('Request size exceeded', context);
+      throw createAuthError('요청 크기가 너무 큽니다.', context);
+    }
+
+    // 4. Rate Limiting 체크
+    if (rateLimit) {
+      const rateLimitResult = advancedRateLimit(request, {
+        windowMs: 60 * 1000, // 1분
+        maxRequests: 100
+      });
+
+      if (!rateLimitResult.allowed) {
+        logger.logSecurity('Rate limit exceeded', {
+          ...context,
+          remaining: rateLimitResult.remaining,
+          resetTime: rateLimitResult.resetTime
+        });
+        
+        const errorResponse = NextResponse.json({
+          success: false,
+          error: '요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
+          retryAfter: rateLimitResult.headers['Retry-After']
+        }, { status: 429 });
+        
+        // Rate limit 헤더 추가
+        Object.entries(rateLimitResult.headers).forEach(([key, value]) => {
+          errorResponse.headers.set(key, value);
+        });
+        
+        return errorResponse;
+      }
+    }
+
+    // 5. 요청 로깅 (민감한 데이터 마스킹)
     if (logRequest) {
-      logger.logApiRequest(request.method, request.url, context);
+      const maskedContext = maskSensitiveData(context);
+      logger.logApiRequest(request.method, request.url, maskedContext);
     }
 
     const startTime = Date.now();
 
     try {
-      // 인증 체크 (필요한 경우)
+      // 6. 인증 체크 (필요한 경우)
       if (requireAuth) {
         const authHeader = request.headers.get('authorization');
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -105,37 +128,49 @@ export function withApiMiddleware<T extends any[]>(
         }
       }
 
-      // 핸들러 실행
+      // 7. 핸들러 실행
       const response = await handler(...args);
       const responseTime = Date.now() - startTime;
 
-      // 응답 로깅
+      // 8. 응답 로깅 (민감한 데이터 마스킹)
       if (logResponse) {
-      logger.logApiResponse(
-        request.method,
-        request.url,
-        response.status,
-        responseTime,
-        { ...context, responseTime }
-      );
+        const maskedContext = maskSensitiveData({
+          ...context,
+          responseTime
+        });
+        logger.logApiResponse(
+          request.method,
+          request.url,
+          response.status,
+          responseTime,
+          maskedContext
+        );
       }
 
-      // 응답 헤더에 요청 ID 추가
-      response.headers.set('X-Request-ID', context.requestId!);
-      response.headers.set('X-Response-Time', `${responseTime}ms`);
+      // 9. 보안 헤더 추가
+      const securedResponse = setSecurityHeaders(response);
+      
+      // 10. 응답 헤더에 요청 ID 추가
+      securedResponse.headers.set('X-Request-ID', context.requestId!);
+      securedResponse.headers.set('X-Response-Time', `${responseTime}ms`);
 
-      return response;
+      return securedResponse;
 
     } catch (error) {
       const responseTime = Date.now() - startTime;
       
-      // 에러 응답 로깅
+      // 에러 응답 로깅 (민감한 데이터 마스킹)
+      const maskedContext = maskSensitiveData({
+        ...context,
+        responseTime,
+        error: true
+      });
       logger.logApiResponse(
         request.method,
         request.url,
         500, // 에러는 errorHandler에서 처리
         responseTime,
-        { ...context, responseTime, error: true }
+        maskedContext
       );
 
       throw error; // errorHandler가 처리하도록 재throw
@@ -143,38 +178,35 @@ export function withApiMiddleware<T extends any[]>(
   });
 }
 
-// 인증 미들웨어
-export async function requireAuth(request: NextRequest): Promise<{ userId: string; userRole: string }> {
-  const authHeader = request.headers.get('authorization');
+// 인증 미들웨어 (JWT 기반)
+export async function requireAuth(request: NextRequest): Promise<{ 
+  userId: string; 
+  userRole: string; 
+  email: string;
+  tenantId?: string;
+}> {
+  const user = authenticateRequest(request);
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!user) {
     throw createAuthError('인증 토큰이 필요합니다.');
   }
-
-  const token = authHeader.substring(7);
   
-  // TODO: JWT 토큰 검증 로직 구현
-  // 현재는 임시로 토큰이 존재하는지만 확인
-  if (!token || token.length < 10) {
-    throw createAuthError('유효하지 않은 인증 토큰입니다.');
-  }
-
-  // TODO: 실제 토큰에서 사용자 정보 추출
-  // 임시로 하드코딩된 사용자 정보 반환
-  return {
-    userId: 'temp-user-id',
-    userRole: 'user'
-  };
+  return user;
 }
 
-// 권한 체크 미들웨어
+// 권한 체크 미들웨어 (보안 강화)
 export async function requireRole(
   request: NextRequest,
   allowedRoles: string[]
-): Promise<{ userId: string; userRole: string }> {
+): Promise<{ 
+  userId: string; 
+  userRole: string; 
+  email: string;
+  tenantId?: string;
+}> {
   const user = await requireAuth(request);
   
-  if (!allowedRoles.includes(user.userRole)) {
+  if (!hasPermission(user.userRole, allowedRoles)) {
     throw createAuthError('접근 권한이 없습니다.');
   }
 
@@ -182,8 +214,33 @@ export async function requireRole(
 }
 
 // 관리자 권한 체크
-export async function requireAdmin(request: NextRequest): Promise<{ userId: string; userRole: string }> {
-  return requireRole(request, ['admin', 'super_admin']);
+export async function requireAdmin(request: NextRequest): Promise<{ 
+  userId: string; 
+  userRole: string; 
+  email: string;
+  tenantId?: string;
+}> {
+  return requireRole(request, ['system_admin', 'super_admin']);
+}
+
+// 리소스 접근 권한 체크
+export async function requireResourceAccess(
+  request: NextRequest,
+  resourceType: 'system' | 'admin' | 'team' | 'farm' | 'device',
+  action: 'read' | 'write' | 'delete'
+): Promise<{ 
+  userId: string; 
+  userRole: string; 
+  email: string;
+  tenantId?: string;
+}> {
+  const user = await requireAuth(request);
+  
+  if (!canAccessResource(user.userRole, resourceType, action)) {
+    throw createAuthError(`${resourceType} 리소스에 대한 ${action} 권한이 없습니다.`);
+  }
+
+  return user;
 }
 
 // 요청 본문 검증

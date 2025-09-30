@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withApiMiddleware, createApiResponse } from '@/lib/apiMiddleware';
+import { withApiMiddleware, createApiResponse, requireResourceAccess } from '@/lib/apiMiddleware';
 import { getServiceClient } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 
@@ -104,6 +104,9 @@ async function getSystemMetrics(): Promise<{
 }
 
 export const GET = withApiMiddleware(async (request: NextRequest) => {
+  // 시스템 모니터링은 system_admin만 접근 가능
+  await requireResourceAccess(request, 'system', 'read');
+  
   const startTime = Date.now();
   
   logger.info('시스템 헬스 체크 요청');
@@ -156,5 +159,6 @@ export const GET = withApiMiddleware(async (request: NextRequest) => {
 }, {
   logRequest: true,
   logResponse: true,
-  rateLimit: false // 헬스 체크는 Rate Limit 제외
+  rateLimit: true, // 보안을 위해 Rate Limit 적용
+  maxRequestSize: 1024 * 10 // 10KB 제한
 });

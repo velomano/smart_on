@@ -8,15 +8,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('🔍 요청 데이터:', body);
     
-    // 환경변수 확인
+    // 환경변수 확인 (민감한 정보는 로깅하지 않음)
     const url = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     console.log('🔍 환경변수 확인:', {
       hasUrl: !!url,
-      hasServiceKey: !!serviceKey,
-      urlLength: url?.length || 0,
-      serviceKeyLength: serviceKey?.length || 0
+      hasServiceKey: !!serviceKey
     });
     
     if (!url || !serviceKey) {

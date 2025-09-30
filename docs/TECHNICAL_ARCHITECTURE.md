@@ -8,7 +8,8 @@
 5. [API 구조](#api-구조)
 6. [보안 및 인증](#보안-및-인증)
 7. [모니터링 및 로깅](#모니터링-및-로깅)
-8. [배포 및 확장성](#배포-및-확장성)
+8. [시스템 안정성](#시스템-안정성)
+9. [배포 및 확장성](#배포-및-확장성)
 
 ---
 
@@ -587,26 +588,9 @@ export function decryptData(encryptedData: string): string {
 
 ## 📊 모니터링 및 로깅
 
-### **로깅 시스템**
+### **통합 로깅 시스템 (Winston 기반)**
 ```typescript
-import winston from 'winston';
-
-// 로거 설정
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' }),
-    new winston.transports.Console({
-      format: winston.format.simple()
-    })
-  ]
-});
+import { logger } from '@/lib/logger';
 
 // 구조화된 로깅
 export function logSensorData(sensorData: SensorDataMessage) {
@@ -668,6 +652,54 @@ app.get('/health', async (req, res) => {
   res.json(health);
 });
 ```
+
+---
+
+## 🛡️ 시스템 안정성
+
+### **전역 에러 처리 시스템**
+```typescript
+import { withErrorHandler, createValidationError, createDatabaseError } from '@/lib/errorHandler';
+
+// API 에러 처리 자동화
+export const POST = withErrorHandler(async (request: NextRequest) => {
+  // 비즈니스 로직
+  if (!isValidData(data)) {
+    throw createValidationError('입력 데이터가 올바르지 않습니다.');
+  }
+  
+  const result = await saveToDatabase(data);
+  return NextResponse.json({ success: true, data: result });
+});
+```
+
+### **API 미들웨어 시스템**
+```typescript
+import { withApiMiddleware, createApiResponse } from '@/lib/apiMiddleware';
+
+// 자동 로깅, Rate Limiting, 에러 처리
+export const GET = withApiMiddleware(async (request: NextRequest) => {
+  const data = await fetchData();
+  return createApiResponse(data);
+}, {
+  logRequest: true,
+  logResponse: true,
+  rateLimit: true
+});
+```
+
+### **시스템 모니터링 대시보드**
+- **실시간 헬스 체크**: `/api/system/health`
+- **시스템 메트릭**: `/api/system/metrics`
+- **모니터링 페이지**: `/system` (시스템 관리자 전용)
+- **자동 새로고침**: 30초 간격
+- **성능 지표**: 응답 시간, 에러율, 메모리 사용률
+
+### **보안 강화**
+- **Rate Limiting**: 분당 100회 요청 제한
+- **요청 추적**: IP, User-Agent, 요청 ID 로깅
+- **에러 정보 보호**: 민감한 정보 노출 방지
+- **접근 권한 제어**: 시스템 관리자만 모니터링 접근
 
 ---
 

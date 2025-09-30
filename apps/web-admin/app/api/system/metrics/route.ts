@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withApiMiddleware, createApiResponse } from '@/lib/apiMiddleware';
+import { withApiMiddleware, createApiResponse, requireResourceAccess } from '@/lib/apiMiddleware';
 import { getServiceClient } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
+import { withCache, generateCacheKey, systemMetricsCache } from '@/lib/cache';
 
 interface SystemMetrics {
   timestamp: string;
@@ -178,39 +179,52 @@ async function getDataMetrics() {
 }
 
 export const GET = withApiMiddleware(async (request: NextRequest) => {
+  // 시스템 모니터링은 system_admin만 접근 가능
+  await requireResourceAccess(request, 'system', 'read');
+  
   const startTime = Date.now();
+  const cacheKey = generateCacheKey('system-metrics');
   
   logger.info('시스템 메트릭 수집 요청');
 
   try {
-    // 모든 메트릭을 병렬로 수집
-    const [users, farms, devices, sensors, data] = await Promise.all([
-      getUserMetrics(),
-      getFarmMetrics(),
-      getDeviceMetrics(),
-      getSensorMetrics(),
-      getDataMetrics()
-    ]);
+    // 캐시된 메트릭 조회 또는 새로 수집
+    const metrics = await withCache(
+      systemMetricsCache,
+      cacheKey,
+      async () => {
+        // 모든 메트릭을 병렬로 수집
+        const [users, farms, devices, sensors, data] = await Promise.all([
+          getUserMetrics(),
+          getFarmMetrics(),
+          getDeviceMetrics(),
+          getSensorMetrics(),
+          getDataMetrics()
+        ]);
 
-    const metrics: SystemMetrics = {
-      timestamp: new Date().toISOString(),
-      users: users || { total: 0, active: 0, approved: 0, pending: 0 },
-      farms: farms || { total: 0, active: 0 },
-      devices: devices || { total: 0, online: 0, offline: 0, byType: {} },
-      sensors: sensors || { total: 0, active: 0, inactive: 0, byType: {} },
-      data: data || { totalReadings: 0, last24Hours: 0, averagePerHour: 0 },
-      performance: {
-        averageResponseTime: Date.now() - startTime,
-        errorRate: 0.02, // TODO: 실제 에러율 계산
-        uptime: Math.round(process.uptime())
-      }
-    };
+        return {
+          timestamp: new Date().toISOString(),
+          users: users || { total: 0, active: 0, approved: 0, pending: 0 },
+          farms: farms || { total: 0, active: 0 },
+          devices: devices || { total: 0, online: 0, offline: 0, byType: {} },
+          sensors: sensors || { total: 0, active: 0, inactive: 0, byType: {} },
+          data: data || { totalReadings: 0, last24Hours: 0, averagePerHour: 0 },
+          performance: {
+            averageResponseTime: Date.now() - startTime,
+            errorRate: 0.02, // TODO: 실제 에러율 계산
+            uptime: Math.round(process.uptime())
+          }
+        } as SystemMetrics;
+      },
+      30 * 1000 // 30초 캐시
+    );
 
     logger.info('시스템 메트릭 수집 완료', {
-      responseTime: metrics.performance.averageResponseTime,
+      responseTime: Date.now() - startTime,
       totalUsers: metrics.users.total,
       totalFarms: metrics.farms.total,
-      totalDevices: metrics.devices.total
+      totalDevices: metrics.devices.total,
+      fromCache: systemMetricsCache.get(cacheKey) !== null
     });
 
     return createApiResponse(metrics);
@@ -227,5 +241,6 @@ export const GET = withApiMiddleware(async (request: NextRequest) => {
 }, {
   logRequest: true,
   logResponse: true,
-  rateLimit: true
+  rateLimit: true,
+  maxRequestSize: 1024 * 10 // 10KB 제한
 });
