@@ -1016,9 +1016,6 @@ function BedsManagementContent() {
               if (farmGroups.length === 0) {
                 return (
                   <div className="text-center py-16">
-                    <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                      <span className="text-4xl">🌱</span>
-                    </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
                       {selectedFarmTab !== 'all' ? 
                         `${farms.find(f => f.id === selectedFarmTab)?.name || '선택된 농장'}에 등록된 베드가 없습니다` :
@@ -1082,16 +1079,12 @@ function BedsManagementContent() {
                   {/* 농장에 속한 베드들 */}
                   <div className="space-y-2 sm:space-y-3">
                     <h5 className="text-lg font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center">
-                      <span className="text-xl mr-2">🌱</span>
                       {farm.name}의 베드 목록
                     </h5>
 
                     <div className="space-y-2 sm:space-y-3">
                       {devices.length === 0 ? (
                         <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                          <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-3">
-                            <span className="text-2xl">🌱</span>
-                          </div>
                           <p className="text-gray-500 font-medium">이 농장에 등록된 베드가 없습니다</p>
                           <p className="text-sm text-gray-400 mt-1">새 베드를 추가해보세요</p>
                         </div>

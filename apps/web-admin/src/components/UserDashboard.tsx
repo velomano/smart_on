@@ -470,9 +470,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
             <div className="p-2 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-lg">🌱</span>
-                </div>
                 <div className="ml-4">
                   <dt className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
                     베드 활성률
@@ -490,9 +487,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
             <div className="p-2 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-lg">🌱</span>
-                </div>
                 <div className="ml-4">
                   <dt className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
                     배양액 레시피
@@ -634,9 +628,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 if (filteredFarms.length === 0) {
                   return (
                     <div className="text-center py-16">
-                      <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                        <span className="text-4xl">🌱</span>
-                      </div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">
                         {filteredFarms.length === 0 
                           ? (userSettings.showOnlyMyFarm ? '자기 농장에 베드가 없습니다' : '표시할 베드가 없습니다')
@@ -718,7 +709,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   {/* 농장에 속한 베드들 - 개별 카드로 변환하고 공간 없이 꽉채우기 */}
                   <div className="space-y-2 sm:space-y-3">
                     <h5 className="text-xl lg:text-2xl font-semibold text-gray-700 mb-2 sm:mb-3 lg:mb-4 flex items-center">
-                      <span className="text-2xl mr-3">🌱</span>
                       {farm.name}의 베드 현황
                     </h5>
 
