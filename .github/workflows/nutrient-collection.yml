@@ -165,8 +165,8 @@ jobs:
 
               const after = await getRecipeCount();
               console.log(`📊 최종 레시피 수: ${after}건`);
-          console.log(`💾 추가된 레시피: ${Math.max(after - before, 0)}건`);
-          console.log('🎉 영양액 레시피 수집 작업 완료');
+              console.log(`💾 추가된 레시피: ${Math.max(after - before, 0)}건`);
+              console.log('🎉 영양액 레시피 수집 작업 완료');
           
           // 텔레그램 알림을 위한 수집 정보 파일 저장
           const collectionInfo = {
