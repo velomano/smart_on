@@ -138,6 +138,11 @@ export default function AppHeader({
       path: '/my-page',
       color: 'from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
     },
+    {
+      label: '사용설명서',
+      path: '/help',
+      color: 'from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700'
+    },
     // 시스템 관리자만 시스템 모니터링 표시 (메뉴 가장 하단)
     ...(safeUser.role === 'system_admin' ? [{
       label: '시스템 모니터링',
@@ -240,6 +245,13 @@ export default function AppHeader({
                   {safeUser.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>
               )}
+              
+              <button
+                onClick={() => router.push('/help')}
+                className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                📚 사용설명서
+              </button>
 
               {/* 햄버거 메뉴 버튼 */}
               <button
