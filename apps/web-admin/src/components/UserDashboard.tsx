@@ -540,9 +540,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             {/* Enhanced Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-white/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 lg:mr-6">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl">🌱</span>
-                </div>
                 <div>
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2 lg:mb-3">농장 현황</h1>
                   <p className="text-white/90 text-sm sm:text-base lg:text-lg">농장관리에서 대시보드 노출을 허용한 농장만 표시 됩니다.</p>
@@ -672,13 +669,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     {/* 농장 헤더 */}
                     <div className="flex items-center justify-between mb-2 sm:mb-3">
                       <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
-                          farmHasAlerts 
-                            ? 'bg-gradient-to-br from-red-400 to-red-600 animate-bounce' 
-                            : 'bg-gradient-to-br from-green-400 to-blue-500'
-                        }`}>
-                          <span className="text-3xl">{farmHasAlerts ? '🚨' : '🏠'}</span>
-                        </div>
                         <div>
                             <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
                             <h4 className="text-2xl lg:text-3xl font-bold text-gray-900 whitespace-nowrap">{farm.name}</h4>
