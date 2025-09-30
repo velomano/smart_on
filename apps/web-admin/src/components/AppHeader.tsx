@@ -349,7 +349,7 @@ export default function AppHeader({
               {canManageFarms && (
                 <button
                   onClick={() => router.push('/beds')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap"
                 >
                   {safeUser.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>
