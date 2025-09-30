@@ -1056,8 +1056,27 @@ function BedsManagementContent() {
                             📊 총 {devices.length}개 베드
                           </span>
                           <div className="flex items-center space-x-1">
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span className="text-xs text-gray-500">활성</span>
+                            {(() => {
+                              // 해당 농장의 디바이스들 중 센서가 연결된 것이 있는지 확인
+                              const hasActiveSensors = devices.some(device => {
+                                const deviceSensors = sensors.filter(s => s.device_id === device.id);
+                                return deviceSensors.some(sensor => {
+                                  const reading = sensorReadings.find(r => r.sensor_id === sensor.id);
+                                  return !!reading;
+                                });
+                              });
+                              
+                              return (
+                                <>
+                                  <div 
+                                    className={`w-2 h-2 rounded-full ${hasActiveSensors ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}
+                                  ></div>
+                                  <span className="text-xs text-gray-500">
+                                    {hasActiveSensors ? '활성' : '비활성'}
+                                  </span>
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>

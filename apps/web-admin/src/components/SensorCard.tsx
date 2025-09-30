@@ -147,10 +147,12 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-1 sm:space-x-2">
           <div 
-            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full animate-pulse"
-            style={{ backgroundColor: color }}
+            className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${isConnected ? 'animate-pulse' : ''}`}
+            style={{ backgroundColor: isConnected ? color : '#9ca3af' }}
           ></div>
-          <span className="text-xs sm:text-sm font-medium text-gray-600">활성</span>
+          <span className="text-xs sm:text-sm font-medium text-gray-600">
+            {isConnected ? '활성' : '비활성'}
+          </span>
         </div>
         <span className="text-xs sm:text-sm text-gray-500">
           {chartData.length > 0 ? `${chartData.length}개 데이터` : '데이터 없음'}
