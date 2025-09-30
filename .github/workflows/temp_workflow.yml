@@ -167,14 +167,14 @@ jobs:
               console.log(`📊 최종 레시피 수: ${after}건`);
               console.log(`💾 추가된 레시피: ${Math.max(after - before, 0)}건`);
               console.log('🎉 영양액 레시피 수집 작업 완료');
-        } catch (err) {
-          console.error('❌ 수집 작업 실패:', err?.message || err);
-          process.exit(1);
-        }
-      }
+            } catch (err) {
+              console.error('❌ 수집 작업 실패:', err?.message || err);
+              process.exit(1);
+            }
+          }
 
-      main();
-      EOF
+          main();
+          EOF
 
       - name: 수집 결과 텔레그램 알림 (선택사항)
         # 텔레그램 봇 토큰이 설정되어 있을 때만 알림 전송
@@ -185,7 +185,6 @@ jobs:
           STATUS="${{ job.status }}"
           SOURCE="${{ env.SOURCE }}"
           TRIGGER="${{ github.event_name }}"
-          
           
           if [ "$STATUS" = "success" ]; then
             ICON="✅"
