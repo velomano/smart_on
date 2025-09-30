@@ -380,13 +380,6 @@ export default function TeamPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Overview Section */}
-        <div className="mb-8">
-          <div className="mb-6 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">사용자 정보</h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-600">사용자의 정보를 볼 수 있습니다</p>
-          </div>
-        </div>
 
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
@@ -418,7 +411,7 @@ export default function TeamPage() {
                     className="px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
                   >
                     <span>➕</span>
-                    <span>멤버 초대 (개발중)</span>
+                    <span>멤버 초대</span>
                   </button>
                 )}
                 <div className="text-xs sm:text-sm text-gray-500">
@@ -683,8 +676,8 @@ export default function TeamPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 rounded-t-2xl">
-              <h3 className="text-xl font-bold text-white">➕ 멤버 초대 (개발 중)</h3>
-              <p className="text-white/90 text-sm">새로운 멤버를 팀에 초대합니다 - 기능 추가 예정</p>
+              <h3 className="text-xl font-bold text-white">➕ 멤버 초대</h3>
+              <p className="text-white/90 text-sm">새로운 멤버를 팀에 초대합니다</p>
             </div>
             
             <div className="p-6">
@@ -749,7 +742,7 @@ export default function TeamPage() {
                   disabled={inviteLoading || !inviteFormData.email}
                   className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {inviteLoading ? '처리 중...' : '개발 상태 확인'}
+                  {inviteLoading ? '처리 중...' : '전송하기'}
                 </button>
               </div>
             </div>
