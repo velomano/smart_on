@@ -535,7 +535,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         </div>
         
         {/* Farm Overview Section */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-4 sm:mb-6">
           <div className="bg-gradient-to-r from-green-500 to-green-600 px-8 py-6">
             {/* Enhanced Header */}
             <div className="flex items-center justify-between">
@@ -726,14 +726,14 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   </div>
 
                   {/* 농장에 속한 베드들 - 개별 카드로 변환하고 공간 없이 꽉채우기 */}
-                  <div className="space-y-4">
-                    <h5 className="text-xl font-semibold text-gray-700 mb-4 flex items-center">
+                  <div className="space-y-2 sm:space-y-3">
+                    <h5 className="text-xl font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center">
                       <span className="text-2xl mr-3">🌱</span>
                       {farm.name}의 베드 현황
                     </h5>
 
                     {/* 베드 카드들을 개별로 배치 - 공간 없이 꽉채우기 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-2">
                       {farm.visibleDevices.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                           <p>현재 표시할 베드가 없습니다.</p>
@@ -755,8 +755,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               data-device-id={device.id}
                               data-device-index={deviceIndex}
                             >
-                              <div className="p-6">
-                              <div className="flex items-center justify-between mb-6">
+                              <div className="p-3 sm:p-4">
+                              <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <div className="flex items-center space-x-4">
                                   <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
                                     <span className="text-xl">📡</span>
@@ -830,30 +830,30 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               </div>
 
                               {/* 제어 상태 - 크기 증대 */}
-                              <div className="mb-6">
+                              <div className="mb-3 sm:mb-4">
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-sm">
-                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 sm:p-3 ring-1 ring-gray-300">
                                     <span className="text-lg">💡</span>
                                     <span className="text-gray-600 font-medium">램프1</span>
                                     <span className={`font-bold text-right ${localActuatorStates['lamp1'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['lamp1'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 sm:p-3 ring-1 ring-gray-300">
                                     <span className="text-lg">💡</span>
                                     <span className="text-gray-600 font-medium">램프2</span>
                                     <span className={`font-bold text-right ${localActuatorStates['lamp2'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['lamp2'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 sm:p-3 ring-1 ring-gray-300">
                                     <span className="text-lg">💧</span>
                                     <span className="text-gray-600 font-medium">펌프</span>
                                     <span className={`font-bold text-right ${localActuatorStates['pump'] ? 'text-green-600' : 'text-gray-400'}`}>
                                       {localActuatorStates['pump'] ? 'ON' : 'OFF'}
                                     </span>
                                   </div>
-                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
+                                  <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-2 sm:p-3 ring-1 ring-gray-300">
                                     <span className="text-lg">🌀</span>
                                     <span className="text-gray-600 font-medium">팬</span>
                                     <span className={`font-bold text-right ${localActuatorStates['fan'] ? 'text-green-600' : 'text-gray-400'}`}>
@@ -864,8 +864,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               </div>
 
                               {/* 센서 데이터 - 대폭 증대 */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4">
-                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-6 shadow-md border border-red-300">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mt-2 sm:mt-3">
+                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-3 sm:p-4 shadow-md border border-red-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">🌡️</span>
                                     <span className="text-lg text-gray-700 font-bold">온도</span>
@@ -880,7 +880,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-6 shadow-md border border-blue-300">
+                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 sm:p-4 shadow-md border border-blue-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">💧</span>
                                     <span className="text-lg text-gray-700 font-bold">습도</span>
@@ -895,7 +895,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-6 shadow-md border border-green-300">
+                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 sm:p-4 shadow-md border border-green-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">⚡</span>
                                     <span className="text-lg text-gray-700 font-bold">EC</span>
@@ -910,7 +910,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             </span>
                           </div>
 
-                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-6 shadow-md border border-purple-300">
+                                <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3 sm:p-4 shadow-md border border-purple-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">🧪</span>
                                     <span className="text-lg text-gray-700 font-bold">pH</span>
