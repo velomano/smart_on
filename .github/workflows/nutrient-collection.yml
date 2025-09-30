@@ -1,4 +1,4 @@
-name: 영양액 레시피 자동 수집
+name: Nutrient Recipe Auto Collection
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
     inputs:
       source:
         description: '수집할 소스 (all, cornell, rda, fao, academic)'
-        required: false
+        required: true
         default: 'all'
         type: string
       batch_size:
