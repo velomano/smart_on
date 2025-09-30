@@ -387,7 +387,7 @@ export default function AdminPage() {
               <div className="flex space-x-2">
                 <button
                   onClick={() => setActiveTab('pending')}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
                     activeTab === 'pending'
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -397,7 +397,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('approved')}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
                     activeTab === 'approved'
                       ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -407,7 +407,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('farms')}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
+                  className={`px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
                     activeTab === 'farms'
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                       : 'text-gray-600 hover:bg-gray-100'
