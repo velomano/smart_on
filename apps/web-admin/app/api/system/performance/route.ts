@@ -193,7 +193,7 @@ export const GET = withApiMiddleware(async (request: NextRequest) => {
       memory,
       cpu,
       uptime: Math.round(process.uptime()),
-      cache: cacheStats,
+      cache: cacheStats as { systemMetrics: any; userData: any; farmData: any; deviceData: any; },
       requests: requestMetrics,
       database
     };
