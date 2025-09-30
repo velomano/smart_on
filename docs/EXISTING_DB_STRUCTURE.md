@@ -30,9 +30,11 @@
 ### 🌱 영양액 관련 테이블
 | 테이블명 | 용도 | 주요 필드 |
 |---------|------|----------|
-| `crop_profiles` | 작물 프로필 | crop_key, crop_name, stage, target_* |
+| `crop_profiles` | 작물 프로필 (기본) | crop_key, crop_name, stage, target_ppm, target_ec, target_ph |
+| `nutrient_recipes` | 영양액 레시피 (수집) | crop_key, crop_name, stage, macro, micro, source_id, reliability |
+| `nutrient_sources` | 영양액 출처 | id, name, url, org_type, license |
 | `water_profiles` | 물 프로필 | tenant_id, name, alkalinity, ph |
-| `recipes` | 영양액 레시피 | tenant_id, crop_profile_id, target_* |
+| `recipes` | 영양액 레시피 (사용자) | tenant_id, crop_profile_id, target_* |
 | `salts` | 염류 정보 | name, formula, ion_contributions |
 | `nutrient_ions` | 영양 이온 | symbol, name, valence |
 | `acid_bases` | 산/염기 | name, type, normality |
