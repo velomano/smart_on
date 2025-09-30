@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
       // 직접 컬럼에서 출처 정보 추출
       const sourceTitle = profile.source_title || '스마트팜 데이터베이스';
       const sourceYear = profile.source_year || new Date(profile.created_at).getFullYear();
-      const sourceUrl = profile.source_url || null;
+      const sourceUrl = null; // crop_profiles 테이블에 source_url 컬럼이 없음
       const license = profile.license || 'CC BY 4.0';
       const author = profile.author || '스마트팜 시스템';
       
