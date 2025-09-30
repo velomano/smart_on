@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AppHeader from '@/components/AppHeader';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, updateUserWeatherRegion } from '@/lib/auth';
 import { AuthUser } from '@/lib/auth';
 import { UserService, UserProfile, UserSettings } from '@/lib/userService';
 import { User } from '@supabase/supabase-js';
@@ -13,7 +13,8 @@ export default function MyPage() {
   const [settings, setSettings] = useState({
     telegramChatId: '',
     notificationEnabled: true,
-    emailNotification: true
+    emailNotification: true,
+    weatherRegion: '서울'
   });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -114,6 +115,11 @@ export default function MyPage() {
         if (savedSettings) {
           const parsed = JSON.parse(savedSettings);
           setSettings(prev => ({ ...prev, ...parsed }));
+        } else {
+          // 사용자의 날씨 지역이 있으면 설정에 반영
+          if (currentUser.weather_region) {
+            setSettings(prev => ({ ...prev, weatherRegion: currentUser.weather_region }));
+          }
         }
       } catch (err) {
         console.error('인증 확인 실패:', err);
@@ -248,6 +254,32 @@ export default function MyPage() {
     return /^-?\d+$/.test(id) || /^@[a-zA-Z0-9_]+$/.test(id);
   };
 
+  // 날씨 지역 업데이트
+  const updateWeatherRegion = async (region: string) => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const result = await updateUserWeatherRegion(user.id, region);
+      if (result.success) {
+        setSettings(prev => ({ ...prev, weatherRegion: region }));
+        setSaveStatus('✅ 날씨 지역이 업데이트되었습니다!');
+        
+        // 로컬스토리지에도 저장
+        localStorage.setItem('userSettings', JSON.stringify({
+          ...settings,
+          weatherRegion: region
+        }));
+      } else {
+        setSaveStatus(`❌ 날씨 지역 업데이트 실패: ${result.error}`);
+      }
+    } catch (error) {
+      setSaveStatus(`❌ 날씨 지역 업데이트 중 오류: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 텔레그램 테스트 버튼
   const testTelegramNotification = async () => {
     if (!settings.telegramChatId) {
@@ -372,7 +404,7 @@ export default function MyPage() {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600">역할:</span>
-                        <span className="ml-2 font-medium">{
+                        <span className="ml-2 font-semibold text-gray-900">{
                           // Supabase 권한 정보가 있으면 Supabase 기반, 없으면 MockAuth 사용
                           userRoleInfo?.role 
                             ? (userRoleInfo.role === 'owner' ? '소유자' :
@@ -386,10 +418,10 @@ export default function MyPage() {
                       </div>
                       <div>
                         <span className="text-gray-600">승인 상태:</span>
-                        <span className={`ml-2 font-medium ${
+                        <span className={`ml-2 font-semibold ${
                           userProfile?.is_approved !== undefined 
-                            ? (userProfile.is_approved ? 'text-green-600' : 'text-red-600')
-                            : (user.is_approved ? 'text-green-600' : 'text-red-600')
+                            ? (userProfile.is_approved ? 'text-green-700' : 'text-red-700')
+                            : (user.is_approved ? 'text-green-700' : 'text-red-700')
                         }`}>
                           {userProfile?.is_approved !== undefined 
                             ? (userProfile.is_approved ? '승인됨' : '대기중')
@@ -399,10 +431,10 @@ export default function MyPage() {
                       </div>
                       <div>
                         <span className="text-gray-600">계정 상태:</span>
-                        <span className={`ml-2 font-medium ${
+                        <span className={`ml-2 font-semibold ${
                           userProfile?.is_active !== undefined 
-                            ? (userProfile.is_active ? 'text-green-600' : 'text-red-600')
-                            : (user.is_active ? 'text-green-600' : 'text-red-600')
+                            ? (userProfile.is_active ? 'text-green-700' : 'text-red-700')
+                            : (user.is_active ? 'text-green-700' : 'text-red-700')
                         }`}>
                           {userProfile?.is_active !== undefined 
                             ? (userProfile.is_active ? '활성' : '비활성')
@@ -412,7 +444,7 @@ export default function MyPage() {
                       </div>
                       <div>
                         <span className="text-gray-600">소속:</span>
-                        <span className="ml-2 font-medium">
+                        <span className="ml-2 font-semibold text-gray-800">
                           {userRoleInfo?.tenant_id ? `테넌트 ${userRoleInfo.tenant_id.substring(0, 8)}...` : 
                            user.team_name ? user.team_name : 'N/A'
                           }
@@ -518,35 +550,253 @@ export default function MyPage() {
                       </label>
                     </div>
                     
-                    <button
-                      onClick={testTelegramNotification}
-                      disabled={!settings.telegramChatId || !settings.notificationEnabled}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={async () => {
+                          setLoading(true);
+                          setSaveStatus('');
+                          try {
+                            // 텔레그램 설정만 저장
+                            if (supabaseUser?.id) {
+                              const settingsUpdated = await UserService.updateUserSetting(supabaseUser.id, 'telegram_chat_id', settings.telegramChatId);
+                              const notificationsEnabled = await UserService.updateUserSetting(supabaseUser.id, 'notification_preferences', {
+                                ...userSettings?.notification_preferences,
+                                telegram_notification: settings.notificationEnabled
+                              });
+                              
+                              if (settingsUpdated && notificationsEnabled) {
+                                setSaveStatus('✅ 텔레그램 설정이 저장되었습니다!');
+                              } else {
+                                setSaveStatus('❌ 텔레그램 설정 저장에 실패했습니다.');
+                              }
+                            } else {
+                              // 로컬 저장
+                              localStorage.setItem('userSettings', JSON.stringify(settings));
+                              const currentNotificationSettings = localStorage.getItem('notificationSettings');
+                              const notificationSettingsObj = currentNotificationSettings ? JSON.parse(currentNotificationSettings) : {};
+                              notificationSettingsObj.telegramChatId = settings.telegramChatId;
+                              notificationSettingsObj.telegramEnabled = settings.notificationEnabled;
+                              localStorage.setItem('notificationSettings', JSON.stringify(notificationSettingsObj));
+                              window.dispatchEvent(new Event('storage'));
+                              setSaveStatus('✅ 텔레그램 설정이 로컬에 저장되었습니다!');
+                            }
+                          } catch (error) {
+                            setSaveStatus(`❌ 저장 중 오류가 발생했습니다: ${error}`);
+                          } finally {
+                            setLoading(false);
+                          }
+                        }}
+                        disabled={loading}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? '저장 중...' : '설정 저장'}
+                      </button>
+                      
+                      <button
+                        onClick={testTelegramNotification}
+                        disabled={!settings.telegramChatId || !settings.notificationEnabled}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        테스트 알림 전송
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* 텔레그램 설정 저장 상태 메시지 */}
+                  {saveStatus && saveStatus.includes('텔레그램') && (
+                    <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+                      <p className="text-sm text-gray-900">{saveStatus}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 날씨 지역 설정 */}
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">🌤️ 날씨 지역 설정</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      날씨 정보를 제공받을 지역을 선택하세요
+                    </label>
+                    <select
+                      value={settings.weatherRegion}
+                      onChange={e => updateWeatherRegion(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
                     >
-                      테스트 알림 전송
-                    </button>
+                      <option value="서울">서울</option>
+                      <option value="부산">부산</option>
+                      <option value="대구">대구</option>
+                      <option value="인천">인천</option>
+                      <option value="광주">광주</option>
+                      <option value="대전">대전</option>
+                      <option value="울산">울산</option>
+                      <option value="세종">세종</option>
+                      <option value="수원">수원</option>
+                      <option value="성남">성남</option>
+                      <option value="의정부">의정부</option>
+                      <option value="안양">안양</option>
+                      <option value="부천">부천</option>
+                      <option value="광명">광명</option>
+                      <option value="평택">평택</option>
+                      <option value="과천">과천</option>
+                      <option value="오산">오산</option>
+                      <option value="시흥">시흥</option>
+                      <option value="군포">군포</option>
+                      <option value="의왕">의왕</option>
+                      <option value="하남">하남</option>
+                      <option value="용인">용인</option>
+                      <option value="파주">파주</option>
+                      <option value="이천">이천</option>
+                      <option value="안성">안성</option>
+                      <option value="김포">김포</option>
+                      <option value="화성">화성</option>
+                      <option value="광주">광주</option>
+                      <option value="여주">여주</option>
+                      <option value="양평">양평</option>
+                      <option value="고양">고양</option>
+                      <option value="동두천">동두천</option>
+                      <option value="가평">가평</option>
+                      <option value="연천">연천</option>
+                      <option value="춘천">춘천</option>
+                      <option value="원주">원주</option>
+                      <option value="강릉">강릉</option>
+                      <option value="동해">동해</option>
+                      <option value="태백">태백</option>
+                      <option value="속초">속초</option>
+                      <option value="삼척">삼척</option>
+                      <option value="홍천">홍천</option>
+                      <option value="횡성">횡성</option>
+                      <option value="영월">영월</option>
+                      <option value="평창">평창</option>
+                      <option value="정선">정선</option>
+                      <option value="철원">철원</option>
+                      <option value="화천">화천</option>
+                      <option value="양구">양구</option>
+                      <option value="인제">인제</option>
+                      <option value="고성">고성</option>
+                      <option value="양양">양양</option>
+                      <option value="청주">청주</option>
+                      <option value="충주">충주</option>
+                      <option value="제천">제천</option>
+                      <option value="보은">보은</option>
+                      <option value="옥천">옥천</option>
+                      <option value="영동">영동</option>
+                      <option value="증평">증평</option>
+                      <option value="진천">진천</option>
+                      <option value="괴산">괴산</option>
+                      <option value="음성">음성</option>
+                      <option value="단양">단양</option>
+                      <option value="천안">천안</option>
+                      <option value="공주">공주</option>
+                      <option value="보령">보령</option>
+                      <option value="아산">아산</option>
+                      <option value="서산">서산</option>
+                      <option value="논산">논산</option>
+                      <option value="계룡">계룡</option>
+                      <option value="당진">당진</option>
+                      <option value="금산">금산</option>
+                      <option value="부여">부여</option>
+                      <option value="서천">서천</option>
+                      <option value="청양">청양</option>
+                      <option value="홍성">홍성</option>
+                      <option value="예산">예산</option>
+                      <option value="태안">태안</option>
+                      <option value="전주">전주</option>
+                      <option value="군산">군산</option>
+                      <option value="익산">익산</option>
+                      <option value="정읍">정읍</option>
+                      <option value="남원">남원</option>
+                      <option value="김제">김제</option>
+                      <option value="완주">완주</option>
+                      <option value="진안">진안</option>
+                      <option value="무주">무주</option>
+                      <option value="장수">장수</option>
+                      <option value="임실">임실</option>
+                      <option value="순창">순창</option>
+                      <option value="고창">고창</option>
+                      <option value="부안">부안</option>
+                      <option value="목포">목포</option>
+                      <option value="여수">여수</option>
+                      <option value="순천">순천</option>
+                      <option value="나주">나주</option>
+                      <option value="광양">광양</option>
+                      <option value="담양">담양</option>
+                      <option value="곡성">곡성</option>
+                      <option value="구례">구례</option>
+                      <option value="고흥">고흥</option>
+                      <option value="보성">보성</option>
+                      <option value="화순">화순</option>
+                      <option value="장흥">장흥</option>
+                      <option value="강진">강진</option>
+                      <option value="해남">해남</option>
+                      <option value="영암">영암</option>
+                      <option value="무안">무안</option>
+                      <option value="함평">함평</option>
+                      <option value="영광">영광</option>
+                      <option value="장성">장성</option>
+                      <option value="완도">완도</option>
+                      <option value="진도">진도</option>
+                      <option value="신안">신안</option>
+                      <option value="포항">포항</option>
+                      <option value="경주">경주</option>
+                      <option value="김천">김천</option>
+                      <option value="안동">안동</option>
+                      <option value="구미">구미</option>
+                      <option value="영주">영주</option>
+                      <option value="영천">영천</option>
+                      <option value="상주">상주</option>
+                      <option value="문경">문경</option>
+                      <option value="경산">경산</option>
+                      <option value="군위">군위</option>
+                      <option value="의성">의성</option>
+                      <option value="청송">청송</option>
+                      <option value="영양">영양</option>
+                      <option value="영덕">영덕</option>
+                      <option value="청도">청도</option>
+                      <option value="고령">고령</option>
+                      <option value="성주">성주</option>
+                      <option value="칠곡">칠곡</option>
+                      <option value="예천">예천</option>
+                      <option value="봉화">봉화</option>
+                      <option value="울진">울진</option>
+                      <option value="울릉">울릉</option>
+                      <option value="창원">창원</option>
+                      <option value="진주">진주</option>
+                      <option value="통영">통영</option>
+                      <option value="사천">사천</option>
+                      <option value="김해">김해</option>
+                      <option value="밀양">밀양</option>
+                      <option value="거제">거제</option>
+                      <option value="양산">양산</option>
+                      <option value="의령">의령</option>
+                      <option value="함안">함안</option>
+                      <option value="창녕">창녕</option>
+                      <option value="고성">고성</option>
+                      <option value="남해">남해</option>
+                      <option value="하동">하동</option>
+                      <option value="산청">산청</option>
+                      <option value="함양">함양</option>
+                      <option value="거창">거창</option>
+                      <option value="합천">합천</option>
+                      <option value="제주">제주</option>
+                      <option value="서귀포">서귀포</option>
+                    </select>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800 font-medium mb-2">💡 날씨 정보 안내</p>
+                    <ul className="text-sm text-blue-700 space-y-1 ml-3">
+                      <li>• 선택한 지역의 실시간 날씨 정보를 대시보드에서 확인할 수 있습니다</li>
+                      <li>• 기상청 초단기예보 API를 사용하여 정확한 정보를 제공합니다</li>
+                      <li>• 온도, 습도, 강수량, 날씨 상태를 확인할 수 있습니다</li>
+                      <li>• 지역 변경 시 즉시 반영됩니다</li>
+                    </ul>
                   </div>
                 </div>
               </div>
 
-              {/* 공지사항 */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">📣 공지사항</h2>
-                
-                <div className="space-y-3">
-                  <div className="border-l-4 border-blue-500 pl-4 py-2">
-                    <h3 className="font-medium text-gray-900">텔레그램 알림 시스템 개선</h3>
-                    <p className="text-sm text-gray-600">각자의 텔레그램 채팅 ID를 설정하여 개인 맞춤 알림을 받으실 수 있습니다.</p>
-                    <p className="text-xs text-gray-500">2025-09-26</p>
-                  </div>
-                  
-                  <div className="border-l-4 border-green-500 pl-4 py-2">
-                    <h3 className="font-medium text-gray-900">시스템 업데이트</h3>
-                    <p className="text-sm text-gray-600">마이페이지 기능이 추가되어 계정 정보를 쉽게 관리할 수 있습니다.</p>
-                    <p className="text-xs text-gray-500">2025-09-26</p>
-                  </div>
-                </div>
-              </div>
 
               {/* 저장 버튼 및 상태 메시지 */}
               {isEditing && (

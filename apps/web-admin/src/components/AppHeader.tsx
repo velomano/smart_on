@@ -27,18 +27,24 @@ export default function AppHeader({
 }: AppHeaderProps) {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  const [hasNewNotice, setHasNewNotice] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // user가 없을 때 기본값 사용
+  // user가 없을 때 기본값 사용 (로딩 중일 때는 null로 처리)
   const safeUser = user || {
     id: '',
     email: '',
-    name: '게스트',
+    name: '로딩 중...',
     role: 'team_member' as const,
     is_approved: false,
     is_active: false,
     team_name: null
   };
+
+  // 사용자 정보 로그 (디버깅용)
+  console.log('🔍 AppHeader - 받은 사용자 정보:', user);
+  console.log('🔍 AppHeader - 사용할 사용자 정보:', safeUser);
 
   // 외부 클릭 감지
   useEffect(() => {
@@ -57,6 +63,35 @@ export default function AppHeader({
     };
   }, [isMenuOpen]);
 
+  // 공지사항 데이터 가져오기
+  useEffect(() => {
+    const checkNewNotices = async () => {
+      try {
+        const lastChecked = localStorage.getItem('lastNoticeCheck');
+        const url = lastChecked 
+          ? `/api/notices?lastChecked=${lastChecked}`
+          : '/api/notices';
+          
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.ok) {
+          setHasNewNotice(result.newCount > 0);
+        } else {
+          console.error('공지사항 확인 실패:', result.error);
+        }
+      } catch (error) {
+        console.error('공지사항 API 호출 실패:', error);
+      }
+    };
+
+    checkNewNotices();
+    
+    // 2분마다 새 공지사항 확인 (더 자주 체크)
+    const interval = setInterval(checkNewNotices, 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // 사용자 역할에 따른 권한 확인
   // 모든 사용자가 사용자 관리 페이지에 접근 가능 (내용만 다름)
   const canAccessUserManagement = true; // 모든 계정이 접근 가능
@@ -71,6 +106,28 @@ export default function AppHeader({
       router.push('/');
     }
   };
+
+  const handleNoticeClick = () => {
+    setIsNoticeOpen(!isNoticeOpen);
+    if (!isNoticeOpen) {
+      // 공지사항을 확인했으므로 새 공지 표시 해제
+      setHasNewNotice(false);
+      localStorage.setItem('lastNoticeCheck', new Date().getTime().toString());
+    }
+  };
+
+  // 모달이 열려있을 때 배경 스크롤 방지
+  useEffect(() => {
+    if (isNoticeOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isNoticeOpen]);
 
   const handleHomeClick = () => {
     // 홈 아이콘 클릭 시 대시보드로 이동
@@ -113,13 +170,13 @@ export default function AppHeader({
     },
     // 관리자만 관리자 페이지 표시 (상단과 동일한 순서)
     ...(canManageUsers ? [{
-      label: '관리자 페이지',
+      label: '승인 관리',
       path: '/admin',
       color: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
     }] : []),
-    // 모든 계정이 사용자 관리 포함
+    // 모든 계정이 멤버 관리 포함
     ...(canAccessUserManagement ? [{
-      label: '사용자 관리',
+      label: '멤버 관리',
       path: '/team',
       color: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
     }] : []),
@@ -220,13 +277,14 @@ export default function AppHeader({
                 </div>
               </div>
 
+
                   {/* 주요 메뉴 버튼들 - 관리자는 관리자 페이지가 먼저, 모든 계정이 사용자 관리 */}
                   {canManageUsers && (
                     <button
                       onClick={() => router.push('/admin')}
                       className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                     >
-                      관리자 페이지
+                      승인 관리
                     </button>
                   )}
                   {canAccessUserManagement && (
@@ -234,7 +292,7 @@ export default function AppHeader({
                       onClick={() => router.push('/team')}
                       className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
                     >
-                      사용자 관리
+                      멤버 관리
                     </button>
                   )}
               {canManageFarms && (
@@ -279,6 +337,26 @@ export default function AppHeader({
                     </p>
                   </div>
                 </div>
+                
+                {/* 작은 공지사항 아이콘 */}
+                <div className="relative">
+                  <button
+                    onClick={handleNoticeClick}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105 ${
+                      hasNewNotice 
+                        ? 'bg-gradient-to-br from-orange-500 to-orange-600 animate-pulse' 
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                    title={hasNewNotice ? '새 공지사항이 있습니다!' : '공지사항'}
+                  >
+                    <span className={`text-sm ${hasNewNotice ? '' : 'grayscale'}`}>
+                      📢
+                    </span>
+                  </button>
+                  {hasNewNotice && (
+                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
+                  )}
+                </div>
               </div>
 
               {/* 메뉴 아이템들 */}
@@ -310,6 +388,97 @@ export default function AppHeader({
                 <div className="flex items-center space-x-2 text-xs text-gray-600">
                   <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
                   <span>시스템 정상 운영 중</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 공지사항 모달 */}
+        {isNoticeOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ paddingTop: '20vh' }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl sm:w-[700px] max-h-[60vh] overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white flex items-center">
+                    <span className="text-2xl mr-2">📢</span>
+                    공지사항
+                  </h2>
+                  <button
+                    onClick={() => setIsNoticeOpen(false)}
+                    className="text-white hover:text-gray-200 transition-colors"
+                  >
+                    <span className="text-2xl">×</span>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[60vh]">
+                <div className="space-y-6">
+                  {/* 공지사항 1 */}
+                  <div className="border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 rounded-r-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-gray-900 text-lg">날씨 기능 추가</h3>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        NEW
+                      </span>
+                    </div>
+                    <p className="text-gray-700 mb-2">
+                      대시보드에서 실시간 날씨 정보를 확인할 수 있습니다. 마이페이지에서 지역을 설정하세요.
+                    </p>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span className="mr-2">📅</span>
+                      <span>{new Date().toISOString().split('T')[0]}</span>
+                    </div>
+                  </div>
+
+                  {/* 공지사항 2 */}
+                  <div className="border-l-4 border-green-500 pl-4 py-3 bg-green-50 rounded-r-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-gray-900 text-lg">텔레그램 알림 시스템 개선</h3>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        업데이트
+                      </span>
+                    </div>
+                    <p className="text-gray-700 mb-2">
+                      각자의 텔레그램 채팅 ID를 설정하여 개인 맞춤 알림을 받으실 수 있습니다.
+                    </p>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span className="mr-2">📅</span>
+                      <span>2025-01-28</span>
+                    </div>
+                  </div>
+
+                  {/* 공지사항 3 */}
+                  <div className="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 rounded-r-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-bold text-gray-900 text-lg">시스템 업데이트</h3>
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        일반
+                      </span>
+                    </div>
+                    <p className="text-gray-700 mb-2">
+                      마이페이지 기능이 추가되어 계정 정보를 쉽게 관리할 수 있습니다.
+                    </p>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span className="mr-2">📅</span>
+                      <span>2025-01-26</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 px-6 py-4 border-t">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">
+                    💡 더 자세한 정보는 관리자에게 문의하세요
+                  </p>
+                  <button
+                    onClick={() => setIsNoticeOpen(false)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    닫기
+                  </button>
                 </div>
               </div>
             </div>

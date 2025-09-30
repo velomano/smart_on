@@ -1,7 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AppHeader from '../../../src/components/AppHeader';
+import BreadcrumbNavigation from '../../../src/components/BreadcrumbNavigation';
+import { getCurrentUser } from '../../../src/lib/auth';
+import { AuthUser } from '../../../src/lib/auth';
 
 interface TabType {
   id: string;
@@ -11,6 +15,30 @@ interface TabType {
 
 export default function DeviceManagementPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  // 사용자 인증 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        console.log('🔍 디바이스 관리 페이지 - 사용자 정보:', currentUser);
+        if (currentUser) {
+          setUser(currentUser);
+        } else {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('인증 확인 실패:', error);
+        window.location.href = '/login';
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const tabs: TabType[] = [
     { id: 'overview', label: '디바이스 관리 개요', icon: '🔧' },
@@ -105,22 +133,22 @@ export default function DeviceManagementPage() {
           <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
             <div className="text-2xl mb-2">🔴</div>
             <h5 className="font-medium text-red-800">연결 끊김</h5>
-            <p className="text-xs text-red-600">디바이스 연결 없음</p>
+            <p className="text-xs text-red-800 font-semibold">디바이스 연결 없음</p>
           </div>
           <div className="text-center p-4 bg-yellow-50 rounded-lg border border-yellow-200">
             <div className="text-2xl mb-2">🟡</div>
             <h5 className="font-medium text-yellow-800">경고</h5>
-            <p className="text-xs text-yellow-600">임계값 초과</p>
+            <p className="text-xs text-yellow-800 font-semibold">임계값 초과</p>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
             <div className="text-2xl mb-2">🟢</div>
             <h5 className="font-medium text-green-800">정상</h5>
-            <p className="text-xs text-green-600">정상 작동</p>
+            <p className="text-xs text-green-800 font-semibold">정상 작동</p>
           </div>
           <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
             <div className="text-2xl mb-2">🔵</div>
             <h5 className="font-medium text-blue-800">대기</h5>
-            <p className="text-xs text-blue-600">명령 대기중</p>
+            <p className="text-xs text-blue-800 font-semibold">명령 대기중</p>
           </div>
         </div>
       </div>
@@ -142,28 +170,28 @@ export default function DeviceManagementPage() {
           <div className="space-y-3">
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">현재 온도</span>
-                <span className="text-lg font-bold text-green-600">23.5°C</span>
+                <span className="font-semibold text-gray-800">현재 온도</span>
+                <span className="text-lg font-bold text-green-800 font-semibold">23.5°C</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">현재 습도</span>
-                <span className="text-sm font-medium text-blue-600">65%</span>
+                <span className="text-sm text-gray-800 font-semibold">현재 습도</span>
+                <span className="text-sm font-medium text-blue-800 font-semibold">65%</span>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">온도 임계값</label>
+              <label className="block text-sm font-semibold text-gray-800">온도 임계값</label>
               <div className="grid grid-cols-2 gap-2">
-                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
+                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">습도 임계값</label>
+              <label className="block text-sm font-semibold text-gray-800">습도 임계값</label>
               <div className="grid grid-cols-2 gap-2">
-                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
-                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
+                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
               </div>
             </div>
           </div>
@@ -174,38 +202,38 @@ export default function DeviceManagementPage() {
           <div className="space-y-3">
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">현재 EC</span>
-                <span className="text-lg font-bold text-purple-600">1.8 mS/cm</span>
+                <span className="font-semibold text-gray-800">현재 EC</span>
+                <span className="text-lg font-bold text-purple-800 font-semibold">1.8 mS/cm</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">현재 pH</span>
-                <span className="text-sm font-medium text-orange-600">6.2</span>
+                <span className="text-sm text-gray-800 font-semibold">현재 pH</span>
+                <span className="text-sm font-medium text-orange-800 font-semibold">6.2</span>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">EC 목표값</label>
-              <input type="number" step="0.1" placeholder="1.5" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              <label className="block text-sm font-semibold text-gray-800">EC 목표값</label>
+              <input type="number" step="0.1" placeholder="1.5" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">pH 목표값</label>
-              <input type="number" step="0.1" placeholder="6.0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              <label className="block text-sm font-semibold text-gray-800">pH 목표값</label>
+              <input type="number" step="0.1" placeholder="6.0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
             </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 센서 데이터 히스토리</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">📊 센서 데이터 히스토리</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700">센서</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">값</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">상태</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700">시간</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-800">센서</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-800">값</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-800">상태</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-800">시간</th>
               </tr>
             </thead>
             <tbody>
@@ -213,32 +241,32 @@ export default function DeviceManagementPage() {
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">🌡️</span>
-                    <span className="font-medium">온도 센서</span>
+                    <span className="font-semibold text-gray-800">온도 센서</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 font-mono">23.5°C</td>
+                <td className="py-3 px-4 font-mono text-gray-900 font-semibold">23.5°C</td>
                 <td className="py-3 px-4">
-                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                  <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                     정상
                   </span>
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-600">2분 전</td>
+                <td className="py-3 px-4 text-sm text-gray-800 font-semibold">2분 전</td>
               </tr>
               
               <tr className="border-b border-gray-100">
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">⚡</span>
-                    <span className="font-medium">EC 센서</span>
+                    <span className="font-semibold text-gray-800">EC 센서</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 font-mono">1.8 mS/cm</td>
+                <td className="py-3 px-4 font-mono text-gray-900 font-semibold">1.8 mS/cm</td>
                 <td className="py-3 px-4">
-                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                  <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
                     경고
                   </span>
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-600">5분 전</td>
+                <td className="py-3 px-4 text-sm text-gray-800 font-semibold">5분 전</td>
               </tr>
             </tbody>
           </table>
@@ -262,26 +290,26 @@ export default function DeviceManagementPage() {
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">물 펌프</span>
+                <span className="font-semibold text-gray-800">물 펌프</span>
                 <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                   ON
                 </span>
               </div>
-              <div className="text-sm text-gray-600">운영 시간: 15분</div>
+              <div className="text-sm text-gray-800 font-semibold">운영 시간: 15분</div>
             </div>
             
             <div className="flex space-x-2">
-              <button className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+              <button className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors">
                 시작
               </button>
-              <button className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
+              <button className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors">
                 중지
               </button>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">운영 시간 설정</label>
-              <input type="number" placeholder="분" className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              <label className="block text-sm font-semibold text-gray-800">운영 시간 설정</label>
+              <input type="number" placeholder="분" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600" />
             </div>
           </div>
         </div>
@@ -291,28 +319,28 @@ export default function DeviceManagementPage() {
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">성장용 LED</span>
+                <span className="font-semibold text-gray-800">성장용 LED</span>
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                   75%
                 </span>
               </div>
-              <div className="text-sm text-gray-600">현재 밝기</div>
+              <div className="text-sm text-gray-800 font-semibold">현재 밝기</div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">밝기 조절</label>
+              <label className="block text-sm font-semibold text-gray-800">밝기 조절</label>
               <input type="range" min="0" max="100" defaultValue="75" className="w-full" />
-              <div className="flex justify-between text-xs text-gray-500">
+              <div className="flex justify-between text-xs text-gray-800 font-semibold">
                 <span>0%</span>
                 <span>100%</span>
               </div>
             </div>
             
             <div className="grid grid-cols-2 gap-2">
-              <button className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+              <button className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors">
                 ON
               </button>
-              <button className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors">
+              <button className="px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-semibold transition-colors">
                 OFF
               </button>
             </div>
@@ -321,43 +349,43 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">⏰ 스케줄 제어</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">⏰ 스케줄 제어</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-              <h4 className="font-medium text-green-900 mb-2">펌프 스케줄</h4>
+              <h4 className="font-semibold text-green-900 mb-2">펌프 스케줄</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>오전 6시</span>
-                  <span className="text-green-600">15분</span>
+                  <span className="text-gray-800 font-semibold">오전 6시</span>
+                  <span className="text-green-800 font-semibold">15분</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>오후 2시</span>
-                  <span className="text-green-600">10분</span>
+                  <span className="text-gray-800 font-semibold">오후 2시</span>
+                  <span className="text-green-800 font-semibold">10분</span>
                 </div>
               </div>
             </div>
             
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-900 mb-2">LED 스케줄</h4>
+              <h4 className="font-semibold text-blue-900 mb-2">LED 스케줄</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>오전 7시</span>
-                  <span className="text-blue-600">ON</span>
+                  <span className="text-gray-800 font-semibold">오전 7시</span>
+                  <span className="text-blue-800 font-semibold">ON</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>오후 7시</span>
-                  <span className="text-blue-600">OFF</span>
+                  <span className="text-gray-800 font-semibold">오후 7시</span>
+                  <span className="text-blue-800 font-semibold">OFF</span>
                 </div>
               </div>
             </div>
             
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <h4 className="font-medium text-purple-900 mb-2">팬 스케줄</h4>
+              <h4 className="font-semibold text-purple-900 mb-2">팬 스케줄</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>온도 25°C 초과시</span>
-                  <span className="text-purple-600">AUTO</span>
+                  <span className="text-gray-800 font-semibold">온도 25°C 초과시</span>
+                  <span className="text-purple-800 font-semibold">AUTO</span>
                 </div>
               </div>
             </div>
@@ -378,21 +406,21 @@ export default function DeviceManagementPage() {
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 1단계: 디바이스 정보 입력</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">📋 1단계: 디바이스 정보 입력</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">디바이스 ID *</label>
+                <label className="block text-sm font-semibold text-gray-800">디바이스 ID *</label>
                 <input 
                   type="text" 
                   placeholder="예: sensor_001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-600"
                 />
               </div>
               
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">디바이스 타입 *</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <label className="block text-sm font-semibold text-gray-800">디바이스 타입 *</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900">
                   <option value="">타입을 선택하세요</option>
                   <option value="temperature">온도 센서</option>
                   <option value="humidity">습도 센서</option>
@@ -409,23 +437,23 @@ export default function DeviceManagementPage() {
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">설명</label>
+              <label className="block text-sm font-semibold text-gray-800">설명</label>
               <textarea 
                 placeholder="디바이스의 용도나 위치 등을 설명해주세요."
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-600"
               />
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🏢 2단계: 배치 위치 설정</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">🏢 2단계: 배치 위치 설정</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">베드 번호</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <label className="block text-sm font-semibold text-gray-800">베드 번호</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900">
                   <option value="">베드를 선택하세요</option>
                   <option value="1">베드 1</option>
                   <option value="2">베드 2</option>
@@ -435,8 +463,8 @@ export default function DeviceManagementPage() {
               </div>
               
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">층 번호</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                <label className="block text-sm font-semibold text-gray-800">층 번호</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900">
                   <option value="">층을 선택하세요</option>
                   <option value="1">1층</option>
                   <option value="2">2층</option>
@@ -456,13 +484,13 @@ export default function DeviceManagementPage() {
               </div>
               <div>
                 <h4 className="font-medium text-green-900">디바이스 등록 완료</h4>
-                <p className="text-sm text-green-700">MQTT 브로커에 연결하여 데이터를 전송할 수 있습니다.</p>
+                <p className="text-sm text-green-800 font-medium">MQTT 브로커에 연결하여 데이터를 전송할 수 있습니다.</p>
               </div>
             </div>
             
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <h4 className="font-medium text-blue-900 mb-2">💡 다음 단계</h4>
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-blue-800 font-medium">
                 디바이스가 MQTT 브로커에 연결되면 자동으로 데이터를 수집하기 시작합니다.
               </p>
             </div>
@@ -487,7 +515,7 @@ export default function DeviceManagementPage() {
           <div className="space-y-4">
             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
               <h4 className="font-medium text-red-900 mb-2">디바이스가 연결되지 않음</h4>
-              <ul className="text-sm text-red-700 space-y-1">
+              <ul className="text-sm text-red-800 font-medium space-y-1">
                 <li>• WiFi 연결 상태 확인</li>
                 <li>• MQTT 브로커 URL/포트 확인</li>
                 <li>• 인증 정보 확인</li>
@@ -497,7 +525,7 @@ export default function DeviceManagementPage() {
             
             <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <h4 className="font-medium text-yellow-900 mb-2">간헐적 연결 끊김</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
+              <ul className="text-sm text-yellow-800 font-medium space-y-1">
                 <li>• 네트워크 신호 강도 확인</li>
                 <li>• Keep-Alive 설정 확인</li>
                 <li>• 디바이스 재시작</li>
@@ -511,7 +539,7 @@ export default function DeviceManagementPage() {
           <div className="space-y-4">
             <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
               <h4 className="font-medium text-orange-900 mb-2">센서 데이터가 없음</h4>
-              <ul className="text-sm text-orange-700 space-y-1">
+              <ul className="text-sm text-orange-800 font-medium space-y-1">
                 <li>• 센서 연결 상태 확인</li>
                 <li>• 센서 전원 공급 확인</li>
                 <li>• 센서 교체 필요 여부 확인</li>
@@ -520,7 +548,7 @@ export default function DeviceManagementPage() {
             
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-blue-900 mb-2">이상한 센서 값</h4>
-              <ul className="text-sm text-blue-700 space-y-1">
+              <ul className="text-sm text-blue-800 font-medium space-y-1">
                 <li>• 센서 보정 필요</li>
                 <li>• 센서 노화 확인</li>
                 <li>• 환경적 요인 확인</li>
@@ -572,11 +600,43 @@ export default function DeviceManagementPage() {
     }
   };
 
+  // 로딩 중일 때
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">인증 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 인증되지 않은 경우
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="디바이스 관리" subtitle="센서 및 액추에이터 관리 완전 가이드" />
+      <AppHeader 
+        user={user}
+        title="디바이스 관리" 
+        subtitle="센서 및 액추에이터 관리 완전 가이드" 
+        showBackButton
+        backButtonText="사용설명서"
+        onBackClick={() => router.push('/help')}
+      />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BreadcrumbNavigation 
+          items={[
+            { label: '대시보드', path: '/' },
+            { label: '사용설명서', path: '/help' },
+            { label: '디바이스 관리', isActive: true }
+          ]}
+          className="mb-6"
+        />
         <div className="grid lg:grid-cols-4 gap-8">
           {/* 사이드바 */}
           <div className="lg:col-span-1">

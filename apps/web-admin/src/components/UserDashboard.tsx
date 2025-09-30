@@ -32,6 +32,81 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ user, farms, devices, sensors, sensorReadings }: UserDashboardProps) {
+  const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0 });
+  const [weatherData, setWeatherData] = useState({
+    temperature: 0,
+    humidity: 0,
+    precipitation: 0,
+    weatherStatus: '맑음',
+    region: '서울'
+  });
+
+  // 배양액 레시피 통계 가져오기
+  useEffect(() => {
+    const fetchRecipeStats = async () => {
+      try {
+        // 전체 레시피 개수
+        const totalResponse = await fetch('/api/nutrients/browse?limit=1');
+        const totalResult = await totalResponse.json();
+        
+        // 오늘 추가된 레시피 개수
+        const today = new Date().toISOString().split('T')[0];
+        const todayResponse = await fetch(`/api/nutrients/browse?limit=100&created_after=${today}`);
+        const todayResult = await todayResponse.json();
+        
+        setRecipeStats({
+          total: totalResult.pagination?.total || 0,
+          today: todayResult.recipes?.length || 0
+        });
+      } catch (error) {
+        console.error('레시피 통계 가져오기 실패:', error);
+        setRecipeStats({ total: 0, today: 0 });
+      }
+    };
+
+    fetchRecipeStats();
+  }, []);
+
+  // 날씨 데이터 가져오기
+  useEffect(() => {
+    const fetchWeatherData = async () => {
+      try {
+        const region = user.weather_region || '서울';
+        console.log('날씨 데이터 요청:', region);
+        
+        const response = await fetch(`/api/weather?region=${encodeURIComponent(region)}`);
+        
+        if (!response.ok) {
+          console.error('날씨 API HTTP 오류:', response.status, response.statusText);
+          return;
+        }
+        
+        const result = await response.json();
+        console.log('날씨 API 응답:', result);
+        
+        if (result.ok) {
+          setWeatherData(result.data);
+        } else {
+          console.error('날씨 데이터 가져오기 실패:', {
+            error: result.error,
+            region: region,
+            status: response.status
+          });
+        }
+      } catch (error) {
+        console.error('날씨 API 호출 실패:', {
+          error: error,
+          region: user.weather_region || '서울'
+        });
+      }
+    };
+
+    fetchWeatherData();
+    
+    // 10분마다 날씨 데이터 업데이트
+    const interval = setInterval(fetchWeatherData, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user.weather_region]);
   
   // 베드 정렬 함수 (농장관리 페이지와 동일)
   const sortBeds = (beds: Device[]) => {
@@ -416,42 +491,43 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             <div className="p-6 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">👥</span>
+                  <span className="text-2xl">🌱</span>
                 </div>
                 <div className="ml-4">
                   <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                    활성화 팀원 수
+                    배양액 레시피
                   </dt>
                   <dd className="text-3xl font-black text-gray-900">
-                    {teamsLoading ? '...' : activeMembers}
+                    {recipeStats.total}
                   </dd>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-purple-600">
-                  {teamsLoading ? '...' : totalFarms}
+                  {recipeStats.today}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">총 농장 수</div>
+                <div className="text-sm text-gray-600 font-medium">오늘 추가</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-orange-300">
-            <div className="p-6 flex items-center justify-between">
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
+              <div className="p-6 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🌡️</span>
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl">🌤️</span>
                 </div>
                 <div className="ml-4">
                   <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
-                    평균 온도
+                    현재 날씨
                   </dt>
-                  <dd className="text-3xl font-black text-gray-900">{averageTemp.toFixed(1)}°C</dd>
+                  <dd className="text-3xl font-black text-gray-900">{weatherData.temperature}°C</dd>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-orange-600">적정</div>
-                <div className="text-sm text-gray-600 font-medium">상태</div>
+                <div className="text-lg font-bold text-blue-600">{weatherData.weatherStatus}</div>
+                <div className="text-sm text-gray-600 font-medium">{weatherData.region}</div>
+                <div className="text-xs text-gray-500 font-medium">강수확률 {weatherData.precipitation}%</div>
               </div>
             </div>
           </div>

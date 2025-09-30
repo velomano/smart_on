@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn, signUp, getCurrentUser } from '../../src/lib/auth';
+import { clearSupabaseTokens, checkTokenStatus } from '../../src/lib/authUtils';
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -431,6 +432,35 @@ export default function LoginPage() {
                   </div>
                 </form>
               </div>
+            </div>
+          )}
+          
+          {/* 개발 환경용 토큰 정리 버튼 */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <h3 className="text-sm font-semibold text-yellow-800 mb-2">🔧 개발자 도구</h3>
+              <div className="flex space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearSupabaseTokens();
+                    window.location.reload();
+                  }}
+                  className="px-3 py-2 bg-yellow-500 text-white text-sm rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  토큰 정리 & 새로고침
+                </button>
+                <button
+                  type="button"
+                  onClick={checkTokenStatus}
+                  className="px-3 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  토큰 상태 확인
+                </button>
+              </div>
+              <p className="text-xs text-yellow-700 mt-2">
+                초기 접속 시 "Invalid Refresh Token" 에러가 발생하면 위 버튼을 클릭하세요.
+              </p>
             </div>
           )}
         </div>

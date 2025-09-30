@@ -31,6 +31,7 @@ export interface AuthUser {
   created_at: string;
   company?: string;
   phone?: string;
+  weather_region?: string;
 }
 
 export interface Farm {
@@ -868,4 +869,27 @@ export const resetMockUsers = async () => {
   // Supabase에서는 mock 데이터 리셋이 필요 없음
   console.log('Mock 사용자 리셋은 Supabase 환경에서는 지원되지 않습니다.');
   return { success: true };
+};
+
+// 사용자 날씨 지역 업데이트
+export const updateUserWeatherRegion = async (userId: string, weatherRegion: string) => {
+  try {
+    const supabase = getSupabaseClient();
+    
+    const { error } = await supabase
+      .from('users')
+      .update({ 
+        weather_region: weatherRegion,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (error) {
+      return { success: false, error: '날씨 지역 설정에 실패했습니다.' };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: '날씨 지역 설정 중 오류가 발생했습니다.' };
+  }
 };

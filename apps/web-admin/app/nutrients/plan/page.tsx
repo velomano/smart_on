@@ -373,11 +373,11 @@ export default function NutrientPlanPage() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">작물 선택</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">작물 선택</label>
                       <select
                       value={crop}
                       onChange={(e) => setCrop(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 font-medium"
                       >
                         <option value="상추">상추</option>
                         <option value="토마토">토마토</option>
@@ -386,12 +386,12 @@ export default function NutrientPlanPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">용량 (L)</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">용량 (L)</label>
                     <input 
                       type="number" 
                       value={volume}
                       onChange={(e) => setVolume(Number(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 font-medium"
                       min="1"
                       max="1000"
                     />
@@ -532,21 +532,21 @@ export default function NutrientPlanPage() {
                 <div className="bg-white rounded-lg shadow-md p-6">
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">검색</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">검색</label>
                       <input
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-medium"
                         placeholder="작물명 또는 단계 검색..."
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">작물</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">작물</label>
                       <select
                         value={selectedCrop}
                         onChange={(e) => setSelectedCrop(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-medium"
                       >
                         <option value="">전체</option>
                         {crops.map(crop => (
@@ -555,11 +555,11 @@ export default function NutrientPlanPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">성장 단계</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">성장 단계</label>
                       <select
                         value={selectedStage}
                         onChange={(e) => setSelectedStage(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 font-medium"
                       >
                         <option value="">전체</option>
                         {stages.map(stage => (

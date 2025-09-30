@@ -38,7 +38,21 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     
     const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !authUser) {
+    if (authError) {
+      console.error('인증 에러:', authError);
+      // Refresh Token 에러인 경우 세션 정리
+      if (authError.message?.includes('Refresh Token') || authError.message?.includes('Invalid Refresh Token')) {
+        console.log('🔄 Refresh Token 에러 감지 - 세션 정리 중...');
+        await supabase.auth.signOut();
+        // 브라우저 저장소 정리
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('sb-' + process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token');
+        }
+      }
+      return null;
+    }
+    
+    if (!authUser) {
       return null;
     }
 

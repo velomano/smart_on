@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
+import { getCurrentUser } from '@/lib/auth';
+import { AuthUser } from '@/lib/auth';
 
 interface HealthData {
   status: string;
@@ -83,6 +86,30 @@ export default function SystemPage() {
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  // 사용자 인증 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        console.log('🔍 시스템 모니터링 페이지 - 사용자 정보:', currentUser);
+        if (currentUser) {
+          setUser(currentUser);
+        } else {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('인증 확인 실패:', error);
+        window.location.href = '/login';
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -184,10 +211,31 @@ export default function SystemPage() {
     }
   };
 
+  // 인증 로딩 중일 때
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">인증 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 인증되지 않은 경우
+  if (!user) {
+    return null;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppHeader title="🖥️ 시스템 모니터링" subtitle="실시간 시스템 상태 및 성능 메트릭" />
+        <AppHeader 
+          user={user}
+          title="🖥️ 시스템 모니터링" 
+          subtitle="실시간 시스템 상태 및 성능 메트릭" 
+        />
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -203,7 +251,11 @@ export default function SystemPage() {
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppHeader title="🖥️ 시스템 모니터링" subtitle="실시간 시스템 상태 및 성능 메트릭" />
+        <AppHeader 
+          user={user}
+          title="🖥️ 시스템 모니터링" 
+          subtitle="실시간 시스템 상태 및 성능 메트릭" 
+        />
         <div className="container mx-auto px-4 py-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
             <div className="text-red-600 text-2xl mb-2">❌</div>
@@ -223,14 +275,18 @@ export default function SystemPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="🖥️ 시스템 모니터링" subtitle="실시간 시스템 상태 및 성능 메트릭" />
+      <AppHeader 
+        user={user}
+        title="🖥️ 시스템 모니터링" 
+        subtitle="실시간 시스템 상태 및 성능 메트릭" 
+      />
       
       <div className="container mx-auto px-4 py-8">
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">시스템 모니터링</h1>
-            <p className="text-gray-600">실시간 시스템 상태 및 성능 메트릭</p>
+            <p className="text-gray-700 font-medium">실시간 시스템 상태 및 성능 메트릭</p>
           </div>
           <button
             onClick={fetchData}
@@ -243,28 +299,28 @@ export default function SystemPage() {
         {/* 전체 상태 */}
         {healthData && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">전체 시스템 상태</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">전체 시스템 상태</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(healthData.status)}`}>
                   <span className="mr-2">{getStatusIcon(healthData.status)}</span>
                   {healthData.status === 'healthy' ? '정상' : '오류'}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">전체 상태</p>
+                <p className="text-xs text-gray-700 font-medium mt-1">전체 상태</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{healthData.responseTime}ms</div>
-                <p className="text-xs text-gray-500">응답 시간</p>
+                <div className="text-2xl font-bold text-blue-700">{healthData.responseTime}ms</div>
+                <p className="text-xs text-gray-700 font-medium">응답 시간</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{formatUptime(healthData.system?.uptime || 0)}</div>
-                <p className="text-xs text-gray-500">가동 시간</p>
+                <div className="text-2xl font-bold text-green-700">{formatUptime(healthData.system?.uptime || 0)}</div>
+                <p className="text-xs text-gray-700 font-medium">가동 시간</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-2xl font-bold text-purple-700">
                   {healthData.system?.memoryUsage ? Math.round((healthData.system.memoryUsage.heapUsed / healthData.system.memoryUsage.heapTotal) * 100) : 0}%
                 </div>
-                <p className="text-xs text-gray-500">로컬 서버 메모리</p>
+                <p className="text-xs text-gray-700 font-medium">로컬 서버 메모리</p>
               </div>
             </div>
           </div>
@@ -273,12 +329,12 @@ export default function SystemPage() {
         {/* 서비스 상태 */}
         {healthData && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">서비스 상태</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">서비스 상태</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h3 className="font-medium text-gray-900">데이터베이스</h3>
-                  <p className="text-sm text-gray-600">Supabase 연결 상태</p>
+                  <p className="text-sm text-gray-700 font-medium">Supabase 연결 상태</p>
                 </div>
                 <div className="text-right">
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(healthData.services.database.status)}`}>
@@ -290,11 +346,11 @@ export default function SystemPage() {
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h3 className="font-medium text-gray-900">Node.js</h3>
-                  <p className="text-sm text-gray-600">시스템 정보</p>
+                  <p className="text-sm text-gray-700 font-medium">시스템 정보</p>
                 </div>
                 <div className="text-right">
                   <div className="text-green-600">✅</div>
-                  <p className="text-xs text-gray-500 mt-1">v{process.version}</p>
+                  <p className="text-xs text-gray-700 font-medium mt-1">v{process.version}</p>
                 </div>
               </div>
             </div>
@@ -305,45 +361,45 @@ export default function SystemPage() {
         {metrics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">사용자 통계</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">사용자 통계</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{metrics.users.total}</div>
-                  <p className="text-sm text-gray-600">총 사용자</p>
+                  <div className="text-2xl font-bold text-blue-700">{metrics.users.total}</div>
+                  <p className="text-sm text-gray-700 font-medium">총 사용자</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{metrics.users.active}</div>
-                  <p className="text-sm text-gray-600">활성 사용자</p>
+                  <div className="text-2xl font-bold text-green-700">{metrics.users.active}</div>
+                  <p className="text-sm text-gray-700 font-medium">활성 사용자</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{metrics.users.approved}</div>
-                  <p className="text-sm text-gray-600">승인된 사용자</p>
+                  <div className="text-2xl font-bold text-purple-700">{metrics.users.approved}</div>
+                  <p className="text-sm text-gray-700 font-medium">승인된 사용자</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">{metrics.users.pending}</div>
-                  <p className="text-sm text-gray-600">승인 대기</p>
+                  <div className="text-2xl font-bold text-orange-700">{metrics.users.pending}</div>
+                  <p className="text-sm text-gray-700 font-medium">승인 대기</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">농장 통계</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">농장 통계</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{metrics.farms.total}</div>
-                  <p className="text-sm text-gray-600">총 농장</p>
+                  <div className="text-2xl font-bold text-blue-700">{metrics.farms.total}</div>
+                  <p className="text-sm text-gray-700 font-medium">총 농장</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{metrics.farms.active}</div>
-                  <p className="text-sm text-gray-600">활성 농장</p>
+                  <div className="text-2xl font-bold text-green-700">{metrics.farms.active}</div>
+                  <p className="text-sm text-gray-700 font-medium">활성 농장</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">{metrics.devices.total}</div>
-                  <p className="text-sm text-gray-600">총 디바이스</p>
+                  <div className="text-2xl font-bold text-purple-700">{metrics.devices.total}</div>
+                  <p className="text-sm text-gray-700 font-medium">총 디바이스</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{metrics.devices.online}</div>
-                  <p className="text-sm text-gray-600">온라인 디바이스</p>
+                  <div className="text-2xl font-bold text-green-700">{metrics.devices.online}</div>
+                  <p className="text-sm text-gray-700 font-medium">온라인 디바이스</p>
                 </div>
               </div>
             </div>
@@ -354,27 +410,27 @@ export default function SystemPage() {
         {metrics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">센서 통계</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">센서 통계</h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">총 센서</span>
-                  <span className="font-semibold">{metrics.sensors.total}개</span>
+                  <span className="text-sm text-gray-700 font-medium">총 센서</span>
+                  <span className="font-bold text-gray-900">{metrics.sensors.total}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">활성 센서</span>
-                  <span className="font-semibold text-green-600">{metrics.sensors.active}개</span>
+                  <span className="text-sm text-gray-700 font-medium">활성 센서</span>
+                  <span className="font-bold text-green-700">{metrics.sensors.active}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">비활성 센서</span>
-                  <span className="font-semibold text-red-600">{metrics.sensors.inactive}개</span>
+                  <span className="text-sm text-gray-700 font-medium">비활성 센서</span>
+                  <span className="font-bold text-red-700">{metrics.sensors.inactive}개</span>
                 </div>
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">센서 타입별</h4>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2">센서 타입별</h4>
                   <div className="space-y-1">
                     {Object.entries(metrics.sensors.byType).map(([type, count]) => (
                       <div key={type} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">{type}</span>
-                        <span className="font-medium">{count}개</span>
+                        <span className="text-gray-700 font-medium">{type}</span>
+                        <span className="font-semibold text-gray-900">{count}개</span>
                       </div>
                     ))}
                   </div>
@@ -383,30 +439,30 @@ export default function SystemPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">데이터 통계</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-4">데이터 통계</h2>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">총 센서 데이터</span>
-                  <span className="font-semibold">{metrics.data.totalReadings.toLocaleString()}개</span>
+                  <span className="text-sm text-gray-700 font-medium">총 센서 데이터</span>
+                  <span className="font-bold text-gray-900">{metrics.data.totalReadings.toLocaleString()}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">최근 24시간</span>
-                  <span className="font-semibold">{metrics.data.last24Hours.toLocaleString()}개</span>
+                  <span className="text-sm text-gray-700 font-medium">최근 24시간</span>
+                  <span className="font-bold text-gray-900">{metrics.data.last24Hours.toLocaleString()}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">시간당 평균</span>
-                  <span className="font-semibold">{metrics.data.averagePerHour.toLocaleString()}개</span>
+                  <span className="text-sm text-gray-700 font-medium">시간당 평균</span>
+                  <span className="font-bold text-gray-900">{metrics.data.averagePerHour.toLocaleString()}개</span>
                 </div>
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">성능 메트릭</h4>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2">성능 메트릭</h4>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">평균 응답 시간</span>
-                      <span className="font-medium">{metrics.performance.averageResponseTime}ms</span>
+                      <span className="text-gray-700 font-medium">평균 응답 시간</span>
+                      <span className="font-semibold text-gray-900">{metrics.performance.averageResponseTime}ms</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">에러율</span>
-                      <span className="font-medium text-red-600">{(metrics.performance.errorRate * 100).toFixed(2)}%</span>
+                      <span className="text-gray-700 font-medium">에러율</span>
+                      <span className="font-semibold text-red-700">{(metrics.performance.errorRate * 100).toFixed(2)}%</span>
                     </div>
                   </div>
                 </div>
@@ -417,7 +473,7 @@ export default function SystemPage() {
 
         {/* 마지막 업데이트 시간 */}
         {healthData && (
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm text-gray-600 font-medium">
             마지막 업데이트: {new Date(healthData.timestamp).toLocaleString('ko-KR')}
           </div>
         )}

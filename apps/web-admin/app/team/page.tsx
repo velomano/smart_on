@@ -36,6 +36,17 @@ export default function TeamPage() {
     team_id: ''
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteFormData, setInviteFormData] = useState<{
+    email: string;
+    role: string;
+    message: string;
+  }>({
+    email: '',
+    role: 'team_member',
+    message: ''
+  });
+  const [inviteLoading, setInviteLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -211,6 +222,40 @@ export default function TeamPage() {
     });
   };
 
+  const handleInviteUser = async () => {
+    setInviteLoading(true);
+    try {
+      // 실제 초대 로직 구현 (API 호출 등)
+      console.log('초대 요청:', inviteFormData);
+      
+      // 기능 추가 예정 안내
+      alert(`멤버 초대 기능은 현재 개발 중입니다.\n\n입력하신 정보:\n- 이메일: ${inviteFormData.email}\n- 역할: ${inviteFormData.role === 'team_member' ? '팀 멤버' : '팀 리더'}\n- 메시지: ${inviteFormData.message || '없음'}\n\n곧 실제 초대 기능이 추가될 예정입니다.`);
+      
+      // 폼 초기화
+      setInviteFormData({
+        email: '',
+        role: 'team_member',
+        message: ''
+      });
+      setIsInviteModalOpen(false);
+      
+    } catch (error) {
+      console.error('초대 전송 오류:', error);
+      alert('초대 전송에 실패했습니다.');
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleCancelInvite = () => {
+    setInviteFormData({
+      email: '',
+      role: 'team_member',
+      message: ''
+    });
+    setIsInviteModalOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -323,8 +368,19 @@ export default function TeamPage() {
                    '농장의 멤버들을 관리합니다'}
                 </p>
               </div>
-              <div className="text-sm text-gray-500">
-                총 {teamMembers.length}명
+              <div className="flex items-center space-x-4">
+                {(user?.role === 'system_admin' || user?.role === 'team_leader') && (
+                  <button
+                    onClick={() => setIsInviteModalOpen(true)}
+                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-xl font-semibold transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 flex items-center space-x-2"
+                  >
+                    <span>➕</span>
+                    <span>멤버 초대 (개발중)</span>
+                  </button>
+                )}
+                <div className="text-sm text-gray-500">
+                  총 {teamMembers.length}명
+                </div>
               </div>
             </div>
 
@@ -572,6 +628,85 @@ export default function TeamPage() {
                   className="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50"
                 >
                   {actionLoading === editingUser ? '저장 중...' : '저장'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 초대 모달 */}
+      {isInviteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 rounded-t-2xl">
+              <h3 className="text-xl font-bold text-white">➕ 멤버 초대 (개발 중)</h3>
+              <p className="text-white/90 text-sm">새로운 멤버를 팀에 초대합니다 - 기능 추가 예정</p>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                {/* 이메일 주소 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    이메일 주소 *
+                  </label>
+                  <input
+                    type="email"
+                    value={inviteFormData.email}
+                    onChange={(e) => setInviteFormData(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-600"
+                    placeholder="user@example.com"
+                    required
+                  />
+                </div>
+
+                {/* 역할 선택 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    역할 선택 *
+                  </label>
+                  <select
+                    value={inviteFormData.role}
+                    onChange={(e) => setInviteFormData(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                  >
+                    <option value="team_member">팀 멤버</option>
+                    {user?.role === 'system_admin' && (
+                      <option value="team_leader">팀 리더</option>
+                    )}
+                  </select>
+                </div>
+
+                {/* 초대 메시지 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    초대 메시지
+                  </label>
+                  <textarea
+                    value={inviteFormData.message}
+                    onChange={(e) => setInviteFormData(prev => ({ ...prev, message: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-600"
+                    placeholder="초대 메시지를 작성하세요 (선택사항)"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              {/* 버튼들 */}
+              <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
+                <button
+                  onClick={handleCancelInvite}
+                  className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleInviteUser}
+                  disabled={inviteLoading || !inviteFormData.email}
+                  className="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {inviteLoading ? '처리 중...' : '개발 상태 확인'}
                 </button>
               </div>
             </div>

@@ -12,7 +12,26 @@ let serviceClient: any = null;
 // 일반 클라이언트 (싱글톤)
 export const getSupabaseClient = () => {
   if (!supabaseClient) {
-    supabaseClient = createClient(supabaseUrl, supabaseKey);
+    supabaseClient = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+        // 개발 환경에서 토큰 에러 시 자동 정리
+        onAuthStateChange: (event, session) => {
+          if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 토큰 새로고침 성공');
+          } else if (event === 'SIGNED_OUT') {
+            console.log('🚪 로그아웃됨');
+            // 개발 환경에서만 자동 정리
+            if (process.env.NODE_ENV === 'development') {
+              localStorage.clear();
+            }
+          }
+        }
+      }
+    });
   }
   return supabaseClient;
 };

@@ -372,13 +372,13 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {authUser && (
-        <AppHeader user={authUser} title="사용자 관리" subtitle="승인된 사용자 목록" isDashboard={false} />
+        <AppHeader user={authUser} title="승인 관리" subtitle="사용자 승인 및 권한 관리" isDashboard={false} />
       )}
 
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-8">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">사용자 관리</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">승인 관리</h2>
             <p className="text-lg text-gray-600">사용자 승인 및 권한을 관리합니다</p>
           </div>
 

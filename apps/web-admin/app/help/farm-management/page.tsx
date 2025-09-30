@@ -1,7 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AppHeader from '../../../src/components/AppHeader';
+import BreadcrumbNavigation from '../../../src/components/BreadcrumbNavigation';
+import { getCurrentUser } from '../../../src/lib/auth';
+import { AuthUser } from '../../../src/lib/auth';
 
 interface TabType {
   id: string;
@@ -11,12 +15,35 @@ interface TabType {
 
 export default function FarmManagementPage() {
   const [activeTab, setActiveTab] = useState('overview');
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const router = useRouter();
+
+  // 사용자 인증 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser);
+        } else {
+          window.location.href = '/login';
+        }
+      } catch (error) {
+        console.error('인증 확인 실패:', error);
+        window.location.href = '/login';
+      } finally {
+        setAuthLoading(false);
+      }
+    };
+    checkAuth();
+  }, []);
 
   const tabs: TabType[] = [
     { id: 'overview', label: '농장 관리 개요', icon: '🏢' },
     { id: 'creation', label: '농장 생성', icon: '➕' },
     { id: 'mqtt-setup', label: 'MQTT 설정', icon: '📡' },
-    { id: 'user-management', label: '사용자 관리', icon: '👥' },
+    { id: 'user-management', label: '멤버 관리', icon: '👥' },
     { id: 'monitoring', label: '농장 모니터링', icon: '📊' },
   ];
 
@@ -31,7 +58,7 @@ export default function FarmManagementPage() {
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-white rounded-lg p-4 border border-purple-100">
             <h3 className="font-semibold text-purple-900 mb-2">📋 주요 기능</h3>
-            <ul className="text-sm text-purple-700 space-y-1">
+            <ul className="text-sm text-purple-800 font-medium space-y-1">
               <li>• 농장 생성 및 기본 정보 설정</li>
               <li>• MQTT 브로커 연결 설정</li>
               <li>• 사용자별 권한 관리</li>
@@ -42,7 +69,7 @@ export default function FarmManagementPage() {
           
           <div className="bg-white rounded-lg p-4 border border-purple-100">
             <h3 className="font-semibold text-purple-900 mb-2">🎯 목표</h3>
-            <ul className="text-sm text-purple-700 space-y-1">
+            <ul className="text-sm text-purple-800 font-medium space-y-1">
               <li>• 안정적인 IoT 디바이스 연결</li>
               <li>• 효율적인 데이터 수집</li>
               <li>• 보안성 있는 접근 제어</li>
@@ -126,9 +153,9 @@ export default function FarmManagementPage() {
                 <input 
                   type="text" 
                   placeholder="예: 스마트팜 서울농장"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
                 />
-                <p className="text-xs text-gray-500">고유하고 식별하기 쉬운 이름을 입력하세요.</p>
+                <p className="text-xs text-gray-700 font-medium">고유하고 식별하기 쉬운 이름을 입력하세요.</p>
               </div>
               
               <div className="space-y-2">
@@ -136,7 +163,7 @@ export default function FarmManagementPage() {
                 <input 
                   type="text" 
                   placeholder="예: 서울시 강남구"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
             </div>
@@ -146,7 +173,7 @@ export default function FarmManagementPage() {
               <textarea 
                 placeholder="농장의 특징, 운영 방식, 주요 작물 등을 설명해주세요."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
               />
             </div>
           </div>
@@ -162,7 +189,7 @@ export default function FarmManagementPage() {
                   type="number" 
                   placeholder="예: 8"
                   min="1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
               
@@ -173,14 +200,14 @@ export default function FarmManagementPage() {
                   placeholder="예: 3"
                   min="1"
                   max="10"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
             </div>
             
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-900 mb-2">💡 팁</h4>
-              <p className="text-sm text-blue-700">
+              <h4 className="font-semibold text-blue-900 mb-2">💡 팁</h4>
+              <p className="text-sm text-blue-800 font-medium">
                 베드 구조는 나중에 수정할 수 있지만, 초기 설정을 정확히 하면 디바이스 배치가 더 용이합니다.
               </p>
             </div>
@@ -195,20 +222,20 @@ export default function FarmManagementPage() {
                 <span className="text-white text-sm">✓</span>
               </div>
               <div>
-                <h4 className="font-medium text-green-900">농장 생성 완료</h4>
-                <p className="text-sm text-green-700">기본 정보가 설정되었습니다.</p>
+                <h4 className="font-semibold text-green-900">농장 생성 완료</h4>
+                <p className="text-sm text-green-800 font-medium">기본 정보가 설정되었습니다.</p>
               </div>
             </div>
             
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h4 className="font-medium text-blue-900 mb-2">다음 단계</h4>
-                <p className="text-sm text-blue-700">MQTT 브로커 설정을 진행하세요.</p>
+                <h4 className="font-semibold text-blue-900 mb-2">다음 단계</h4>
+                <p className="text-sm text-blue-800 font-medium">MQTT 브로커 설정을 진행하세요.</p>
               </div>
               
               <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <h4 className="font-medium text-purple-900 mb-2">설정 변경</h4>
-                <p className="text-sm text-purple-700">언제든지 농장 정보를 수정할 수 있습니다.</p>
+                <h4 className="font-semibold text-purple-900 mb-2">설정 변경</h4>
+                <p className="text-sm text-purple-800 font-medium">언제든지 농장 정보를 수정할 수 있습니다.</p>
               </div>
             </div>
           </div>
@@ -236,9 +263,9 @@ export default function FarmManagementPage() {
                 <input 
                   type="text" 
                   placeholder="예: mqtt://your-broker.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600"
                 />
-                <p className="text-xs text-gray-500">mqtt://, mqtts://, ws://, wss:// 프로토콜 지원</p>
+                <p className="text-xs text-gray-700 font-medium">mqtt://, mqtts://, ws://, wss:// 프로토콜 지원</p>
               </div>
               
               <div className="space-y-2">
@@ -246,7 +273,7 @@ export default function FarmManagementPage() {
                 <input 
                   type="number" 
                   placeholder="1883"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
             </div>
@@ -257,7 +284,7 @@ export default function FarmManagementPage() {
                 <input 
                   type="text" 
                   placeholder="MQTT 브로커 사용자명"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
               
@@ -266,7 +293,7 @@ export default function FarmManagementPage() {
                 <input 
                   type="password" 
                   placeholder="MQTT 브로커 비밀번호"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
             </div>
@@ -280,7 +307,7 @@ export default function FarmManagementPage() {
               <input 
                 type="checkbox" 
                 id="useTLS"
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-800 font-semibold bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
               />
               <label htmlFor="useTLS" className="text-sm font-medium text-gray-700">
                 TLS/SSL 사용 (권장)
@@ -291,7 +318,7 @@ export default function FarmManagementPage() {
               <input 
                 type="checkbox" 
                 id="keepAlive"
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-800 font-semibold bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 defaultChecked
               />
               <label htmlFor="keepAlive" className="text-sm font-medium text-gray-700">
@@ -300,8 +327,8 @@ export default function FarmManagementPage() {
             </div>
             
             <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-              <h4 className="font-medium text-yellow-900 mb-2">⚠️ 보안 주의사항</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
+              <h4 className="font-semibold text-yellow-900 mb-2">⚠️ 보안 주의사항</h4>
+              <ul className="text-sm text-yellow-800 font-medium space-y-1">
                 <li>• 프로덕션 환경에서는 반드시 TLS/SSL을 사용하세요.</li>
                 <li>• 강력한 비밀번호를 설정하세요.</li>
                 <li>• 브로커 접근 권한을 최소화하세요.</li>
@@ -319,24 +346,24 @@ export default function FarmManagementPage() {
               </button>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                <span className="text-sm text-gray-600">연결 상태 확인 중...</span>
+                <span className="text-sm text-gray-700 font-medium">연결 상태 확인 중...</span>
               </div>
             </div>
             
             <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h4 className="font-medium text-gray-900 mb-2">테스트 결과</h4>
+              <h4 className="font-semibold text-gray-900 mb-2">테스트 결과</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>브로커 연결:</span>
-                  <span className="text-green-600">✓ 성공</span>
+                  <span className="text-gray-700 font-medium">브로커 연결:</span>
+                  <span className="text-green-800 font-medium font-semibold">✓ 성공</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>인증:</span>
-                  <span className="text-green-600">✓ 성공</span>
+                  <span className="text-gray-700 font-medium">인증:</span>
+                  <span className="text-green-800 font-medium font-semibold">✓ 성공</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>응답 시간:</span>
-                  <span className="text-blue-600">45ms</span>
+                  <span className="text-gray-700 font-medium">응답 시간:</span>
+                  <span className="text-blue-800 font-medium font-semibold">45ms</span>
                 </div>
               </div>
             </div>
@@ -349,15 +376,15 @@ export default function FarmManagementPage() {
   const renderUserManagement = () => (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-6 border border-orange-200">
-        <h2 className="text-2xl font-bold text-orange-900 mb-4">👥 사용자 관리</h2>
+        <h2 className="text-2xl font-bold text-orange-900 mb-4">👥 멤버 관리</h2>
         <p className="text-orange-800 mb-6">
-          농장에 접근할 수 있는 사용자들을 관리하고 권한을 설정할 수 있습니다.
+          농장에 접근할 수 있는 멤버들을 관리하고 권한을 설정할 수 있습니다.
         </p>
       </div>
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">➕ 사용자 초대</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">➕ 멤버 초대</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -365,13 +392,13 @@ export default function FarmManagementPage() {
                 <input 
                   type="email" 
                   placeholder="user@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-600"
                 />
               </div>
               
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">역할 선택 *</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900">
                   <option value="">역할을 선택하세요</option>
                   <option value="team_leader">팀 리더</option>
                   <option value="team_member">팀 멤버</option>
@@ -384,7 +411,7 @@ export default function FarmManagementPage() {
               <textarea 
                 placeholder="초대 메시지를 작성하세요 (선택사항)"
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent placeholder-gray-600"
               />
             </div>
             
@@ -395,12 +422,12 @@ export default function FarmManagementPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 현재 사용자 목록</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 현재 멤버 목록</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-medium text-gray-700">사용자</th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-700">멤버</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">역할</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">상태</th>
                   <th className="text-left py-3 px-4 font-medium text-gray-700">마지막 접속</th>
@@ -412,11 +439,11 @@ export default function FarmManagementPage() {
                   <td className="py-3 px-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-blue-600">김</span>
+                        <span className="text-sm font-medium text-blue-800 font-semibold">김</span>
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">김농장</div>
-                        <div className="text-sm text-gray-500">kim@farm.com</div>
+                        <div className="text-sm text-gray-700 font-medium">kim@farm.com</div>
                       </div>
                     </div>
                   </td>
@@ -432,7 +459,7 @@ export default function FarmManagementPage() {
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-600">2시간 전</td>
                   <td className="py-3 px-4">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    <button className="text-blue-800 font-semibold hover:text-blue-800 text-sm font-medium">
                       편집
                     </button>
                   </td>
@@ -442,11 +469,11 @@ export default function FarmManagementPage() {
                   <td className="py-3 px-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-green-600">이</span>
+                        <span className="text-sm font-medium text-green-800 font-semibold">이</span>
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">이스마트</div>
-                        <div className="text-sm text-gray-500">lee@farm.com</div>
+                        <div className="text-sm text-gray-700 font-medium">lee@farm.com</div>
                       </div>
                     </div>
                   </td>
@@ -463,10 +490,10 @@ export default function FarmManagementPage() {
                   <td className="py-3 px-4 text-sm text-gray-600">-</td>
                   <td className="py-3 px-4">
                     <div className="flex space-x-2">
-                      <button className="text-green-600 hover:text-green-800 text-sm font-medium">
+                      <button className="text-green-800 font-semibold hover:text-green-800 text-sm font-medium">
                         승인
                       </button>
-                      <button className="text-red-600 hover:text-red-800 text-sm font-medium">
+                      <button className="text-red-800 font-semibold hover:text-red-800 text-sm font-medium">
                         거부
                       </button>
                     </div>
@@ -483,7 +510,7 @@ export default function FarmManagementPage() {
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-900">팀 리더 권한</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-700 font-medium">
                   <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>농장 설정 변경</li>
                   <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>사용자 관리</li>
                   <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>디바이스 설정</li>
@@ -493,7 +520,7 @@ export default function FarmManagementPage() {
               
               <div className="space-y-3">
                 <h4 className="font-medium text-gray-900">팀 멤버 권한</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-700 font-medium">
                   <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>농장 데이터 조회</li>
                   <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>센서 데이터 모니터링</li>
                   <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>기본 디바이스 제어</li>
@@ -522,13 +549,13 @@ export default function FarmManagementPage() {
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🌡️</span>
             </div>
-            <span className="text-sm text-gray-500">평균</span>
+            <span className="text-sm text-gray-700 font-medium">평균</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-1">23.5°C</h3>
           <p className="text-sm text-gray-600">온도</p>
           <div className="mt-2 flex items-center">
-            <span className="text-xs text-green-600">+0.3°C</span>
-            <span className="text-xs text-gray-500 ml-1">vs 어제</span>
+            <span className="text-xs text-green-800 font-semibold">+0.3°C</span>
+            <span className="text-xs text-gray-700 font-medium ml-1">vs 어제</span>
           </div>
         </div>
 
@@ -537,13 +564,13 @@ export default function FarmManagementPage() {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">💧</span>
             </div>
-            <span className="text-sm text-gray-500">평균</span>
+            <span className="text-sm text-gray-700 font-medium">평균</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-1">65%</h3>
           <p className="text-sm text-gray-600">습도</p>
           <div className="mt-2 flex items-center">
-            <span className="text-xs text-red-600">-2%</span>
-            <span className="text-xs text-gray-500 ml-1">vs 어제</span>
+            <span className="text-xs text-red-800 font-semibold">-2%</span>
+            <span className="text-xs text-gray-700 font-medium ml-1">vs 어제</span>
           </div>
         </div>
 
@@ -552,13 +579,13 @@ export default function FarmManagementPage() {
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">⚡</span>
             </div>
-            <span className="text-sm text-gray-500">평균</span>
+            <span className="text-sm text-gray-700 font-medium">평균</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-1">1.8</h3>
           <p className="text-sm text-gray-600">EC</p>
           <div className="mt-2 flex items-center">
-            <span className="text-xs text-green-600">+0.1</span>
-            <span className="text-xs text-gray-500 ml-1">vs 어제</span>
+            <span className="text-xs text-green-800 font-semibold">+0.1</span>
+            <span className="text-xs text-gray-700 font-medium ml-1">vs 어제</span>
           </div>
         </div>
 
@@ -567,21 +594,98 @@ export default function FarmManagementPage() {
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🔌</span>
             </div>
-            <span className="text-sm text-gray-500">연결</span>
+            <span className="text-sm text-gray-700 font-medium">연결</span>
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-1">12/15</h3>
           <p className="text-sm text-gray-600">디바이스</p>
           <div className="mt-2 flex items-center">
-            <span className="text-xs text-yellow-600">3개 오프라인</span>
+            <span className="text-xs text-yellow-800 font-semibold">3개 오프라인</span>
           </div>
         </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 최근 24시간 트렌드</h3>
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">차트 영역</p>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">📈 최근 24시간 트렌드</h3>
+          <div className="h-64 bg-gray-50 rounded-lg p-4">
+            <div className="h-full relative">
+              {/* 차트 제목 */}
+              <div className="text-xs text-gray-700 mb-2 font-semibold">온도 (°C)</div>
+              
+              {/* Y축 라벨 */}
+              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-600 font-medium">
+                <span>30</span>
+                <span>25</span>
+                <span>20</span>
+                <span>15</span>
+                <span>10</span>
+              </div>
+              
+              {/* 차트 영역 */}
+              <div className="ml-8 mr-4 h-full relative">
+                {/* 격자선 */}
+                <div className="absolute inset-0">
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <div key={i} className="absolute w-full border-t border-gray-200" style={{top: `${i * 25}%`}}></div>
+                  ))}
+                </div>
+                
+                {/* 데이터 라인 */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 200 200">
+                  {/* 온도 라인 */}
+                  <polyline
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2"
+                    points="0,160 20,140 40,120 60,100 80,90 100,85 120,80 140,75 160,70 180,65 200,60"
+                  />
+                  
+                  {/* 습도 라인 */}
+                  <polyline
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    points="0,120 20,110 40,100 60,90 80,85 100,80 120,75 140,70 160,65 180,60 200,55"
+                  />
+                  
+                  {/* 데이터 포인트 */}
+                  <circle cx="0" cy="160" r="3" fill="#10b981" />
+                  <circle cx="20" cy="140" r="3" fill="#10b981" />
+                  <circle cx="40" cy="120" r="3" fill="#10b981" />
+                  <circle cx="60" cy="100" r="3" fill="#10b981" />
+                  <circle cx="80" cy="90" r="3" fill="#10b981" />
+                  <circle cx="100" cy="85" r="3" fill="#10b981" />
+                  <circle cx="120" cy="80" r="3" fill="#10b981" />
+                  <circle cx="140" cy="75" r="3" fill="#10b981" />
+                  <circle cx="160" cy="70" r="3" fill="#10b981" />
+                  <circle cx="180" cy="65" r="3" fill="#10b981" />
+                  <circle cx="200" cy="60" r="3" fill="#10b981" />
+                </svg>
+                
+                {/* X축 라벨 */}
+                <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-600 font-medium">
+                  <span>00:00</span>
+                  <span>04:00</span>
+                  <span>08:00</span>
+                  <span>12:00</span>
+                  <span>16:00</span>
+                  <span>20:00</span>
+                  <span>24:00</span>
+                </div>
+              </div>
+              
+              {/* 범례 */}
+              <div className="absolute top-2 right-2 flex space-x-4 text-xs">
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-0.5 bg-green-500"></div>
+                  <span className="text-gray-700 font-medium">온도</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <div className="w-3 h-0.5 bg-blue-500"></div>
+                  <span className="text-gray-700 font-medium">습도</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -592,7 +696,7 @@ export default function FarmManagementPage() {
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-red-900">온도 임계값 초과</p>
-                <p className="text-xs text-red-700">베드 3 - 30분 전</p>
+                <p className="text-xs text-red-800 font-medium">베드 3 - 30분 전</p>
               </div>
             </div>
             
@@ -600,7 +704,7 @@ export default function FarmManagementPage() {
               <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-yellow-900">센서 연결 끊김</p>
-                <p className="text-xs text-yellow-700">센서 ID: 12345 - 1시간 전</p>
+                <p className="text-xs text-yellow-800 font-medium">센서 ID: 12345 - 1시간 전</p>
               </div>
             </div>
             
@@ -608,7 +712,7 @@ export default function FarmManagementPage() {
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-blue-900">배양액 교체 권장</p>
-                <p className="text-xs text-blue-700">베드 1, 2 - 2시간 전</p>
+                <p className="text-xs text-blue-800 font-medium">베드 1, 2 - 2시간 전</p>
               </div>
             </div>
           </div>
@@ -659,11 +763,38 @@ export default function FarmManagementPage() {
     }
   };
 
+  // 로딩 상태
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+      </div>
+    );
+  }
+
+  // 사용자가 없으면 null 반환 (리다이렉트 처리됨)
+  if (!user) return null;
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader title="농장 관리" subtitle="농장 생성, 설정 및 관리 완전 가이드" />
+      <AppHeader 
+        user={user}
+        title="농장 관리" 
+        subtitle="농장 생성, 설정 및 관리 완전 가이드" 
+        showBackButton
+        backButtonText="사용설명서"
+        onBackClick={() => router.push('/help')}
+      />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <BreadcrumbNavigation 
+          items={[
+            { label: '대시보드', path: '/' },
+            { label: '사용설명서', path: '/help' },
+            { label: '농장 관리', isActive: true }
+          ]}
+          className="mb-6"
+        />
         <div className="grid lg:grid-cols-4 gap-8">
           {/* 사이드바 */}
           <div className="lg:col-span-1">
