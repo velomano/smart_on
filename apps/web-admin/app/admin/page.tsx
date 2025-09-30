@@ -378,7 +378,7 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-8">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">승인 관리</h2>
+            <h2 className="text-3xl font-bold text-gray-600 mb-2">승인 관리</h2>
             <p className="text-lg text-gray-600">사용자 승인 및 권한을 관리합니다</p>
           </div>
 
@@ -430,7 +430,7 @@ export default function AdminPage() {
         ) : !authUser ? (
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-300 overflow-hidden mb-8">
             <div className="px-8 py-16 text-center">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">로그인 필요</h3>
+              <h3 className="text-xl font-bold text-gray-600 mb-2">로그인 필요</h3>
               <p className="text-gray-600">사용자 관리 페이지에 접근하려면 로그인이 필요합니다.</p>
             </div>
           </div>
@@ -474,7 +474,7 @@ export default function AdminPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-8">
                     <div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mb-1 sm:mb-2">⏳ 승인 대기 사용자 목록</h3>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">⏳ 승인 대기 사용자 목록</h3>
                       <p className="text-gray-600 text-sm sm:text-base">승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다</p>
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500">총 {pendingUsers.length}명</div>
@@ -492,7 +492,7 @@ export default function AdminPage() {
                               <span className="text-lg sm:text-xl lg:text-2xl">⏳</span>
                             </div>
                             <div>
-                              <h4 className="text-lg sm:text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
+                              <h4 className="text-lg sm:text-xl font-bold text-gray-600">{u.name || '이름 없음'}</h4>
                               <p className="text-gray-600 font-medium text-sm sm:text-base">{u.email}</p>
                               <div className="flex items-center space-x-2 sm:space-x-3 mt-1 sm:mt-2">
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
@@ -526,7 +526,7 @@ export default function AdminPage() {
                         <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                           <span className="text-4xl">⏳</span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">승인 대기 사용자가 없습니다</h3>
+                        <h3 className="text-xl font-bold text-gray-600 mb-2">승인 대기 사용자가 없습니다</h3>
                         <p className="text-gray-600">현재 승인을 기다리는 사용자가 없습니다.</p>
                       </div>
                     )}
@@ -539,7 +539,7 @@ export default function AdminPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
                     <div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mb-1 sm:mb-2">✅ 승인된 사용자 목록</h3>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">✅ 승인된 사용자 목록</h3>
                       <p className="text-gray-600 text-sm sm:text-base">시스템에 등록된 모든 승인된 사용자를 관리합니다</p>
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500">
@@ -592,7 +592,7 @@ export default function AdminPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 lg:space-x-3 mb-2 sm:mb-3 lg:mb-4">
-                                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 whitespace-nowrap">{u.name || '이름 없음'}</h4>
+                                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600 whitespace-nowrap">{u.name || '이름 없음'}</h4>
                                 <div
                                   className={`text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-semibold ${
                                     u.is_active ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'
@@ -664,7 +664,7 @@ export default function AdminPage() {
                         <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                           <span className="text-4xl">👥</span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">승인된 사용자가 없습니다</h3>
+                        <h3 className="text-xl font-bold text-gray-600 mb-2">승인된 사용자가 없습니다</h3>
                         <p className="text-gray-600">아직 승인된 사용자가 없습니다.</p>
                       </div>
                     )}
@@ -677,7 +677,7 @@ export default function AdminPage() {
                 <div>
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h3 className="text-2xl font-black text-gray-900 mb-2">🏢 농장별 사용자 보기</h3>
+                      <h3 className="text-2xl font-black text-gray-600 mb-2">🏢 농장별 사용자 보기</h3>
                       <p className="text-gray-600">농장별로 분류된 사용자 목록을 확인할 수 있습니다</p>
                     </div>
                     <div className="text-sm text-gray-500">{Object.keys(usersByFarm).length}개 농장</div>
@@ -691,7 +691,7 @@ export default function AdminPage() {
                             <span className="text-2xl">🏢</span>
                           </div>
                           <div>
-                            <h4 className="text-2xl font-bold text-gray-900">{farmName}</h4>
+                            <h4 className="text-2xl font-bold text-gray-600">{farmName}</h4>
                             <p className="text-gray-600">{farmData.users.length}명의 사용자</p>
                           </div>
                         </div>
@@ -715,7 +715,7 @@ export default function AdminPage() {
                                     </span>
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <h5 className="font-semibold text-gray-900 truncate">{user.name || '이름 없음'}</h5>
+                                    <h5 className="font-semibold text-gray-600 truncate">{user.name || '이름 없음'}</h5>
                                     <p className="text-sm text-gray-600 truncate">{user.email}</p>
                                     <div className="flex items-center space-x-2 mt-1">
                                       <span
@@ -751,7 +751,7 @@ export default function AdminPage() {
                         <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                           <span className="text-4xl">🏢</span>
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">농장 정보가 없습니다</h3>
+                        <h3 className="text-xl font-bold text-gray-600 mb-2">농장 정보가 없습니다</h3>
                         <p className="text-gray-600">아직 농장별로 정리된 사용자 정보가 없습니다.</p>
                       </div>
                     )}
@@ -764,7 +764,7 @@ export default function AdminPage() {
                               <span className="text-2xl">👥</span>
                             </div>
                             <div>
-                              <h4 className="text-2xl font-bold text-gray-900">미배정 사용자</h4>
+                              <h4 className="text-2xl font-bold text-gray-600">미배정 사용자</h4>
                               <p className="text-gray-600">{unassignedUsers.length}명의 사용자가 농장에 배정되지 않았습니다</p>
                             </div>
                           </div>
@@ -779,7 +779,7 @@ export default function AdminPage() {
                                         <span className="text-lg">👤</span>
                                       </div>
                                       <div className="flex-1">
-                                        <h5 className="font-bold text-gray-900">{user.name || '이름 없음'}</h5>
+                                        <h5 className="font-bold text-gray-600">{user.name || '이름 없음'}</h5>
                                         <p className="text-sm text-gray-600">{user.email}</p>
                                       </div>
                                     </div>
@@ -848,7 +848,7 @@ export default function AdminPage() {
                       <span className="text-2xl">👤</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">{approvingUser.name || '이름 없음'}</h3>
+                      <h3 className="text-xl font-bold text-gray-600">{approvingUser.name || '이름 없음'}</h3>
                       <p className="text-gray-600">{approvingUser.email}</p>
                     </div>
                   </div>
@@ -856,11 +856,11 @@ export default function AdminPage() {
 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">역할 *</label>
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">역할 *</label>
                     <select
                       value={approveFormData.role}
                       onChange={(e) => setApproveFormData((prev) => ({ ...prev, role: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="team_member">팀원</option>
                       <option value="team_leader">농장장</option>
@@ -869,11 +869,11 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">농장 배정 *</label>
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">농장 배정 *</label>
                     <select
                       value={approveFormData.team_id}
                       onChange={(e) => setApproveFormData((prev) => ({ ...prev, team_id: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="">농장을 선택하세요</option>
                       {teams.map((team) => (
@@ -888,7 +888,7 @@ export default function AdminPage() {
                 <div className="flex justify-end space-x-4 mt-8">
                   <button
                     onClick={handleCloseApproveModal}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-6 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                     disabled={approveLoading}
                   >
                     취소
@@ -940,41 +940,41 @@ export default function AdminPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* 이름 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       이름 *
                     </label>
                     <input
                       type="text"
                       value={editingUserInfo?.name || ''}
                       onChange={(e) => setEditingUserInfo(prev => prev ? { ...prev, name: e.target.value } : null)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                       placeholder="사용자 이름"
                     />
                   </div>
 
                   {/* 이메일 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       이메일 *
                     </label>
                     <input
                       type="email"
                       value={editingUserInfo?.email || ''}
                       onChange={(e) => setEditingUserInfo(prev => prev ? { ...prev, email: e.target.value } : null)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                       placeholder="user@example.com"
                     />
                   </div>
 
                   {/* 역할 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       역할 *
                     </label>
                     <select
                       value={selectedRole}
                       onChange={(e) => setSelectedRole(e.target.value as Role)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="team_member">팀원</option>
                       <option value="team_leader">팀장</option>
@@ -984,13 +984,13 @@ export default function AdminPage() {
 
                   {/* 소속 농장 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       소속 농장
                     </label>
                     <select
                       value={selectedFarmId}
                       onChange={(e) => setSelectedFarmId(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="">농장을 선택하세요 (미배정)</option>
                       {farms.map((farm) => (
@@ -1003,39 +1003,39 @@ export default function AdminPage() {
 
                   {/* 회사 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       회사
                     </label>
                     <input
                       type="text"
                       value={editingUserInfo?.company || ''}
                       onChange={(e) => setEditingUserInfo(prev => prev ? { ...prev, company: e.target.value } : null)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                       placeholder="회사명"
                     />
                   </div>
 
                   {/* 전화번호 */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       전화번호
                     </label>
                     <input
                       type="tel"
                       value={editingUserInfo?.phone || ''}
                       onChange={(e) => setEditingUserInfo(prev => prev ? { ...prev, phone: e.target.value } : null)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                       placeholder="010-1234-5678"
                     />
                   </div>
 
                   {/* 활성 상태 */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-4">
+                    <label className="block text-sm font-semibold text-gray-600 mb-4">
                       활성 상태
                     </label>
                     <div className="flex space-x-6">
-                      <label className="flex items-center text-gray-800 font-semibold">
+                      <label className="flex items-center text-gray-600 font-semibold">
                         <input
                           type="radio"
                           name="is_active"
@@ -1045,7 +1045,7 @@ export default function AdminPage() {
                         />
                         활성
                       </label>
-                      <label className="flex items-center text-gray-800 font-semibold">
+                      <label className="flex items-center text-gray-600 font-semibold">
                         <input
                           type="radio"
                           name="is_active"
@@ -1117,7 +1117,7 @@ export default function AdminPage() {
                       <span className="text-2xl">👤</span>
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900">{editingUserInfo.name || '이름 없음'}</h3>
+                      <h3 className="text-xl font-bold text-gray-600">{editingUserInfo.name || '이름 없음'}</h3>
                       <p className="text-gray-600">{editingUserInfo.email}</p>
                     </div>
                   </div>

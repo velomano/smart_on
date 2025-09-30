@@ -59,33 +59,33 @@ export default function DeviceManagementPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📡 센서 타입</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📡 센서 타입</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
               <span className="text-2xl">🌡️</span>
               <div>
-                <h4 className="font-medium text-gray-900">온도/습도</h4>
+                <h4 className="font-medium text-gray-600">온도/습도</h4>
                 <p className="text-sm text-gray-600">DHT22, SHT30 등</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
               <span className="text-2xl">⚡</span>
               <div>
-                <h4 className="font-medium text-gray-900">EC/pH</h4>
+                <h4 className="font-medium text-gray-600">EC/pH</h4>
                 <p className="text-sm text-gray-600">DFRobot EC/pH 센서</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
               <span className="text-2xl">💧</span>
               <div>
-                <h4 className="font-medium text-gray-900">수위</h4>
+                <h4 className="font-medium text-gray-600">수위</h4>
                 <p className="text-sm text-gray-600">초음파, 압력 센서</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
               <span className="text-2xl">☀️</span>
               <div>
-                <h4 className="font-medium text-gray-900">조도</h4>
+                <h4 className="font-medium text-gray-600">조도</h4>
                 <p className="text-sm text-gray-600">BH1750, TSL2561</p>
               </div>
             </div>
@@ -93,33 +93,33 @@ export default function DeviceManagementPage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🎛️ 액추에이터 타입</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🎛️ 액추에이터 타입</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg">
               <span className="text-2xl">🚰</span>
               <div>
-                <h4 className="font-medium text-gray-900">펌프</h4>
+                <h4 className="font-medium text-gray-600">펌프</h4>
                 <p className="text-sm text-gray-600">물 펌프, 영양액 펌프</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-indigo-50 rounded-lg">
               <span className="text-2xl">🔧</span>
               <div>
-                <h4 className="font-medium text-gray-900">밸브</h4>
+                <h4 className="font-medium text-gray-600">밸브</h4>
                 <p className="text-sm text-gray-600">솔레노이드 밸브</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-pink-50 rounded-lg">
               <span className="text-2xl">💡</span>
               <div>
-                <h4 className="font-medium text-gray-900">LED</h4>
+                <h4 className="font-medium text-gray-600">LED</h4>
                 <p className="text-sm text-gray-600">성장용 LED 조명</p>
               </div>
             </div>
             <div className="flex items-center space-x-3 p-3 bg-cyan-50 rounded-lg">
               <span className="text-2xl">🌀</span>
               <div>
-                <h4 className="font-medium text-gray-900">팬</h4>
+                <h4 className="font-medium text-gray-600">팬</h4>
                 <p className="text-sm text-gray-600">환기용 팬</p>
               </div>
             </div>
@@ -128,7 +128,7 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 디바이스 상태 표시</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 디바이스 상태 표시</h3>
         <div className="grid md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
             <div className="text-2xl mb-2">🔴</div>
@@ -166,74 +166,74 @@ export default function DeviceManagementPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🌡️ 온도/습도 센서</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🌡️ 온도/습도 센서</h3>
           <div className="space-y-3">
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-gray-800">현재 온도</span>
+                <span className="font-semibold text-gray-600">현재 온도</span>
                 <span className="text-lg font-bold text-green-800 font-semibold">23.5°C</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-800 font-semibold">현재 습도</span>
+                <span className="text-sm text-gray-600 font-semibold">현재 습도</span>
                 <span className="text-sm font-medium text-blue-800 font-semibold">65%</span>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">온도 임계값</label>
+              <label className="block text-sm font-semibold text-gray-600">온도 임계값</label>
               <div className="grid grid-cols-2 gap-2">
-                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
-                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
+                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 placeholder-gray-600" />
+                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 placeholder-gray-600" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">습도 임계값</label>
+              <label className="block text-sm font-semibold text-gray-600">습도 임계값</label>
               <div className="grid grid-cols-2 gap-2">
-                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
-                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
+                <input type="number" placeholder="최소" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 placeholder-gray-600" />
+                <input type="number" placeholder="최대" className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 placeholder-gray-600" />
               </div>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ EC/pH 센서</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">⚡ EC/pH 센서</h3>
           <div className="space-y-3">
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-gray-800">현재 EC</span>
+                <span className="font-semibold text-gray-600">현재 EC</span>
                 <span className="text-lg font-bold text-purple-800 font-semibold">1.8 mS/cm</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-800 font-semibold">현재 pH</span>
+                <span className="text-sm text-gray-600 font-semibold">현재 pH</span>
                 <span className="text-sm font-medium text-orange-800 font-semibold">6.2</span>
               </div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">EC 목표값</label>
-              <input type="number" step="0.1" placeholder="1.5" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
+              <label className="block text-sm font-semibold text-gray-600">EC 목표값</label>
+              <input type="number" step="0.1" placeholder="1.5" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 placeholder-gray-600" />
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">pH 목표값</label>
-              <input type="number" step="0.1" placeholder="6.0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-600" />
+              <label className="block text-sm font-semibold text-gray-600">pH 목표값</label>
+              <input type="number" step="0.1" placeholder="6.0" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 placeholder-gray-600" />
             </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">📊 센서 데이터 히스토리</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">📊 센서 데이터 히스토리</h3>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">센서</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">값</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">상태</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-800">시간</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">센서</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">값</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">상태</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-600">시간</th>
               </tr>
             </thead>
             <tbody>
@@ -241,32 +241,32 @@ export default function DeviceManagementPage() {
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">🌡️</span>
-                    <span className="font-semibold text-gray-800">온도 센서</span>
+                    <span className="font-semibold text-gray-600">온도 센서</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 font-mono text-gray-900 font-semibold">23.5°C</td>
+                <td className="py-3 px-4 font-mono text-gray-600 font-semibold">23.5°C</td>
                 <td className="py-3 px-4">
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                     정상
                   </span>
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-800 font-semibold">2분 전</td>
+                <td className="py-3 px-4 text-sm text-gray-600 font-semibold">2분 전</td>
               </tr>
               
               <tr className="border-b border-gray-100">
                 <td className="py-3 px-4">
                   <div className="flex items-center space-x-2">
                     <span className="text-lg">⚡</span>
-                    <span className="font-semibold text-gray-800">EC 센서</span>
+                    <span className="font-semibold text-gray-600">EC 센서</span>
                   </div>
                 </td>
-                <td className="py-3 px-4 font-mono text-gray-900 font-semibold">1.8 mS/cm</td>
+                <td className="py-3 px-4 font-mono text-gray-600 font-semibold">1.8 mS/cm</td>
                 <td className="py-3 px-4">
                   <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
                     경고
                   </span>
                 </td>
-                <td className="py-3 px-4 text-sm text-gray-800 font-semibold">5분 전</td>
+                <td className="py-3 px-4 text-sm text-gray-600 font-semibold">5분 전</td>
               </tr>
             </tbody>
           </table>
@@ -286,16 +286,16 @@ export default function DeviceManagementPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🚰 펌프 제어</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🚰 펌프 제어</h3>
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-gray-800">물 펌프</span>
+                <span className="font-semibold text-gray-600">물 펌프</span>
                 <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                   ON
                 </span>
               </div>
-              <div className="text-sm text-gray-800 font-semibold">운영 시간: 15분</div>
+              <div className="text-sm text-gray-600 font-semibold">운영 시간: 15분</div>
             </div>
             
             <div className="flex space-x-2">
@@ -308,29 +308,29 @@ export default function DeviceManagementPage() {
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">운영 시간 설정</label>
-              <input type="number" placeholder="분" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-600" />
+              <label className="block text-sm font-semibold text-gray-600">운영 시간 설정</label>
+              <input type="number" placeholder="분" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-600 placeholder-gray-600" />
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">💡 LED 조명 제어</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">💡 LED 조명 제어</h3>
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-semibold text-gray-800">성장용 LED</span>
+                <span className="font-semibold text-gray-600">성장용 LED</span>
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                   75%
                 </span>
               </div>
-              <div className="text-sm text-gray-800 font-semibold">현재 밝기</div>
+              <div className="text-sm text-gray-600 font-semibold">현재 밝기</div>
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">밝기 조절</label>
+              <label className="block text-sm font-semibold text-gray-600">밝기 조절</label>
               <input type="range" min="0" max="100" defaultValue="75" className="w-full" />
-              <div className="flex justify-between text-xs text-gray-800 font-semibold">
+              <div className="flex justify-between text-xs text-gray-600 font-semibold">
                 <span>0%</span>
                 <span>100%</span>
               </div>
@@ -349,18 +349,18 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">⏰ 스케줄 제어</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">⏰ 스케줄 제어</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 bg-green-50 rounded-lg border border-green-200">
               <h4 className="font-semibold text-green-900 mb-2">펌프 스케줄</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-800 font-semibold">오전 6시</span>
+                  <span className="text-gray-600 font-semibold">오전 6시</span>
                   <span className="text-green-800 font-semibold">15분</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-800 font-semibold">오후 2시</span>
+                  <span className="text-gray-600 font-semibold">오후 2시</span>
                   <span className="text-green-800 font-semibold">10분</span>
                 </div>
               </div>
@@ -370,11 +370,11 @@ export default function DeviceManagementPage() {
               <h4 className="font-semibold text-blue-900 mb-2">LED 스케줄</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-800 font-semibold">오전 7시</span>
+                  <span className="text-gray-600 font-semibold">오전 7시</span>
                   <span className="text-blue-800 font-semibold">ON</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-800 font-semibold">오후 7시</span>
+                  <span className="text-gray-600 font-semibold">오후 7시</span>
                   <span className="text-blue-800 font-semibold">OFF</span>
                 </div>
               </div>
@@ -384,7 +384,7 @@ export default function DeviceManagementPage() {
               <h4 className="font-semibold text-purple-900 mb-2">팬 스케줄</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-800 font-semibold">온도 25°C 초과시</span>
+                  <span className="text-gray-600 font-semibold">온도 25°C 초과시</span>
                   <span className="text-purple-800 font-semibold">AUTO</span>
                 </div>
               </div>
@@ -406,21 +406,21 @@ export default function DeviceManagementPage() {
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">📋 1단계: 디바이스 정보 입력</h3>
+          <h3 className="text-lg font-bold text-gray-600 mb-4">📋 1단계: 디바이스 정보 입력</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">디바이스 ID *</label>
+                <label className="block text-sm font-semibold text-gray-600">디바이스 ID *</label>
                 <input 
                   type="text" 
                   placeholder="예: sensor_001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-600"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600 placeholder-gray-600"
                 />
               </div>
               
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">디바이스 타입 *</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900">
+                <label className="block text-sm font-semibold text-gray-600">디바이스 타입 *</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600">
                   <option value="">타입을 선택하세요</option>
                   <option value="temperature">온도 센서</option>
                   <option value="humidity">습도 센서</option>
@@ -437,23 +437,23 @@ export default function DeviceManagementPage() {
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">설명</label>
+              <label className="block text-sm font-semibold text-gray-600">설명</label>
               <textarea 
                 placeholder="디바이스의 용도나 위치 등을 설명해주세요."
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 placeholder-gray-600"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600 placeholder-gray-600"
               />
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">🏢 2단계: 배치 위치 설정</h3>
+          <h3 className="text-lg font-bold text-gray-600 mb-4">🏢 2단계: 배치 위치 설정</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">베드 번호</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900">
+                <label className="block text-sm font-semibold text-gray-600">베드 번호</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600">
                   <option value="">베드를 선택하세요</option>
                   <option value="1">베드 1</option>
                   <option value="2">베드 2</option>
@@ -463,8 +463,8 @@ export default function DeviceManagementPage() {
               </div>
               
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-800">층 번호</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900">
+                <label className="block text-sm font-semibold text-gray-600">층 번호</label>
+                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600">
                   <option value="">층을 선택하세요</option>
                   <option value="1">1층</option>
                   <option value="2">2층</option>
@@ -476,7 +476,7 @@ export default function DeviceManagementPage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">⚙️ 3단계: 설정 완료</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">⚙️ 3단계: 설정 완료</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
@@ -511,7 +511,7 @@ export default function DeviceManagementPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔴 연결 문제</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🔴 연결 문제</h3>
           <div className="space-y-4">
             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
               <h4 className="font-medium text-red-900 mb-2">디바이스가 연결되지 않음</h4>
@@ -535,7 +535,7 @@ export default function DeviceManagementPage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 데이터 문제</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 데이터 문제</h3>
           <div className="space-y-4">
             <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
               <h4 className="font-medium text-orange-900 mb-2">센서 데이터가 없음</h4>
@@ -559,11 +559,11 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📞 지원 요청</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📞 지원 요청</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">기술 지원</h4>
+              <h4 className="font-medium text-gray-600">기술 지원</h4>
               <p className="text-sm text-gray-600">복잡한 문제는 기술 지원팀에 문의하세요.</p>
               <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors">
                 지원 요청
@@ -571,7 +571,7 @@ export default function DeviceManagementPage() {
             </div>
             
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">커뮤니티</h4>
+              <h4 className="font-medium text-gray-600">커뮤니티</h4>
               <p className="text-sm text-gray-600">다른 사용자들과 문제를 공유하고 해결책을 찾아보세요.</p>
               <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
                 커뮤니티 참여
@@ -641,7 +641,7 @@ export default function DeviceManagementPage() {
           {/* 사이드바 */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -650,7 +650,7 @@ export default function DeviceManagementPage() {
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'bg-orange-100 text-orange-900 border border-orange-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-600'
                     }`}
                   >
                     <span className="mr-2">{tab.icon}</span>

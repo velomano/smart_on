@@ -115,7 +115,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
       <div className="flex items-center justify-between mb-1 sm:mb-2 lg:mb-3">
         <div className="flex items-center space-x-1 sm:space-x-2">
           <span className="text-lg sm:text-xl lg:text-2xl">{icon}</span>
-          <span className="text-xs sm:text-sm font-bold text-gray-800">{title}</span>
+          <span className="text-xs sm:text-sm font-bold text-gray-700">{title}</span>
         </div>
         {/* 그래프 아이콘 버튼 */}
         <button 
@@ -169,7 +169,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
               <div className="flex items-center space-x-3">
                 <span className="text-3xl">{icon}</span>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">{title} 상세 그래프</h3>
+                  <h3 className="text-xl font-bold text-gray-700">{title} 상세 그래프</h3>
                   <p className="text-sm text-gray-500">최근 24시간 데이터</p>
                 </div>
               </div>

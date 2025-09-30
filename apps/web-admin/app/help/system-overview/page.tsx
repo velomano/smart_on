@@ -126,49 +126,49 @@ export default function SystemOverviewPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔧 기술 스택</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🔧 기술 스택</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">프론트엔드</span>
-              <span className="text-sm text-gray-700 font-medium">Next.js, React, TypeScript</span>
+              <span className="font-semibold text-gray-600">프론트엔드</span>
+              <span className="text-sm text-gray-600 font-medium">Next.js, React, TypeScript</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">백엔드</span>
-              <span className="text-sm text-gray-700 font-medium">Next.js API Routes</span>
+              <span className="font-semibold text-gray-600">백엔드</span>
+              <span className="text-sm text-gray-600 font-medium">Next.js API Routes</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">데이터베이스</span>
-              <span className="text-sm text-gray-700 font-medium">Supabase (PostgreSQL)</span>
+              <span className="font-semibold text-gray-600">데이터베이스</span>
+              <span className="text-sm text-gray-600 font-medium">Supabase (PostgreSQL)</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">MQTT</span>
-              <span className="text-sm text-gray-700 font-medium">MQTT.js, Node.js</span>
+              <span className="font-semibold text-gray-600">MQTT</span>
+              <span className="text-sm text-gray-600 font-medium">MQTT.js, Node.js</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">스타일링</span>
-              <span className="text-sm text-gray-700 font-medium">Tailwind CSS</span>
+              <span className="font-semibold text-gray-600">스타일링</span>
+              <span className="text-sm text-gray-600 font-medium">Tailwind CSS</span>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🌐 배포 환경</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🌐 배포 환경</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">웹 호스팅</span>
-              <span className="text-sm text-gray-700 font-medium">Vercel</span>
+              <span className="font-semibold text-gray-600">웹 호스팅</span>
+              <span className="text-sm text-gray-600 font-medium">Vercel</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">데이터베이스</span>
-              <span className="text-sm text-gray-700 font-medium">Supabase Cloud</span>
+              <span className="font-semibold text-gray-600">데이터베이스</span>
+              <span className="text-sm text-gray-600 font-medium">Supabase Cloud</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">MQTT 브리지</span>
-              <span className="text-sm text-gray-700 font-medium">독립 서버</span>
+              <span className="font-semibold text-gray-600">MQTT 브리지</span>
+              <span className="text-sm text-gray-600 font-medium">독립 서버</span>
             </div>
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-800">CI/CD</span>
-              <span className="text-sm text-gray-700 font-medium">GitHub Actions</span>
+              <span className="font-semibold text-gray-600">CI/CD</span>
+              <span className="text-sm text-gray-600 font-medium">GitHub Actions</span>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function SystemOverviewPage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 실시간 모니터링</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 실시간 모니터링</h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>센서 데이터 실시간 수집</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>시각적 데이터 표시</li>
@@ -197,7 +197,7 @@ export default function SystemOverviewPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🎛️ 디바이스 제어</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🎛️ 디바이스 제어</h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>원격 펌프/밸브 제어</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>LED 조명 제어</li>
@@ -207,7 +207,7 @@ export default function SystemOverviewPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🏢 농장 관리</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🏢 농장 관리</h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>다중 농장 지원</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>사용자별 권한 관리</li>
@@ -217,7 +217,7 @@ export default function SystemOverviewPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🧪 배양액 관리</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🧪 배양액 관리</h3>
           <ul className="space-y-2 text-sm text-gray-600">
             <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>작물별 레시피 검색</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>EC/pH 목표값 설정</li>
@@ -245,7 +245,7 @@ export default function SystemOverviewPage() {
               <span className="text-2xl">👑</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Super Admin</h3>
+              <h3 className="text-lg font-semibold text-gray-600">Super Admin</h3>
               <p className="text-sm text-gray-600">최고 관리자</p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function SystemOverviewPage() {
               <span className="text-2xl">⚙️</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">System Admin</h3>
+              <h3 className="text-lg font-semibold text-gray-600">System Admin</h3>
               <p className="text-sm text-gray-600">시스템 관리자</p>
             </div>
           </div>
@@ -293,7 +293,7 @@ export default function SystemOverviewPage() {
               <span className="text-2xl">👨‍💼</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Team Leader</h3>
+              <h3 className="text-lg font-semibold text-gray-600">Team Leader</h3>
               <p className="text-sm text-gray-600">팀 리더</p>
             </div>
           </div>
@@ -317,7 +317,7 @@ export default function SystemOverviewPage() {
               <span className="text-2xl">👤</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Team Member</h3>
+              <h3 className="text-lg font-semibold text-gray-600">Team Member</h3>
               <p className="text-sm text-gray-600">팀 멤버</p>
             </div>
           </div>
@@ -349,12 +349,12 @@ export default function SystemOverviewPage() {
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 데이터 수집 흐름</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 데이터 수집 흐름</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">센서 데이터 측정</h4>
+                <h4 className="font-medium text-gray-600">센서 데이터 측정</h4>
                 <p className="text-sm text-gray-600">IoT 디바이스에서 온도, 습도, EC, pH 등 측정</p>
               </div>
             </div>
@@ -362,7 +362,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">2</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">MQTT 메시지 발행</h4>
+                <h4 className="font-medium text-gray-600">MQTT 메시지 발행</h4>
                 <p className="text-sm text-gray-600">센서 데이터를 MQTT 브로커로 전송 (JSON 형식)</p>
               </div>
             </div>
@@ -370,7 +370,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
               <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">3</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">브리지 처리</h4>
+                <h4 className="font-medium text-gray-600">브리지 처리</h4>
                 <p className="text-sm text-gray-600">MQTT 브리지가 센서 데이터를 구독하고 Supabase에 저장</p>
               </div>
             </div>
@@ -378,7 +378,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
               <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">4</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">데이터베이스 저장</h4>
+                <h4 className="font-medium text-gray-600">데이터베이스 저장</h4>
                 <p className="text-sm text-gray-600">Supabase PostgreSQL에 센서 데이터 저장</p>
               </div>
             </div>
@@ -386,7 +386,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-red-50 rounded-lg border border-red-200">
               <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">5</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">웹 대시보드 표시</h4>
+                <h4 className="font-medium text-gray-600">웹 대시보드 표시</h4>
                 <p className="text-sm text-gray-600">실시간으로 웹 대시보드에 데이터 표시</p>
               </div>
             </div>
@@ -394,12 +394,12 @@ export default function SystemOverviewPage() {
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🎛️ 명령 제어 흐름</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🎛️ 명령 제어 흐름</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">1</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">웹 대시보드 명령</h4>
+                <h4 className="font-medium text-gray-600">웹 대시보드 명령</h4>
                 <p className="text-sm text-gray-600">사용자가 웹 대시보드에서 디바이스 제어 명령 입력</p>
               </div>
             </div>
@@ -407,7 +407,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
               <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white font-bold">2</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">명령 데이터베이스 저장</h4>
+                <h4 className="font-medium text-gray-600">명령 데이터베이스 저장</h4>
                 <p className="text-sm text-gray-600">Supabase commands 테이블에 명령 정보 저장</p>
               </div>
             </div>
@@ -415,7 +415,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
               <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">3</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">MQTT 브리지 처리</h4>
+                <h4 className="font-medium text-gray-600">MQTT 브리지 처리</h4>
                 <p className="text-sm text-gray-600">MQTT 브리지가 명령을 브로커로 발행하여 디바이스에 전달</p>
               </div>
             </div>
@@ -423,7 +423,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-green-50 rounded-lg border border-green-200">
               <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">4</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">디바이스 명령 수신</h4>
+                <h4 className="font-medium text-gray-600">디바이스 명령 수신</h4>
                 <p className="text-sm text-gray-600">IoT 디바이스가 MQTT 브로커에서 명령 구독</p>
               </div>
             </div>
@@ -431,7 +431,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold">5</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">디바이스 제어 실행</h4>
+                <h4 className="font-medium text-gray-600">디바이스 제어 실행</h4>
                 <p className="text-sm text-gray-600">펌프, LED, 팬 등 액추에이터 제어 실행</p>
               </div>
             </div>
@@ -439,7 +439,7 @@ export default function SystemOverviewPage() {
             <div className="flex items-center space-x-4 p-4 bg-teal-50 rounded-lg border border-teal-200">
               <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold">6</div>
               <div className="flex-1">
-                <h4 className="font-medium text-gray-900">실행 결과 응답</h4>
+                <h4 className="font-medium text-gray-600">실행 결과 응답</h4>
                 <p className="text-sm text-gray-600">디바이스가 실행 결과를 ACK 메시지로 브리지에 전송</p>
               </div>
             </div>
@@ -501,7 +501,7 @@ export default function SystemOverviewPage() {
           {/* 사이드바 */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -510,7 +510,7 @@ export default function SystemOverviewPage() {
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'bg-blue-100 text-blue-900 border border-blue-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-600'
                     }`}
                   >
                     <span className="mr-2">{tab.icon}</span>

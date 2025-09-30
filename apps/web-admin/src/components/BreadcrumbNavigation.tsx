@@ -43,7 +43,7 @@ export default function BreadcrumbNavigation({ items, className = '' }: Breadcru
               </svg>
             )}
             {item.isActive ? (
-              <span className="text-gray-900 font-medium">{item.label}</span>
+              <span className="text-gray-600 font-medium">{item.label}</span>
             ) : (
               <button
                 onClick={() => handleItemClick(item)}

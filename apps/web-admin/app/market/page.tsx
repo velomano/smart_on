@@ -303,14 +303,14 @@ export default function MarketPage() {
                 placeholder="농산물명을 검색하세요..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base lg:text-lg text-gray-900 placeholder-gray-500"
+                className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base lg:text-lg text-gray-600 placeholder-gray-500"
               />
             </div>
             <div className="md:w-48">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base lg:text-lg text-gray-900"
+                className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base lg:text-lg text-gray-600"
               >
                 <option value="all">전체 카테고리</option>
                 {categories.slice(1).map(category => (
@@ -341,22 +341,22 @@ export default function MarketPage() {
         {/* 시세 데이터 테이블 */}
         <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
           <div className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 border-b border-gray-200">
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">실시간 시세 정보</h3>
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600">실시간 시세 정보</h3>
             <p className="text-gray-600 mt-1 text-sm sm:text-base">주요 농산물의 최신 가격 정보</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">품목</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">카테고리</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">단위</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">최근가격</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">1일전</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">1개월전</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">1년전</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">등락</th>
-                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">액션</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">품목</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">카테고리</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">단위</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">최근가격</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">1일전</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">1개월전</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">1년전</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">등락</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-600">액션</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -365,29 +365,29 @@ export default function MarketPage() {
                     <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4">
                       <div className="flex items-center">
                         <div>
-                          <div className="font-semibold text-gray-900 text-sm sm:text-base">{item.productName}</div>
+                          <div className="font-semibold text-gray-600 text-sm sm:text-base">{item.productName}</div>
                           <div className="text-xs sm:text-sm text-gray-500">{item.item_name}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">{item.category_name}</td>
-                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">{item.unit}</td>
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-600">{item.category_name}</td>
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-600">{item.unit}</td>
                     <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4">
-                      <div className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-gray-600">
                         {(parseInt(item.dpr1) * 1000).toLocaleString()}원
                         <span className="text-xs sm:text-sm text-gray-500 ml-1">/{item.unit}</span>
                       </div>
                       <div className="text-xs text-gray-500">{item.day1}</div>
                     </td>
-                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-600">
                       {(parseInt(item.dpr2) * 1000).toLocaleString()}원
                       <span className="text-xs text-gray-500">/{item.unit}</span>
                     </td>
-                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-600">
                       {(parseInt(item.dpr3) * 1000).toLocaleString()}원
                       <span className="text-xs text-gray-500">/{item.unit}</span>
                     </td>
-                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-600">
                       {(parseInt(item.dpr4) * 1000).toLocaleString()}원
                       <span className="text-xs text-gray-500">/{item.unit}</span>
                     </td>

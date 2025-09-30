@@ -351,7 +351,7 @@ export default function MyPage() {
               {/* 기본 정보 카드 */}
               <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
                 <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-6">
-                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">기본 정보</h2>
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-600">기본 정보</h2>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
                     className="px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
@@ -362,46 +362,46 @@ export default function MyPage() {
                 
                 <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">이름</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">이름</label>
                     <input
                       type="text"
                       value={profileForm.name}
                       onChange={e => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-600 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">이메일</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">이메일</label>
                     <input
                       type="email"
                       value={profileForm.email}
                       onChange={e => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-600 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">전화번호</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">전화번호</label>
                     <input
                       type="tel"
                       value={profileForm.phone}
                       onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="010-1234-5678"
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-600 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   {/* 사용자 권한 정보 (Supabase 기반 또는 MockAuth 백업) */}
                   <div className="bg-gray-50 rounded-lg p-2 sm:p-3 lg:p-4">
-                    <h3 className="font-medium text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">권한 정보</h3>
+                    <h3 className="font-medium text-gray-600 mb-1 sm:mb-2 text-sm sm:text-base">권한 정보</h3>
                     <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 text-xs sm:text-sm">
                       <div>
                         <span className="text-gray-600">역할:</span>
-                        <span className="ml-2 font-semibold text-gray-900">{
+                        <span className="ml-2 font-semibold text-gray-600">{
                           // Supabase 권한 정보가 있으면 Supabase 기반, 없으면 MockAuth 사용
                           userRoleInfo?.role 
                             ? (userRoleInfo.role === 'owner' ? '소유자' :
@@ -441,7 +441,7 @@ export default function MyPage() {
                       </div>
                       <div>
                         <span className="text-gray-600">소속:</span>
-                        <span className="ml-2 font-semibold text-gray-800">
+                        <span className="ml-2 font-semibold text-gray-600">
                           {userRoleInfo?.tenant_id ? `테넌트 ${userRoleInfo.tenant_id.substring(0, 8)}...` : 
                            user.team_name ? user.team_name : 'N/A'
                           }
@@ -454,39 +454,39 @@ export default function MyPage() {
 
               {/* 비밀번호 변경 */}
               <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">비밀번호 변경</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2 sm:mb-3 lg:mb-4">비밀번호 변경</h2>
                 
                 <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">현재 비밀번호</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">현재 비밀번호</label>
                     <input
                       type="password"
                       value={passwordForm.currentPassword}
                       onChange={e => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-600 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">새 비밀번호</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">새 비밀번호</label>
                     <input
                       type="password"
                       value={passwordForm.newPassword}
                       onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-600 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">새 비밀번호 확인</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">새 비밀번호 확인</label>
                     <input
                       type="password"
                       value={passwordForm.confirmPassword}
                       onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-600 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                 </div>
@@ -494,17 +494,17 @@ export default function MyPage() {
 
               {/* 텔레그램 설정 */}
               <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">텔레그램 알림 설정</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2 sm:mb-3 lg:mb-4">텔레그램 알림 설정</h2>
                 
                 <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">텔레그램 채팅 ID</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">텔레그램 채팅 ID</label>
                     <input
                       type="text"
                       value={settings.telegramChatId}
                       onChange={e => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
                       placeholder="텔레그램 채팅 ID를 입력하세요"
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base text-gray-900 bg-white"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base text-gray-600 bg-white"
                     />
                     
                     {/* 텔레그램 ID 받는 방법 안내 */}
@@ -542,7 +542,7 @@ export default function MyPage() {
                         onChange={e => setSettings(prev => ({ ...prev, notificationEnabled: e.target.checked }))}
                         className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="telegramEnabled" className="text-gray-900 font-medium text-sm sm:text-base">
+                      <label htmlFor="telegramEnabled" className="text-gray-600 font-medium text-sm sm:text-base">
                         텔레그램 알림 활성화
                       </label>
                     </div>
@@ -602,7 +602,7 @@ export default function MyPage() {
                   {/* 텔레그램 설정 저장 상태 메시지 */}
                   {saveStatus && saveStatus.includes('텔레그램') && (
                     <div className="mt-2 sm:mt-3 lg:mt-4 p-2 sm:p-3 bg-gray-100 rounded-lg">
-                      <p className="text-xs sm:text-sm text-gray-900">{saveStatus}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{saveStatus}</p>
                     </div>
                   )}
                 </div>
@@ -610,17 +610,17 @@ export default function MyPage() {
 
               {/* 날씨 지역 설정 */}
               <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">날씨 지역 설정</h2>
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-600 mb-2 sm:mb-3 lg:mb-4">날씨 지역 설정</h2>
                 
                 <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       날씨 정보를 제공받을 지역을 선택하세요
                     </label>
                     <select
                       value={settings.weatherRegion}
                       onChange={e => updateWeatherRegion(e.target.value)}
-                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-white"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-600 bg-white"
                     >
                       <option value="서울">서울</option>
                       <option value="부산">부산</option>
@@ -816,7 +816,7 @@ export default function MyPage() {
                   
                   {saveStatus && (
                     <div className="p-3 bg-gray-100 rounded-lg">
-                      <p className="text-sm text-gray-900">{saveStatus}</p>
+                      <p className="text-sm text-gray-600">{saveStatus}</p>
                     </div>
                   )}
                 </div>

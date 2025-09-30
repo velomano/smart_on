@@ -289,7 +289,7 @@ export default function AppHeader({
                     </>
                   ) : (
                     <>
-                      <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+                      <h1 className="text-3xl font-black text-gray-600 tracking-tight">
                         {title}
                       </h1>
                       <p className="text-sm text-gray-500 font-medium">
@@ -381,7 +381,7 @@ export default function AppHeader({
                     <span className="text-sm">🌱</span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-gray-900">메뉴</h3>
+                    <h3 className="text-sm font-bold text-gray-600">메뉴</h3>
                     <p className="text-xs text-gray-500">
                       {safeUser.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
                        safeUser.role === 'system_admin' ? '시스템 관리자' : 
@@ -482,12 +482,12 @@ export default function AppHeader({
                 {/* 공지사항 작성 폼 */}
                 {isWritingNotice && safeUser.role === 'system_admin' && (
                   <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg border-2 border-blue-200">
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">새 공지사항 작성</h3>
+                    <h3 className="text-lg font-bold text-gray-600 mb-4">새 공지사항 작성</h3>
                     
                     <div className="space-y-4">
                       {/* 제목 입력 */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-600 mb-2">
                           제목 *
                         </label>
                         <input
@@ -495,13 +495,13 @@ export default function AppHeader({
                           value={newNoticeTitle}
                           onChange={(e) => setNewNoticeTitle(e.target.value)}
                           placeholder="공지사항 제목을 입력하세요"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                         />
                       </div>
 
                       {/* 내용 입력 */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-600 mb-2">
                           내용 *
                         </label>
                         <textarea
@@ -509,19 +509,19 @@ export default function AppHeader({
                           onChange={(e) => setNewNoticeContent(e.target.value)}
                           placeholder="공지사항 내용을 입력하세요"
                           rows={4}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 resize-none"
                         />
                       </div>
 
                       {/* 타입 선택 */}
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        <label className="block text-sm font-semibold text-gray-600 mb-2">
                           공지 유형
                         </label>
                         <select
                           value={newNoticeType}
                           onChange={(e) => setNewNoticeType(e.target.value as 'new' | 'update' | 'general')}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                         >
                           <option value="general">일반</option>
                           <option value="new">새 기능</option>
@@ -582,7 +582,7 @@ export default function AppHeader({
                       return (
                         <div key={notice.id} className={`border-l-4 ${typeColor.border} pl-4 py-3 ${typeColor.bg} rounded-r-lg`}>
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-gray-900 text-lg">{notice.title}</h3>
+                            <h3 className="font-bold text-gray-600 text-lg">{notice.title}</h3>
                             <div className="flex items-center space-x-2">
                               {notice.isNew && (
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
@@ -594,7 +594,7 @@ export default function AppHeader({
                               </span>
                             </div>
                           </div>
-                          <p className="text-gray-700 mb-2">{notice.content}</p>
+                          <p className="text-gray-600 mb-2">{notice.content}</p>
                           <div className="flex items-center text-sm text-gray-500">
                             <span className="mr-2">📅</span>
                             <span>{notice.date}</span>

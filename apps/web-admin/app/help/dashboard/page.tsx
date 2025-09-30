@@ -60,72 +60,72 @@ export default function DashboardGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🎯 주요 기능</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🎯 주요 기능</h3>
           <ul className="space-y-3">
             <li className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 font-semibold text-sm font-bold">1</div>
               <div>
-                <h4 className="font-medium text-gray-900">농장 선택</h4>
-                <p className="text-sm text-gray-700 font-medium">드롭다운에서 관리할 농장 선택</p>
+                <h4 className="font-medium text-gray-600">농장 선택</h4>
+                <p className="text-sm text-gray-600 font-medium">드롭다운에서 관리할 농장 선택</p>
               </div>
             </li>
             <li className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-800 font-semibold text-sm font-bold">2</div>
               <div>
-                <h4 className="font-medium text-gray-900">실시간 모니터링</h4>
-                <p className="text-sm text-gray-700 font-medium">센서 데이터와 디바이스 상태 실시간 확인</p>
+                <h4 className="font-medium text-gray-600">실시간 모니터링</h4>
+                <p className="text-sm text-gray-600 font-medium">센서 데이터와 디바이스 상태 실시간 확인</p>
               </div>
             </li>
             <li className="flex items-start space-x-3">
               <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold text-sm font-bold">3</div>
               <div>
-                <h4 className="font-medium text-gray-900">알림 관리</h4>
-                <p className="text-sm text-gray-700 font-medium">중요한 이벤트와 경고 알림 확인</p>
+                <h4 className="font-medium text-gray-600">알림 관리</h4>
+                <p className="text-sm text-gray-600 font-medium">중요한 이벤트와 경고 알림 확인</p>
               </div>
             </li>
           </ul>
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 반응형 디자인</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📱 반응형 디자인</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-700 font-medium">데스크톱 최적화</span>
+              <span className="text-sm text-gray-600 font-medium">데스크톱 최적화</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-gray-700 font-medium">태블릿 지원</span>
+              <span className="text-sm text-gray-600 font-medium">태블릿 지원</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span className="text-sm text-gray-700 font-medium">모바일 최적화</span>
+              <span className="text-sm text-gray-600 font-medium">모바일 최적화</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-              <span className="text-sm text-gray-700 font-medium">터치 인터페이스</span>
+              <span className="text-sm text-gray-600 font-medium">터치 인터페이스</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">🔄 자동 새로고침</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">🔄 자동 새로고침</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">⏱️</div>
-            <h4 className="font-bold text-gray-900">30초 간격</h4>
-            <p className="text-sm text-gray-800 font-semibold">센서 데이터 자동 업데이트</p>
+            <h4 className="font-bold text-gray-600">30초 간격</h4>
+            <p className="text-sm text-gray-600 font-semibold">센서 데이터 자동 업데이트</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">🔔</div>
-            <h4 className="font-bold text-gray-900">실시간 알림</h4>
-            <p className="text-sm text-gray-800 font-semibold">중요 이벤트 즉시 표시</p>
+            <h4 className="font-bold text-gray-600">실시간 알림</h4>
+            <p className="text-sm text-gray-600 font-semibold">중요 이벤트 즉시 표시</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">🔄</div>
-            <h4 className="font-bold text-gray-900">수동 새로고침</h4>
-            <p className="text-sm text-gray-800 font-semibold">필요시 즉시 업데이트</p>
+            <h4 className="font-bold text-gray-600">수동 새로고침</h4>
+            <p className="text-sm text-gray-600 font-semibold">필요시 즉시 업데이트</p>
           </div>
         </div>
       </div>
@@ -143,14 +143,14 @@ export default function DashboardGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🏠 상단 헤더</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🏠 상단 헤더</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
                 <span className="text-white text-sm">🏠</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">홈 아이콘</h4>
+                <h4 className="font-medium text-gray-600">홈 아이콘</h4>
                 <p className="text-sm text-gray-600">대시보드로 이동</p>
               </div>
             </div>
@@ -158,7 +158,7 @@ export default function DashboardGuidePage() {
             <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="text-xl">📚</div>
               <div>
-                <h4 className="font-medium text-gray-900">사용설명서</h4>
+                <h4 className="font-medium text-gray-600">사용설명서</h4>
                 <p className="text-sm text-gray-600">도움말 및 가이드</p>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function DashboardGuidePage() {
             <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="text-xl">☰</div>
               <div>
-                <h4 className="font-medium text-gray-900">햄버거 메뉴</h4>
+                <h4 className="font-medium text-gray-600">햄버거 메뉴</h4>
                 <p className="text-sm text-gray-600">전체 메뉴 열기</p>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function DashboardGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 햄버거 메뉴</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📱 햄버거 메뉴</h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-2 bg-cyan-50 rounded">
               <span className="text-sm font-medium text-cyan-900">📚 사용설명서</span>
@@ -201,10 +201,10 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🎯 빠른 접근 팁</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">🎯 빠른 접근 팁</h3>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">⌨️ 키보드 단축키</h4>
+            <h4 className="font-medium text-gray-600 mb-2">⌨️ 키보드 단축키</h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">F5</kbd> - 페이지 새로고침</li>
               <li>• <kbd className="px-1 py-0.5 bg-gray-200 rounded text-xs">Ctrl + R</kbd> - 강제 새로고침</li>
@@ -213,7 +213,7 @@ export default function DashboardGuidePage() {
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">👆 터치 제스처</h4>
+            <h4 className="font-medium text-gray-600 mb-2">👆 터치 제스처</h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• <span className="font-medium">탭</span> - 메뉴 열기/선택</li>
               <li>• <span className="font-medium">스와이프</span> - 메뉴 닫기</li>
@@ -236,7 +236,7 @@ export default function DashboardGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 통계 카드</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📈 통계 카드</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center space-x-3">
@@ -244,7 +244,7 @@ export default function DashboardGuidePage() {
                   <span className="text-white text-sm">🏢</span>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">전체 농장</h4>
+                  <h4 className="font-medium text-gray-600">전체 농장</h4>
                   <p className="text-xs text-gray-600">등록된 농장 수</p>
                 </div>
               </div>
@@ -257,7 +257,7 @@ export default function DashboardGuidePage() {
                   <span className="text-white text-sm">🔧</span>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">활성 디바이스</h4>
+                  <h4 className="font-medium text-gray-600">활성 디바이스</h4>
                   <p className="text-xs text-gray-600">연결된 디바이스</p>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function DashboardGuidePage() {
                   <span className="text-white text-sm">📡</span>
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900">센서</h4>
+                  <h4 className="font-medium text-gray-600">센서</h4>
                   <p className="text-xs text-gray-600">활성 센서 수</p>
                 </div>
               </div>
@@ -280,30 +280,30 @@ export default function DashboardGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 상태 표시</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 상태 표시</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-700">시스템 정상 운영 중</span>
+              <span className="text-sm text-gray-600">시스템 정상 운영 중</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">MQTT 브리지 연결됨</span>
+              <span className="text-sm text-gray-600">MQTT 브리지 연결됨</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">데이터베이스 정상</span>
+              <span className="text-sm text-gray-600">데이터베이스 정상</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">자동 새로고침 활성</span>
+              <span className="text-sm text-gray-600">자동 새로고침 활성</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🎯 카드 활용법</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">🎯 카드 활용법</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">👀</div>
@@ -336,19 +336,19 @@ export default function DashboardGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🌡️ 센서 타입</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🌡️ 센서 타입</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">🌡️</div>
                 <div>
-                  <h4 className="font-medium text-gray-900">온도 센서</h4>
+                  <h4 className="font-medium text-gray-600">온도 센서</h4>
                   <p className="text-xs text-gray-600">실내 온도 모니터링</p>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-red-800 font-semibold">25.3°C</div>
-                <div className="text-xs text-gray-700 font-medium">정상</div>
+                <div className="text-xs text-gray-600 font-medium">정상</div>
               </div>
             </div>
             
@@ -356,13 +356,13 @@ export default function DashboardGuidePage() {
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">💧</div>
                 <div>
-                  <h4 className="font-medium text-gray-900">습도 센서</h4>
+                  <h4 className="font-medium text-gray-600">습도 센서</h4>
                   <p className="text-xs text-gray-600">공기 습도 측정</p>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-blue-800 font-semibold">65%</div>
-                <div className="text-xs text-gray-700 font-medium">정상</div>
+                <div className="text-xs text-gray-600 font-medium">정상</div>
               </div>
             </div>
             
@@ -370,26 +370,26 @@ export default function DashboardGuidePage() {
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">⚡</div>
                 <div>
-                  <h4 className="font-medium text-gray-900">EC 센서</h4>
+                  <h4 className="font-medium text-gray-600">EC 센서</h4>
                   <p className="text-xs text-gray-600">배양액 전기전도도</p>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-lg font-bold text-green-800 font-semibold">1.8 mS/cm</div>
-                <div className="text-xs text-gray-700 font-medium">정상</div>
+                <div className="text-xs text-gray-600 font-medium">정상</div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🎛️ 액추에이터</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🎛️ 액추에이터</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">💧</div>
                 <div>
-                  <h4 className="font-medium text-gray-900">펌프</h4>
+                  <h4 className="font-medium text-gray-600">펌프</h4>
                   <p className="text-xs text-gray-600">급수 시스템</p>
                 </div>
               </div>
@@ -403,7 +403,7 @@ export default function DashboardGuidePage() {
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">💡</div>
                 <div>
-                  <h4 className="font-medium text-gray-900">LED</h4>
+                  <h4 className="font-medium text-gray-600">LED</h4>
                   <p className="text-xs text-gray-600">조명 시스템</p>
                 </div>
               </div>
@@ -417,7 +417,7 @@ export default function DashboardGuidePage() {
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">🌀</div>
                 <div>
-                  <h4 className="font-medium text-gray-900">팬</h4>
+                  <h4 className="font-medium text-gray-600">팬</h4>
                   <p className="text-xs text-gray-600">환기 시스템</p>
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 데이터 해석</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 데이터 해석</h3>
         <div className="grid md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
             <div className="text-2xl mb-2">🔴</div>
@@ -469,7 +469,7 @@ export default function DashboardGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔔 알림 타입</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🔔 알림 타입</h3>
           <div className="space-y-3">
             <div className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
               <div className="text-2xl">🚨</div>
@@ -498,14 +498,14 @@ export default function DashboardGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 알림 배지</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 알림 배지</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">3</span>
                 </div>
-                <span className="text-sm text-gray-700">농장 A</span>
+                <span className="text-sm text-gray-600">농장 A</span>
               </div>
               <span className="text-xs text-red-800 font-semibold">센서 오류</span>
             </div>
@@ -515,7 +515,7 @@ export default function DashboardGuidePage() {
                 <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">1</span>
                 </div>
-                <span className="text-sm text-gray-700">농장 B</span>
+                <span className="text-sm text-gray-600">농장 B</span>
               </div>
               <span className="text-xs text-yellow-800 font-semibold">임계값 초과</span>
             </div>
@@ -525,7 +525,7 @@ export default function DashboardGuidePage() {
                 <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-xs font-bold">0</span>
                 </div>
-                <span className="text-sm text-gray-700">농장 C</span>
+                <span className="text-sm text-gray-600">농장 C</span>
               </div>
               <span className="text-xs text-green-800 font-semibold">정상</span>
             </div>
@@ -534,22 +534,22 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">⚙️ 알림 설정</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">⚙️ 알림 설정</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">🔔</div>
-            <h4 className="font-bold text-gray-900">알림 수신</h4>
-            <p className="text-sm text-gray-800 font-semibold">실시간 알림 받기</p>
+            <h4 className="font-bold text-gray-600">알림 수신</h4>
+            <p className="text-sm text-gray-600 font-semibold">실시간 알림 받기</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">📧</div>
-            <h4 className="font-bold text-gray-900">이메일 알림</h4>
-            <p className="text-sm text-gray-800 font-semibold">중요 알림 이메일 전송</p>
+            <h4 className="font-bold text-gray-600">이메일 알림</h4>
+            <p className="text-sm text-gray-600 font-semibold">중요 알림 이메일 전송</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">📱</div>
-            <h4 className="font-bold text-gray-900">모바일 푸시</h4>
-            <p className="text-sm text-gray-800 font-semibold">모바일 앱 알림</p>
+            <h4 className="font-bold text-gray-600">모바일 푸시</h4>
+            <p className="text-sm text-gray-600 font-semibold">모바일 앱 알림</p>
           </div>
         </div>
       </div>
@@ -567,36 +567,36 @@ export default function DashboardGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 모바일 최적화</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📱 모바일 최적화</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">터치 인터페이스</span>
+              <span className="text-sm text-gray-600">터치 인터페이스</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">반응형 레이아웃</span>
+              <span className="text-sm text-gray-600">반응형 레이아웃</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">스와이프 제스처</span>
+              <span className="text-sm text-gray-600">스와이프 제스처</span>
             </div>
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-              <span className="text-sm text-gray-700">빠른 로딩</span>
+              <span className="text-sm text-gray-600">빠른 로딩</span>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">👆 터치 제스처</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">👆 터치 제스처</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                 <span className="text-blue-800 font-semibold text-sm">👆</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">탭</h4>
+                <h4 className="font-medium text-gray-600">탭</h4>
                 <p className="text-xs text-gray-600">메뉴 열기, 버튼 클릭</p>
               </div>
             </div>
@@ -606,7 +606,7 @@ export default function DashboardGuidePage() {
                 <span className="text-green-800 font-semibold text-sm">👆👆</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">더블탭</h4>
+                <h4 className="font-medium text-gray-600">더블탭</h4>
                 <p className="text-xs text-gray-600">빠른 새로고침</p>
               </div>
             </div>
@@ -616,7 +616,7 @@ export default function DashboardGuidePage() {
                 <span className="text-purple-800 font-semibold text-sm">👈</span>
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">스와이프</h4>
+                <h4 className="font-medium text-gray-600">스와이프</h4>
                 <p className="text-xs text-gray-600">메뉴 닫기, 뒤로가기</p>
               </div>
             </div>
@@ -625,10 +625,10 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 모바일 팁</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📱 모바일 팁</h3>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">🔋 배터리 최적화</h4>
+            <h4 className="font-medium text-gray-600 mb-2">🔋 배터리 최적화</h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• 자동 새로고침 간격 조정</li>
               <li>• 백그라운드 새로고침 제한</li>
@@ -637,7 +637,7 @@ export default function DashboardGuidePage() {
           </div>
           
           <div>
-            <h4 className="font-medium text-gray-900 mb-2">📶 네트워크 최적화</h4>
+            <h4 className="font-medium text-gray-600 mb-2">📶 네트워크 최적화</h4>
             <ul className="space-y-1 text-sm text-gray-600">
               <li>• 데이터 사용량 최적화</li>
               <li>• 오프라인 캐싱</li>
@@ -716,7 +716,7 @@ export default function DashboardGuidePage() {
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'border-green-500 text-green-800 font-semibold'
-                      : 'border-transparent text-gray-700 font-medium hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-600 font-medium hover:text-gray-600 hover:border-gray-300'
                   }`}
                 >
                   <span className="mr-2">{tab.icon}</span>

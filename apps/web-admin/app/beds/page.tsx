@@ -849,7 +849,7 @@ function BedsManagementContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">로그인이 필요합니다</h1>
+          <h1 className="text-2xl font-bold text-gray-600 mb-4">로그인이 필요합니다</h1>
           <button
             onClick={() => router.push('/')}
             className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
@@ -881,7 +881,7 @@ function BedsManagementContent() {
             {/* 농장별 탭 */}
             <div className="mb-2 sm:mb-3 lg:mb-6">
             <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-              <h4 className="text-lg font-semibold text-gray-700">농장별 보기</h4>
+              <h4 className="text-lg font-semibold text-gray-600">농장별 보기</h4>
               <div className="flex items-center space-x-3">
                 {/* MQTT 설정 - 관리자와 농장장 모두 접근 가능 */}
                 {user && (user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com') && selectedFarmTab && selectedFarmTab !== 'all' && (
@@ -917,7 +917,7 @@ function BedsManagementContent() {
                   className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                     selectedFarmTab === 'all'
                       ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-white/80 text-gray-700 hover:bg-blue-50'
+                      : 'bg-white/80 text-gray-600 hover:bg-blue-50'
                   }`}
                 >
                   전체 농장 ({farms.length}개)
@@ -945,7 +945,7 @@ function BedsManagementContent() {
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                       selectedFarmTab === farm.id
                         ? 'bg-green-500 text-white shadow-lg'
-                        : 'bg-white/80 text-gray-700 hover:bg-green-50'
+                        : 'bg-white/80 text-gray-600 hover:bg-green-50'
                     }`}
                   >
                     {farm.name} ({asArray(devices).filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway').length}개 베드)
@@ -1016,7 +1016,7 @@ function BedsManagementContent() {
               if (farmGroups.length === 0) {
                 return (
                   <div className="text-center py-16">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    <h3 className="text-xl font-bold text-gray-600 mb-2">
                       {selectedFarmTab !== 'all' ? 
                         `${farms.find(f => f.id === selectedFarmTab)?.name || '선택된 농장'}에 등록된 베드가 없습니다` :
                         '등록된 농장이 없습니다'
@@ -1049,7 +1049,7 @@ function BedsManagementContent() {
                   <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
                     <div className="flex items-center space-x-4">
                       <div>
-                        <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
+                        <h4 className="text-2xl font-bold text-gray-600">{farm.name}</h4>
                         <p className="text-gray-600 font-medium text-lg">📍 {farm.location || '위치 정보 없음'}</p>
                         <div className="mt-2 flex items-center space-x-4">
                           <span className="text-sm text-blue-600 font-semibold">
@@ -1078,7 +1078,7 @@ function BedsManagementContent() {
 
                   {/* 농장에 속한 베드들 */}
                   <div className="space-y-2 sm:space-y-3">
-                    <h5 className="text-lg font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center">
+                    <h5 className="text-lg font-semibold text-gray-600 mb-2 sm:mb-3 flex items-center">
                       {farm.name}의 베드 목록
                     </h5>
 
@@ -1098,7 +1098,7 @@ function BedsManagementContent() {
                             <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
                               <div className="flex items-center space-x-3">
                                 <div>
-                                  <span className="font-bold text-gray-900 text-lg">
+                                  <span className="font-bold text-gray-600 text-lg">
                                     {(() => {
                                       const location = String(device.meta?.location || '센서 게이트웨이');
                                       
@@ -1211,7 +1211,7 @@ function BedsManagementContent() {
 
                                 {/* 센서 데이터 */}
                                 <div>
-                                  <h6 className="text-base font-bold text-gray-800 mb-2 sm:mb-3 flex items-center">
+                                  <h6 className="text-base font-bold text-gray-600 mb-2 sm:mb-3 flex items-center">
                                     <span className="text-lg mr-2">📊</span>
                                     센서 데이터
                                   </h6>
@@ -1335,7 +1335,7 @@ function BedsManagementContent() {
 
                                 {/* 제어 상태 - 원격 스위치 제어 */}
                                 <div>
-                                  <h6 className="text-base font-bold text-gray-800 mb-3 flex items-center">
+                                  <h6 className="text-base font-bold text-gray-600 mb-3 flex items-center">
                                     <span className="text-lg mr-2">🔌</span>
                                     원격 스위치 제어
                                   </h6>
@@ -1344,7 +1344,7 @@ function BedsManagementContent() {
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center space-x-2">
                                       <span className="text-lg">💡</span>
-                                      <span className="text-sm font-medium text-gray-700">램프1</span>
+                                      <span className="text-sm font-medium text-gray-600">램프1</span>
                                     </div>
                                     <button 
                                       onClick={() => toggleActuator('lamp1')}
@@ -1377,7 +1377,7 @@ function BedsManagementContent() {
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center space-x-2">
                                       <span className="text-lg">💡</span>
-                                      <span className="text-sm font-medium text-gray-700">램프2</span>
+                                      <span className="text-sm font-medium text-gray-600">램프2</span>
                                     </div>
                                     <button 
                                       onClick={() => toggleActuator('lamp2')}
@@ -1410,7 +1410,7 @@ function BedsManagementContent() {
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center space-x-2">
                                       <span className="text-lg">💧</span>
-                                      <span className="text-sm font-medium text-gray-700">펌프</span>
+                                      <span className="text-sm font-medium text-gray-600">펌프</span>
                                     </div>
                                     <button 
                                       onClick={() => toggleActuator('pump')}
@@ -1443,7 +1443,7 @@ function BedsManagementContent() {
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center space-x-2">
                                       <span className="text-lg">🌀</span>
-                                      <span className="text-sm font-medium text-gray-700">팬</span>
+                                      <span className="text-sm font-medium text-gray-600">팬</span>
                                     </div>
                                     <button 
                                       onClick={() => toggleActuator('fan')}
@@ -1479,7 +1479,7 @@ function BedsManagementContent() {
                             {/* 생육 노트 섹션 */}
                             <div className="mt-6 pt-4 border-t border-gray-200">
                               <div className="flex items-center justify-between mb-4">
-                                <h6 className="text-sm font-medium text-gray-700 flex items-center">
+                                <h6 className="text-sm font-medium text-gray-600 flex items-center">
                                   <span className="mr-1">📝</span>
                                   생육 노트
                                 </h6>
@@ -1570,7 +1570,7 @@ function BedsManagementContent() {
                                         }`}
                                       >
                                         <div className="flex items-center space-x-2">
-                                          <div className="text-xs font-medium text-gray-900 truncate">
+                                          <div className="text-xs font-medium text-gray-600 truncate">
                                             {note.title}
                                           </div>
                                           {note.isAnnouncement && (
@@ -1689,7 +1689,7 @@ function BedsManagementContent() {
           {/* 모달창 */}
           <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">새 농장 추가</h3>
+              <h3 className="text-2xl font-bold text-gray-600">새 농장 추가</h3>
               <button
                 onClick={() => setShowAddFarmModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -1700,40 +1700,40 @@ function BedsManagementContent() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   농장 이름 *
                 </label>
                 <input
                   type="text"
                   value={newFarmData.name}
                   onChange={(e) => setNewFarmData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                   placeholder="예: 스마트팜 A, 토마토 농장"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   농장 설명
                 </label>
                 <textarea
                   value={newFarmData.description}
                   onChange={(e) => setNewFarmData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                   rows={3}
                   placeholder="농장에 대한 간단한 설명을 입력하세요"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   농장 위치
                 </label>
                 <input
                   type="text"
                   value={newFarmData.location}
                   onChange={(e) => setNewFarmData(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                   placeholder="예: 경기도 수원시, 서울시 강남구"
                 />
               </div>
@@ -1741,7 +1741,7 @@ function BedsManagementContent() {
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => setShowAddFarmModal(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   취소
                 </button>
@@ -1765,7 +1765,7 @@ function BedsManagementContent() {
           {/* 모달창 */}
           <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">새 베드 추가</h3>
+              <h3 className="text-2xl font-bold text-gray-600">새 베드 추가</h3>
               <button
                 onClick={() => setShowAddBedModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -1776,14 +1776,14 @@ function BedsManagementContent() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   베드 이름 *
                 </label>
                 <input
                   type="text"
                   value={newBedData.name}
                   onChange={(e) => setNewBedData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 placeholder-gray-500"
                   placeholder="예: 베드2, 3, A구역"
                 />
                 {/* 베드 이름 규칙 안내 */}
@@ -1824,16 +1824,16 @@ function BedsManagementContent() {
 
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   베드 시스템 유형
                 </label>
                 <select
                   value={newBedData.bedSystemType}
                   onChange={(e) => setNewBedData(prev => ({ ...prev, bedSystemType: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
                 >
-                  <option value="multi-tier" className="text-gray-900">🌱 다단 베드 시스템</option>
-                  <option value="vertical" className="text-gray-900" disabled>🏗️ 수직형 베드 시스템 (준비 중)</option>
+                  <option value="multi-tier" className="text-gray-600">🌱 다단 베드 시스템</option>
+                  <option value="vertical" className="text-gray-600" disabled>🏗️ 수직형 베드 시스템 (준비 중)</option>
                 </select>
                 
                 {/* 베드 시스템 유형 안내 */}
@@ -1870,7 +1870,7 @@ function BedsManagementContent() {
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => setShowAddBedModal(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                 >
                   취소
                 </button>
@@ -1956,7 +1956,7 @@ function BedsManagementContent() {
           <div className="relative bg-white rounded-2xl w-full max-w-md mx-4 shadow-2xl max-h-[90vh] flex flex-col">
             {/* 모달 헤더 */}
             <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
-              <h3 className="text-2xl font-bold text-gray-900">베드 정보 편집</h3>
+              <h3 className="text-2xl font-bold text-gray-600">베드 정보 편집</h3>
               <button
                 onClick={() => setShowEditBedModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -1969,14 +1969,14 @@ function BedsManagementContent() {
             <div className="flex-1 overflow-y-auto p-6 pt-4">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     베드 이름 *
                   </label>
                   <input
                     type="text"
                     value={editBedData.name}
                     onChange={(e) => setEditBedData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                     placeholder="예: 베드2, 3, A구역"
                   />
                   {/* 베드 이름 규칙 안내 */}
@@ -2018,13 +2018,13 @@ function BedsManagementContent() {
 
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   베드 시스템 유형
                 </label>
                 <select
                   value={editBedData.bedSystemType}
                   onChange={(e) => setEditBedData(prev => ({ ...prev, bedSystemType: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                 >
                   <option value="multi-tier">🌱 다단 베드 시스템</option>
                   <option value="vertical" disabled>🏗️ 수직형 베드 시스템 (준비 중)</option>
@@ -2047,13 +2047,13 @@ function BedsManagementContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   활성 단 수
                 </label>
                 <select
                   value={editBedData.totalTiers}
                   onChange={(e) => setEditBedData(prev => ({ ...prev, totalTiers: parseInt(e.target.value) }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                 >
                   <option value={1}>1단 (단층)</option>
                   <option value={2}>2단 (이층)</option>
@@ -2071,7 +2071,7 @@ function BedsManagementContent() {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowEditBedModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                 >
                   취소
                 </button>
@@ -2128,7 +2128,7 @@ function BedsManagementContent() {
               <div className="flex items-center space-x-4 pt-4">
                 <button
                   onClick={() => setShowDeleteConfirmModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                 >
                   취소
                 </button>
@@ -2152,7 +2152,7 @@ function BedsManagementContent() {
           {/* 모달창 */}
           <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">농장 정보 편집</h3>
+              <h3 className="text-2xl font-bold text-gray-600">농장 정보 편집</h3>
               <button
                 onClick={() => setShowEditFarmModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -2163,27 +2163,27 @@ function BedsManagementContent() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   농장 이름 *
                 </label>
                 <input
                   type="text"
                   value={editFarmData.name}
                   onChange={(e) => setEditFarmData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                   placeholder="예: 메인 팜, 토마토 농장"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   농장 위치
                 </label>
                 <input
                   type="text"
                   value={editFarmData.location}
                   onChange={(e) => setEditFarmData(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                   placeholder="예: 서울시 강남구, 경기도 수원시"
                 />
               </div>
@@ -2191,7 +2191,7 @@ function BedsManagementContent() {
               {/* 농장 숨김 토글 */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1">
+                  <label className="block text-sm font-semibold text-gray-600 mb-1">
                     대시보드에서 숨기기
                   </label>
                   <p className="text-xs text-gray-600">
@@ -2216,7 +2216,7 @@ function BedsManagementContent() {
               <div className="flex items-center space-x-4 pt-4">
                 <button
                   onClick={() => setShowEditFarmModal(false)}
-                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  className="flex-1 px-6 py-3 bg-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                 >
                   취소
                 </button>
@@ -2258,7 +2258,7 @@ function BedsManagementContent() {
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setShowEditFarmModal(false)}
-                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-600 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
                       >
                         취소
                       </button>
@@ -2288,7 +2288,7 @@ function BedsManagementContent() {
           {/* 모달창 */}
           <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">
+              <h3 className="text-2xl font-bold text-gray-600">
                 {selectedTier}단 작물 정보 입력
               </h3>
               <button
@@ -2371,26 +2371,26 @@ function BedsManagementContent() {
               })()}
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   작물 이름 *
                 </label>
                 <input
                   type="text"
                   value={cropInputData.cropName}
                   onChange={(e) => setCropInputData(prev => ({ ...prev, cropName: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                   placeholder="예: 토마토, 상추"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   재배 방법
                 </label>
                 <select
                   value={cropInputData.growingMethod}
                   onChange={(e) => setCropInputData(prev => ({ ...prev, growingMethod: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                 >
                   <option value="담액식">담액식</option>
                   <option value="NFT식">NFT식</option>
@@ -2401,7 +2401,7 @@ function BedsManagementContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   작물 유형
                 </label>
                 <div className="flex space-x-2">
@@ -2411,7 +2411,7 @@ function BedsManagementContent() {
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                       cropInputData.plantType === 'seed'
                         ? 'bg-green-500 text-white shadow-md'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                     }`}
                   >
                     파종
@@ -2422,7 +2422,7 @@ function BedsManagementContent() {
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                       cropInputData.plantType === 'seedling'
                         ? 'bg-green-500 text-white shadow-md'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
                     }`}
                   >
                     육묘
@@ -2431,21 +2431,21 @@ function BedsManagementContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
                   생육 시작일자
                 </label>
                 <input
                   type="date"
                   value={cropInputData.startDate}
                   onChange={(e) => setCropInputData(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                 />
               </div>
 
               <div className="flex space-x-4 pt-4">
                 <button
                   onClick={() => setShowCropInputModal(false)}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
                 >
                   취소
                 </button>

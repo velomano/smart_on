@@ -112,11 +112,11 @@ function MqttIntegrationGuideContent() {
           <h3 className="text-lg font-semibold text-indigo-900 mb-3">데이터 흐름</h3>
           <div className="flex flex-wrap items-center justify-center space-x-4 space-y-2">
             <div className="bg-green-100 px-4 py-2 rounded-lg text-sm font-semibold text-green-800">디바이스/센서</div>
-            <div className="text-gray-700 font-bold text-lg">→</div>
+            <div className="text-gray-600 font-bold text-lg">→</div>
             <div className="bg-blue-100 px-4 py-2 rounded-lg text-sm font-semibold text-blue-800">MQTT 브로커</div>
-            <div className="text-gray-700 font-bold text-lg">→</div>
+            <div className="text-gray-600 font-bold text-lg">→</div>
             <div className="bg-purple-100 px-4 py-2 rounded-lg text-sm font-semibold text-purple-800">스마트팜 브리지</div>
-            <div className="text-gray-700 font-bold text-lg">→</div>
+            <div className="text-gray-600 font-bold text-lg">→</div>
             <div className="bg-orange-100 px-4 py-2 rounded-lg text-sm font-semibold text-orange-800">웹 대시보드</div>
           </div>
         </div>
@@ -124,8 +124,8 @@ function MqttIntegrationGuideContent() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">📊 센서 데이터 수집</h3>
-          <ul className="space-y-2 text-sm text-gray-700 font-medium">
+          <h3 className="text-lg font-semibold text-gray-600 mb-3">📊 센서 데이터 수집</h3>
+          <ul className="space-y-2 text-sm text-gray-600 font-medium">
             <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>온도/습도 센서</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>EC/pH 센서</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>수위 센서</li>
@@ -134,8 +134,8 @@ function MqttIntegrationGuideContent() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">🎛️ 디바이스 제어</h3>
-          <ul className="space-y-2 text-sm text-gray-700 font-medium">
+          <h3 className="text-lg font-semibold text-gray-600 mb-3">🎛️ 디바이스 제어</h3>
+          <ul className="space-y-2 text-sm text-gray-600 font-medium">
             <li className="flex items-center"><span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>펌프 제어</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></span>밸브 제어</li>
             <li className="flex items-center"><span className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></span>LED 제어</li>
@@ -145,22 +145,22 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">⚡ 주요 특징</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-3">⚡ 주요 특징</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">🔄</div>
-            <h4 className="font-semibold text-gray-900">실시간 통신</h4>
-            <p className="text-sm text-gray-700 font-medium">저지연 실시간 데이터 전송</p>
+            <h4 className="font-semibold text-gray-600">실시간 통신</h4>
+            <p className="text-sm text-gray-600 font-medium">저지연 실시간 데이터 전송</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">🔒</div>
-            <h4 className="font-semibold text-gray-900">보안 연결</h4>
-            <p className="text-sm text-gray-700 font-medium">TLS/SSL 암호화 지원</p>
+            <h4 className="font-semibold text-gray-600">보안 연결</h4>
+            <p className="text-sm text-gray-600 font-medium">TLS/SSL 암호화 지원</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">📈</div>
-            <h4 className="font-semibold text-gray-900">확장성</h4>
-            <p className="text-sm text-gray-700 font-medium">수천 개 디바이스 지원</p>
+            <h4 className="font-semibold text-gray-600">확장성</h4>
+            <p className="text-sm text-gray-600 font-medium">수천 개 디바이스 지원</p>
           </div>
         </div>
       </div>
@@ -180,8 +180,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🐛</div>
-            <h3 className="text-lg font-semibold text-gray-900">Eclipse Mosquitto</h3>
-            <p className="text-sm text-gray-700 font-medium">오픈소스 MQTT 브로커</p>
+            <h3 className="text-lg font-semibold text-gray-600">Eclipse Mosquitto</h3>
+            <p className="text-sm text-gray-600 font-medium">오픈소스 MQTT 브로커</p>
           </div>
           
           <div className="space-y-3">
@@ -215,8 +215,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">⚡</div>
-            <h3 className="text-lg font-semibold text-gray-900">EMQX</h3>
-            <p className="text-sm text-gray-700 font-medium">엔터프라이즈급 MQTT 브로커</p>
+            <h3 className="text-lg font-semibold text-gray-600">EMQX</h3>
+            <p className="text-sm text-gray-600 font-medium">엔터프라이즈급 MQTT 브로커</p>
           </div>
           
           <div className="space-y-3">
@@ -250,8 +250,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">☁️</div>
-            <h3 className="text-lg font-semibold text-gray-900">AWS IoT Core</h3>
-            <p className="text-sm text-gray-700 font-medium">클라우드 MQTT 서비스</p>
+            <h3 className="text-lg font-semibold text-gray-600">AWS IoT Core</h3>
+            <p className="text-sm text-gray-600 font-medium">클라우드 MQTT 서비스</p>
           </div>
           
           <div className="space-y-3">
@@ -297,37 +297,37 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🚀 빠른 설정 가이드</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">🚀 빠른 설정 가이드</h3>
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 font-semibold font-bold">1</div>
             <div>
-              <h4 className="font-semibold text-gray-900">브로커 선택</h4>
-              <p className="text-sm text-gray-700 font-medium">농장 규모와 요구사항에 맞는 브로커 선택</p>
+              <h4 className="font-semibold text-gray-600">브로커 선택</h4>
+              <p className="text-sm text-gray-600 font-medium">농장 규모와 요구사항에 맞는 브로커 선택</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-800 font-semibold font-bold">2</div>
             <div>
-              <h4 className="font-semibold text-gray-900">설치 및 설정</h4>
-              <p className="text-sm text-gray-700 font-medium">선택한 브로커 설치 및 기본 설정</p>
+              <h4 className="font-semibold text-gray-600">설치 및 설정</h4>
+              <p className="text-sm text-gray-600 font-medium">선택한 브로커 설치 및 기본 설정</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold font-bold">3</div>
             <div>
-              <h4 className="font-semibold text-gray-900">브리지 연결</h4>
-              <p className="text-sm text-gray-700 font-medium">스마트팜 브리지와 연결 설정</p>
+              <h4 className="font-semibold text-gray-600">브리지 연결</h4>
+              <p className="text-sm text-gray-600 font-medium">스마트팜 브리지와 연결 설정</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-800 font-semibold font-bold">4</div>
             <div>
-              <h4 className="font-semibold text-gray-900">연결 테스트</h4>
-              <p className="text-sm text-gray-700 font-medium">MQTT 클라이언트로 연결 테스트</p>
+              <h4 className="font-semibold text-gray-600">연결 테스트</h4>
+              <p className="text-sm text-gray-600 font-medium">MQTT 클라이언트로 연결 테스트</p>
             </div>
           </div>
         </div>
@@ -348,8 +348,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🍓</div>
-            <h3 className="text-lg font-semibold text-gray-900">라즈베리파이5</h3>
-            <p className="text-sm text-gray-700 font-medium">고성능 IoT 디바이스</p>
+            <h3 className="text-lg font-semibold text-gray-600">라즈베리파이5</h3>
+            <p className="text-sm text-gray-600 font-medium">고성능 IoT 디바이스</p>
           </div>
           
           <div className="space-y-3">
@@ -393,8 +393,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🔌</div>
-            <h3 className="text-lg font-semibold text-gray-900">Arduino/ESP32</h3>
-            <p className="text-sm text-gray-700 font-medium">마이크로컨트롤러 기반</p>
+            <h3 className="text-lg font-semibold text-gray-600">Arduino/ESP32</h3>
+            <p className="text-sm text-gray-600 font-medium">마이크로컨트롤러 기반</p>
           </div>
           
           <div className="space-y-3">
@@ -428,8 +428,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🐍</div>
-            <h3 className="text-lg font-semibold text-gray-900">Python</h3>
-            <p className="text-sm text-gray-700 font-medium">고급 기능 및 데이터 처리</p>
+            <h3 className="text-lg font-semibold text-gray-600">Python</h3>
+            <p className="text-sm text-gray-600 font-medium">고급 기능 및 데이터 처리</p>
           </div>
           
           <div className="space-y-3">
@@ -463,8 +463,8 @@ function MqttIntegrationGuideContent() {
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🟢</div>
-            <h3 className="text-lg font-semibold text-gray-900">Node.js</h3>
-            <p className="text-sm text-gray-700 font-medium">웹 기반 IoT 게이트웨이</p>
+            <h3 className="text-lg font-semibold text-gray-600">Node.js</h3>
+            <p className="text-sm text-gray-600 font-medium">웹 기반 IoT 게이트웨이</p>
           </div>
           
           <div className="space-y-3">
@@ -497,21 +497,21 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🔧 연동 단계</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">🔧 연동 단계</h3>
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 font-semibold font-bold">1</div>
             <div>
-              <h4 className="font-semibold text-gray-900">템플릿 다운로드</h4>
-              <p className="text-sm text-gray-700 font-medium">언어별 기본 템플릿 코드 다운로드</p>
+              <h4 className="font-semibold text-gray-600">템플릿 다운로드</h4>
+              <p className="text-sm text-gray-600 font-medium">언어별 기본 템플릿 코드 다운로드</p>
             </div>
           </div>
           
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-800 font-semibold font-bold">2</div>
                 <div>
-                  <h4 className="font-semibold text-gray-900">설정 수정</h4>
-                  <p className="text-sm text-gray-700 font-medium">브로커 URL, 포트, 인증 정보 입력</p>
+                  <h4 className="font-semibold text-gray-600">설정 수정</h4>
+                  <p className="text-sm text-gray-600 font-medium">브로커 URL, 포트, 인증 정보 입력</p>
                   <button 
                     onClick={() => downloadTemplate('config')}
                     className="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition-colors mt-1"
@@ -524,16 +524,16 @@ function MqttIntegrationGuideContent() {
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold font-bold">3</div>
             <div>
-              <h4 className="font-semibold text-gray-900">센서/액추에이터 추가</h4>
-              <p className="text-sm text-gray-700 font-medium">실제 하드웨어와 연결하고 코드 수정</p>
+              <h4 className="font-semibold text-gray-600">센서/액추에이터 추가</h4>
+              <p className="text-sm text-gray-600 font-medium">실제 하드웨어와 연결하고 코드 수정</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-800 font-semibold font-bold">4</div>
             <div>
-              <h4 className="font-semibold text-gray-900">테스트 및 배포</h4>
-              <p className="text-sm text-gray-700 font-medium">연동 테스트 후 실제 환경에 배포</p>
+              <h4 className="font-semibold text-gray-600">테스트 및 배포</h4>
+              <p className="text-sm text-gray-600 font-medium">연동 테스트 후 실제 환경에 배포</p>
             </div>
           </div>
         </div>
@@ -551,17 +551,17 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">🏗️ 기본 토픽 패턴</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">🏗️ 기본 토픽 패턴</h3>
         <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm">
-          <div className="text-gray-700 font-medium mb-2">표준 토픽 구조:</div>
+          <div className="text-gray-600 font-medium mb-2">표준 토픽 구조:</div>
           <div className="text-blue-800 font-semibold text-lg font-bold mb-4">
             farms/{'{farm_id}'}/devices/{'{device_id}'}/{'{message_type}'}
           </div>
           
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <div className="text-gray-700 font-medium mb-2">파라미터:</div>
-              <ul className="space-y-1 text-gray-700">
+              <div className="text-gray-600 font-medium mb-2">파라미터:</div>
+              <ul className="space-y-1 text-gray-600">
                 <li><span className="text-green-800 font-semibold font-bold">farm_id:</span> 농장 고유 ID</li>
                 <li><span className="text-blue-800 font-semibold font-bold">device_id:</span> 디바이스 고유 ID</li>
                 <li><span className="text-purple-800 font-semibold font-bold">message_type:</span> 메시지 타입</li>
@@ -569,7 +569,7 @@ function MqttIntegrationGuideContent() {
             </div>
             
             <div>
-              <div className="text-gray-700 font-medium mb-2">예시:</div>
+              <div className="text-gray-600 font-medium mb-2">예시:</div>
               <div className="bg-gray-800 text-green-400 p-3 rounded text-xs">
                 <div>farms/farm_001/devices/sensor_001/telemetry</div>
                 <div>farms/farm_001/devices/pump_001/command</div>
@@ -581,7 +581,7 @@ function MqttIntegrationGuideContent() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📤 발행 (Publish) 토픽</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📤 발행 (Publish) 토픽</h3>
           <div className="space-y-3">
             <div className="bg-green-50 p-3 rounded-lg">
               <h4 className="font-medium text-green-900 mb-1">📊 telemetry</h4>
@@ -618,7 +618,7 @@ function MqttIntegrationGuideContent() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📥 구독 (Subscribe) 토픽</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📥 구독 (Subscribe) 토픽</h3>
           <div className="space-y-3">
             <div className="bg-red-50 p-3 rounded-lg">
               <h4 className="font-medium text-red-900 mb-1">🎛️ command</h4>
@@ -640,7 +640,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 메시지 포맷</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📋 메시지 포맷</h3>
         <div className="space-y-4">
           <div className="bg-green-50 p-4 rounded-lg">
             <h4 className="font-medium text-green-900 mb-2">📊 Telemetry 메시지</h4>
@@ -682,7 +682,7 @@ function MqttIntegrationGuideContent() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔐 인증 및 권한</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🔐 인증 및 권한</h3>
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-1">사용자 인증</h4>
@@ -705,7 +705,7 @@ function MqttIntegrationGuideContent() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🛡️ 암호화</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🛡️ 암호화</h3>
           <div className="space-y-3">
             <div className="bg-purple-50 p-3 rounded-lg">
               <h4 className="font-medium text-purple-900 mb-1">TLS/SSL</h4>
@@ -729,37 +729,37 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">⚙️ 보안 설정 단계</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">⚙️ 보안 설정 단계</h3>
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-800 font-semibold font-bold">1</div>
             <div>
-              <h4 className="font-semibold text-gray-900">인증서 생성</h4>
-              <p className="text-sm text-gray-700 font-medium">CA 인증서, 서버 인증서, 클라이언트 인증서 생성</p>
+              <h4 className="font-semibold text-gray-600">인증서 생성</h4>
+              <p className="text-sm text-gray-600 font-medium">CA 인증서, 서버 인증서, 클라이언트 인증서 생성</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-800 font-semibold font-bold">2</div>
             <div>
-              <h4 className="font-semibold text-gray-900">브로커 보안 설정</h4>
-              <p className="text-sm text-gray-700 font-medium">TLS 포트 설정, ACL 파일 구성</p>
+              <h4 className="font-semibold text-gray-600">브로커 보안 설정</h4>
+              <p className="text-sm text-gray-600 font-medium">TLS 포트 설정, ACL 파일 구성</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-800 font-semibold font-bold">3</div>
             <div>
-              <h4 className="font-semibold text-gray-900">디바이스 설정</h4>
-              <p className="text-sm text-gray-700 font-medium">클라이언트 인증서 및 보안 설정 적용</p>
+              <h4 className="font-semibold text-gray-600">디바이스 설정</h4>
+              <p className="text-sm text-gray-600 font-medium">클라이언트 인증서 및 보안 설정 적용</p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-800 font-semibold font-bold">4</div>
             <div>
-              <h4 className="font-semibold text-gray-900">테스트 및 모니터링</h4>
-              <p className="text-sm text-gray-700 font-medium">보안 연결 테스트 및 지속적 모니터링</p>
+              <h4 className="font-semibold text-gray-600">테스트 및 모니터링</h4>
+              <p className="text-sm text-gray-600 font-medium">보안 연결 테스트 및 지속적 모니터링</p>
             </div>
           </div>
         </div>
@@ -778,7 +778,7 @@ function MqttIntegrationGuideContent() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔌 연결 문제</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🔌 연결 문제</h3>
           <div className="space-y-3">
             <div className="bg-red-50 p-3 rounded-lg">
               <h4 className="font-medium text-red-900 mb-1">연결 실패</h4>
@@ -805,7 +805,7 @@ function MqttIntegrationGuideContent() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📡 통신 문제</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📡 통신 문제</h3>
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-1">메시지 수신 안됨</h4>
@@ -833,28 +833,28 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">🛠️ 디버깅 도구</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">🛠️ 디버깅 도구</h3>
         <div className="grid md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">🔍</div>
-            <h4 className="font-semibold text-gray-900">MQTT Explorer</h4>
-            <p className="text-sm text-gray-700 font-medium">토픽 모니터링 도구</p>
+            <h4 className="font-semibold text-gray-600">MQTT Explorer</h4>
+            <p className="text-sm text-gray-600 font-medium">토픽 모니터링 도구</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">📊</div>
-            <h4 className="font-semibold text-gray-900">MQTT.fx</h4>
-            <p className="text-sm text-gray-700 font-medium">클라이언트 테스트 도구</p>
+            <h4 className="font-semibold text-gray-600">MQTT.fx</h4>
+            <p className="text-sm text-gray-600 font-medium">클라이언트 테스트 도구</p>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl mb-2">📝</div>
-            <h4 className="font-semibold text-gray-900">로그 분석</h4>
-            <p className="text-sm text-gray-700 font-medium">브로커 로그 확인</p>
+            <h4 className="font-semibold text-gray-600">로그 분석</h4>
+            <p className="text-sm text-gray-600 font-medium">브로커 로그 확인</p>
           </div>
         </div>
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📞 지원</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📞 지원</h3>
         <div className="space-y-3">
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">📚 문서</h4>
@@ -942,7 +942,7 @@ function MqttIntegrationGuideContent() {
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-800 font-semibold'
-                      : 'border-transparent text-gray-700 font-medium hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-600 font-medium hover:text-gray-600 hover:border-gray-300'
                   }`}
                 >
                   <span className="mr-2">{tab.icon}</span>

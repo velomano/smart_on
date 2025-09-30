@@ -232,7 +232,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         default: return 'bg-red-500 text-white border-red-600 shadow-lg shadow-red-300 ring-2 ring-red-400';
       }
     }
-    return 'bg-gray-100 text-gray-800 border-gray-300';
+    return 'bg-gray-100 text-gray-600 border-gray-300';
   };
 
   // 농장에 알림이 있는지 확인하는 함수
@@ -452,10 +452,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   <span className="text-lg">🏠</span>
                 </div>
                 <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
                     농장 수
                   </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-900">{totalFarms}</dd>
+                  <dd className="text-lg sm:text-2xl font-black text-gray-600">{totalFarms}</dd>
                 </div>
               </div>
               <div className="text-right">
@@ -471,10 +471,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             <div className="p-2 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
                     베드 활성률
                   </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-900">{bedActivationRate}%</dd>
+                  <dd className="text-lg sm:text-2xl font-black text-gray-600">{bedActivationRate}%</dd>
                 </div>
               </div>
               <div className="text-right">
@@ -488,10 +488,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             <div className="p-2 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
                     배양액 레시피
                   </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-900">
+                  <dd className="text-lg sm:text-2xl font-black text-gray-600">
                     {recipeStats.total}
                   </dd>
                 </div>
@@ -512,10 +512,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   <span className="text-lg">🌤️</span>
                 </div>
                 <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
                     현재 날씨
                   </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-900">{weatherData.temperature}°C</dd>
+                  <dd className="text-lg sm:text-2xl font-black text-gray-600">{weatherData.temperature}°C</dd>
                 </div>
               </div>
               <div className="text-right">
@@ -628,7 +628,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 if (filteredFarms.length === 0) {
                   return (
                     <div className="text-center py-16">
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <h3 className="text-xl font-bold text-gray-600 mb-2">
                         {filteredFarms.length === 0 
                           ? (userSettings.showOnlyMyFarm ? '자기 농장에 베드가 없습니다' : '표시할 베드가 없습니다')
                           : '활성화된 베드가 없습니다'}
@@ -662,7 +662,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <div>
                             <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <h4 className="text-2xl lg:text-3xl font-bold text-gray-900 whitespace-nowrap">{farm.name}</h4>
+                            <h4 className="text-2xl lg:text-3xl font-bold text-gray-600 whitespace-nowrap">{farm.name}</h4>
                             <span className="text-gray-500 font-normal text-xs">🏷️ {farm.id}</span>
                           </div>
                           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -708,7 +708,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
                   {/* 농장에 속한 베드들 - 개별 카드로 변환하고 공간 없이 꽉채우기 */}
                   <div className="space-y-2 sm:space-y-3">
-                    <h5 className="text-xl lg:text-2xl font-semibold text-gray-700 mb-2 sm:mb-3 lg:mb-4 flex items-center">
+                    <h5 className="text-xl lg:text-2xl font-semibold text-gray-600 mb-2 sm:mb-3 lg:mb-4 flex items-center">
                       {farm.name}의 베드 현황
                     </h5>
 
@@ -739,7 +739,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <div className="flex items-center space-x-4">
                               <div>
-                                    <span className="font-bold text-gray-900 text-lg lg:text-xl">
+                                    <span className="font-bold text-gray-600 text-lg lg:text-xl">
                                       {(() => {
                                         const location = String(device.meta?.location ?? '센서 게이트웨이');
                                         
@@ -845,7 +845,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 <div className="flex items-center justify-between bg-red-50 rounded-lg p-3 sm:p-4 lg:p-5 shadow-md border border-red-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">🌡️</span>
-                                    <span className="text-lg lg:text-xl text-gray-700 font-bold">온도</span>
+                                    <span className="text-lg lg:text-xl text-gray-600 font-bold">온도</span>
                                   </div>
                                   <span className="text-3xl lg:text-4xl font-black text-red-600">
                                     {(() => {
@@ -860,7 +860,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 sm:p-4 lg:p-5 shadow-md border border-blue-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">💧</span>
-                                    <span className="text-lg lg:text-xl text-gray-700 font-bold">습도</span>
+                                    <span className="text-lg lg:text-xl text-gray-600 font-bold">습도</span>
                                   </div>
                                   <span className="text-3xl lg:text-4xl font-black text-blue-600">
                                     {(() => {
@@ -875,7 +875,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 sm:p-4 lg:p-5 shadow-md border border-green-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">⚡</span>
-                                    <span className="text-lg lg:text-xl text-gray-700 font-bold">EC</span>
+                                    <span className="text-lg lg:text-xl text-gray-600 font-bold">EC</span>
                                   </div>
                                   <span className="text-3xl lg:text-4xl font-black text-green-600">
                                     {(() => {
@@ -890,7 +890,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                 <div className="flex items-center justify-between bg-purple-50 rounded-lg p-3 sm:p-4 shadow-md border border-purple-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">🧪</span>
-                                    <span className="text-lg text-gray-700 font-bold">pH</span>
+                                    <span className="text-lg text-gray-600 font-bold">pH</span>
                                   </div>
                                   <span className="text-3xl font-black text-purple-600">
                                     {(() => {
@@ -924,7 +924,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           <div className="px-8 py-8">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">
+                <h3 className="text-2xl font-black text-gray-600 mb-2">
                   📈 최근 활동
                 </h3>
                 <p className="text-gray-600">실시간 센서 데이터와 시스템 활동을 확인하세요</p>
@@ -953,7 +953,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                           <span className="text-xl">📊</span>
                         </div>
                         <div>
-                          <div className="font-bold text-gray-900">
+                          <div className="font-bold text-gray-600">
                             {farm?.name} - {String(device?.meta?.location || '')}
                           </div>
                           <div className="text-sm text-gray-600">
@@ -962,7 +962,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-2xl font-black text-gray-900">
+                        <div className="text-2xl font-black text-gray-600">
                           {reading.value}{reading.unit}
                         </div>
                         <div className="text-xs text-gray-500 font-medium">
@@ -978,7 +978,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <span className="text-4xl">📊</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">최근 센서 데이터가 없습니다</h3>
+                  <h3 className="text-xl font-bold text-gray-600 mb-2">최근 센서 데이터가 없습니다</h3>
                   <p className="text-gray-600 mb-6">센서 데이터가 수집되면 여기에 표시됩니다</p>
                   {canManageFarms && (
                     <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200">

@@ -340,7 +340,7 @@ export default function TeamPage() {
                   </span>
                 </div>
                 <div>
-                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{user.name}</h2>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600">{user.name}</h2>
                   <p className="text-gray-600 font-medium text-sm sm:text-base">{user.email}</p>
                   <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 mt-1 sm:mt-2">
                     <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-100 text-blue-800">
@@ -362,7 +362,7 @@ export default function TeamPage() {
               </div>
               <div className="text-right">
                 <p className="text-xs sm:text-sm text-gray-500">마지막 로그인</p>
-                <p className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900">
+                <p className="text-sm sm:text-base lg:text-lg font-semibold text-gray-600">
                   {new Date().toLocaleDateString('ko-KR', {
                     year: 'numeric',
                     month: 'long',
@@ -395,7 +395,7 @@ export default function TeamPage() {
           <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
             <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-8">
               <div>
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mb-1 sm:mb-2">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">
                   {user?.role === 'system_admin' ? '전체 사용자 목록' : '팀원 목록'}
                 </h3>
                 <p className="text-gray-600 text-sm sm:text-base">
@@ -436,18 +436,18 @@ export default function TeamPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 lg:space-x-3">
                           <div className="min-w-0">
-                            <h4 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 truncate">{member.name || '이름 없음'}</h4>
+                            <h4 className="text-sm sm:text-base lg:text-lg font-bold text-gray-600 truncate">{member.name || '이름 없음'}</h4>
                             <p className="text-gray-600 font-medium text-xs sm:text-sm truncate">{member.email}</p>
                           </div>
                           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                             {(member as any).company && (
                               <div className="flex items-center space-x-1">
-                                <span className="text-xs text-gray-700 font-medium">{(member as any).company}</span>
+                                <span className="text-xs text-gray-600 font-medium">{(member as any).company}</span>
                               </div>
                             )}
                             {(member as any).phone && (
                               <div className="flex items-center space-x-1">
-                                <span className="text-xs text-gray-700 font-medium">{(member as any).phone}</span>
+                                <span className="text-xs text-gray-600 font-medium">{(member as any).phone}</span>
                               </div>
                             )}
                           </div>
@@ -487,7 +487,7 @@ export default function TeamPage() {
                   <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
                     <span className="text-4xl">👥</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-gray-600 mb-2">
                     {user?.role === 'system_admin' ? '사용자가 없습니다' : '팀원이 없습니다'}
                   </h3>
                   <p className="text-gray-600">
@@ -524,56 +524,56 @@ export default function TeamPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 이름 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     이름 *
                   </label>
                   <input
                     type="text"
                     value={editFormData.name}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     placeholder="사용자 이름"
                   />
                 </div>
 
                 {/* 이메일 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     이메일 *
                   </label>
                   <input
                     type="email"
                     value={editFormData.email}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     placeholder="user@example.com"
                   />
                 </div>
 
                 {/* 회사 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     회사
                   </label>
                   <input
                     type="text"
                     value={editFormData.company || ''}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, company: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     placeholder="회사명"
                   />
                 </div>
 
                 {/* 전화번호 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     전화번호
                   </label>
                   <input
                     type="tel"
                     value={editFormData.phone || ''}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     placeholder="010-1234-5678"
                   />
                 </div>
@@ -581,13 +581,13 @@ export default function TeamPage() {
                 {/* 역할 - 관리자 계정만 표시 */}
                 {(user?.role === 'system_admin' || user?.role === 'super_admin') && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       역할 *
                     </label>
                     <select
                       value={editFormData.role}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, role: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="team_member">팀원</option>
                       <option value="team_leader">농장장</option>
@@ -602,13 +602,13 @@ export default function TeamPage() {
                 {/* 농장 배정 - 관리자 계정만 표시 */}
                 {(user?.role === 'system_admin' || user?.role === 'super_admin') && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-sm font-semibold text-gray-600 mb-2">
                       농장
                     </label>
                     <select
                       value={editFormData.team_id}
                       onChange={(e) => setEditFormData(prev => ({ ...prev, team_id: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="">농장 미배정</option>
                       {Array.isArray(farms) && farms.map((farm) => (
@@ -622,11 +622,11 @@ export default function TeamPage() {
 
                 {/* 활성 상태 */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     계정 상태
                   </label>
                   <div className="flex space-x-4">
-                    <label className="flex items-center text-gray-900 font-medium">
+                    <label className="flex items-center text-gray-600 font-medium">
                       <input
                         type="radio"
                         name="is_active"
@@ -636,7 +636,7 @@ export default function TeamPage() {
                       />
                       활성
                     </label>
-                    <label className="flex items-center text-gray-900 font-medium">
+                    <label className="flex items-center text-gray-600 font-medium">
                       <input
                         type="radio"
                         name="is_active"
@@ -684,14 +684,14 @@ export default function TeamPage() {
               <div className="space-y-4">
                 {/* 이메일 주소 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     이메일 주소 *
                   </label>
                   <input
                     type="email"
                     value={inviteFormData.email}
                     onChange={(e) => setInviteFormData(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-600"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 placeholder-gray-600"
                     placeholder="user@example.com"
                     required
                   />
@@ -699,13 +699,13 @@ export default function TeamPage() {
 
                 {/* 역할 선택 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     역할 선택 *
                   </label>
                   <select
                     value={inviteFormData.role}
                     onChange={(e) => setInviteFormData(prev => ({ ...prev, role: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600"
                   >
                     <option value="team_member">팀 멤버</option>
                     {user?.role === 'system_admin' && (
@@ -716,13 +716,13 @@ export default function TeamPage() {
 
                 {/* 초대 메시지 */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     초대 메시지
                   </label>
                   <textarea
                     value={inviteFormData.message}
                     onChange={(e) => setInviteFormData(prev => ({ ...prev, message: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-600"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 placeholder-gray-600"
                     placeholder="초대 메시지를 작성하세요 (선택사항)"
                     rows={3}
                   />

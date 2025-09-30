@@ -173,7 +173,7 @@ export default function LoginPage() {
             {!isLogin && (
               <>
                 <div>
-                  <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-sm font-semibold text-gray-600 mb-2">
                     이름 *
                   </label>
                   <input
@@ -189,7 +189,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="company" className="block text-sm font-semibold text-gray-600 mb-2">
                     소속
                   </label>
                   <input
@@ -204,7 +204,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-600 mb-2">
                     연락처
                   </label>
                   <input
@@ -219,7 +219,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="preferred_team" className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="preferred_team" className="block text-sm font-semibold text-gray-600 mb-2">
                     조 선택 *
                   </label>
                   <select
@@ -241,7 +241,7 @@ export default function LoginPage() {
             )}
 
             <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-600 mb-2">
                   이메일 *
                 </label>
               <input
@@ -260,7 +260,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-semibold text-gray-600 mb-2">
                   비밀번호 *
                 </label>
               <div className="relative">
@@ -278,7 +278,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200 focus:outline-none"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-600 transition-colors duration-200 focus:outline-none"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,14 +372,14 @@ export default function LoginPage() {
           {showForgotPassword && (
             <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
               <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">비밀번호 재설정</h3>
+                <h3 className="text-xl font-bold text-gray-600 mb-4">비밀번호 재설정</h3>
                 <p className="text-sm text-gray-600 mb-6">
                   등록된 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.
                 </p>
                 
                 <form onSubmit={handleForgotPassword} className="space-y-4">
                   <div>
-                    <label htmlFor="forgot-email" className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor="forgot-email" className="block text-sm font-semibold text-gray-600 mb-2">
                       이메일 주소
                     </label>
                     <input
@@ -411,7 +411,7 @@ export default function LoginPage() {
                         setForgotPasswordEmail('');
                         setForgotPasswordMessage('');
                       }}
-                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200"
+                      className="flex-1 px-4 py-3 border border-gray-300 text-gray-600 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200"
                     >
                       취소
                     </button>

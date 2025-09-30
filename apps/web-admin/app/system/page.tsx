@@ -392,8 +392,8 @@ export default function SystemPage() {
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-6">
           <div>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">시스템 모니터링</h1>
-            <p className="text-gray-700 font-medium text-sm sm:text-base">실시간 시스템 상태 및 성능 메트릭</p>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600">시스템 모니터링</h1>
+            <p className="text-gray-600 font-medium text-sm sm:text-base">실시간 시스템 상태 및 성능 메트릭</p>
           </div>
           <button
             onClick={fetchData}
@@ -406,28 +406,28 @@ export default function SystemPage() {
         {/* 전체 상태 */}
         {healthData && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">전체 시스템 상태</h2>
+            <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">전체 시스템 상태</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
               <div className="text-center">
                 <div className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getStatusColor(healthData.status)}`}>
                   <span className="mr-1 sm:mr-2">{getStatusIcon(healthData.status)}</span>
                   {healthData.status === 'healthy' ? '정상' : '오류'}
                 </div>
-                <p className="text-xs text-gray-700 font-medium mt-1">전체 상태</p>
+                <p className="text-xs text-gray-600 font-medium mt-1">전체 상태</p>
               </div>
               <div className="text-center">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-700">{healthData.responseTime}ms</div>
-                <p className="text-xs text-gray-700 font-medium">응답 시간</p>
+                <p className="text-xs text-gray-600 font-medium">응답 시간</p>
               </div>
               <div className="text-center">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">{formatUptime(healthData.system?.uptime || 0)}</div>
-                <p className="text-xs text-gray-700 font-medium">가동 시간</p>
+                <p className="text-xs text-gray-600 font-medium">가동 시간</p>
               </div>
               <div className="text-center">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-700">
                   {healthData.system?.memoryUsage ? Math.round((healthData.system.memoryUsage.heapUsed / healthData.system.memoryUsage.heapTotal) * 100) : 0}%
                 </div>
-                <p className="text-xs text-gray-700 font-medium">로컬 서버 메모리</p>
+                <p className="text-xs text-gray-600 font-medium">로컬 서버 메모리</p>
               </div>
             </div>
           </div>
@@ -436,12 +436,12 @@ export default function SystemPage() {
         {/* 서비스 상태 */}
         {healthData && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">서비스 상태</h2>
+            <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">서비스 상태</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
               <div className="flex items-center justify-between p-2 sm:p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h3 className="font-medium text-gray-900 text-sm sm:text-base">데이터베이스</h3>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">Supabase 연결 상태</p>
+                  <h3 className="font-medium text-gray-600 text-sm sm:text-base">데이터베이스</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Supabase 연결 상태</p>
                 </div>
                 <div className="text-right">
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(healthData.services.database.status)}`}>
@@ -452,12 +452,12 @@ export default function SystemPage() {
               </div>
               <div className="flex items-center justify-between p-2 sm:p-3 lg:p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h3 className="font-medium text-gray-900 text-sm sm:text-base">Node.js</h3>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">시스템 정보</p>
+                  <h3 className="font-medium text-gray-600 text-sm sm:text-base">Node.js</h3>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">시스템 정보</p>
                 </div>
                 <div className="text-right">
                   <div className="text-green-600">✅</div>
-                  <p className="text-xs text-gray-700 font-medium mt-1">v{process.version}</p>
+                  <p className="text-xs text-gray-600 font-medium mt-1">v{process.version}</p>
                 </div>
               </div>
             </div>
@@ -468,45 +468,45 @@ export default function SystemPage() {
         {metrics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">사용자 통계</h2>
+              <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">사용자 통계</h2>
               <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-700">{metrics.users.total}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">총 사용자</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">총 사용자</p>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">{metrics.users.active}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">활성 사용자</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">활성 사용자</p>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-700">{metrics.users.approved}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">승인된 사용자</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">승인된 사용자</p>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-700">{metrics.users.pending}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">승인 대기</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">승인 대기</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">농장 통계</h2>
+              <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">농장 통계</h2>
               <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4">
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-700">{metrics.farms.total}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">총 농장</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">총 농장</p>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">{metrics.farms.active}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">활성 농장</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">활성 농장</p>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-700">{metrics.devices.total}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">총 디바이스</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">총 디바이스</p>
                 </div>
                 <div className="text-center">
                   <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-700">{metrics.devices.online}</div>
-                  <p className="text-xs sm:text-sm text-gray-700 font-medium">온라인 디바이스</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">온라인 디바이스</p>
                 </div>
               </div>
             </div>
@@ -517,27 +517,27 @@ export default function SystemPage() {
         {metrics && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 lg:gap-6 mb-2 sm:mb-3 lg:mb-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">센서 통계</h2>
+              <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">센서 통계</h2>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium">총 센서</span>
-                  <span className="font-bold text-gray-900 text-sm sm:text-base">{metrics.sensors.total}개</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">총 센서</span>
+                  <span className="font-bold text-gray-600 text-sm sm:text-base">{metrics.sensors.total}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium">활성 센서</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">활성 센서</span>
                   <span className="font-bold text-green-700 text-sm sm:text-base">{metrics.sensors.active}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium">비활성 센서</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">비활성 센서</span>
                   <span className="font-bold text-red-700 text-sm sm:text-base">{metrics.sensors.inactive}개</span>
                 </div>
                 <div className="mt-2 sm:mt-3 lg:mt-4">
-                  <h4 className="text-xs sm:text-sm font-semibold text-gray-800 mb-1 sm:mb-2">센서 타입별</h4>
+                  <h4 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">센서 타입별</h4>
                   <div className="space-y-1">
                     {Object.entries(metrics.sensors.byType).map(([type, count]) => (
                       <div key={type} className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="text-gray-700 font-medium">{type}</span>
-                        <span className="font-semibold text-gray-900">{count}개</span>
+                        <span className="text-gray-600 font-medium">{type}</span>
+                        <span className="font-semibold text-gray-600">{count}개</span>
                       </div>
                     ))}
                   </div>
@@ -546,29 +546,29 @@ export default function SystemPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6">
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">데이터 통계</h2>
+              <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">데이터 통계</h2>
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium">총 센서 데이터</span>
-                  <span className="font-bold text-gray-900 text-sm sm:text-base">{metrics.data.totalReadings.toLocaleString()}개</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">총 센서 데이터</span>
+                  <span className="font-bold text-gray-600 text-sm sm:text-base">{metrics.data.totalReadings.toLocaleString()}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium">최근 24시간</span>
-                  <span className="font-bold text-gray-900 text-sm sm:text-base">{metrics.data.last24Hours.toLocaleString()}개</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">최근 24시간</span>
+                  <span className="font-bold text-gray-600 text-sm sm:text-base">{metrics.data.last24Hours.toLocaleString()}개</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-gray-700 font-medium">시간당 평균</span>
-                  <span className="font-bold text-gray-900 text-sm sm:text-base">{metrics.data.averagePerHour.toLocaleString()}개</span>
+                  <span className="text-xs sm:text-sm text-gray-600 font-medium">시간당 평균</span>
+                  <span className="font-bold text-gray-600 text-sm sm:text-base">{metrics.data.averagePerHour.toLocaleString()}개</span>
                 </div>
                 <div className="mt-2 sm:mt-3 lg:mt-4">
-                  <h4 className="text-xs sm:text-sm font-semibold text-gray-800 mb-1 sm:mb-2">성능 메트릭</h4>
+                  <h4 className="text-xs sm:text-sm font-semibold text-gray-600 mb-1 sm:mb-2">성능 메트릭</h4>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-xs sm:text-sm">
-                      <span className="text-gray-700 font-medium">평균 응답 시간</span>
-                      <span className="font-semibold text-gray-900">{metrics.performance.averageResponseTime}ms</span>
+                      <span className="text-gray-600 font-medium">평균 응답 시간</span>
+                      <span className="font-semibold text-gray-600">{metrics.performance.averageResponseTime}ms</span>
                     </div>
                     <div className="flex justify-between items-center text-xs sm:text-sm">
-                      <span className="text-gray-700 font-medium">에러율</span>
+                      <span className="text-gray-600 font-medium">에러율</span>
                       <span className="font-semibold text-red-700">{(metrics.performance.errorRate * 100).toFixed(2)}%</span>
                     </div>
                   </div>
@@ -581,7 +581,7 @@ export default function SystemPage() {
         {/* 디바이스 관리 */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
           <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-4">
-            <h2 className="text-base sm:text-lg font-bold text-gray-900">디바이스 관리</h2>
+            <h2 className="text-base sm:text-lg font-bold text-gray-600">디바이스 관리</h2>
             <button
               onClick={() => {
                 setEditingDevice(null);
@@ -613,7 +613,7 @@ export default function SystemPage() {
                 <div key={device.id} className="border border-gray-200 rounded-lg p-2 sm:p-3 lg:p-4 hover:shadow-md transition-shadow">
                   <div className="flex justify-between items-start mb-2 sm:mb-3">
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{device.name}</h3>
+                      <h3 className="font-semibold text-gray-600 text-sm sm:text-base">{device.name}</h3>
                       <p className="text-xs sm:text-sm text-gray-600">{device.farm?.name || '농장 미지정'}</p>
                     </div>
                     <div className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -626,12 +626,12 @@ export default function SystemPage() {
                   <div className="space-y-1 sm:space-y-2 mb-2 sm:mb-3 lg:mb-4">
                     <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-gray-600">타입:</span>
-                      <span className="font-medium text-gray-900">{device.device_type}</span>
+                      <span className="font-medium text-gray-600">{device.device_type}</span>
                     </div>
                     {device.location && (
                       <div className="flex justify-between text-xs sm:text-sm">
                         <span className="text-gray-600">위치:</span>
-                        <span className="font-medium text-gray-900">{device.location}</span>
+                        <span className="font-medium text-gray-600">{device.location}</span>
                       </div>
                     )}
                     {device.latest_data && (
@@ -658,7 +658,7 @@ export default function SystemPage() {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleDeviceEdit(device)}
-                      className="flex-1 bg-gray-100 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-gray-200 transition-colors"
+                      className="flex-1 bg-gray-100 text-gray-600 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-gray-200 transition-colors"
                     >
                       수정
                     </button>
@@ -710,26 +710,26 @@ export default function SystemPage() {
             <div className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     디바이스명 *
                   </label>
                   <input
                     type="text"
                     value={deviceForm.name}
                     onChange={(e) => setDeviceForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                     placeholder="디바이스 이름을 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     디바이스 타입 *
                   </label>
                   <select
                     value={deviceForm.device_type}
                     onChange={(e) => setDeviceForm(prev => ({ ...prev, device_type: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                   >
                     <option value="sensor">센서</option>
                     <option value="actuator">액추에이터</option>
@@ -739,53 +739,53 @@ export default function SystemPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     농장 ID *
                   </label>
                   <input
                     type="text"
                     value={deviceForm.farm_id}
                     onChange={(e) => setDeviceForm(prev => ({ ...prev, farm_id: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                     placeholder="농장 ID를 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     위치
                   </label>
                   <input
                     type="text"
                     value={deviceForm.location}
                     onChange={(e) => setDeviceForm(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                     placeholder="디바이스 위치 (예: 베드-1, 온실-A)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     설명
                   </label>
                   <textarea
                     value={deviceForm.description}
                     onChange={(e) => setDeviceForm(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 resize-none"
                     placeholder="디바이스 설명을 입력하세요"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     MQTT 토픽
                   </label>
                   <input
                     type="text"
                     value={deviceForm.mqtt_topic}
                     onChange={(e) => setDeviceForm(prev => ({ ...prev, mqtt_topic: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
                     placeholder="device/sensor_1"
                   />
                 </div>

@@ -54,11 +54,11 @@ export default function HelpPage() {
             <div className="bg-white rounded-lg p-2 sm:p-3 border border-blue-100">
               <div className="flex flex-wrap items-center justify-center space-x-4 space-y-2">
                 <div className="bg-green-100 px-3 py-2 rounded-lg text-sm font-semibold text-green-800">디바이스/센서</div>
-                <div className="text-gray-700 font-bold text-lg">→</div>
+                <div className="text-gray-600 font-bold text-lg">→</div>
                 <div className="bg-blue-100 px-3 py-2 rounded-lg text-sm font-semibold text-blue-800">MQTT 브로커</div>
-                <div className="text-gray-700 font-bold text-lg">→</div>
+                <div className="text-gray-600 font-bold text-lg">→</div>
                 <div className="bg-purple-100 px-3 py-2 rounded-lg text-sm font-semibold text-purple-800">스마트팜 브리지</div>
-                <div className="text-gray-700 font-bold text-lg">→</div>
+                <div className="text-gray-600 font-bold text-lg">→</div>
                 <div className="bg-orange-100 px-3 py-2 rounded-lg text-sm font-semibold text-orange-800">웹 대시보드</div>
               </div>
             </div>
@@ -66,7 +66,7 @@ export default function HelpPage() {
 
           <div className="grid md:grid-cols-2 gap-2 sm:gap-3">
             <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-3">📊 주요 기능</h4>
+              <h4 className="text-lg font-semibold text-gray-600 mb-2 sm:mb-3">📊 주요 기능</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>실시간 센서 모니터링</li>
                 <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>디바이스 원격 제어</li>
@@ -77,7 +77,7 @@ export default function HelpPage() {
             </div>
 
             <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-3">👥 사용자 역할</h4>
+              <h4 className="text-lg font-semibold text-gray-600 mb-2 sm:mb-3">👥 사용자 역할</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li><strong>super_admin:</strong> 시스템 전체 관리</li>
                 <li><strong>system_admin:</strong> 시스템 모니터링 및 관리</li>
@@ -136,7 +136,7 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">🎯 주요 기능</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">🎯 주요 기능</h4>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className="text-2xl mb-2">🔍</div>
@@ -193,12 +193,12 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">🔧 농장 설정</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">🔧 농장 설정</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">1</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">기본 정보</h5>
+                  <h5 className="font-medium text-gray-600">기본 정보</h5>
                   <p className="text-sm text-gray-600">농장명, 위치, 연락처 등 기본 정보 입력</p>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">2</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">MQTT 브로커 설정</h5>
+                  <h5 className="font-medium text-gray-600">MQTT 브로커 설정</h5>
                   <p className="text-sm text-gray-600">브로커 URL, 포트, 인증 정보 설정</p>
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">3</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">디바이스 등록</h5>
+                  <h5 className="font-medium text-gray-600">디바이스 등록</h5>
                   <p className="text-sm text-gray-600">센서, 액추에이터 등 디바이스 등록</p>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">4</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">연결 테스트</h5>
+                  <h5 className="font-medium text-gray-600">연결 테스트</h5>
                   <p className="text-sm text-gray-600">MQTT 브로커와의 연결 상태 확인</p>
                 </div>
               </div>
@@ -274,7 +274,7 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">📊 센서 상태 표시</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">📊 센서 상태 표시</h4>
             <div className="grid md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-red-50 rounded-lg border border-red-200">
                 <div className="text-2xl mb-2">🔴</div>
@@ -342,12 +342,12 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">🎯 주요 기능</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">🎯 주요 기능</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">1</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">레시피 검색</h5>
+                  <h5 className="font-medium text-gray-600">레시피 검색</h5>
                   <p className="text-sm text-gray-600">작물명, 생육 단계, 출처별로 배양액 레시피 검색</p>
                 </div>
               </div>
@@ -355,7 +355,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">2</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">상세 정보 확인</h5>
+                  <h5 className="font-medium text-gray-600">상세 정보 확인</h5>
                   <p className="text-sm text-gray-600">EC, pH, 영양소 함량 등 상세 정보 확인</p>
                 </div>
               </div>
@@ -363,7 +363,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">3</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">조제 가이드</h5>
+                  <h5 className="font-medium text-gray-600">조제 가이드</h5>
                   <p className="text-sm text-gray-600">단계별 조제 방법과 주의사항 안내</p>
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">4</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">최신 업데이트</h5>
+                  <h5 className="font-medium text-gray-600">최신 업데이트</h5>
                   <p className="text-sm text-gray-600">최신 레시피 업데이트 정보 확인</p>
                 </div>
               </div>
@@ -408,11 +408,11 @@ export default function HelpPage() {
               <h4 className="font-semibold text-indigo-900 mb-2">🏗️ 아키텍처</h4>
               <div className="flex flex-wrap items-center justify-center space-x-2 space-y-1">
                 <div className="bg-green-100 px-2 py-1 rounded text-xs font-semibold text-green-800">디바이스</div>
-                <span className="text-gray-700 font-bold">→</span>
+                <span className="text-gray-600 font-bold">→</span>
                 <div className="bg-blue-100 px-2 py-1 rounded text-xs font-semibold text-blue-800">MQTT 브로커</div>
-                <span className="text-gray-700 font-bold">→</span>
+                <span className="text-gray-600 font-bold">→</span>
                 <div className="bg-purple-100 px-2 py-1 rounded text-xs font-semibold text-purple-800">스마트팜 브리지</div>
-                <span className="text-gray-700 font-bold">→</span>
+                <span className="text-gray-600 font-bold">→</span>
                 <div className="bg-orange-100 px-2 py-1 rounded text-xs font-semibold text-orange-800">웹 대시보드</div>
               </div>
             </div>
@@ -420,12 +420,12 @@ export default function HelpPage() {
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">🔧 브로커 설정</h4>
+              <h4 className="text-lg font-semibold text-gray-600 mb-3">🔧 브로커 설정</h4>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm font-bold">1</div>
                   <div>
-                    <h5 className="font-medium text-gray-900">브로커 선택</h5>
+                    <h5 className="font-medium text-gray-600">브로커 선택</h5>
                     <p className="text-sm text-gray-600">Mosquitto, EMQX, AWS IoT Core</p>
                   </div>
                 </div>
@@ -433,7 +433,7 @@ export default function HelpPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-sm font-bold">2</div>
                   <div>
-                    <h5 className="font-medium text-gray-900">설정 적용</h5>
+                    <h5 className="font-medium text-gray-600">설정 적용</h5>
                     <p className="text-sm text-gray-600">보안, 토픽, 권한 설정</p>
                   </div>
                 </div>
@@ -441,7 +441,7 @@ export default function HelpPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-sm font-bold">3</div>
                   <div>
-                    <h5 className="font-medium text-gray-900">연결 테스트</h5>
+                    <h5 className="font-medium text-gray-600">연결 테스트</h5>
                     <p className="text-sm text-gray-600">MQTT 클라이언트로 테스트</p>
                   </div>
                 </div>
@@ -449,12 +449,12 @@ export default function HelpPage() {
             </div>
 
             <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">💻 디바이스 연동</h4>
+              <h4 className="text-lg font-semibold text-gray-600 mb-3">💻 디바이스 연동</h4>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm font-bold">1</div>
                   <div>
-                    <h5 className="font-medium text-gray-900">템플릿 다운로드</h5>
+                    <h5 className="font-medium text-gray-600">템플릿 다운로드</h5>
                     <p className="text-sm text-gray-600">Arduino, Python, Node.js</p>
                   </div>
                 </div>
@@ -462,7 +462,7 @@ export default function HelpPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-sm font-bold">2</div>
                   <div>
-                    <h5 className="font-medium text-gray-900">설정 수정</h5>
+                    <h5 className="font-medium text-gray-600">설정 수정</h5>
                     <p className="text-sm text-gray-600">브로커 정보 입력</p>
                   </div>
                 </div>
@@ -470,7 +470,7 @@ export default function HelpPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-sm font-bold">3</div>
                   <div>
-                    <h5 className="font-medium text-gray-900">실행 및 테스트</h5>
+                    <h5 className="font-medium text-gray-600">실행 및 테스트</h5>
                     <p className="text-sm text-gray-600">디바이스 실행 후 연동 확인</p>
                   </div>
                 </div>
@@ -479,13 +479,13 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">📋 토픽 구조</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">📋 토픽 구조</h4>
             <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm">
               <div className="text-gray-600 mb-2">표준 토픽 패턴:</div>
               <div className="text-blue-600">farms/{'{farm_id}'}/devices/{'{device_id}'}/{'{message_type}'}</div>
               
               <div className="mt-4 text-gray-600">메시지 타입:</div>
-              <ul className="mt-2 space-y-1 text-gray-700">
+              <ul className="mt-2 space-y-1 text-gray-600">
                 <li>• <span className="text-green-600">registry</span> - 디바이스 등록 정보</li>
                 <li>• <span className="text-blue-600">state</span> - 디바이스 상태</li>
                 <li>• <span className="text-purple-600">telemetry</span> - 센서 데이터</li>
@@ -555,48 +555,48 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">🔐 권한 체계</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">🔐 권한 체계</h4>
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h5 className="font-medium text-gray-900 mb-2">사용자 역할</h5>
+                <h5 className="font-medium text-gray-600 mb-2">사용자 역할</h5>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-semibold text-gray-800">super_admin</span>
-                    <span className="text-xs text-gray-700 font-medium">시스템 전체 관리</span>
+                    <span className="text-sm font-semibold text-gray-600">super_admin</span>
+                    <span className="text-xs text-gray-600 font-medium">시스템 전체 관리</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-semibold text-gray-800">system_admin</span>
-                    <span className="text-xs text-gray-700 font-medium">시스템 모니터링</span>
+                    <span className="text-sm font-semibold text-gray-600">system_admin</span>
+                    <span className="text-xs text-gray-600 font-medium">시스템 모니터링</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-semibold text-gray-800">team_leader</span>
-                    <span className="text-xs text-gray-700 font-medium">팀 및 농장 관리</span>
+                    <span className="text-sm font-semibold text-gray-600">team_leader</span>
+                    <span className="text-xs text-gray-600 font-medium">팀 및 농장 관리</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-semibold text-gray-800">team_member</span>
-                    <span className="text-xs text-gray-700 font-medium">농장 조회</span>
+                    <span className="text-sm font-semibold text-gray-600">team_member</span>
+                    <span className="text-xs text-gray-600 font-medium">농장 조회</span>
                   </div>
                 </div>
               </div>
               
               <div>
-                <h5 className="font-medium text-gray-900 mb-2">접근 권한</h5>
+                <h5 className="font-medium text-gray-600 mb-2">접근 권한</h5>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-gray-800">관리자 페이지</span>
+                    <span className="text-sm font-semibold text-gray-600">관리자 페이지</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-gray-800">농장 관리</span>
+                    <span className="text-sm font-semibold text-gray-600">농장 관리</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-gray-800">시스템 모니터링</span>
+                    <span className="text-sm font-semibold text-gray-600">시스템 모니터링</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-gray-800">사용자 관리</span>
+                    <span className="text-sm font-semibold text-gray-600">사용자 관리</span>
                   </div>
                 </div>
               </div>
@@ -619,12 +619,12 @@ export default function HelpPage() {
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6 border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">📊 시스템 모니터링</h3>
-            <p className="text-gray-700 mb-4">시스템 상태, 성능 메트릭, 로그 등을 실시간으로 모니터링할 수 있습니다.</p>
+            <h3 className="text-xl font-bold text-gray-600 mb-4">📊 시스템 모니터링</h3>
+            <p className="text-gray-600 mb-4">시스템 상태, 성능 메트릭, 로그 등을 실시간으로 모니터링할 수 있습니다.</p>
             
             <div className="grid md:grid-cols-3 gap-4">
               <div className="bg-white rounded-lg p-4 border border-gray-100">
-                <h4 className="font-semibold text-gray-900 mb-2">🏥 헬스 체크</h4>
+                <h4 className="font-semibold text-gray-600 mb-2">🏥 헬스 체크</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• 데이터베이스 연결</li>
                   <li>• 서비스 상태</li>
@@ -634,7 +634,7 @@ export default function HelpPage() {
               </div>
               
               <div className="bg-white rounded-lg p-4 border border-gray-100">
-                <h4 className="font-semibold text-gray-900 mb-2">📈 메트릭</h4>
+                <h4 className="font-semibold text-gray-600 mb-2">📈 메트릭</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• 사용자 수</li>
                   <li>• 농장/디바이스 수</li>
@@ -644,7 +644,7 @@ export default function HelpPage() {
               </div>
               
               <div className="bg-white rounded-lg p-4 border border-gray-100">
-                <h4 className="font-semibold text-gray-900 mb-2">⚡ 성능</h4>
+                <h4 className="font-semibold text-gray-600 mb-2">⚡ 성능</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• 메모리 사용률</li>
                   <li>• CPU 사용률</li>
@@ -656,12 +656,12 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-white rounded-lg p-6 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-900 mb-3">🔍 모니터링 기능</h4>
+            <h4 className="text-lg font-semibold text-gray-600 mb-3">🔍 모니터링 기능</h4>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">1</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">실시간 상태 확인</h5>
+                  <h5 className="font-medium text-gray-600">실시간 상태 확인</h5>
                   <p className="text-sm text-gray-600">시스템 헬스 체크와 서비스 상태를 실시간으로 확인</p>
                 </div>
               </div>
@@ -669,7 +669,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">2</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">성능 메트릭</h5>
+                  <h5 className="font-medium text-gray-600">성능 메트릭</h5>
                   <p className="text-sm text-gray-600">시스템 리소스 사용률과 성능 지표 모니터링</p>
                 </div>
               </div>
@@ -677,7 +677,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">3</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">자동 새로고침</h5>
+                  <h5 className="font-medium text-gray-600">자동 새로고침</h5>
                   <p className="text-sm text-gray-600">30초마다 데이터 자동 업데이트</p>
                 </div>
               </div>
@@ -685,7 +685,7 @@ export default function HelpPage() {
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 font-bold">4</div>
                 <div>
-                  <h5 className="font-medium text-gray-900">에러 처리</h5>
+                  <h5 className="font-medium text-gray-600">에러 처리</h5>
                   <p className="text-sm text-gray-600">상세한 에러 메시지와 재시도 기능</p>
                 </div>
               </div>
@@ -738,7 +738,7 @@ export default function HelpPage() {
           {/* 사이드바 네비게이션 */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">📚 목차</h2>
+              <h2 className="text-lg font-semibold text-gray-600 mb-4">📚 목차</h2>
               <nav className="space-y-2">
                 {sections.map((section) => (
                   <button
@@ -754,7 +754,7 @@ export default function HelpPage() {
                       <span className="text-lg">{section.icon}</span>
                       <div>
                         <div className="font-medium">{section.title}</div>
-                        <div className="text-xs text-gray-700 font-medium">{section.description}</div>
+                        <div className="text-xs text-gray-600 font-medium">{section.description}</div>
                       </div>
                     </div>
                   </button>
@@ -771,7 +771,7 @@ export default function HelpPage() {
                   <div className="flex items-center space-x-3 mb-6">
                     <span className="text-3xl">{currentSection.icon}</span>
                     <div>
-                      <h1 className="text-2xl font-bold text-gray-900">{currentSection.title}</h1>
+                      <h1 className="text-2xl font-bold text-gray-600">{currentSection.title}</h1>
                       <p className="text-gray-600">{currentSection.description}</p>
                     </div>
                   </div>

@@ -64,7 +64,7 @@ export default function NutrientGuidePage() {
               <span className="text-2xl">🌱</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">작물별 레시피</h3>
+              <h3 className="text-lg font-semibold text-gray-600">작물별 레시피</h3>
               <p className="text-sm text-gray-600">40+ 작물 지원</p>
             </div>
           </div>
@@ -82,7 +82,7 @@ export default function NutrientGuidePage() {
               <span className="text-2xl">📚</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">신뢰할 수 있는 출처</h3>
+              <h3 className="text-lg font-semibold text-gray-600">신뢰할 수 있는 출처</h3>
               <p className="text-sm text-gray-600">과학적 근거</p>
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function NutrientGuidePage() {
               <span className="text-2xl">⚡</span>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">실시간 모니터링</h3>
+              <h3 className="text-lg font-semibold text-gray-600">실시간 모니터링</h3>
               <p className="text-sm text-gray-600">EC/pH 추적</p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function NutrientGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 주요 영양소 지표</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 주요 영양소 지표</h3>
         <div className="grid md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-green-50 rounded-lg border border-green-200">
             <div className="text-2xl mb-2">⚡</div>
@@ -155,21 +155,21 @@ export default function NutrientGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">🔍 검색 옵션</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">🔍 검색 옵션</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">작물명</label>
+              <label className="block text-sm font-semibold text-gray-600">작물명</label>
               <input 
                 type="text" 
                 placeholder="예: 상추, 토마토"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-600 font-medium"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 placeholder-gray-600 font-medium"
               />
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">생육 단계</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 font-medium">
+              <label className="block text-sm font-semibold text-gray-600">생육 단계</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 font-medium">
                 <option value="">전체</option>
                 <option value="seedling">발아기</option>
                 <option value="vegetative">영양생장기</option>
@@ -179,8 +179,8 @@ export default function NutrientGuidePage() {
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-800">출처</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 font-medium">
+              <label className="block text-sm font-semibold text-gray-600">출처</label>
+              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 font-medium">
                 <option value="">전체</option>
                 <option value="cornell">Cornell University</option>
                 <option value="usda">USDA</option>
@@ -196,13 +196,13 @@ export default function NutrientGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">📋 검색 결과</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">📋 검색 결과</h3>
         <div className="space-y-4">
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h4 className="font-medium text-gray-900">상추 - 영양생장기</h4>
-                <p className="text-sm text-gray-700 font-medium">Cornell University • 2023</p>
+                <h4 className="font-medium text-gray-600">상추 - 영양생장기</h4>
+                <p className="text-sm text-gray-600 font-medium">Cornell University • 2023</p>
               </div>
               <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
                 EC: 1.2-1.8 mS/cm
@@ -211,15 +211,15 @@ export default function NutrientGuidePage() {
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="font-medium">EC 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">1.5 mS/cm</span>
+                <span className="ml-2 text-gray-600 font-medium">1.5 mS/cm</span>
               </div>
               <div>
                 <span className="font-medium">pH 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">6.0</span>
+                <span className="ml-2 text-gray-600 font-medium">6.0</span>
               </div>
               <div>
                 <span className="font-medium">온도:</span>
-                <span className="ml-2 text-gray-700 font-medium">20-22°C</span>
+                <span className="ml-2 text-gray-600 font-medium">20-22°C</span>
               </div>
             </div>
             <div className="mt-3">
@@ -232,8 +232,8 @@ export default function NutrientGuidePage() {
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h4 className="font-medium text-gray-900">토마토 - 결실기</h4>
-                <p className="text-sm text-gray-700 font-medium">USDA 농업연구소 • 2022</p>
+                <h4 className="font-medium text-gray-600">토마토 - 결실기</h4>
+                <p className="text-sm text-gray-600 font-medium">USDA 농업연구소 • 2022</p>
               </div>
               <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
                 EC: 2.0-2.5 mS/cm
@@ -242,15 +242,15 @@ export default function NutrientGuidePage() {
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="font-medium">EC 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">2.2 mS/cm</span>
+                <span className="ml-2 text-gray-600 font-medium">2.2 mS/cm</span>
               </div>
               <div>
                 <span className="font-medium">pH 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">6.2</span>
+                <span className="ml-2 text-gray-600 font-medium">6.2</span>
               </div>
               <div>
                 <span className="font-medium">온도:</span>
-                <span className="ml-2 text-gray-700 font-medium">22-24°C</span>
+                <span className="ml-2 text-gray-600 font-medium">22-24°C</span>
               </div>
             </div>
             <div className="mt-3">
@@ -263,8 +263,8 @@ export default function NutrientGuidePage() {
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h4 className="font-medium text-gray-900">오이 - 생육기</h4>
-                <p className="text-sm text-gray-700 font-medium">한국농업연구원 • 2023</p>
+                <h4 className="font-medium text-gray-600">오이 - 생육기</h4>
+                <p className="text-sm text-gray-600 font-medium">한국농업연구원 • 2023</p>
               </div>
               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                 EC: 1.8-2.2 mS/cm
@@ -273,15 +273,15 @@ export default function NutrientGuidePage() {
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="font-medium">EC 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">2.0 mS/cm</span>
+                <span className="ml-2 text-gray-600 font-medium">2.0 mS/cm</span>
               </div>
               <div>
                 <span className="font-medium">pH 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">6.5</span>
+                <span className="ml-2 text-gray-600 font-medium">6.5</span>
               </div>
               <div>
                 <span className="font-medium">온도:</span>
-                <span className="ml-2 text-gray-700 font-medium">24-26°C</span>
+                <span className="ml-2 text-gray-600 font-medium">24-26°C</span>
               </div>
             </div>
             <div className="mt-3">
@@ -294,8 +294,8 @@ export default function NutrientGuidePage() {
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h4 className="font-medium text-gray-900">딸기 - 개화기</h4>
-                <p className="text-sm text-gray-700 font-medium">일본 농업기술센터 • 2022</p>
+                <h4 className="font-medium text-gray-600">딸기 - 개화기</h4>
+                <p className="text-sm text-gray-600 font-medium">일본 농업기술센터 • 2022</p>
               </div>
               <span className="px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
                 EC: 1.0-1.5 mS/cm
@@ -304,15 +304,15 @@ export default function NutrientGuidePage() {
             <div className="grid md:grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="font-medium">EC 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">1.2 mS/cm</span>
+                <span className="ml-2 text-gray-600 font-medium">1.2 mS/cm</span>
               </div>
               <div>
                 <span className="font-medium">pH 목표값:</span>
-                <span className="ml-2 text-gray-700 font-medium">5.8</span>
+                <span className="ml-2 text-gray-600 font-medium">5.8</span>
               </div>
               <div>
                 <span className="font-medium">온도:</span>
-                <span className="ml-2 text-gray-700 font-medium">18-20°C</span>
+                <span className="ml-2 text-gray-600 font-medium">18-20°C</span>
               </div>
             </div>
             <div className="mt-3">
@@ -337,7 +337,7 @@ export default function NutrientGuidePage() {
 
       <div className="space-y-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 1단계: 재료 준비</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">📋 1단계: 재료 준비</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
@@ -373,49 +373,49 @@ export default function NutrientGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">⚖️ 2단계: 계량 및 혼합</h3>
+          <h3 className="text-lg font-bold text-gray-600 mb-4">⚖️ 2단계: 계량 및 혼합</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">A액 (칼슘계) - 상추용</h4>
+                <h4 className="font-semibold text-gray-600 mb-3">A액 (칼슘계) - 상추용</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">질산칼슘 (Ca(NO₃)₂)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">236g</span>
+                    <span className="text-sm text-gray-600 font-medium">질산칼슘 (Ca(NO₃)₂)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">236g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">질산칼륨 (KNO₃)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">101g</span>
+                    <span className="text-sm text-gray-600 font-medium">질산칼륨 (KNO₃)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">101g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">질산암모늄 (NH₄NO₃)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">80g</span>
+                    <span className="text-sm text-gray-600 font-medium">질산암모늄 (NH₄NO₃)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">80g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">물 (H₂O)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">10L</span>
+                    <span className="text-sm text-gray-600 font-medium">물 (H₂O)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">10L</span>
                   </div>
                 </div>
               </div>
               
               <div>
-                <h4 className="font-semibold text-gray-900 mb-3">B액 (인산계) - 상추용</h4>
+                <h4 className="font-semibold text-gray-600 mb-3">B액 (인산계) - 상추용</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">인산이수소칼륨 (KH₂PO₄)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">136g</span>
+                    <span className="text-sm text-gray-600 font-medium">인산이수소칼륨 (KH₂PO₄)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">136g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">황산마그네슘 (MgSO₄)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">123g</span>
+                    <span className="text-sm text-gray-600 font-medium">황산마그네슘 (MgSO₄)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">123g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">황산칼륨 (K₂SO₄)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">87g</span>
+                    <span className="text-sm text-gray-600 font-medium">황산칼륨 (K₂SO₄)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">87g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                    <span className="text-sm text-gray-800 font-medium">물 (H₂O)</span>
-                    <span className="font-mono text-sm text-gray-900 font-semibold">10L</span>
+                    <span className="text-sm text-gray-600 font-medium">물 (H₂O)</span>
+                    <span className="font-mono text-sm text-gray-600 font-semibold">10L</span>
                   </div>
                 </div>
               </div>
@@ -425,54 +425,54 @@ export default function NutrientGuidePage() {
               <h4 className="font-semibold text-yellow-900 mb-3">🌿 작물별 레시피 비교</h4>
               <div className="grid md:grid-cols-3 gap-4 text-sm">
                 <div className="p-3 bg-white rounded border">
-                  <h5 className="font-medium text-gray-900 mb-2">토마토용</h5>
+                  <h5 className="font-medium text-gray-600 mb-2">토마토용</h5>
                   <div className="space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">질산칼슘:</span>
+                      <span className="text-gray-600">질산칼슘:</span>
                       <span className="font-mono font-semibold">280g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">인산이수소칼륨:</span>
+                      <span className="text-gray-600">인산이수소칼륨:</span>
                       <span className="font-mono font-semibold">150g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">황산마그네슘:</span>
+                      <span className="text-gray-600">황산마그네슘:</span>
                       <span className="font-mono font-semibold">140g</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="p-3 bg-white rounded border">
-                  <h5 className="font-medium text-gray-900 mb-2">오이용</h5>
+                  <h5 className="font-medium text-gray-600 mb-2">오이용</h5>
                   <div className="space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">질산칼슘:</span>
+                      <span className="text-gray-600">질산칼슘:</span>
                       <span className="font-mono font-semibold">250g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">인산이수소칼륨:</span>
+                      <span className="text-gray-600">인산이수소칼륨:</span>
                       <span className="font-mono font-semibold">120g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">황산마그네슘:</span>
+                      <span className="text-gray-600">황산마그네슘:</span>
                       <span className="font-mono font-semibold">130g</span>
                     </div>
                   </div>
                 </div>
                 
                 <div className="p-3 bg-white rounded border">
-                  <h5 className="font-medium text-gray-900 mb-2">딸기용</h5>
+                  <h5 className="font-medium text-gray-600 mb-2">딸기용</h5>
                   <div className="space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-gray-700">질산칼슘:</span>
+                      <span className="text-gray-600">질산칼슘:</span>
                       <span className="font-mono font-semibold">200g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">인산이수소칼륨:</span>
+                      <span className="text-gray-600">인산이수소칼륨:</span>
                       <span className="font-mono font-semibold">100g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-700">황산마그네슘:</span>
+                      <span className="text-gray-600">황산마그네슘:</span>
                       <span className="font-mono font-semibold">110g</span>
                     </div>
                   </div>
@@ -494,30 +494,30 @@ export default function NutrientGuidePage() {
               <div className="grid md:grid-cols-2 gap-4 text-sm">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 bg-white rounded">
-                    <span className="text-gray-800 font-medium">철 킬레이트 (Fe-EDTA)</span>
-                    <span className="font-mono text-gray-900 font-semibold">15g</span>
+                    <span className="text-gray-600 font-medium">철 킬레이트 (Fe-EDTA)</span>
+                    <span className="font-mono text-gray-600 font-semibold">15g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-white rounded">
-                    <span className="text-gray-800 font-medium">붕산 (H₃BO₃)</span>
-                    <span className="font-mono text-gray-900 font-semibold">3g</span>
+                    <span className="text-gray-600 font-medium">붕산 (H₃BO₃)</span>
+                    <span className="font-mono text-gray-600 font-semibold">3g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-white rounded">
-                    <span className="text-gray-800 font-medium">황산망간 (MnSO₄)</span>
-                    <span className="font-mono text-gray-900 font-semibold">2g</span>
+                    <span className="text-gray-600 font-medium">황산망간 (MnSO₄)</span>
+                    <span className="font-mono text-gray-600 font-semibold">2g</span>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 bg-white rounded">
-                    <span className="text-gray-800 font-medium">황산아연 (ZnSO₄)</span>
-                    <span className="font-mono text-gray-900 font-semibold">0.5g</span>
+                    <span className="text-gray-600 font-medium">황산아연 (ZnSO₄)</span>
+                    <span className="font-mono text-gray-600 font-semibold">0.5g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-white rounded">
-                    <span className="text-gray-800 font-medium">황산구리 (CuSO₄)</span>
-                    <span className="font-mono text-gray-900 font-semibold">0.1g</span>
+                    <span className="text-gray-600 font-medium">황산구리 (CuSO₄)</span>
+                    <span className="font-mono text-gray-600 font-semibold">0.1g</span>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-white rounded">
-                    <span className="text-gray-800 font-medium">몰리브덴산암모늄</span>
-                    <span className="font-mono text-gray-900 font-semibold">0.05g</span>
+                    <span className="text-gray-600 font-medium">몰리브덴산암모늄</span>
+                    <span className="font-mono text-gray-600 font-semibold">0.05g</span>
                   </div>
                 </div>
               </div>
@@ -529,7 +529,7 @@ export default function NutrientGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🧪 3단계: 최종 조제</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🧪 3단계: 최종 조제</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-3 gap-4">
               <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
@@ -562,19 +562,19 @@ export default function NutrientGuidePage() {
               <div className="grid md:grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" className="w-4 h-4 text-green-800 font-semibold" />
-                  <span className="text-gray-800 font-medium">EC 값 확인 (목표값 ±0.1)</span>
+                  <span className="text-gray-600 font-medium">EC 값 확인 (목표값 ±0.1)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" className="w-4 h-4 text-green-800 font-semibold" />
-                  <span className="text-gray-800 font-medium">pH 값 확인 (목표값 ±0.1)</span>
+                  <span className="text-gray-600 font-medium">pH 값 확인 (목표값 ±0.1)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" className="w-4 h-4 text-green-800 font-semibold" />
-                  <span className="text-gray-800 font-medium">온도 확인 (18-25°C)</span>
+                  <span className="text-gray-600 font-medium">온도 확인 (18-25°C)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" className="w-4 h-4 text-green-800 font-semibold" />
-                  <span className="text-gray-800 font-medium">용존산소 확인 (5mg/L 이상)</span>
+                  <span className="text-gray-600 font-medium">용존산소 확인 (5mg/L 이상)</span>
                 </div>
               </div>
             </div>
@@ -599,9 +599,9 @@ export default function NutrientGuidePage() {
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">⚡</span>
             </div>
-            <span className="text-sm text-gray-700 font-medium">현재</span>
+            <span className="text-sm text-gray-600 font-medium">현재</span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">1.52</h3>
+          <h3 className="text-2xl font-bold text-gray-600 mb-1">1.52</h3>
           <p className="text-sm text-gray-600">EC (mS/cm)</p>
           <div className="mt-2 flex items-center">
             <span className="text-xs text-green-800 font-semibold">정상 범위</span>
@@ -613,9 +613,9 @@ export default function NutrientGuidePage() {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🧪</span>
             </div>
-            <span className="text-sm text-gray-700 font-medium">현재</span>
+            <span className="text-sm text-gray-600 font-medium">현재</span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">6.1</h3>
+          <h3 className="text-2xl font-bold text-gray-600 mb-1">6.1</h3>
           <p className="text-sm text-gray-600">pH</p>
           <div className="mt-2 flex items-center">
             <span className="text-xs text-green-800 font-semibold">정상 범위</span>
@@ -627,9 +627,9 @@ export default function NutrientGuidePage() {
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🌡️</span>
             </div>
-            <span className="text-sm text-gray-700 font-medium">현재</span>
+            <span className="text-sm text-gray-600 font-medium">현재</span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">21.5°C</h3>
+          <h3 className="text-2xl font-bold text-gray-600 mb-1">21.5°C</h3>
           <p className="text-sm text-gray-600">온도</p>
           <div className="mt-2 flex items-center">
             <span className="text-xs text-green-800 font-semibold">적정 온도</span>
@@ -641,9 +641,9 @@ export default function NutrientGuidePage() {
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">💧</span>
             </div>
-            <span className="text-sm text-gray-700 font-medium">현재</span>
+            <span className="text-sm text-gray-600 font-medium">현재</span>
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-1">6.2</h3>
+          <h3 className="text-2xl font-bold text-gray-600 mb-1">6.2</h3>
           <p className="text-sm text-gray-600">DO (mg/L)</p>
           <div className="mt-2 flex items-center">
             <span className="text-xs text-green-800 font-semibold">충분</span>
@@ -653,14 +653,14 @@ export default function NutrientGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">📈 24시간 트렌드</h3>
+          <h3 className="text-lg font-bold text-gray-600 mb-4">📈 24시간 트렌드</h3>
           <div className="h-64 bg-gray-50 rounded-lg p-4">
             <div className="h-full relative">
               {/* 차트 제목 */}
-              <div className="text-xs text-gray-700 mb-2 font-semibold">EC (mS/cm) & pH</div>
+              <div className="text-xs text-gray-600 mb-2 font-semibold">EC (mS/cm) & pH</div>
               
               {/* Y축 라벨 */}
-              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-700 font-medium">
+              <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-600 font-medium">
                 <span>8.0</span>
                 <span>7.5</span>
                 <span>7.0</span>
@@ -727,7 +727,7 @@ export default function NutrientGuidePage() {
                 </svg>
                 
                 {/* X축 라벨 */}
-                <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-700 font-medium">
+                <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-600 font-medium">
                   <span>00:00</span>
                   <span>04:00</span>
                   <span>08:00</span>
@@ -742,11 +742,11 @@ export default function NutrientGuidePage() {
               <div className="absolute top-2 right-2 flex space-x-4 text-xs">
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-0.5 bg-green-500"></div>
-                  <span className="text-gray-700 font-medium">EC</span>
+                  <span className="text-gray-600 font-medium">EC</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <div className="w-3 h-0.5 bg-blue-500"></div>
-                  <span className="text-gray-700 font-medium">pH</span>
+                  <span className="text-gray-600 font-medium">pH</span>
                 </div>
               </div>
             </div>
@@ -754,7 +754,7 @@ export default function NutrientGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🚨 알림 현황</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🚨 알림 현황</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg border border-green-200">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -784,30 +784,30 @@ export default function NutrientGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">⚙️ 자동 조정 설정</h3>
+        <h3 className="text-lg font-bold text-gray-600 mb-4">⚙️ 자동 조정 설정</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <h4 className="font-bold text-gray-900">EC 자동 조정</h4>
+              <h4 className="font-bold text-gray-600">EC 자동 조정</h4>
               <div className="flex items-center space-x-3">
                 <input type="checkbox" className="w-4 h-4 text-purple-800 font-semibold" defaultChecked />
-                <label className="text-sm font-semibold text-gray-900">EC 값이 목표값에서 벗어나면 자동 조정</label>
+                <label className="text-sm font-semibold text-gray-600">EC 값이 목표값에서 벗어나면 자동 조정</label>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-900">허용 오차</label>
-                <input type="number" step="0.1" defaultValue="0.1" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-900" />
+                <label className="block text-sm font-bold text-gray-600">허용 오차</label>
+                <input type="number" step="0.1" defaultValue="0.1" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600" />
               </div>
             </div>
             
             <div className="space-y-3">
-              <h4 className="font-bold text-gray-900">pH 자동 조정</h4>
+              <h4 className="font-bold text-gray-600">pH 자동 조정</h4>
               <div className="flex items-center space-x-3">
                 <input type="checkbox" className="w-4 h-4 text-purple-800 font-semibold" defaultChecked />
-                <label className="text-sm font-semibold text-gray-900">pH 값이 목표값에서 벗어나면 자동 조정</label>
+                <label className="text-sm font-semibold text-gray-600">pH 값이 목표값에서 벗어나면 자동 조정</label>
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-gray-900">허용 오차</label>
-                <input type="number" step="0.1" defaultValue="0.1" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-900" />
+                <label className="block text-sm font-bold text-gray-600">허용 오차</label>
+                <input type="number" step="0.1" defaultValue="0.1" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-600" />
               </div>
             </div>
           </div>
@@ -827,7 +827,7 @@ export default function NutrientGuidePage() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🔄 교체 주기</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🔄 교체 주기</h3>
           <div className="space-y-4">
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h4 className="font-medium text-blue-900 mb-2">일반적인 교체 주기</h4>
@@ -852,7 +852,7 @@ export default function NutrientGuidePage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">🧹 청소 및 관리</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">🧹 청소 및 관리</h3>
           <div className="space-y-4">
             <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
               <h4 className="font-medium text-purple-900 mb-2">정기 청소</h4>
@@ -878,7 +878,7 @@ export default function NutrientGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📚 문제 해결 가이드</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📚 문제 해결 가이드</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
@@ -912,11 +912,11 @@ export default function NutrientGuidePage() {
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 성능 최적화</h3>
+        <h3 className="text-lg font-semibold text-gray-600 mb-4">📊 성능 최적화</h3>
         <div className="space-y-4">
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">모니터링 최적화</h4>
+              <h4 className="font-medium text-gray-600">모니터링 최적화</h4>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• 실시간 센서 데이터 수집</li>
                 <li>• 자동 알림 시스템 구축</li>
@@ -926,7 +926,7 @@ export default function NutrientGuidePage() {
             </div>
             
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">자동화 시스템</h4>
+              <h4 className="font-medium text-gray-600">자동화 시스템</h4>
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• 자동 EC/pH 조정</li>
                 <li>• 스케줄 기반 교체</li>
@@ -998,7 +998,7 @@ export default function NutrientGuidePage() {
           {/* 사이드바 */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
+              <h3 className="text-lg font-semibold text-gray-600 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
                   <button
@@ -1007,7 +1007,7 @@ export default function NutrientGuidePage() {
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       activeTab === tab.id
                         ? 'bg-cyan-100 text-cyan-900 border border-cyan-200'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-600'
                     }`}
                   >
                     <span className="mr-2">{tab.icon}</span>
