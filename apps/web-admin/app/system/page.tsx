@@ -254,7 +254,7 @@ export default function SystemPage() {
                 <div className="text-2xl font-bold text-purple-600">
                   {healthData.system?.memoryUsage ? Math.round((healthData.system.memoryUsage.heapUsed / healthData.system.memoryUsage.heapTotal) * 100) : 0}%
                 </div>
-                <p className="text-xs text-gray-500">메모리 사용률</p>
+                <p className="text-xs text-gray-500">로컬 서버 메모리</p>
               </div>
             </div>
           </div>
