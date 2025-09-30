@@ -151,40 +151,44 @@ export default function SystemPage() {
       setLoading(true);
       setError(null);
 
-      const [healthResponse, metricsResponse, devicesResponse] = await Promise.all([
+      const [healthResponse, metricsResponse, devicesResponse] = await Promise.allSettled([
         fetch('/api/system/simple-health'),
         fetch('/api/system/simple-metrics'),
         fetch('/api/devices')
       ]);
 
       // 각 응답의 상태를 개별적으로 확인
-      if (!healthResponse.ok) {
-        let healthError;
-        try {
-          healthError = await healthResponse.json();
-        } catch {
-          healthError = { error: '응답을 파싱할 수 없습니다.' };
-        }
+      let health, systemMetrics, devicesData;
+
+      // 헬스 응답 처리
+      if (healthResponse.status === 'fulfilled' && healthResponse.value.ok) {
+        health = await healthResponse.value.json();
+      } else {
+        const healthError = healthResponse.status === 'rejected' 
+          ? healthResponse.reason 
+          : await healthResponse.value.json().catch(() => ({ error: '응답을 파싱할 수 없습니다.' }));
         console.error('헬스 API 에러:', healthError);
-        throw new Error(`헬스 체크 실패: ${healthResponse.status} ${healthError.error || 'Unknown error'}`);
+        throw new Error(`헬스 체크 실패: ${healthResponse.status === 'rejected' ? 'Network error' : healthResponse.value.status} ${healthError.error || 'Unknown error'}`);
       }
 
-      if (!metricsResponse.ok) {
-        let metricsError;
-        try {
-          metricsError = await metricsResponse.json();
-        } catch {
-          metricsError = { error: '응답을 파싱할 수 없습니다.' };
-        }
+      // 메트릭 응답 처리
+      if (metricsResponse.status === 'fulfilled' && metricsResponse.value.ok) {
+        systemMetrics = await metricsResponse.value.json();
+      } else {
+        const metricsError = metricsResponse.status === 'rejected' 
+          ? metricsResponse.reason 
+          : await metricsResponse.value.json().catch(() => ({ error: '응답을 파싱할 수 없습니다.' }));
         console.error('메트릭 API 에러:', metricsError);
-        throw new Error(`메트릭 수집 실패: ${metricsResponse.status} ${metricsError.error || 'Unknown error'}`);
+        throw new Error(`메트릭 수집 실패: ${metricsResponse.status === 'rejected' ? 'Network error' : metricsResponse.value.status} ${metricsError.error || 'Unknown error'}`);
       }
 
-      const [health, systemMetrics, devicesData] = await Promise.all([
-        healthResponse.json(),
-        metricsResponse.json(),
-        devicesResponse.json()
-      ]);
+      // 디바이스 응답 처리 (선택적)
+      if (devicesResponse.status === 'fulfilled' && devicesResponse.value.ok) {
+        devicesData = await devicesResponse.value.json();
+      } else {
+        console.warn('디바이스 API 호출 실패:', devicesResponse.status === 'rejected' ? devicesResponse.reason : 'HTTP error');
+        devicesData = { ok: false, data: [] };
+      }
 
       console.log('헬스 응답:', health);
       console.log('메트릭 응답:', systemMetrics);
@@ -204,11 +208,20 @@ export default function SystemPage() {
         throw new Error('메트릭 데이터 형식이 올바르지 않습니다.');
       }
 
-      if (devicesData.ok && devicesData.data) {
-        setDevices(devicesData.data);
+      // 디바이스 데이터 처리 (선택적)
+      if (devicesData && typeof devicesData === 'object') {
+        if (devicesData.ok && Array.isArray(devicesData.data)) {
+          setDevices(devicesData.data);
+        } else if (devicesData.ok && devicesData.data === null) {
+          // 빈 디바이스 목록
+          setDevices([]);
+        } else {
+          console.warn('디바이스 데이터 구조가 예상과 다름:', devicesData);
+          setDevices([]);
+        }
       } else {
-        console.error('디바이스 데이터 구조 오류:', devicesData);
-        // 디바이스 데이터는 필수가 아니므로 에러를 던지지 않음
+        console.warn('디바이스 API 응답이 비어있음:', devicesData);
+        setDevices([]);
       }
     } catch (err) {
       console.error('시스템 데이터 로드 오류:', err);
