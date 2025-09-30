@@ -577,7 +577,7 @@ export default function AdminPage() {
                         key={u.id}
                         className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-2 sm:p-3 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                       >
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
                           <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-5 flex-1">
                             <div
                               className={`w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center shadow-lg ${
@@ -590,9 +590,9 @@ export default function AdminPage() {
                             >
                               <span className="text-lg sm:text-2xl lg:text-3xl">{u.role === 'system_admin' ? '👑' : u.role === 'team_leader' ? '👨‍💼' : '👤'}</span>
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 mb-2 sm:mb-3 lg:mb-4">
-                                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 lg:space-x-3 mb-2 sm:mb-3 lg:mb-4">
+                                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 whitespace-nowrap">{u.name || '이름 없음'}</h4>
                                 <div
                                   className={`text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-semibold ${
                                     u.is_active ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'
@@ -600,7 +600,10 @@ export default function AdminPage() {
                                 >
                                   {u.is_active ? '활성' : '비활성'}
                                 </div>
-                                <p className="text-gray-600 font-medium text-sm sm:text-base lg:text-lg">{u.email}</p>
+                                <p className="text-gray-600 font-medium text-sm sm:text-base lg:text-lg truncate">{u.email}</p>
+                              </div>
+                              
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-2">
                                 {u.phone && (
                                   <span className="flex items-center text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
                                     <span className="mr-1 sm:mr-1.5">📞</span>
@@ -612,19 +615,19 @@ export default function AdminPage() {
                                 </span>
                               </div>
 
-                              <div className="flex items-center space-x-4 mb-2">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                                 {u.company && (
-                                  <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-purple-100 text-purple-800 border border-purple-200 shadow-sm">
+                                  <span className="inline-flex items-center px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-purple-100 text-purple-800 border border-purple-200 shadow-sm">
                                     🏢 {u.company}
                                   </span>
                                 )}
                                 {u.team_name && (
-                                  <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-green-100 text-green-800 border border-green-200 shadow-sm">
+                                  <span className="inline-flex items-center px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-green-100 text-green-800 border border-green-200 shadow-sm">
                                     🏡 {u.team_name}
                                   </span>
                                 )}
                                 <span
-                                  className={`inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold shadow-sm ${
+                                  className={`inline-flex items-center px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 lg:py-2 rounded-xl text-xs sm:text-sm font-semibold shadow-sm ${
                                     u.role === 'system_admin'
                                       ? 'bg-yellow-100 text-yellow-800 border border-yellow-200'
                                       : u.role === 'team_leader'
@@ -635,8 +638,8 @@ export default function AdminPage() {
                                   {u.role === 'system_admin' ? '👑 시스템관리자' : u.role === 'team_leader' ? '👨‍💼 농장장' : '👤 팀원'}
                                 </span>
                                 {(u as any).updated_at && (
-                                  <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
-                                    <span className="mr-1.5">🕒</span>최근 접속:{' '}
+                                  <span className="flex items-center text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+                                    <span className="mr-1 sm:mr-1.5">🕒</span>최근 접속:{' '}
                                     {new Date((u as any).updated_at).toLocaleDateString('ko-KR')}
                                   </span>
                                 )}
@@ -644,10 +647,10 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center justify-end lg:justify-start lg:ml-4">
                             <button
                               onClick={() => handleEditUser(u)}
-                              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl text-xs sm:text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 whitespace-nowrap"
                             >
                               ✏️ 편집
                             </button>
