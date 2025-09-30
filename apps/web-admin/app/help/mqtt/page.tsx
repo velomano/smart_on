@@ -217,6 +217,20 @@ export default function MqttIntegrationGuidePage() {
         </div>
       </div>
 
+      <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg p-6 border border-cyan-200">
+        <h3 className="text-lg font-semibold text-cyan-900 mb-4">🌉 브로커-브리지 연결</h3>
+        <p className="text-cyan-800 mb-4">
+          농장의 MQTT 브로커를 스마트팜 플랫폼의 브리지와 연결하는 핵심 가이드입니다.
+        </p>
+        <a 
+          href="/api/templates/download?type=broker-bridge" 
+          className="inline-flex items-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors"
+          download
+        >
+          📥 브로커-브리지 연결 가이드 다운로드
+        </a>
+      </div>
+
       <div className="bg-white rounded-lg p-6 border border-gray-200">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">🚀 빠른 설정 가이드</h3>
         <div className="space-y-4">
@@ -239,8 +253,8 @@ export default function MqttIntegrationGuidePage() {
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">3</div>
             <div>
-              <h4 className="font-medium text-gray-900">보안 설정</h4>
-              <p className="text-sm text-gray-600">TLS/SSL, 인증, 권한 설정</p>
+              <h4 className="font-medium text-gray-900">브리지 연결</h4>
+              <p className="text-sm text-gray-600">스마트팜 브리지와 연결 설정</p>
             </div>
           </div>
           
@@ -265,7 +279,54 @@ export default function MqttIntegrationGuidePage() {
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg p-6 border border-gray-200">
+          <div className="text-center mb-4">
+            <div className="text-4xl mb-2">🍓</div>
+            <h3 className="text-lg font-semibold text-gray-900">라즈베리파이5</h3>
+            <p className="text-sm text-gray-600">고성능 IoT 디바이스</p>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">필요 패키지</h4>
+              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono mb-2">
+                <div>pip install paho-mqtt</div>
+                <div>pip install RPi.GPIO</div>
+                <div>pip install adafruit-circuitpython-dht</div>
+              </div>
+              <a 
+                href="/api/templates/download?type=raspberry-pi" 
+                className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 라즈베리파이5 템플릿
+              </a>
+            </div>
+            
+            <div className="bg-green-50 p-3 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-1">주요 기능</h4>
+              <ul className="text-sm text-green-700 space-y-1">
+                <li>• GPIO 센서/액추에이터 제어</li>
+                <li>• 고성능 처리 능력</li>
+                <li>• 다양한 센서 지원</li>
+                <li>• 시스템 서비스 지원</li>
+              </ul>
+            </div>
+            
+            <div className="bg-purple-50 p-3 rounded-lg">
+              <h4 className="font-medium text-purple-900 mb-1">설정 가이드</h4>
+              <a 
+                href="/api/templates/download?type=raspberry-pi-setup" 
+                className="inline-flex items-center px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 라즈베리파이5 설정 가이드
+              </a>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-lg p-6 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🔌</div>

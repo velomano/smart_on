@@ -58,6 +58,30 @@ export async function GET(request: NextRequest) {
         icon: '☁️',
         filename: 'aws_iot_core_setup.md',
         category: 'broker'
+      },
+      {
+        id: 'raspberry-pi',
+        name: '라즈베리파이5',
+        description: '라즈베리파이5 기반 IoT 디바이스 템플릿',
+        icon: '🍓',
+        filename: 'raspberry_pi_mqtt_template.py',
+        category: 'device'
+      },
+      {
+        id: 'raspberry-pi-setup',
+        name: '라즈베리파이5 설정',
+        description: '라즈베리파이5 하드웨어 설정 가이드',
+        icon: '🔧',
+        filename: 'raspberry_pi_setup.md',
+        category: 'setup'
+      },
+      {
+        id: 'broker-bridge',
+        name: '브로커-브리지 연결',
+        description: '농장 MQTT 브로커와 스마트팜 브리지 연결 가이드',
+        icon: '🌉',
+        filename: 'mqtt_broker_bridge_connection.md',
+        category: 'broker'
       }
     ];
 
@@ -80,6 +104,11 @@ export async function GET(request: NextRequest) {
             id: 'broker',
             name: '브로커 설정',
             description: 'MQTT 브로커 설정 가이드'
+          },
+          {
+            id: 'setup',
+            name: '설정 가이드',
+            description: '하드웨어 설정 및 연결 가이드'
           }
         ]
       }

@@ -50,6 +50,21 @@ export async function GET(request: NextRequest) {
         filename: 'aws_iot_core_setup.md',
         contentType: 'text/markdown',
         description: 'AWS IoT Core 설정 가이드'
+      },
+      'raspberry-pi': {
+        filename: 'raspberry_pi_mqtt_template.py',
+        contentType: 'text/x-python',
+        description: '라즈베리파이5 MQTT 템플릿'
+      },
+      'raspberry-pi-setup': {
+        filename: 'raspberry_pi_setup.md',
+        contentType: 'text/markdown',
+        description: '라즈베리파이5 설정 가이드'
+      },
+      'broker-bridge': {
+        filename: 'mqtt_broker_bridge_connection.md',
+        contentType: 'text/markdown',
+        description: 'MQTT 브로커-브리지 연결 가이드'
       }
     };
 
