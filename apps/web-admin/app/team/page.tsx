@@ -673,7 +673,7 @@ export default function TeamPage() {
 
       {/* 초대 모달 */}
       {isInviteModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 rounded-t-2xl">
               <h3 className="text-xl font-bold text-white">➕ 멤버 초대</h3>
