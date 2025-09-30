@@ -128,11 +128,18 @@ export default function MqttIntegrationGuidePage() {
             
             <div className="bg-yellow-50 p-3 rounded-lg">
               <h4 className="font-medium text-yellow-900 mb-1">적합한 경우</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
+              <ul className="text-sm text-yellow-700 space-y-1 mb-2">
                 <li>• 소규모 농장</li>
                 <li>• 개발/테스트 환경</li>
                 <li>• 비용 절약이 중요한 경우</li>
               </ul>
+              <a 
+                href="/api/templates/download?type=mosquitto" 
+                className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 Mosquitto 설정 가이드
+              </a>
             </div>
           </div>
         </div>
@@ -157,11 +164,18 @@ export default function MqttIntegrationGuidePage() {
             
             <div className="bg-yellow-50 p-3 rounded-lg">
               <h4 className="font-medium text-yellow-900 mb-1">적합한 경우</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
+              <ul className="text-sm text-yellow-700 space-y-1 mb-2">
                 <li>• 대규모 농장</li>
                 <li>• 높은 안정성 요구</li>
                 <li>• 복잡한 라우팅 필요</li>
               </ul>
+              <a 
+                href="/api/templates/download?type=emqx" 
+                className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 EMQX 설정 가이드
+              </a>
             </div>
           </div>
         </div>
@@ -186,11 +200,18 @@ export default function MqttIntegrationGuidePage() {
             
             <div className="bg-yellow-50 p-3 rounded-lg">
               <h4 className="font-medium text-yellow-900 mb-1">적합한 경우</h4>
-              <ul className="text-sm text-yellow-700 space-y-1">
+              <ul className="text-sm text-yellow-700 space-y-1 mb-2">
                 <li>• 클라우드 우선 전략</li>
                 <li>• AWS 사용 중인 경우</li>
                 <li>• 서버 관리 부담 회피</li>
               </ul>
+              <a 
+                href="/api/templates/download?type=aws-iot" 
+                className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 AWS IoT Core 설정 가이드
+              </a>
             </div>
           </div>
         </div>
@@ -255,11 +276,18 @@ export default function MqttIntegrationGuidePage() {
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">필요 라이브러리</h4>
-              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono">
+              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono mb-2">
                 <div>#include &lt;WiFi.h&gt;</div>
                 <div>#include &lt;PubSubClient.h&gt;</div>
                 <div>#include &lt;ArduinoJson.h&gt;</div>
               </div>
+              <a 
+                href="/api/templates/download?type=arduino" 
+                className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 Arduino 템플릿 다운로드
+              </a>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -284,11 +312,18 @@ export default function MqttIntegrationGuidePage() {
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">필요 패키지</h4>
-              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono">
+              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono mb-2">
                 <div>pip install paho-mqtt</div>
                 <div>pip install requests</div>
                 <div>pip install schedule</div>
               </div>
+              <a 
+                href="/api/templates/download?type=python" 
+                className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 Python 템플릿 다운로드
+              </a>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -313,11 +348,18 @@ export default function MqttIntegrationGuidePage() {
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">필요 패키지</h4>
-              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono">
+              <div className="bg-gray-800 text-green-400 p-2 rounded text-xs font-mono mb-2">
                 <div>npm install mqtt</div>
                 <div>npm install express</div>
                 <div>npm install ws</div>
               </div>
+              <a 
+                href="/api/templates/download?type=nodejs" 
+                className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
+                download
+              >
+                📥 Node.js 템플릿 다운로드
+              </a>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -344,13 +386,20 @@ export default function MqttIntegrationGuidePage() {
             </div>
           </div>
           
-          <div className="flex items-start space-x-3">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">2</div>
-            <div>
-              <h4 className="font-medium text-gray-900">설정 수정</h4>
-              <p className="text-sm text-gray-600">브로커 URL, 포트, 인증 정보 입력</p>
-            </div>
-          </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold">2</div>
+                <div>
+                  <h4 className="font-medium text-gray-900">설정 수정</h4>
+                  <p className="text-sm text-gray-600">브로커 URL, 포트, 인증 정보 입력</p>
+                  <a 
+                    href="/api/templates/download?type=config" 
+                    className="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition-colors mt-1"
+                    download
+                  >
+                    📥 설정 템플릿 다운로드
+                  </a>
+                </div>
+              </div>
           
           <div className="flex items-start space-x-3">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">3</div>
