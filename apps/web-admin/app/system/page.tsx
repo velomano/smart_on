@@ -10,7 +10,8 @@ interface HealthData {
   services: {
     database: {
       status: string;
-      responseTime: number;
+      responseTime?: number;
+      latency_ms?: number;
       error?: string;
     };
   };
@@ -283,7 +284,7 @@ export default function SystemPage() {
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(healthData.services.database.status)}`}>
                     {getStatusIcon(healthData.services.database.status)}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{healthData.services.database.latency_ms}ms</p>
+                  <p className="text-xs text-gray-500 mt-1">{healthData.services.database.latency_ms || healthData.services.database.responseTime || 0}ms</p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
