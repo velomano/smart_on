@@ -9,10 +9,12 @@ on:
         description: '수집할 소스 (all, cornell, rda, fao, academic)'
         required: false
         default: 'all'
+        type: string
       batch_size:
         description: '배치 크기'
         required: false
         default: '10'
+        type: string
 
 jobs:
   collect-recipes:
