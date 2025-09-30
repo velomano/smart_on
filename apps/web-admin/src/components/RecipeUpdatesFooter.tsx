@@ -8,6 +8,7 @@ interface RecipeUpdate {
   created_at: string;
   source_title?: string;
   source_year?: number;
+  source_url?: string;
   license?: string;
 }
 
@@ -49,6 +50,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
             created_at: recipe.created_at,
             source_title: recipe.source_title,
             source_year: recipe.source_year,
+            source_url: recipe.source_url,
             license: recipe.license
           }));
           
@@ -192,8 +194,20 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                   </p>
                   {recipe.source_title && (
                     <p className="text-xs text-gray-500 mb-1">
-                      출처: {recipe.source_title}
-                      {recipe.source_year && ` (${recipe.source_year})`}
+                      출처: {recipe.source_url ? (
+                        <a 
+                          href={recipe.source_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {recipe.source_title}
+                          {recipe.source_year && ` (${recipe.source_year})`}
+                          <span className="ml-1">🔗</span>
+                        </a>
+                      ) : (
+                        `${recipe.source_title}${recipe.source_year ? ` (${recipe.source_year})` : ''}`
+                      )}
                     </p>
                   )}
                   {recipe.license && (

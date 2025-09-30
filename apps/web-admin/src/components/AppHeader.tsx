@@ -124,7 +124,7 @@ export default function AppHeader({
       color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
     }] : []),
     {
-      label: '양액계산',
+      label: '배양액 찾기',
       path: '/nutrients/plan',
       color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
     },

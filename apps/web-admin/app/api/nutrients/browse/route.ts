@@ -109,6 +109,7 @@ export async function GET(req: NextRequest) {
         created_at: new Date().toISOString(),
         source_title: '스마트팜 데이터베이스',
         source_year: 2024,
+        source_url: 'https://smartfarm.tera-hub.com',
         license: 'CC BY 4.0',
         description: `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
         growing_conditions: {

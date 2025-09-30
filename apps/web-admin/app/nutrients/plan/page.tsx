@@ -17,6 +17,7 @@ interface Recipe {
   created_at: string;
   source_title?: string;
   source_year?: number;
+  source_url?: string;
   license?: string;
   // 상세 정보 추가
   description?: string;
@@ -272,7 +273,7 @@ export default function NutrientPlanPage() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <AppHeader 
         user={user}
-        title="🌱 배양액 제조"
+        title="🌱 배양액 찾기"
         subtitle="작물별 최적 배양액 제조 및 레시피 관리"
         showBackButton={true}
         backButtonText="대시보드"
@@ -582,12 +583,25 @@ export default function NutrientPlanPage() {
                       {recipe.source_title && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
                           <p className="text-xs text-gray-500 mb-1">출처:</p>
-                          <p className="text-xs text-gray-600">
-                            {recipe.source_title}
-                            {recipe.source_year && ` (${recipe.source_year})`}
-                          </p>
-                  </div>
-                )}
+                          {recipe.source_url ? (
+                            <a 
+                              href={recipe.source_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              {recipe.source_title}
+                              {recipe.source_year && ` (${recipe.source_year})`}
+                              <span className="ml-1">🔗</span>
+                            </a>
+                          ) : (
+                            <p className="text-xs text-gray-600">
+                              {recipe.source_title}
+                              {recipe.source_year && ` (${recipe.source_year})`}
+                            </p>
+                          )}
+                        </div>
+                      )}
 
                       <div className="mt-4 flex space-x-2">
                         <button 
