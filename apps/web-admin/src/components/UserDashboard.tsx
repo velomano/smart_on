@@ -576,7 +576,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             </div>
           </div>
           <div className="px-2 sm:px-3 py-2 sm:py-3">
-            <div className="space-y-2 sm:space-y-3">
+            <div className="space-y-4 sm:space-y-6 lg:space-y-8">
               {(() => {
                 // 농장 필터링 및 베드 계산
                 console.log('🔍 대시보드 필터링 디버그:', {
