@@ -20,7 +20,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: 'system_admin' | 'team_leader' | 'team_member';
+  role: 'super_admin' | 'system_admin' | 'team_leader' | 'team_member';
   tenant_id: string;
   team_id?: string | null;
   team_name?: string | null;
