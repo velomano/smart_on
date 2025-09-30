@@ -99,8 +99,13 @@ export default function AppHeader({
     }
   };
 
-  // 햄버거 메뉴용 메뉴 아이템들 (상단 메뉴 순서와 통일)
+  // 햄버거 메뉴용 메뉴 아이템들 (사용설명서를 가장 상단에 배치)
   const menuItems = [
+    {
+      label: '사용설명서',
+      path: '/help',
+      color: 'from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700'
+    },
     {
       label: '알림설정',
       path: '/notifications',
@@ -137,11 +142,6 @@ export default function AppHeader({
       label: '마이페이지',
       path: '/my-page',
       color: 'from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
-    },
-    {
-      label: '사용설명서',
-      path: '/help',
-      color: 'from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700'
     },
     // 시스템 관리자만 시스템 모니터링 표시 (메뉴 가장 하단)
     ...(safeUser.role === 'system_admin' ? [{
@@ -246,12 +246,6 @@ export default function AppHeader({
                 </button>
               )}
               
-              <button
-                onClick={() => router.push('/help')}
-                className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
-              >
-                📚 사용설명서
-              </button>
 
               {/* 햄버거 메뉴 버튼 */}
               <button
