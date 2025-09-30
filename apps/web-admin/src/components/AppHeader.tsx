@@ -29,6 +29,12 @@ export default function AppHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [hasNewNotice, setHasNewNotice] = useState(false);
+  const [isWritingNotice, setIsWritingNotice] = useState(false);
+  const [newNoticeTitle, setNewNoticeTitle] = useState('');
+  const [newNoticeContent, setNewNoticeContent] = useState('');
+  const [newNoticeType, setNewNoticeType] = useState<'new' | 'update' | 'general'>('general');
+  const [notices, setNotices] = useState<any[]>([]);
+  const [isLoadingNotices, setIsLoadingNotices] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
   // user가 없을 때 기본값 사용 (로딩 중일 때는 null로 처리)
@@ -63,33 +69,38 @@ export default function AppHeader({
     };
   }, [isMenuOpen]);
 
+  // 공지사항 가져오기
+  const fetchNotices = async () => {
+    setIsLoadingNotices(true);
+    try {
+      const response = await fetch('/api/notices');
+      const data = await response.json();
+      if (data.ok && data.notices) {
+        setNotices(data.notices);
+        const hasNew = data.notices.some((notice: any) => notice.isNew);
+        setHasNewNotice(hasNew);
+      }
+    } catch (error) {
+      console.error('공지사항 가져오기 오류:', error);
+    } finally {
+      setIsLoadingNotices(false);
+    }
+  };
+
   // 공지사항 데이터 가져오기
   useEffect(() => {
-    const checkNewNotices = async () => {
-      try {
-        const lastChecked = localStorage.getItem('lastNoticeCheck');
-        const url = lastChecked 
-          ? `/api/notices?lastChecked=${lastChecked}`
-          : '/api/notices';
-          
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (result.ok) {
-          setHasNewNotice(result.newCount > 0);
-        } else {
-          console.error('공지사항 확인 실패:', result.error);
-        }
-      } catch (error) {
-        console.error('공지사항 API 호출 실패:', error);
-      }
-    };
-
-    checkNewNotices();
+    fetchNotices();
     
-    // 2분마다 새 공지사항 확인 (더 자주 체크)
-    const interval = setInterval(checkNewNotices, 2 * 60 * 1000);
+    // 2분마다 새 공지사항 확인
+    const interval = setInterval(fetchNotices, 2 * 60 * 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // 컴포넌트 언마운트 시 스크롤 복원
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, []);
 
   // 사용자 역할에 따른 권한 확인
@@ -113,6 +124,46 @@ export default function AppHeader({
       // 공지사항을 확인했으므로 새 공지 표시 해제
       setHasNewNotice(false);
       localStorage.setItem('lastNoticeCheck', new Date().getTime().toString());
+    }
+  };
+
+  // 공지사항 작성 함수
+  const handleWriteNotice = async () => {
+    if (!newNoticeTitle.trim() || !newNoticeContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/notices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newNoticeTitle,
+          content: newNoticeContent,
+          type: newNoticeType
+        })
+      });
+
+      const result = await response.json();
+
+           if (result.ok) {
+             alert('공지사항이 성공적으로 작성되었습니다!');
+             // 폼 초기화
+             setNewNoticeTitle('');
+             setNewNoticeContent('');
+             setNewNoticeType('general');
+             setIsWritingNotice(false);
+             // 공지사항 목록 새로고침
+             fetchNotices();
+           } else {
+             alert('공지사항 작성에 실패했습니다: ' + result.error);
+           }
+    } catch (error) {
+      console.error('공지사항 작성 오류:', error);
+      alert('공지사항 작성 중 오류가 발생했습니다.');
     }
   };
 
@@ -396,8 +447,8 @@ export default function AppHeader({
 
         {/* 공지사항 모달 */}
         {isNoticeOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center" style={{ paddingTop: '20vh' }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl sm:w-[700px] max-h-[60vh] overflow-hidden">
+          <div className="fixed inset-0 z-40 flex items-center justify-center" style={{ paddingTop: '530px' }}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl sm:w-[700px] max-h-[60vh] overflow-hidden mx-4">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-white flex items-center">
@@ -414,57 +465,143 @@ export default function AppHeader({
               </div>
               
               <div className="p-6 overflow-y-auto max-h-[60vh]">
+                {/* 시스템 관리자용 공지사항 작성 버튼 */}
+                {safeUser.role === 'system_admin' && (
+                  <div className="mb-6">
+                    <button
+                      onClick={() => setIsWritingNotice(!isWritingNotice)}
+                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center"
+                    >
+                      <span className="text-lg mr-2">✏️</span>
+                      {isWritingNotice ? '작성 취소' : '새 공지사항 작성'}
+                    </button>
+                  </div>
+                )}
+
+                {/* 공지사항 작성 폼 */}
+                {isWritingNotice && safeUser.role === 'system_admin' && (
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-blue-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">새 공지사항 작성</h3>
+                    
+                    <div className="space-y-4">
+                      {/* 제목 입력 */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          제목 *
+                        </label>
+                        <input
+                          type="text"
+                          value={newNoticeTitle}
+                          onChange={(e) => setNewNoticeTitle(e.target.value)}
+                          placeholder="공지사항 제목을 입력하세요"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        />
+                      </div>
+
+                      {/* 내용 입력 */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          내용 *
+                        </label>
+                        <textarea
+                          value={newNoticeContent}
+                          onChange={(e) => setNewNoticeContent(e.target.value)}
+                          placeholder="공지사항 내용을 입력하세요"
+                          rows={4}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
+                        />
+                      </div>
+
+                      {/* 타입 선택 */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          공지 유형
+                        </label>
+                        <select
+                          value={newNoticeType}
+                          onChange={(e) => setNewNoticeType(e.target.value as 'new' | 'update' | 'general')}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        >
+                          <option value="general">일반</option>
+                          <option value="new">새 기능</option>
+                          <option value="update">업데이트</option>
+                        </select>
+                      </div>
+
+                      {/* 작성 버튼 */}
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={handleWriteNotice}
+                          className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                        >
+                          공지사항 작성
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsWritingNotice(false);
+                            setNewNoticeTitle('');
+                            setNewNoticeContent('');
+                            setNewNoticeType('general');
+                          }}
+                          className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-6">
-                  {/* 공지사항 1 */}
-                  <div className="border-l-4 border-blue-500 pl-4 py-3 bg-blue-50 rounded-r-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg">날씨 기능 추가</h3>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        NEW
-                      </span>
+                  {isLoadingNotices ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      <span className="ml-2 text-gray-600">공지사항을 불러오는 중...</span>
                     </div>
-                    <p className="text-gray-700 mb-2">
-                      대시보드에서 실시간 날씨 정보를 확인할 수 있습니다. 마이페이지에서 지역을 설정하세요.
-                    </p>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span className="mr-2">📅</span>
-                      <span>{new Date().toISOString().split('T')[0]}</span>
+                  ) : notices.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <span className="text-4xl mb-2 block">📢</span>
+                      <p>등록된 공지사항이 없습니다.</p>
                     </div>
-                  </div>
-
-                  {/* 공지사항 2 */}
-                  <div className="border-l-4 border-green-500 pl-4 py-3 bg-green-50 rounded-r-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg">텔레그램 알림 시스템 개선</h3>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        업데이트
-                      </span>
-                    </div>
-                    <p className="text-gray-700 mb-2">
-                      각자의 텔레그램 채팅 ID를 설정하여 개인 맞춤 알림을 받으실 수 있습니다.
-                    </p>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span className="mr-2">📅</span>
-                      <span>2025-01-28</span>
-                    </div>
-                  </div>
-
-                  {/* 공지사항 3 */}
-                  <div className="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 rounded-r-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg">시스템 업데이트</h3>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                        일반
-                      </span>
-                    </div>
-                    <p className="text-gray-700 mb-2">
-                      마이페이지 기능이 추가되어 계정 정보를 쉽게 관리할 수 있습니다.
-                    </p>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span className="mr-2">📅</span>
-                      <span>2025-01-26</span>
-                    </div>
-                  </div>
+                  ) : (
+                    notices.map((notice) => {
+                      const getTypeColor = (type: string) => {
+                        switch (type) {
+                          case 'new':
+                            return { border: 'border-green-500', bg: 'bg-green-50', badge: 'bg-green-100 text-green-800', text: 'NEW' };
+                          case 'update':
+                            return { border: 'border-blue-500', bg: 'bg-blue-50', badge: 'bg-blue-100 text-blue-800', text: '업데이트' };
+                          default:
+                            return { border: 'border-purple-500', bg: 'bg-purple-50', badge: 'bg-purple-100 text-purple-800', text: '일반' };
+                        }
+                      };
+                      
+                      const typeColor = getTypeColor(notice.type);
+                      
+                      return (
+                        <div key={notice.id} className={`border-l-4 ${typeColor.border} pl-4 py-3 ${typeColor.bg} rounded-r-lg`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-bold text-gray-900 text-lg">{notice.title}</h3>
+                            <div className="flex items-center space-x-2">
+                              {notice.isNew && (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                  NEW
+                                </span>
+                              )}
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeColor.badge}`}>
+                                {typeColor.text}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-gray-700 mb-2">{notice.content}</p>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <span className="mr-2">📅</span>
+                            <span>{notice.date}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
               
