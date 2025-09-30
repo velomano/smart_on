@@ -14,7 +14,7 @@ interface HealthData {
       error?: string;
     };
   };
-  resources: {
+  resources?: {
     memory: {
       used: number;
       total: number;
@@ -23,6 +23,15 @@ interface HealthData {
     uptime: number;
     nodeVersion: string;
     platform: string;
+  };
+  system?: {
+    memoryUsage: {
+      rss: number;
+      heapTotal: number;
+      heapUsed: number;
+      external: number;
+    };
+    uptime: number;
   };
   metrics: {
     activeUsers: number;
