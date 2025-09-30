@@ -68,7 +68,7 @@ function getCPUUsage() {
   let totalIdle = 0;
   let totalTick = 0;
   
-  cpus.forEach(cpu => {
+  cpus.forEach((cpu: any) => {
     for (const type in cpu.times) {
       totalTick += cpu.times[type as keyof typeof cpu.times];
     }
