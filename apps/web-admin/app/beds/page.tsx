@@ -1156,8 +1156,8 @@ function BedsManagementContent() {
                               </div>
                             </div>
 
-                            {/* 베드 시각화와 센서/제어 데이터를 나란히 배치 */}
-                            <div className="flex gap-6">
+                            {/* 베드 시각화와 센서/제어 데이터를 반응형으로 배치 */}
+                            <div className="flex flex-col lg:flex-row gap-2 sm:gap-3 lg:gap-6">
                               {/* 베드 시각화 */}
                               <div className="flex-shrink-0">
                                 <BedTierShelfVisualization
@@ -1223,15 +1223,15 @@ function BedsManagementContent() {
                               </div>
 
                               {/* 센서 데이터와 원격 스위치 제어 */}
-                              <div className="flex-1 space-y-4">
+                              <div className="flex-1 space-y-2 sm:space-y-3 lg:space-y-4">
 
                                 {/* 센서 데이터 */}
                                 <div>
-                                  <h6 className="text-base font-bold text-gray-800 mb-3 flex items-center">
+                                  <h6 className="text-base font-bold text-gray-800 mb-2 sm:mb-3 flex items-center">
                                     <span className="text-lg mr-2">📊</span>
                                     센서 데이터
                                   </h6>
-                                  <div className="grid grid-cols-3 gap-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                                 <SensorCard
                                   type="temperature"
                                   value={(() => {
