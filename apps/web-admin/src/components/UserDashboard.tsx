@@ -540,12 +540,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             {/* Enhanced Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
-                  <span className="text-2xl sm:text-3xl">🌱</span>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-white/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4 lg:mr-6">
+                  <span className="text-2xl sm:text-3xl lg:text-4xl">🌱</span>
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">농장 현황</h1>
-                  <p className="text-white/90 text-sm sm:text-base">농장관리에서 대시보드 노출을 허용한 농장만 표시 됩니다.</p>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2 lg:mb-3">농장 현황</h1>
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">농장관리에서 대시보드 노출을 허용한 농장만 표시 됩니다.</p>
                 </div>
               </div>
                 
@@ -664,7 +664,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   const highAlerts = farmAlerts.filter(alert => alert.level === 'high').length;
                   
                   return (
-                <div key={farm.id} className={`bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-2 sm:p-3 shadow-xl hover:shadow-2xl transition-all duration-300 ${
+                <div key={farm.id} className={`bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 ${
                   farmHasAlerts 
                     ? 'border-red-400 ring-2 ring-red-300 animate-pulse shadow-red-200' 
                     : 'border-gray-200'
@@ -681,7 +681,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         </div>
                         <div>
                             <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <h4 className="text-2xl font-bold text-gray-900 whitespace-nowrap">{farm.name}</h4>
+                            <h4 className="text-2xl lg:text-3xl font-bold text-gray-900 whitespace-nowrap">{farm.name}</h4>
                             <span className="text-gray-500 font-normal text-xs">🏷️ {farm.id}</span>
                           </div>
                           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -727,13 +727,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
                   {/* 농장에 속한 베드들 - 개별 카드로 변환하고 공간 없이 꽉채우기 */}
                   <div className="space-y-2 sm:space-y-3">
-                    <h5 className="text-xl font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center">
+                    <h5 className="text-xl lg:text-2xl font-semibold text-gray-700 mb-2 sm:mb-3 lg:mb-4 flex items-center">
                       <span className="text-2xl mr-3">🌱</span>
                       {farm.name}의 베드 현황
                     </h5>
 
                     {/* 베드 카드들을 개별로 배치 - 공간 없이 꽉채우기 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1 sm:gap-2">
+                    <div className="grid grid-cols-1 gap-1 sm:gap-2 lg:gap-3">
                       {farm.visibleDevices.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                           <p>현재 표시할 베드가 없습니다.</p>
@@ -755,14 +755,14 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               data-device-id={device.id}
                               data-device-index={deviceIndex}
                             >
-                              <div className="p-3 sm:p-4">
+                              <div className="p-3 sm:p-4 lg:p-6">
                               <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <div className="flex items-center space-x-4">
                                   <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
                                     <span className="text-xl">📡</span>
                               </div>
                               <div>
-                                    <span className="font-bold text-gray-900 text-lg">
+                                    <span className="font-bold text-gray-900 text-lg lg:text-xl">
                                       {(() => {
                                         const location = String(device.meta?.location ?? '센서 게이트웨이');
                                         
@@ -864,13 +864,13 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               </div>
 
                               {/* 센서 데이터 - 대폭 증대 */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mt-2 sm:mt-3">
-                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-3 sm:p-4 shadow-md border border-red-300">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mt-2 sm:mt-3 lg:mt-4">
+                                <div className="flex items-center justify-between bg-red-50 rounded-lg p-3 sm:p-4 lg:p-5 shadow-md border border-red-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">🌡️</span>
-                                    <span className="text-lg text-gray-700 font-bold">온도</span>
+                                    <span className="text-lg lg:text-xl text-gray-700 font-bold">온도</span>
                                   </div>
-                                  <span className="text-3xl font-black text-red-600">
+                                  <span className="text-3xl lg:text-4xl font-black text-red-600">
                                     {(() => {
                                       // 실제 센서 데이터 사용
                                       const tempSensor = deviceSensors.find(s => s.type === 'temperature');
@@ -880,12 +880,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 sm:p-4 shadow-md border border-blue-300">
+                                <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 sm:p-4 lg:p-5 shadow-md border border-blue-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">💧</span>
-                                    <span className="text-lg text-gray-700 font-bold">습도</span>
+                                    <span className="text-lg lg:text-xl text-gray-700 font-bold">습도</span>
                                   </div>
-                                  <span className="text-3xl font-black text-blue-600">
+                                  <span className="text-3xl lg:text-4xl font-black text-blue-600">
                                     {(() => {
                                       // 실제 센서 데이터 사용
                                       const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
@@ -895,12 +895,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                   </span>
                                 </div>
 
-                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 sm:p-4 shadow-md border border-green-300">
+                                <div className="flex items-center justify-between bg-green-50 rounded-lg p-3 sm:p-4 lg:p-5 shadow-md border border-green-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">⚡</span>
-                                    <span className="text-lg text-gray-700 font-bold">EC</span>
+                                    <span className="text-lg lg:text-xl text-gray-700 font-bold">EC</span>
                                   </div>
-                                  <span className="text-3xl font-black text-green-600">
+                                  <span className="text-3xl lg:text-4xl font-black text-green-600">
                                     {(() => {
                                       // 실제 센서 데이터 사용
                                       const ecSensor = deviceSensors.find(s => s.type === 'ec');
