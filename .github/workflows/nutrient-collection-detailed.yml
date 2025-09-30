@@ -1,9 +1,20 @@
-name: 영양액 레시피 자동 수집 (기본)
+name: 영양액 레시피 자동 수집 (세부)
 
 on:
   schedule:
     - cron: '0 0 * * *'   # 매일 오전 9시 (KST)
   workflow_dispatch:
+    inputs:
+      source:
+        description: '수집할 소스 (all, cornell, rda, fao, academic)'
+        required: false
+        default: 'all'
+        type: string
+      batch_size:
+        description: '배치 크기'
+        required: false
+        default: '10'
+        type: string
 
 jobs:
   collect-recipes:
@@ -14,8 +25,8 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      SOURCE: all
-      BATCH_SIZE: 10
+      SOURCE: ${{ inputs.source || 'all' }}
+      BATCH_SIZE: ${{ inputs.batch_size || '10' }}
 
     steps:
     - name: 체크아웃
@@ -26,7 +37,7 @@ jobs:
       with:
         node-version: '20'
 
-    - name: 영양액 레시피 수집 실행
+    - name: 영양액 레시피 수집 실행 (배치 처리)
       run: |
         set -euo pipefail
         
@@ -85,6 +96,14 @@ jobs:
               target_ppm: 250,
               target_ec: 2.0,
               target_ph: 6.5
+            },
+            {
+              crop_key: 'cucumber',
+              crop_name: '오이',
+              stage: 'flowering',
+              target_ppm: 200,
+              target_ec: 1.8,
+              target_ph: 6.2
             }
           ];
           
@@ -130,8 +149,32 @@ jobs:
             console.log(`📊 최종 레시피 수: ${after}건`);
             console.log(`💾 추가된 레시피: ${Math.max(after - before, 0)}건`);
             console.log('🎉 영양액 레시피 수집 작업 완료');
+            
+            // 텔레그램 알림을 위한 수집 정보 파일 저장
+            const collectionInfo = {
+              before_count: before,
+              collected_count: collectedData.length,
+              saved_count: savedCount,
+              after_count: after,
+              added_count: Math.max(after - before, 0),
+              source: SRC,
+              batch_size: BATCH,
+              timestamp: new Date().toISOString()
+            };
+            
+            require('fs').writeFileSync('/tmp/collection_info.json', JSON.stringify(collectionInfo, null, 2));
           } catch (err) {
             console.error('❌ 수집 작업 실패:', err?.message || err);
+            
+            // 실패 정보도 파일로 저장
+            const errorInfo = {
+              error: err?.message || 'Unknown error',
+              source: SRC,
+              batch_size: BATCH,
+              timestamp: new Date().toISOString()
+            };
+            
+            require('fs').writeFileSync('/tmp/collection_info.json', JSON.stringify(errorInfo, null, 2));
             process.exit(1);
           }
         }
@@ -139,12 +182,27 @@ jobs:
         main();
         EOF
 
-    - name: 수집 결과 텔레그램 알림
+    - name: 수집 결과 텔레그램 알림 (세부 정보)
       if: always() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != ''
       run: |
         STATUS="${{ job.status }}"
         SOURCE="${{ env.SOURCE }}"
         TRIGGER="${{ github.event_name }}"
+        
+        # 이전 단계에서 수집된 데이터 정보 추출
+        if [ -f "/tmp/collection_info.json" ]; then
+          COLLECTED_COUNT=$(jq -r '.collected_count // 0' /tmp/collection_info.json)
+          SAVED_COUNT=$(jq -r '.saved_count // 0' /tmp/collection_info.json)
+          BEFORE_COUNT=$(jq -r '.before_count // 0' /tmp/collection_info.json)
+          AFTER_COUNT=$(jq -r '.after_count // 0' /tmp/collection_info.json)
+          ADDED_COUNT=$(jq -r '.added_count // 0' /tmp/collection_info.json)
+        else
+          COLLECTED_COUNT="0"
+          SAVED_COUNT="0"
+          BEFORE_COUNT="0"
+          AFTER_COUNT="0"
+          ADDED_COUNT="0"
+        fi
         
         if [ "$STATUS" = "success" ]; then
           ICON="✅"
@@ -154,12 +212,19 @@ jobs:
           MESSAGE="영양액 레시피 수집 작업이 실패했습니다."
         fi
         
-        FULL_MESSAGE="$ICON <b>TeraHub 양액 수집 알림</b>
+        FULL_MESSAGE="$ICON <b>TeraHub 양액 수집 알림 (세부)</b>
 
         📊 <b>작업 상태</b>: $STATUS
         🌱 <b>수집 소스</b>: $SOURCE
         ⏰ <b>실행 시간</b>: $(date '+%Y-%m-%d %H:%M:%S')
         🔄 <b>트리거</b>: $TRIGGER
+        
+        📈 <b>수집 상세 정보</b>:
+        • 기존 레시피: ${BEFORE_COUNT}건
+        • 새로 수집: ${COLLECTED_COUNT}건
+        • 저장 완료: ${SAVED_COUNT}건
+        • 최종 레시피: ${AFTER_COUNT}건
+        • 순증가: ${ADDED_COUNT}건
         
         $MESSAGE"
         
