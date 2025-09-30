@@ -60,6 +60,17 @@ interface SavedRecipe {
   }>;
 }
 
+// URL 유효성 검증 함수
+function isValidUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    // HTTP/HTTPS 프로토콜만 허용
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export default function NutrientPlanPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -583,12 +594,18 @@ export default function NutrientPlanPage() {
                       {recipe.source_title && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
                           <p className="text-xs text-gray-500 mb-1">출처:</p>
-                          {recipe.source_url ? (
+                          {recipe.source_url && isValidUrl(recipe.source_url) ? (
                             <a 
                               href={recipe.source_url} 
                               target="_blank" 
                               rel="noopener noreferrer"
                               className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                              onClick={(e) => {
+                                // 링크 클릭 시 새 탭에서 열기 전에 확인
+                                if (!window.confirm('외부 링크로 이동합니다. 계속하시겠습니까?')) {
+                                  e.preventDefault();
+                                }
+                              }}
                             >
                               {recipe.source_title}
                               {recipe.source_year && ` (${recipe.source_year})`}
@@ -598,6 +615,9 @@ export default function NutrientPlanPage() {
                             <p className="text-xs text-gray-600">
                               {recipe.source_title}
                               {recipe.source_year && ` (${recipe.source_year})`}
+                              {recipe.source_url && !isValidUrl(recipe.source_url) && (
+                                <span className="ml-1 text-gray-400" title="링크 접속 불가">⚠️</span>
+                              )}
                             </p>
                           )}
                         </div>

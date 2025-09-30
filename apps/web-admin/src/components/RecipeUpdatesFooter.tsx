@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
+// URL 유효성 검증 함수
+function isValidUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 interface RecipeUpdate {
   id: string;
   crop: string;
@@ -194,19 +204,30 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                   </p>
                   {recipe.source_title && (
                     <p className="text-xs text-gray-500 mb-1">
-                      출처: {recipe.source_url ? (
+                      출처: {recipe.source_url && isValidUrl(recipe.source_url) ? (
                         <a 
                           href={recipe.source_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:text-blue-800 hover:underline"
+                          onClick={(e) => {
+                            if (!window.confirm('외부 링크로 이동합니다. 계속하시겠습니까?')) {
+                              e.preventDefault();
+                            }
+                          }}
                         >
                           {recipe.source_title}
                           {recipe.source_year && ` (${recipe.source_year})`}
                           <span className="ml-1">🔗</span>
                         </a>
                       ) : (
-                        `${recipe.source_title}${recipe.source_year ? ` (${recipe.source_year})` : ''}`
+                        <>
+                          {recipe.source_title}
+                          {recipe.source_year && ` (${recipe.source_year})`}
+                          {recipe.source_url && !isValidUrl(recipe.source_url) && (
+                            <span className="ml-1 text-gray-400" title="링크 접속 불가">⚠️</span>
+                          )}
+                        </>
                       )}
                     </p>
                   )}
