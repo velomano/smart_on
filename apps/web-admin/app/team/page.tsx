@@ -47,6 +47,8 @@ export default function TeamPage() {
     message: ''
   });
   const [inviteLoading, setInviteLoading] = useState(false);
+  const [invites, setInvites] = useState<any[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -57,6 +59,10 @@ export default function TeamPage() {
         return;
       }
       setUser(currentUser);
+      await loadTeamMembers();
+      await loadFarms();
+      await loadInvites();
+      setLoading(false);
     };
     checkAuth();
   }, [router]);
@@ -77,6 +83,26 @@ export default function TeamPage() {
       setFarms(farmsResult?.teams || []);
     } catch (error) {
       console.error('Error loading farms:', error);
+    }
+  };
+
+  const loadInvites = async () => {
+    if (user?.role === 'super_admin' || user?.role === 'system_admin') {
+      setInvitesLoading(true);
+      try {
+        const response = await fetch('/api/invite');
+        const result = await response.json();
+        
+        if (result.ok) {
+          setInvites(result.data);
+        } else {
+          console.error('초대 목록 로드 오류:', result.error);
+        }
+      } catch (error) {
+        console.error('초대 목록 로드 오류:', error);
+      } finally {
+        setInvitesLoading(false);
+      }
     }
   };
 
@@ -223,25 +249,45 @@ export default function TeamPage() {
   };
 
   const handleInviteUser = async () => {
+    if (!inviteFormData.email.trim()) {
+      alert('이메일을 입력해주세요.');
+      return;
+    }
+
     setInviteLoading(true);
     try {
-      // 실제 초대 로직 구현 (API 호출 등)
-      console.log('초대 요청:', inviteFormData);
-      
-      // 기능 추가 예정 안내
-      alert(`멤버 초대 기능은 현재 개발 중입니다.\n\n입력하신 정보:\n- 이메일: ${inviteFormData.email}\n- 역할: ${inviteFormData.role === 'team_member' ? '팀 멤버' : '팀 리더'}\n- 메시지: ${inviteFormData.message || '없음'}\n\n곧 실제 초대 기능이 추가될 예정입니다.`);
-      
-      // 폼 초기화
-      setInviteFormData({
-        email: '',
-        role: 'team_member',
-        message: ''
+      const response = await fetch('/api/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: inviteFormData.email,
+          role: inviteFormData.role,
+          message: inviteFormData.message,
+          invited_by: user?.id,
+          invited_by_name: user?.name || '관리자'
+        })
       });
-      setIsInviteModalOpen(false);
-      
+
+      const result = await response.json();
+
+      if (result.ok) {
+        alert(`초대 이메일이 ${inviteFormData.email}로 발송되었습니다!\n\n초대 링크는 7일 후에 만료됩니다.`);
+        
+        // 폼 초기화
+        setInviteFormData({
+          email: '',
+          role: 'team_member',
+          message: ''
+        });
+        setIsInviteModalOpen(false);
+      } else {
+        alert(`초대 실패: ${result.error}`);
+      }
     } catch (error) {
       console.error('초대 전송 오류:', error);
-      alert('초대 전송에 실패했습니다.');
+      alert('초대 중 오류가 발생했습니다. 네트워크 연결을 확인해주세요.');
     } finally {
       setInviteLoading(false);
     }
