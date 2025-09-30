@@ -70,8 +70,15 @@ export default function HelpPage() {
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-            <h3 className="text-xl font-bold text-green-900 mb-4">🏠 메인 대시보드</h3>
-            <p className="text-green-800 mb-4">로그인 후 첫 화면에서 농장 현황과 센서 데이터를 한눈에 확인할 수 있습니다.</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-green-900">🏠 메인 대시보드</h3>
+                <p className="text-green-800">로그인 후 첫 화면에서 농장 현황과 센서 데이터를 한눈에 확인할 수 있습니다.</p>
+              </div>
+              <a href="/help/dashboard" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
+            </div>
             
             <div className="grid md:grid-cols-2 gap-4">
               <div className="bg-white rounded-lg p-4 border border-green-100">
@@ -337,8 +344,15 @@ export default function HelpPage() {
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-6 border border-indigo-200">
-            <h3 className="text-xl font-bold text-indigo-900 mb-4">📡 MQTT 연동 가이드</h3>
-            <p className="text-indigo-800 mb-4">MQTT 브로커를 설정하고 디바이스를 연동하는 완전한 가이드입니다.</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-indigo-900">📡 MQTT 연동 가이드</h3>
+                <p className="text-indigo-800">MQTT 브로커를 설정하고 디바이스를 연동하는 완전한 가이드입니다.</p>
+              </div>
+              <a href="/help/mqtt" className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
+            </div>
             
             <div className="bg-white rounded-lg p-4 border border-indigo-100 mb-4">
               <h4 className="font-semibold text-indigo-900 mb-2">🏗️ 아키텍처</h4>
@@ -434,21 +448,21 @@ export default function HelpPage() {
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
             <h4 className="text-lg font-semibold text-green-900 mb-3">📚 상세 가이드</h4>
             <div className="grid md:grid-cols-3 gap-4">
-              <a href="/docs/MQTT_INTEGRATION_OVERVIEW.md" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
+              <a href="/help/mqtt" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
                 <div className="text-2xl mb-2">📖</div>
                 <h5 className="font-medium text-green-900">종합 가이드</h5>
                 <p className="text-sm text-green-700">전체 아키텍처 및 설정 방법</p>
               </a>
               
-              <a href="/docs/templates/mosquitto_setup.md" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
+              <a href="/help/mqtt?tab=broker-setup" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
                 <div className="text-2xl mb-2">🐛</div>
-                <h5 className="font-medium text-green-900">Mosquitto 설정</h5>
-                <p className="text-sm text-green-700">오픈소스 브로커 설정</p>
+                <h5 className="font-medium text-green-900">브로커 설정</h5>
+                <p className="text-sm text-green-700">MQTT 브로커 설정 방법</p>
               </a>
               
-              <a href="/docs/templates/python_mqtt_template.py" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
+              <a href="/help/mqtt?tab=device-integration" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
                 <div className="text-2xl mb-2">🐍</div>
-                <h5 className="font-medium text-green-900">Python 템플릿</h5>
+                <h5 className="font-medium text-green-900">디바이스 연동</h5>
                 <p className="text-sm text-green-700">디바이스 연동 코드</p>
               </a>
             </div>
