@@ -62,12 +62,12 @@ function BedsManagementContent() {
   const [newBedData, setNewBedData] = useState({
     name: '',
     bedSystemType: 'multi-tier', // 다단 베드 시스템
-    totalTiers: 1
+    totalTiers: 3 // 다단 베드 시스템은 기본적으로 3단
   });
   const [editBedData, setEditBedData] = useState({
     name: '',
     bedSystemType: 'multi-tier',
-    totalTiers: 1
+    totalTiers: 3
   });
   
   // 작물 입력 모달 상태
@@ -558,7 +558,7 @@ function BedsManagementContent() {
       const newBed = data[0];
       console.log('🔄 베드 추가 완료, 데이터 다시 로드 중...');
       await loadData(); // Reload data after adding bed
-      setNewBedData({ name: '', bedSystemType: 'multi-tier', totalTiers: 1 });
+      setNewBedData({ name: '', bedSystemType: 'multi-tier', totalTiers: 3 });
       setShowAddBedModal(false);
       alert(`새 베드 "${normalizedBedName}"가 ${targetFarm?.name || '농장'}에 추가되었습니다!`);
     } catch (error) {
@@ -576,7 +576,7 @@ function BedsManagementContent() {
     const editData = {
       name: (bed.meta as any)?.location || '',
       bedSystemType: (bed.meta as any)?.bed_system_type || (bed.meta as any)?.growing_method || 'multi-tier',
-      totalTiers: (bed.meta as any)?.total_tiers || 1
+      totalTiers: (bed.meta as any)?.total_tiers || 3
     };
     
     console.log('📝 편집 폼에 설정할 데이터:', editData);
@@ -2059,6 +2059,24 @@ function BedsManagementContent() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  활성 단 수
+                </label>
+                <select
+                  value={editBedData.totalTiers}
+                  onChange={(e) => setEditBedData(prev => ({ ...prev, totalTiers: parseInt(e.target.value) }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
+                >
+                  <option value={1}>1단 (단층)</option>
+                  <option value={2}>2단 (이층)</option>
+                  <option value={3}>3단 (삼층)</option>
+                </select>
+                <div className="mt-1 text-xs text-gray-600">
+                  활성 단 수에 따라 시각화에서 표시되는 단의 개수가 결정됩니다.
                 </div>
               </div>
 
