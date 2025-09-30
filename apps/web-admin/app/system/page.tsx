@@ -80,8 +80,8 @@ export default function SystemPage() {
       setError(null);
 
       const [healthResponse, metricsResponse] = await Promise.all([
-        fetch('/api/system/health'),
-        fetch('/api/system/metrics')
+        fetch('/api/system/simple-health'),
+        fetch('/api/system/simple-metrics')
       ]);
 
       // 각 응답의 상태를 개별적으로 확인

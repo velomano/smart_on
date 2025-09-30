@@ -157,8 +157,8 @@ export const GET = withApiMiddleware(async (request: NextRequest) => {
     }, 500);
   }
 }, {
-  logRequest: true,
-  logResponse: true,
-  rateLimit: true, // 보안을 위해 Rate Limit 적용
-  maxRequestSize: 1024 * 10 // 10KB 제한
+  logRequest: false, // 임시로 로깅 비활성화
+  logResponse: false, // 임시로 로깅 비활성화
+  rateLimit: false, // 임시로 Rate Limit 비활성화
+  maxRequestSize: 1024 * 1024 // 1MB로 증가
 });
