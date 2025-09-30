@@ -57,6 +57,11 @@ export default function HelpPage() {
                 <li><strong>team_leader:</strong> 팀 및 농장 관리</li>
                 <li><strong>team_member:</strong> 농장 조회 및 기본 기능</li>
               </ul>
+              <div className="mt-4">
+                <a href="/help/system-overview" className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">
+                  상세 가이드 보기 →
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -195,6 +200,12 @@ export default function HelpPage() {
                 </div>
               </div>
             </div>
+            
+            <div className="mt-6">
+              <a href="/help/farm-management" className="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
+            </div>
           </div>
         </div>
       )
@@ -258,6 +269,12 @@ export default function HelpPage() {
                 <h5 className="font-medium text-red-800">높음</h5>
                 <p className="text-xs text-red-600">임계값 초과</p>
               </div>
+            </div>
+            
+            <div className="mt-6">
+              <a href="/help/device-management" className="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
             </div>
           </div>
         </div>
@@ -331,6 +348,12 @@ export default function HelpPage() {
                   <p className="text-sm text-gray-600">최신 레시피 업데이트 정보 확인</p>
                 </div>
               </div>
+            </div>
+            
+            <div className="mt-6">
+              <a href="/help/nutrient-guide" className="inline-flex items-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
             </div>
           </div>
         </div>
@@ -551,6 +574,12 @@ export default function HelpPage() {
                 </div>
               </div>
             </div>
+            
+            <div className="mt-6">
+              <a href="/help/admin-features" className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
+            </div>
           </div>
         </div>
       )
@@ -633,6 +662,12 @@ export default function HelpPage() {
                   <p className="text-sm text-gray-600">상세한 에러 메시지와 재시도 기능</p>
                 </div>
               </div>
+            </div>
+            
+            <div className="mt-6">
+              <a href="/help/system-monitoring" className="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm font-medium transition-colors">
+                상세 가이드 보기 →
+              </a>
             </div>
           </div>
         </div>
