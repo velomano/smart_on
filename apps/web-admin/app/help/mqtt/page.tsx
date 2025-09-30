@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AppHeader from '../../../src/components/AppHeader';
 import BreadcrumbNavigation from '../../../src/components/BreadcrumbNavigation';
@@ -13,7 +13,7 @@ interface TabType {
   icon: string;
 }
 
-export default function MqttIntegrationGuidePage() {
+function MqttIntegrationGuideContent() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -959,5 +959,13 @@ export default function MqttIntegrationGuidePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MqttIntegrationGuidePage() {
+  return (
+    <Suspense fallback={<div>로딩 중...</div>}>
+      <MqttIntegrationGuideContent />
+    </Suspense>
   );
 }

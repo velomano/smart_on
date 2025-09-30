@@ -118,7 +118,7 @@ export default function MyPage() {
         } else {
           // 사용자의 날씨 지역이 있으면 설정에 반영
           if (currentUser.weather_region) {
-            setSettings(prev => ({ ...prev, weatherRegion: currentUser.weather_region }));
+            setSettings(prev => ({ ...prev, weatherRegion: currentUser.weather_region || prev.weatherRegion }));
           }
         }
       } catch (err) {

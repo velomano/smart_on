@@ -33,7 +33,9 @@ class MemoryCache<T = any> {
     // 최대 크기 초과 시 가장 오래된 항목 제거
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
     }
 
     this.cache.set(key, {
@@ -166,7 +168,7 @@ export function invalidateCachePattern(
   const regex = new RegExp(pattern);
   
   keys.forEach(key => {
-    if (regex.test(key)) {
+    if (typeof key === 'string' && regex.test(key)) {
       cache.delete(key);
     }
   });

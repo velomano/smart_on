@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     console.error('날씨 API 오류:', error);
     return NextResponse.json({ 
       ok: false, 
-      error: '서버 오류: ' + error.message 
+      error: '서버 오류: ' + (error instanceof Error ? error.message : '알 수 없는 오류') 
     }, { status: 500 });
   }
 }

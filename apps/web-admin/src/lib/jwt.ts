@@ -19,7 +19,7 @@ export interface JWTPayload {
 // JWT 토큰 생성
 export function generateAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: '24h',
     issuer: 'smarton-web-admin',
     audience: 'smarton-users'
   });
@@ -28,7 +28,7 @@ export function generateAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): s
 // JWT 리프레시 토큰 생성
 export function generateRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_REFRESH_EXPIRES_IN,
+    expiresIn: '7d',
     issuer: 'smarton-web-admin',
     audience: 'smarton-users'
   });
