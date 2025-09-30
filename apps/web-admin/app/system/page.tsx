@@ -84,8 +84,17 @@ export default function SystemPage() {
         fetch('/api/system/metrics')
       ]);
 
-      if (!healthResponse.ok || !metricsResponse.ok) {
-        throw new Error('데이터 로드에 실패했습니다.');
+      // 각 응답의 상태를 개별적으로 확인
+      if (!healthResponse.ok) {
+        const healthError = await healthResponse.json();
+        console.error('헬스 API 에러:', healthError);
+        throw new Error(`헬스 체크 실패: ${healthResponse.status} ${healthError.error || 'Unknown error'}`);
+      }
+
+      if (!metricsResponse.ok) {
+        const metricsError = await metricsResponse.json();
+        console.error('메트릭 API 에러:', metricsError);
+        throw new Error(`메트릭 수집 실패: ${metricsResponse.status} ${metricsError.error || 'Unknown error'}`);
       }
 
       const [health, systemMetrics] = await Promise.all([
@@ -96,6 +105,7 @@ export default function SystemPage() {
       setHealthData(health.data);
       setMetrics(systemMetrics.data);
     } catch (err) {
+      console.error('시스템 데이터 로드 오류:', err);
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
     } finally {
       setLoading(false);
