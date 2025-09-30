@@ -40,6 +40,37 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     weatherStatus: '맑음',
     region: '서울'
   });
+  
+  // 베드 작물 정보 저장 (deviceId -> tier -> cropInfo)
+  const [bedCropData, setBedCropData] = useState<Record<string, Record<number, any>>>({});
+
+  // 베드 작물 정보 로드 함수
+  const loadCropData = async (deviceId: string) => {
+    try {
+      const response = await fetch(`/api/bed-crop-data?deviceId=${deviceId}`);
+      const result = await response.json();
+      
+      if (result.ok && result.data) {
+        const cropDataMap: Record<number, any> = {};
+        result.data.forEach((item: any) => {
+          cropDataMap[item.tier_number] = {
+            cropName: item.crop_name,
+            growingMethod: item.growing_method,
+            plantType: item.plant_type,
+            startDate: item.start_date,
+            savedAt: item.created_at
+          };
+        });
+        
+        setBedCropData(prev => ({
+          ...prev,
+          [deviceId]: cropDataMap
+        }));
+      }
+    } catch (error) {
+      console.error('작물 정보 로드 오류:', error);
+    }
+  };
 
   // 배양액 레시피 통계 가져오기
   useEffect(() => {
@@ -107,6 +138,15 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
     const interval = setInterval(fetchWeatherData, 10 * 60 * 1000);
     return () => clearInterval(interval);
   }, [user.weather_region]);
+
+  // 베드 작물 정보 로드
+  useEffect(() => {
+    if (devices && devices.length > 0) {
+      devices.forEach((device: any) => {
+        loadCropData(device.id);
+      });
+    }
+  }, [devices]);
   
   // 베드 정렬 함수 (농장관리 페이지와 동일)
   const sortBeds = (beds: Device[]) => {
@@ -780,10 +820,26 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                                     {/* 작물명과 재배 방식 표시 */}
                                     <div className="mt-2 flex items-center space-x-3">
                                       <span className="text-sm text-green-600 font-medium">
-                                        🌱 {(device.meta as any)?.crop_name || '미설정'}
+                                        🌱 {(() => {
+                                          const cropData = bedCropData[device.id];
+                                          if (cropData) {
+                                            // 첫 번째 단의 작물 정보를 표시 (가장 최근 또는 1단)
+                                            const firstTier = Object.keys(cropData).sort((a, b) => parseInt(a) - parseInt(b))[0];
+                                            return cropData[parseInt(firstTier)]?.cropName || '미설정';
+                                          }
+                                          return '미설정';
+                                        })()}
                                       </span>
                                       <span className="text-sm text-blue-600 font-medium">
-                                        🔧 {(device.meta as any)?.growing_method || '미설정'}
+                                        🔧 {(() => {
+                                          const cropData = bedCropData[device.id];
+                                          if (cropData) {
+                                            // 첫 번째 단의 재배 방식 정보를 표시
+                                            const firstTier = Object.keys(cropData).sort((a, b) => parseInt(a) - parseInt(b))[0];
+                                            return cropData[parseInt(firstTier)]?.growingMethod || '미설정';
+                                          }
+                                          return '미설정';
+                                        })()}
                                       </span>
                                     </div>
                               </div>
