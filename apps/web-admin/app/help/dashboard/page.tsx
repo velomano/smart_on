@@ -59,7 +59,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🎯 주요 기능</h3>
           <ul className="space-y-3">
             <li className="flex items-start space-x-3">
@@ -86,7 +86,7 @@ export default function DashboardGuidePage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 반응형 디자인</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
@@ -133,8 +133,8 @@ export default function DashboardGuidePage() {
   );
 
   const renderNavigation = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 sm:p-3 border border-blue-200">
         <h2 className="text-2xl font-bold text-blue-900 mb-4">🧭 네비게이션 가이드</h2>
         <p className="text-blue-800 mb-4">
           웹 어드민의 다양한 기능에 쉽게 접근할 수 있는 네비게이션 시스템입니다.
@@ -142,7 +142,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🏠 상단 헤더</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
@@ -173,7 +173,7 @@ export default function DashboardGuidePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 햄버거 메뉴</h3>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-2 bg-cyan-50 rounded">
@@ -235,7 +235,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 통계 카드</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
@@ -279,7 +279,7 @@ export default function DashboardGuidePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 상태 표시</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
@@ -335,7 +335,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🌡️ 센서 타입</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
@@ -382,7 +382,7 @@ export default function DashboardGuidePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🎛️ 액추에이터</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
@@ -468,7 +468,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔔 알림 타입</h3>
           <div className="space-y-3">
             <div className="flex items-start space-x-3 p-3 bg-red-50 rounded-lg">
@@ -497,7 +497,7 @@ export default function DashboardGuidePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 알림 배지</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -566,7 +566,7 @@ export default function DashboardGuidePage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 모바일 최적화</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
@@ -588,7 +588,7 @@ export default function DashboardGuidePage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">👆 터치 제스처</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
@@ -727,7 +727,7 @@ export default function DashboardGuidePage() {
           </div>
 
           {/* 탭 콘텐츠 */}
-          <div className="p-8">
+          <div className="p-2 sm:p-3">
             {renderContent()}
           </div>
         </div>

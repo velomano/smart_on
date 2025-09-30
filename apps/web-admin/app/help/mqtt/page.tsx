@@ -123,7 +123,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">📊 센서 데이터 수집</h3>
           <ul className="space-y-2 text-sm text-gray-700 font-medium">
             <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>온도/습도 센서</li>
@@ -133,7 +133,7 @@ function MqttIntegrationGuideContent() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-3">🎛️ 디바이스 제어</h3>
           <ul className="space-y-2 text-sm text-gray-700 font-medium">
             <li className="flex items-center"><span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>펌프 제어</li>
@@ -177,7 +177,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🐛</div>
             <h3 className="text-lg font-semibold text-gray-900">Eclipse Mosquitto</h3>
@@ -212,7 +212,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">⚡</div>
             <h3 className="text-lg font-semibold text-gray-900">EMQX</h3>
@@ -247,7 +247,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">☁️</div>
             <h3 className="text-lg font-semibold text-gray-900">AWS IoT Core</h3>
@@ -336,8 +336,8 @@ function MqttIntegrationGuideContent() {
   );
 
   const renderDeviceIntegration = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-2 sm:p-3 border border-green-200">
         <h2 className="text-2xl font-bold text-green-900 mb-4">💻 디바이스 연동 가이드</h2>
         <p className="text-green-800 mb-4">
           다양한 플랫폼과 언어로 디바이스를 스마트팜 플랫폼에 연동하세요.
@@ -345,7 +345,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🍓</div>
             <h3 className="text-lg font-semibold text-gray-900">라즈베리파이5</h3>
@@ -390,7 +390,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🔌</div>
             <h3 className="text-lg font-semibold text-gray-900">Arduino/ESP32</h3>
@@ -425,7 +425,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🐍</div>
             <h3 className="text-lg font-semibold text-gray-900">Python</h3>
@@ -460,7 +460,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="text-center mb-4">
             <div className="text-4xl mb-2">🟢</div>
             <h3 className="text-lg font-semibold text-gray-900">Node.js</h3>
@@ -580,7 +580,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📤 발행 (Publish) 토픽</h3>
           <div className="space-y-3">
             <div className="bg-green-50 p-3 rounded-lg">
@@ -617,7 +617,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📥 구독 (Subscribe) 토픽</h3>
           <div className="space-y-3">
             <div className="bg-red-50 p-3 rounded-lg">
@@ -681,7 +681,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔐 인증 및 권한</h3>
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
@@ -704,7 +704,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🛡️ 암호화</h3>
           <div className="space-y-3">
             <div className="bg-purple-50 p-3 rounded-lg">
@@ -777,7 +777,7 @@ function MqttIntegrationGuideContent() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔌 연결 문제</h3>
           <div className="space-y-3">
             <div className="bg-red-50 p-3 rounded-lg">
@@ -804,7 +804,7 @@ function MqttIntegrationGuideContent() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📡 통신 문제</h3>
           <div className="space-y-3">
             <div className="bg-blue-50 p-3 rounded-lg">
@@ -953,7 +953,7 @@ function MqttIntegrationGuideContent() {
           </div>
 
           {/* 탭 콘텐츠 */}
-          <div className="p-8">
+          <div className="p-2 sm:p-3">
             {renderContent()}
           </div>
         </div>

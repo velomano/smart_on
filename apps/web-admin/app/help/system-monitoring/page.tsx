@@ -49,8 +49,8 @@ export default function SystemMonitoringPage() {
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-6 border border-gray-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-gray-50 to-slate-50 rounded-lg p-2 sm:p-3 border border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 시스템 모니터링 개요</h2>
         <p className="text-gray-700 mb-6">
           시스템 상태, 성능 메트릭, 로그 등을 실시간으로 모니터링하여 안정적인 서비스 운영을 보장합니다.
@@ -58,7 +58,7 @@ export default function SystemMonitoringPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🏥 헬스 체크</h3>
           <ul className="space-y-2 text-sm text-gray-700 font-medium">
             <li>• 데이터베이스 연결 상태</li>
@@ -68,7 +68,7 @@ export default function SystemMonitoringPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 메트릭</h3>
           <ul className="space-y-2 text-sm text-gray-700 font-medium">
             <li>• 사용자 수 통계</li>
@@ -78,7 +78,7 @@ export default function SystemMonitoringPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ 성능</h3>
           <ul className="space-y-2 text-sm text-gray-700 font-medium">
             <li>• 메모리 사용률</li>
@@ -121,8 +121,8 @@ export default function SystemMonitoringPage() {
   );
 
   const renderHealth = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-2 sm:p-3 border border-green-200">
         <h2 className="text-2xl font-bold text-green-900 mb-4">🏥 헬스 체크</h2>
         <p className="text-green-800 mb-6">
           시스템의 전반적인 상태를 확인하고 문제를 조기에 발견할 수 있습니다.
@@ -130,7 +130,7 @@ export default function SystemMonitoringPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">💾 데이터베이스 상태</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
@@ -159,7 +159,7 @@ export default function SystemMonitoringPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🖥️ 시스템 리소스</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -212,8 +212,8 @@ export default function SystemMonitoringPage() {
   );
 
   const renderMetrics = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-2 sm:p-3 border border-blue-200">
         <h2 className="text-2xl font-bold text-blue-900 mb-4">📈 시스템 메트릭</h2>
         <p className="text-blue-800 mb-6">
           사용자, 농장, 디바이스 등의 통계 정보를 통해 시스템 사용 현황을 파악할 수 있습니다.
@@ -221,7 +221,7 @@ export default function SystemMonitoringPage() {
       </div>
 
       <div className="grid md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">👥</span>
@@ -236,7 +236,7 @@ export default function SystemMonitoringPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🏢</span>
@@ -251,7 +251,7 @@ export default function SystemMonitoringPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🔧</span>
@@ -266,7 +266,7 @@ export default function SystemMonitoringPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">📡</span>
@@ -305,8 +305,8 @@ export default function SystemMonitoringPage() {
   );
 
   const renderPerformance = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-6 border border-purple-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-2 sm:p-3 border border-purple-200">
         <h2 className="text-2xl font-bold text-purple-900 mb-4">⚡ 성능 모니터링</h2>
         <p className="text-purple-800 mb-6">
           시스템의 성능 지표를 모니터링하여 최적의 성능을 유지합니다.
@@ -314,7 +314,7 @@ export default function SystemMonitoringPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">🚀 응답 시간</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
@@ -332,7 +332,7 @@ export default function SystemMonitoringPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">❌ 에러율</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
@@ -451,8 +451,8 @@ export default function SystemMonitoringPage() {
   );
 
   const renderLogs = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-6 border border-orange-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg p-2 sm:p-3 border border-orange-200">
         <h2 className="text-2xl font-bold text-orange-900 mb-4">📋 로그 관리</h2>
         <p className="text-orange-800 mb-6">
           시스템 로그를 통해 문제를 추적하고 시스템 동작을 분석할 수 있습니다.
@@ -597,10 +597,10 @@ export default function SystemMonitoringPage() {
           ]}
           className="mb-6"
         />
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-2 sm:gap-3">
           {/* 사이드바 */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -624,7 +624,7 @@ export default function SystemMonitoringPage() {
           {/* 메인 콘텐츠 */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
+              <div className="p-2 sm:p-3">
                 {renderContent()}
               </div>
             </div>

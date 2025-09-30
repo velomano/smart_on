@@ -48,10 +48,10 @@ export default function HelpPage() {
       description: '스마트팜 플랫폼 전체 구조와 주요 기능',
       icon: '🏠',
       content: (
-        <div className="space-y-6">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-            <h3 className="text-xl font-bold text-blue-900 mb-4">🏗️ 전체 아키텍처</h3>
-            <div className="bg-white rounded-lg p-4 border border-blue-100">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 sm:p-3 border border-blue-200">
+            <h3 className="text-xl font-bold text-blue-900 mb-2 sm:mb-3">🏗️ 전체 아키텍처</h3>
+            <div className="bg-white rounded-lg p-2 sm:p-3 border border-blue-100">
               <div className="flex flex-wrap items-center justify-center space-x-4 space-y-2">
                 <div className="bg-green-100 px-3 py-2 rounded-lg text-sm font-semibold text-green-800">디바이스/센서</div>
                 <div className="text-gray-700 font-bold text-lg">→</div>
@@ -64,9 +64,9 @@ export default function HelpPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">📊 주요 기능</h4>
+          <div className="grid md:grid-cols-2 gap-2 sm:gap-3">
+            <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-3">📊 주요 기능</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li className="flex items-center"><span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>실시간 센서 모니터링</li>
                 <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>디바이스 원격 제어</li>
@@ -76,8 +76,8 @@ export default function HelpPage() {
               </ul>
             </div>
 
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">👥 사용자 역할</h4>
+            <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
+              <h4 className="text-lg font-semibold text-gray-900 mb-2 sm:mb-3">👥 사용자 역할</h4>
               <ul className="space-y-2 text-sm text-gray-600">
                 <li><strong>super_admin:</strong> 시스템 전체 관리</li>
                 <li><strong>system_admin:</strong> 시스템 모니터링 및 관리</li>
@@ -734,10 +734,10 @@ export default function HelpPage() {
           ]}
           className="mb-6"
         />
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-2 sm:gap-3">
           {/* 사이드바 네비게이션 */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">📚 목차</h2>
               <nav className="space-y-2">
                 {sections.map((section) => (
@@ -765,7 +765,7 @@ export default function HelpPage() {
 
           {/* 메인 콘텐츠 */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3">
               {currentSection && (
                 <div>
                   <div className="flex items-center space-x-3 mb-6">

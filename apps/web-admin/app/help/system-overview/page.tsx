@@ -497,10 +497,10 @@ export default function SystemOverviewPage() {
           ]}
           className="mb-6"
         />
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-2 sm:gap-3">
           {/* 사이드바 */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -524,7 +524,7 @@ export default function SystemOverviewPage() {
           {/* 메인 콘텐츠 */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
+              <div className="p-2 sm:p-3">
                 {renderContent()}
               </div>
             </div>

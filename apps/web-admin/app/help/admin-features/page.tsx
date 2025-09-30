@@ -49,8 +49,8 @@ export default function AdminFeaturesPage() {
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-6 border border-red-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-2 sm:p-3 border border-red-200">
         <h2 className="text-2xl font-bold text-red-900 mb-4">👨‍💼 관리자 기능 개요</h2>
         <p className="text-red-800 mb-6">
           시스템 관리자만 접근 가능한 고급 관리 기능들을 통해 전체 시스템을 효율적으로 운영할 수 있습니다.
@@ -58,7 +58,7 @@ export default function AdminFeaturesPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">👥</span>
@@ -76,7 +76,7 @@ export default function AdminFeaturesPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🏢</span>
@@ -94,7 +94,7 @@ export default function AdminFeaturesPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">⚙️</span>
@@ -112,7 +112,7 @@ export default function AdminFeaturesPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🔒</span>
@@ -281,7 +281,7 @@ export default function AdminFeaturesPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">➕ 농장 생성</h3>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -317,7 +317,7 @@ export default function AdminFeaturesPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">👥 사용자 배정</h3>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -387,7 +387,7 @@ export default function AdminFeaturesPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">🔔 알림 설정</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -409,7 +409,7 @@ export default function AdminFeaturesPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">🌐 시스템 환경</h3>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -463,8 +463,8 @@ export default function AdminFeaturesPage() {
   );
 
   const renderSecurity = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-6 border border-red-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-2 sm:p-3 border border-red-200">
         <h2 className="text-2xl font-bold text-red-900 mb-4">🔒 보안 관리</h2>
         <p className="text-red-800 mb-6">
           시스템 보안 정책을 설정하고 접근 로그를 모니터링하여 안전한 운영을 보장합니다.
@@ -472,7 +472,7 @@ export default function AdminFeaturesPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">🛡️ 보안 정책</h3>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -506,7 +506,7 @@ export default function AdminFeaturesPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">📊 접근 로그</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
@@ -614,10 +614,10 @@ export default function AdminFeaturesPage() {
           ]}
           className="mb-6"
         />
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-2 sm:gap-3">
           {/* 사이드바 */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -641,7 +641,7 @@ export default function AdminFeaturesPage() {
           {/* 메인 콘텐츠 */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
+              <div className="p-2 sm:p-3">
                 {renderContent()}
               </div>
             </div>

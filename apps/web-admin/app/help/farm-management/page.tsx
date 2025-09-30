@@ -48,8 +48,8 @@ export default function FarmManagementPage() {
   ];
 
   const renderOverview = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-6 border border-purple-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg p-2 sm:p-3 border border-purple-200">
         <h2 className="text-2xl font-bold text-purple-900 mb-4">🏢 농장 관리 개요</h2>
         <p className="text-purple-800 mb-6">
           농장을 생성하고 설정하여 IoT 디바이스들을 효율적으로 관리할 수 있습니다.
@@ -79,8 +79,8 @@ export default function FarmManagementPage() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+      <div className="grid md:grid-cols-3 gap-2 sm:gap-3">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🏗️</span>
@@ -97,7 +97,7 @@ export default function FarmManagementPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">📡</span>
@@ -114,7 +114,7 @@ export default function FarmManagementPage() {
           </ul>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">👥</span>
@@ -144,7 +144,7 @@ export default function FarmManagementPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 1단계: 기본 정보 입력</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -179,7 +179,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🏗️ 2단계: 농장 구조 설정</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -214,7 +214,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">✅ 3단계: 생성 완료</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
@@ -254,7 +254,7 @@ export default function FarmManagementPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔧 브로커 연결 설정</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -300,7 +300,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔒 보안 설정</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
@@ -337,7 +337,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🧪 연결 테스트</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
@@ -383,7 +383,7 @@ export default function FarmManagementPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">➕ 멤버 초대</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -421,7 +421,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 현재 멤버 목록</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -504,7 +504,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔐 권한 관리</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-6">
@@ -544,7 +544,7 @@ export default function FarmManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🌡️</span>
@@ -559,7 +559,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">💧</span>
@@ -574,7 +574,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">⚡</span>
@@ -589,7 +589,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
               <span className="text-2xl">🔌</span>
@@ -605,7 +605,7 @@ export default function FarmManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">📈 최근 24시간 트렌드</h3>
           <div className="h-64 bg-gray-50 rounded-lg p-4">
             <div className="h-full relative">
@@ -689,7 +689,7 @@ export default function FarmManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🚨 알림 현황</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg border border-red-200">
@@ -795,10 +795,10 @@ export default function FarmManagementPage() {
           ]}
           className="mb-6"
         />
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-2 sm:gap-3">
           {/* 사이드바 */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -822,7 +822,7 @@ export default function FarmManagementPage() {
           {/* 메인 콘텐츠 */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
+              <div className="p-2 sm:p-3">
                 {renderContent()}
               </div>
             </div>

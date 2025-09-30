@@ -58,7 +58,7 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📡 센서 타입</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
@@ -92,7 +92,7 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🎛️ 액추에이터 타입</h3>
           <div className="space-y-3">
             <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg">
@@ -165,7 +165,7 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🌡️ 온도/습도 센서</h3>
           <div className="space-y-3">
             <div className="p-3 bg-gray-50 rounded-lg">
@@ -197,7 +197,7 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ EC/pH 센서</h3>
           <div className="space-y-3">
             <div className="p-3 bg-gray-50 rounded-lg">
@@ -276,8 +276,8 @@ export default function DeviceManagementPage() {
   );
 
   const renderActuators = () => (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-6 border border-blue-200">
+    <div className="space-y-2 sm:space-y-3">
+      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-2 sm:p-3 border border-blue-200">
         <h2 className="text-2xl font-bold text-blue-900 mb-4">🎛️ 액추에이터 제어</h2>
         <p className="text-blue-800 mb-6">
           펌프, 밸브, LED, 팬 등의 액추에이터를 원격으로 제어할 수 있습니다.
@@ -285,7 +285,7 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🚰 펌프 제어</h3>
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
@@ -314,7 +314,7 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">💡 LED 조명 제어</h3>
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg">
@@ -405,7 +405,7 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">📋 1단계: 디바이스 정보 입력</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -447,7 +447,7 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-bold text-gray-900 mb-4">🏢 2단계: 배치 위치 설정</h3>
           <div className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
@@ -475,7 +475,7 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">⚙️ 3단계: 설정 완료</h3>
           <div className="space-y-4">
             <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-200">
@@ -510,7 +510,7 @@ export default function DeviceManagementPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">🔴 연결 문제</h3>
           <div className="space-y-4">
             <div className="p-4 bg-red-50 rounded-lg border border-red-200">
@@ -534,7 +534,7 @@ export default function DeviceManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
+        <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 데이터 문제</h3>
           <div className="space-y-4">
             <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
@@ -637,10 +637,10 @@ export default function DeviceManagementPage() {
           ]}
           className="mb-6"
         />
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid lg:grid-cols-4 gap-2 sm:gap-3">
           {/* 사이드바 */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 sticky top-8">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">목차</h3>
               <nav className="space-y-2">
                 {tabs.map((tab) => (
@@ -664,7 +664,7 @@ export default function DeviceManagementPage() {
           {/* 메인 콘텐츠 */}
           <div className="lg:col-span-3">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
+              <div className="p-2 sm:p-3">
                 {renderContent()}
               </div>
             </div>
