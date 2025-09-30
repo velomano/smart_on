@@ -681,7 +681,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         </div>
                         <div>
                             <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
+                            <h4 className="text-2xl font-bold text-gray-900 whitespace-nowrap">{farm.name}</h4>
                             <span className="text-gray-500 font-normal text-xs">🏷️ {farm.id}</span>
                           </div>
                           <div className="flex items-center space-x-2 sm:space-x-3">
