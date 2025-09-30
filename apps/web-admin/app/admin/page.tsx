@@ -450,14 +450,14 @@ export default function AdminPage() {
                   <span className="text-3xl">{activeTab === 'pending' ? '⏳' : activeTab === 'approved' ? '✅' : '🏢'}</span>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold text-white mb-2">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
                     {activeTab === 'pending'
                       ? '승인 대기 사용자'
                       : activeTab === 'approved'
                       ? '승인된 사용자'
                       : '농장별 사용자 보기'}
                   </h1>
-                  <p className="text-white/90 text-lg">
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">
                     {activeTab === 'pending'
                       ? '승인을 기다리는 사용자들을 관리합니다'
                       : activeTab === 'approved'
@@ -468,33 +468,33 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="px-8 py-8">
+            <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
               {/* 대기 */}
               {activeTab === 'pending' && (
                 <div>
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-8">
                     <div>
-                      <h3 className="text-2xl font-black text-gray-900 mb-2">⏳ 승인 대기 사용자 목록</h3>
-                      <p className="text-gray-600">승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다</p>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mb-1 sm:mb-2">⏳ 승인 대기 사용자 목록</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다</p>
                     </div>
-                    <div className="text-sm text-gray-500">총 {pendingUsers.length}명</div>
+                    <div className="text-xs sm:text-sm text-gray-500">총 {pendingUsers.length}명</div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-6">
                     {pendingUsers.map((u) => (
                       <div
                         key={u.id}
-                        className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+                        className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
-                              <span className="text-2xl">⏳</span>
+                          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                              <span className="text-lg sm:text-xl lg:text-2xl">⏳</span>
                             </div>
                             <div>
-                              <h4 className="text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
-                              <p className="text-gray-600 font-medium">{u.email}</p>
-                              <div className="flex items-center space-x-3 mt-2">
+                              <h4 className="text-lg sm:text-xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
+                              <p className="text-gray-600 font-medium text-sm sm:text-base">{u.email}</p>
+                              <div className="flex items-center space-x-2 sm:space-x-3 mt-1 sm:mt-2">
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                   승인 대기
                                 </span>
@@ -537,12 +537,12 @@ export default function AdminPage() {
               {/* 승인됨 */}
               {activeTab === 'approved' && (
                 <div>
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
                     <div>
-                      <h3 className="text-2xl font-black text-gray-900 mb-2">✅ 승인된 사용자 목록</h3>
-                      <p className="text-gray-600">시스템에 등록된 모든 승인된 사용자를 관리합니다</p>
+                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mb-1 sm:mb-2">✅ 승인된 사용자 목록</h3>
+                      <p className="text-gray-600 text-sm sm:text-base">시스템에 등록된 모든 승인된 사용자를 관리합니다</p>
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs sm:text-sm text-gray-500">
                       총 {approvedUsers.length}명 (검색결과: {filteredApprovedUsers.length}명)
                     </div>
                   </div>
@@ -571,16 +571,16 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className="space-y-2 sm:space-y-3 lg:space-y-6">
                     {filteredApprovedUsers.map((u) => (
                       <div
                         key={u.id}
-                        className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                        className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200/50 rounded-3xl p-2 sm:p-3 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-5 flex-1">
+                          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-5 flex-1">
                             <div
-                              className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg ${
+                              className={`w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center shadow-lg ${
                                 u.role === 'system_admin'
                                   ? 'bg-gradient-to-br from-yellow-400 to-orange-500'
                                   : u.role === 'team_leader'
@@ -588,27 +588,27 @@ export default function AdminPage() {
                                   : 'bg-gradient-to-br from-green-400 to-emerald-500'
                               }`}
                             >
-                              <span className="text-3xl">{u.role === 'system_admin' ? '👑' : u.role === 'team_leader' ? '👨‍💼' : '👤'}</span>
+                              <span className="text-lg sm:text-2xl lg:text-3xl">{u.role === 'system_admin' ? '👑' : u.role === 'team_leader' ? '👨‍💼' : '👤'}</span>
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center space-x-4 mb-4">
-                                <h4 className="text-2xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
+                              <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 mb-2 sm:mb-3 lg:mb-4">
+                                <h4 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{u.name || '이름 없음'}</h4>
                                 <div
-                                  className={`text-sm px-3 py-1.5 rounded-full font-semibold ${
+                                  className={`text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-semibold ${
                                     u.is_active ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'
                                   }`}
                                 >
                                   {u.is_active ? '활성' : '비활성'}
                                 </div>
-                                <p className="text-gray-600 font-medium text-lg">{u.email}</p>
+                                <p className="text-gray-600 font-medium text-sm sm:text-base lg:text-lg">{u.email}</p>
                                 {u.phone && (
-                                  <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
-                                    <span className="mr-1.5">📞</span>
+                                  <span className="flex items-center text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+                                    <span className="mr-1 sm:mr-1.5">📞</span>
                                     {u.phone}
                                   </span>
                                 )}
-                                <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg">
-                                  <span className="mr-1.5">📅</span>가입: {new Date(u.created_at).toLocaleDateString('ko-KR')}
+                                <span className="flex items-center text-xs sm:text-sm text-gray-600 bg-gray-50 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg">
+                                  <span className="mr-1 sm:mr-1.5">📅</span>가입: {new Date(u.created_at).toLocaleDateString('ko-KR')}
                                 </span>
                               </div>
 
