@@ -442,9 +442,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       {/* Main Content */}
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         
-        {/* Stats Overview - 데스크톱에서만 상단 표시 */}
-        <div className="hidden sm:block mb-4 sm:mb-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+        {/* Stats Overview - 모든 화면에서 상단 표시 */}
+        <div className="mb-4 sm:mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
             <div className="p-3 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
@@ -942,78 +942,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         </div>
 
         {/* Recent Activity */}
-        {/* 모바일용 통계 카드들 - 최근활동 위에 표시 */}
-        <div className="block sm:hidden mb-4">
-          <div className="grid grid-cols-2 gap-2">
-            {/* 농장 수 카드 */}
-            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-lg border border-gray-200">
-              <div className="p-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="text-sm">🏠</span>
-                  </div>
-                  <div className="ml-2">
-                    <dt className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      농장 수
-                    </dt>
-                    <dd className="text-lg font-black text-gray-900">{totalFarms}</dd>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 베드 활성률 카드 */}
-            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-lg border border-gray-200">
-              <div className="p-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="text-sm">🌱</span>
-                  </div>
-                  <div className="ml-2">
-                    <dt className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      베드 활성률
-                    </dt>
-                    <dd className="text-lg font-black text-gray-900">{bedActivationRate}%</dd>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 배양액 레시피 카드 */}
-            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-lg border border-gray-200">
-              <div className="p-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="text-sm">🌱</span>
-                  </div>
-                  <div className="ml-2">
-                    <dt className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      배양액 레시피
-                    </dt>
-                    <dd className="text-lg font-black text-gray-900">{recipeStats.total}</dd>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 현재 날씨 카드 */}
-            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-lg rounded-lg border border-gray-200">
-              <div className="p-3 flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-700 rounded-lg flex items-center justify-center shadow-lg">
-                    <span className="text-sm">🌤️</span>
-                  </div>
-                  <div className="ml-2">
-                    <dt className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      현재 날씨
-                    </dt>
-                    <dd className="text-lg font-black text-gray-900">{weatherData.temperature}°C</dd>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div className="mt-8 bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
           <div className="px-8 py-8">
