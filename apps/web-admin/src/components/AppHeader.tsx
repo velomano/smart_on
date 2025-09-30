@@ -359,7 +359,8 @@ export default function AppHeader({
               {/* 햄버거 메뉴 버튼 */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="relative w-10 h-10 flex flex-col justify-center items-center space-y-1 group"
+                className="relative w-12 h-12 flex flex-col justify-center items-center space-y-1 group p-2 -m-2"
+                aria-label="메뉴 열기"
               >
                 <span className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
                 <span className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
@@ -371,7 +372,7 @@ export default function AppHeader({
 
         {/* 햄버거 드롭다운 메뉴 */}
         {isMenuOpen && (
-          <div className="absolute top-full right-4 w-80 bg-white shadow-2xl border border-gray-200 rounded-b-2xl z-[60] overflow-hidden">
+          <div className="absolute top-full right-0 sm:right-4 w-full sm:w-80 bg-white shadow-2xl border border-gray-200 rounded-b-2xl z-[60] overflow-hidden">
             <div className="p-4">
               {/* 메뉴 헤더 */}
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
@@ -411,7 +412,7 @@ export default function AppHeader({
               </div>
 
               {/* 메뉴 아이템들 */}
-              <div className="space-y-2 mb-4">
+              <div className="space-y-1 mb-4">
                 {menuItems.map((item, index) => (
                   <button
                     key={index}
@@ -419,7 +420,7 @@ export default function AppHeader({
                       router.push(item.path);
                       setIsMenuOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2.5 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
+                    className={`w-full text-left px-4 py-3 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
                   >
                     {item.label}
                   </button>
@@ -448,8 +449,8 @@ export default function AppHeader({
         {/* 공지사항 모달 */}
         {isNoticeOpen && (
           <div className="fixed inset-0 z-40 flex items-center justify-center" style={{ paddingTop: '530px' }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl sm:w-[700px] max-h-[60vh] overflow-hidden mx-4">
-              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl sm:w-[700px] max-h-[60vh] overflow-hidden mx-2 sm:mx-4">
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-white flex items-center">
                     <span className="text-2xl mr-2">📢</span>
@@ -464,7 +465,7 @@ export default function AppHeader({
                 </div>
               </div>
               
-              <div className="p-6 overflow-y-auto max-h-[60vh]">
+              <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
                 {/* 시스템 관리자용 공지사항 작성 버튼 */}
                 {safeUser.role === 'system_admin' && (
                   <div className="mb-6">
@@ -480,7 +481,7 @@ export default function AppHeader({
 
                 {/* 공지사항 작성 폼 */}
                 {isWritingNotice && safeUser.role === 'system_admin' && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg border-2 border-blue-200">
+                  <div className="mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg border-2 border-blue-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">새 공지사항 작성</h3>
                     
                     <div className="space-y-4">

@@ -444,9 +444,9 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         
         {/* Stats Overview */}
         <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
-            <div className="p-6 flex items-center justify-between">
+            <div className="p-4 sm:p-6 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-2xl">🏠</span>
@@ -468,7 +468,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
-            <div className="p-6 flex items-center justify-between">
+            <div className="p-4 sm:p-6 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-2xl">🌱</span>
@@ -488,7 +488,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
-            <div className="p-6 flex items-center justify-between">
+            <div className="p-4 sm:p-6 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-2xl">🌱</span>
@@ -512,7 +512,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
             <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
-              <div className="p-6 flex items-center justify-between">
+              <div className="p-4 sm:p-6 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-2xl">🌤️</span>
@@ -733,7 +733,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     </h5>
 
                     {/* 베드 카드들을 개별로 배치 - 공간 없이 꽉채우기 */}
-                    <div className="grid grid-cols-1 gap-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                       {farm.visibleDevices.length === 0 ? (
                         <div className="text-center py-8 text-gray-500">
                           <p>현재 표시할 베드가 없습니다.</p>
@@ -831,7 +831,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
                               {/* 제어 상태 - 크기 증대 */}
                               <div className="mb-6">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-sm">
                                   <div className="flex items-center space-x-2 bg-white/50 rounded-lg p-3 ring-1 ring-gray-300">
                                     <span className="text-lg">💡</span>
                                     <span className="text-gray-600 font-medium">램프1</span>
@@ -864,7 +864,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               </div>
 
                               {/* 센서 데이터 - 대폭 증대 */}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4">
                                 <div className="flex items-center justify-between bg-red-50 rounded-lg p-6 shadow-md border border-red-300">
                                   <div className="flex items-center space-x-3">
                                     <span className="text-3xl">🌡️</span>
