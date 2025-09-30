@@ -536,7 +536,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         
         {/* Farm Overview Section */}
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-4 sm:mb-6">
-          <div className="bg-gradient-to-r from-green-500 to-green-600 px-8 py-6">
+          <div className="bg-gradient-to-r from-green-500 to-green-600 px-3 sm:px-4 py-3 sm:py-4">
             {/* Enhanced Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -575,8 +575,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
               )}
             </div>
           </div>
-          <div className="px-8 py-6">
-            <div className="space-y-6">
+          <div className="px-2 sm:px-3 py-2 sm:py-3">
+            <div className="space-y-2 sm:space-y-3">
               {(() => {
                 // 농장 필터링 및 베드 계산
                 console.log('🔍 대시보드 필터링 디버그:', {
@@ -664,14 +664,14 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                   const highAlerts = farmAlerts.filter(alert => alert.level === 'high').length;
                   
                   return (
-                <div key={farm.id} className={`bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 ${
+                <div key={farm.id} className={`bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-2 sm:p-3 shadow-xl hover:shadow-2xl transition-all duration-300 ${
                   farmHasAlerts 
                     ? 'border-red-400 ring-2 ring-red-300 animate-pulse shadow-red-200' 
                     : 'border-gray-200'
                 }`}>
                     {/* 농장 헤더 */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center space-x-4">
+                    <div className="flex items-center justify-between mb-2 sm:mb-3">
+                      <div className="flex items-center space-x-2 sm:space-x-3">
                         <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg transition-all duration-300 ${
                           farmHasAlerts 
                             ? 'bg-gradient-to-br from-red-400 to-red-600 animate-bounce' 
@@ -680,11 +680,11 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                           <span className="text-3xl">{farmHasAlerts ? '🚨' : '🏠'}</span>
                         </div>
                         <div>
-                          <div className="flex items-center space-x-3 mb-2">
+                            <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
                             <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
                             <span className="text-gray-600 font-medium text-lg">🏷️ {farm.id}</span>
                           </div>
-                          <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2 sm:space-x-3">
                             <span className="text-sm text-blue-600 font-semibold">
                               📊 총 {farm.visibleDevices.length}개 베드
                             </span>
