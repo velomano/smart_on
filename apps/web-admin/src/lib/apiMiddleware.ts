@@ -154,7 +154,7 @@ export function withApiMiddleware<T extends any[]>(
       securedResponse.headers.set('X-Request-ID', context.requestId!);
       securedResponse.headers.set('X-Response-Time', `${responseTime}ms`);
 
-      return securedResponse;
+      return securedResponse as NextResponse;
 
     } catch (error) {
       const responseTime = Date.now() - startTime;
