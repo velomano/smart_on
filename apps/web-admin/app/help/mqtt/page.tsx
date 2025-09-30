@@ -22,6 +22,47 @@ export default function MqttIntegrationGuidePage() {
     }
   }, [searchParams]);
 
+  // 템플릿 다운로드 함수
+  const downloadTemplate = async (templateType: string) => {
+    try {
+      const response = await fetch(`/api/templates/download?type=${templateType}`);
+      
+      if (!response.ok) {
+        throw new Error(`다운로드 실패: ${response.status}`);
+      }
+
+      // Content-Disposition 헤더에서 파일명 추출
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `${templateType}_template`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // 파일 내용을 Blob으로 변환
+      const blob = await response.blob();
+      
+      // 다운로드 링크 생성
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      
+      // 정리
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+    } catch (error) {
+      console.error('템플릿 다운로드 오류:', error);
+      alert('템플릿 다운로드 중 오류가 발생했습니다.');
+    }
+  };
+
   const tabs: TabType[] = [
     { id: 'overview', label: '개요', icon: '🏗️' },
     { id: 'broker-setup', label: '브로커 설정', icon: '🔧' },
@@ -133,13 +174,12 @@ export default function MqttIntegrationGuidePage() {
                 <li>• 개발/테스트 환경</li>
                 <li>• 비용 절약이 중요한 경우</li>
               </ul>
-              <a 
-                href="/api/templates/download?type=mosquitto" 
+              <button 
+                onClick={() => downloadTemplate('mosquitto')}
                 className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 Mosquitto 설정 가이드
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -169,13 +209,12 @@ export default function MqttIntegrationGuidePage() {
                 <li>• 높은 안정성 요구</li>
                 <li>• 복잡한 라우팅 필요</li>
               </ul>
-              <a 
-                href="/api/templates/download?type=emqx" 
+              <button 
+                onClick={() => downloadTemplate('emqx')}
                 className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 EMQX 설정 가이드
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -205,13 +244,12 @@ export default function MqttIntegrationGuidePage() {
                 <li>• AWS 사용 중인 경우</li>
                 <li>• 서버 관리 부담 회피</li>
               </ul>
-              <a 
-                href="/api/templates/download?type=aws-iot" 
+              <button 
+                onClick={() => downloadTemplate('aws-iot')}
                 className="inline-flex items-center px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 AWS IoT Core 설정 가이드
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -222,13 +260,12 @@ export default function MqttIntegrationGuidePage() {
         <p className="text-cyan-800 mb-4">
           농장의 MQTT 브로커를 스마트팜 플랫폼의 브리지와 연결하는 핵심 가이드입니다.
         </p>
-        <a 
-          href="/api/templates/download?type=broker-bridge" 
+        <button 
+          onClick={() => downloadTemplate('broker-bridge')}
           className="inline-flex items-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors"
-          download
         >
           📥 브로커-브리지 연결 가이드 다운로드
-        </a>
+        </button>
       </div>
 
       <div className="bg-white rounded-lg p-6 border border-gray-200">
@@ -295,13 +332,12 @@ export default function MqttIntegrationGuidePage() {
                 <div>pip install RPi.GPIO</div>
                 <div>pip install adafruit-circuitpython-dht</div>
               </div>
-              <a 
-                href="/api/templates/download?type=raspberry-pi" 
+              <button 
+                onClick={() => downloadTemplate('raspberry-pi')}
                 className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 라즈베리파이5 템플릿
-              </a>
+              </button>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -316,13 +352,12 @@ export default function MqttIntegrationGuidePage() {
             
             <div className="bg-purple-50 p-3 rounded-lg">
               <h4 className="font-medium text-purple-900 mb-1">설정 가이드</h4>
-              <a 
-                href="/api/templates/download?type=raspberry-pi-setup" 
+              <button 
+                onClick={() => downloadTemplate('raspberry-pi-setup')}
                 className="inline-flex items-center px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 라즈베리파이5 설정 가이드
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -342,13 +377,12 @@ export default function MqttIntegrationGuidePage() {
                 <div>#include &lt;PubSubClient.h&gt;</div>
                 <div>#include &lt;ArduinoJson.h&gt;</div>
               </div>
-              <a 
-                href="/api/templates/download?type=arduino" 
+              <button 
+                onClick={() => downloadTemplate('arduino')}
                 className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 Arduino 템플릿 다운로드
-              </a>
+              </button>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -378,13 +412,12 @@ export default function MqttIntegrationGuidePage() {
                 <div>pip install requests</div>
                 <div>pip install schedule</div>
               </div>
-              <a 
-                href="/api/templates/download?type=python" 
+              <button 
+                onClick={() => downloadTemplate('python')}
                 className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 Python 템플릿 다운로드
-              </a>
+              </button>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -414,13 +447,12 @@ export default function MqttIntegrationGuidePage() {
                 <div>npm install express</div>
                 <div>npm install ws</div>
               </div>
-              <a 
-                href="/api/templates/download?type=nodejs" 
+              <button 
+                onClick={() => downloadTemplate('nodejs')}
                 className="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium transition-colors"
-                download
               >
                 📥 Node.js 템플릿 다운로드
-              </a>
+              </button>
             </div>
             
             <div className="bg-green-50 p-3 rounded-lg">
@@ -452,13 +484,12 @@ export default function MqttIntegrationGuidePage() {
                 <div>
                   <h4 className="font-medium text-gray-900">설정 수정</h4>
                   <p className="text-sm text-gray-600">브로커 URL, 포트, 인증 정보 입력</p>
-                  <a 
-                    href="/api/templates/download?type=config" 
+                  <button 
+                    onClick={() => downloadTemplate('config')}
                     className="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium transition-colors mt-1"
-                    download
                   >
                     📥 설정 템플릿 다운로드
-                  </a>
+                  </button>
                 </div>
               </div>
           
