@@ -110,33 +110,33 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
 
 
   return (
-    <div className="bg-white rounded-xl p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-64 flex flex-col">
+    <div className="bg-white rounded-xl p-2 sm:p-3 lg:p-4 border-2 border-gray-400 shadow-lg hover:shadow-xl transition-all duration-200 h-32 sm:h-48 lg:h-64 flex flex-col">
       {/* 헤더 섹션 */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <span className="text-2xl">{icon}</span>
-          <span className="text-sm font-bold text-gray-800">{title}</span>
+      <div className="flex items-center justify-between mb-1 sm:mb-2 lg:mb-3">
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          <span className="text-lg sm:text-xl lg:text-2xl">{icon}</span>
+          <span className="text-xs sm:text-sm font-bold text-gray-800">{title}</span>
         </div>
         {/* 그래프 아이콘 버튼 */}
         <button 
           onClick={() => setIsModalOpen(true)}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors"
           title="그래프 보기"
         >
-          <span className="text-lg">📊</span>
+          <span className="text-sm sm:text-base lg:text-lg">📊</span>
         </button>
       </div>
 
       {/* 대형 센서 값 표시 */}
-      <div className="flex-1 flex flex-col items-center justify-center mb-4">
+      <div className="flex-1 flex flex-col items-center justify-center mb-2 sm:mb-3 lg:mb-4">
         <div 
-          className="text-6xl font-bold mb-2"
+          className="text-2xl sm:text-4xl lg:text-6xl font-bold mb-1 sm:mb-2"
           style={{ color: color }}
         >
           {formatValue(value)}
         </div>
         <div 
-          className="text-2xl font-semibold"
+          className="text-sm sm:text-lg lg:text-2xl font-semibold"
           style={{ color: color }}
         >
           {unit}
@@ -145,14 +145,14 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
 
       {/* 상태 표시 */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <div 
-            className="w-3 h-3 rounded-full animate-pulse"
+            className="w-2 h-2 sm:w-3 sm:h-3 rounded-full animate-pulse"
             style={{ backgroundColor: color }}
           ></div>
-          <span className="text-sm font-medium text-gray-600">활성</span>
+          <span className="text-xs sm:text-sm font-medium text-gray-600">활성</span>
         </div>
-        <span className="text-sm text-gray-500">
+        <span className="text-xs sm:text-sm text-gray-500">
           {chartData.length > 0 ? `${chartData.length}개 데이터` : '데이터 없음'}
         </span>
       </div>
