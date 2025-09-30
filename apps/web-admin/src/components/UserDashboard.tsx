@@ -717,7 +717,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               // 클릭된 농장의 ID를 직접 사용 (항상 해당 농장 관리로 이동)
                               router.push(`/beds?farm=${farm.id}`);
                             }}
-                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200 whitespace-nowrap"
                           >
                             농장 관리
                           </button>
