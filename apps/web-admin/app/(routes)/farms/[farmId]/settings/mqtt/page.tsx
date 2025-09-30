@@ -257,27 +257,88 @@ export default function FarmMqttSettingsPage() {
           </div>
         )}
 
-        {/* 도움말 */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
-            설정 도움말
+        {/* 데이터 흐름 설명 */}
+        <div className="mt-8 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            🔄 MQTT 데이터 흐름
           </h3>
-          <div className="space-y-2 text-sm text-blue-800">
-            <p>
-              • <strong>브로커 URL:</strong> MQTT 브로커의 주소 (예: mqtts://your-broker.com)
-            </p>
-            <p>
-              • <strong>포트:</strong> 일반적으로 1883 (비암호화), 8883 (SSL/TLS)
-            </p>
-            <p>
-              • <strong>인증 방식:</strong> API 키 또는 사용자명/비밀번호 중 선택
-            </p>
-            <p>
-              • <strong>연결 테스트:</strong> 설정 저장 후 반드시 연결 테스트를 수행하세요
-            </p>
-            <p>
-              • <strong>보안:</strong> 프로덕션 환경에서는 SSL/TLS 연결을 권장합니다
-            </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg p-4 border border-blue-200">
+              <h4 className="font-semibold text-blue-700 mb-3 flex items-center">
+                📊 센서 데이터 수신
+              </h4>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  농장 센서 → MQTT 브로커
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  MQTT 브릿지 구독
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  Supabase DB 저장
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  웹어드민 표시
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-green-200">
+              <h4 className="font-semibold text-green-700 mb-3 flex items-center">
+                🎛️ 제어 명령 전송
+              </h4>
+              <div className="space-y-2 text-sm text-gray-700">
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  웹어드민 명령 생성
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  Supabase DB 저장
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  MQTT 브릿지 발송
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                  농장 디바이스 제어
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 설정 도움말 */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+            ⚙️ 설정 도움말
+          </h3>
+          <div className="space-y-3 text-sm text-blue-800">
+            <div className="bg-white rounded p-3 border border-blue-200">
+              <p className="font-semibold text-blue-900 mb-1">브로커 URL</p>
+              <p>MQTT 브로커의 주소 (예: mqtts://your-broker.com, wss://your-broker.com/mqtt)</p>
+            </div>
+            <div className="bg-white rounded p-3 border border-blue-200">
+              <p className="font-semibold text-blue-900 mb-1">포트</p>
+              <p>일반적으로 1883 (비암호화), 8883 (SSL/TLS), 443 (WSS)</p>
+            </div>
+            <div className="bg-white rounded p-3 border border-blue-200">
+              <p className="font-semibold text-blue-900 mb-1">인증 방식</p>
+              <p>API 키 또는 사용자명/비밀번호 중 선택 (브로커 설정에 따라)</p>
+            </div>
+            <div className="bg-white rounded p-3 border border-blue-200">
+              <p className="font-semibold text-blue-900 mb-1">연결 테스트</p>
+              <p>설정 저장 후 반드시 연결 테스트를 수행하여 정상 작동 확인</p>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-300 rounded p-3">
+              <p className="font-semibold text-yellow-800 mb-1">⚠️ 중요 사항</p>
+              <p>프로덕션 환경에서는 SSL/TLS 연결을 권장하며, 설정 후 MQTT 브릿지가 자동으로 재시작됩니다.</p>
+            </div>
           </div>
         </div>
       </div>

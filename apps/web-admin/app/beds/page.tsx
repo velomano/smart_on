@@ -1174,7 +1174,16 @@ function BedsManagementContent() {
                                       startDate: cropInfo?.startDate
                                     };
                                   })}
-                                  waterLevelStatus="normal"
+                                  waterLevelStatus={(() => {
+                                    const waterSensor = deviceSensors.find(s => s.type === 'water_level');
+                                    const reading = waterSensor && sensorReadings.find(r => r.sensor_id === waterSensor.id);
+                                    if (!waterSensor) return 'disconnected';
+                                    if (!reading) return 'disconnected';
+                                    const value = reading.value;
+                                    if (value < 20) return 'low';
+                                    if (value > 80) return 'high';
+                                    return 'normal';
+                                  })()}
                                   onTierClick={(tierNumber) => {
                                     console.log(`${tierNumber}단 클릭됨`);
                                     setSelectedTier(tierNumber);
@@ -1236,6 +1245,11 @@ function BedsManagementContent() {
                                   color="#ef4444"
                                   chartData={sensorChartData}
                                   title="온도"
+                                  isConnected={(() => {
+                                    const tempSensor = deviceSensors.find(s => s.type === 'temperature');
+                                    const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                                    return !!tempSensor && !!reading;
+                                  })()}
                                 />
                                 
                                 <SensorCard
@@ -1250,6 +1264,11 @@ function BedsManagementContent() {
                                   color="#3b82f6"
                                   chartData={sensorChartData}
                                   title="습도"
+                                  isConnected={(() => {
+                                    const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
+                                    const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                                    return !!humiditySensor && !!reading;
+                                  })()}
                                 />
                                 
                                 <SensorCard
@@ -1264,11 +1283,29 @@ function BedsManagementContent() {
                                   color="#10b981"
                                   chartData={sensorChartData}
                                   title="EC"
+                                  isConnected={(() => {
+                                    const ecSensor = deviceSensors.find(s => s.type === 'ec');
+                                    const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
+                                    return !!ecSensor && !!reading;
+                                  })()}
                                 />
                                 
                                 <WaterLevelSensorCard
-                                  level="normal"
-                                  percentage={75}
+                                  level={(() => {
+                                    const waterSensor = deviceSensors.find(s => s.type === 'water_level');
+                                    const reading = waterSensor && sensorReadings.find(r => r.sensor_id === waterSensor.id);
+                                    if (!waterSensor) return 'disconnected';
+                                    if (!reading) return 'disconnected';
+                                    const value = reading.value;
+                                    if (value < 20) return 'low';
+                                    if (value > 80) return 'high';
+                                    return 'normal';
+                                  })()}
+                                  percentage={(() => {
+                                    const waterSensor = deviceSensors.find(s => s.type === 'water_level');
+                                    const reading = waterSensor && sensorReadings.find(r => r.sensor_id === waterSensor.id);
+                                    return reading ? reading.value : 0;
+                                  })()}
                                   chartData={sensorChartData}
                                   title="수위센서"
                                 />
@@ -1285,6 +1322,11 @@ function BedsManagementContent() {
                                   color="#f59e0b"
                                   chartData={sensorChartData}
                                   title="조도"
+                                  isConnected={(() => {
+                                    const lightSensor = deviceSensors.find(s => s.type === 'light');
+                                    const reading = lightSensor && sensorReadings.find(r => r.sensor_id === lightSensor.id);
+                                    return !!lightSensor && !!reading;
+                                  })()}
                                 />
                                 
                                 <SensorCard
@@ -1299,6 +1341,11 @@ function BedsManagementContent() {
                                   color="#8b5cf6"
                                   chartData={sensorChartData}
                                   title="pH"
+                                  isConnected={(() => {
+                                    const phSensor = deviceSensors.find(s => s.type === 'ph');
+                                    const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
+                                    return !!phSensor && !!reading;
+                                  })()}
                                 />
                                   </div>
                                 </div>

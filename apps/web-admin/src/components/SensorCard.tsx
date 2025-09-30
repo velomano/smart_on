@@ -10,9 +10,10 @@ interface SensorCardProps {
   color: string;
   chartData: any[];
   title: string;
+  isConnected?: boolean; // 센서 연결 상태 추가
 }
 
-export default function SensorCard({ type, value, unit, icon, color, chartData, title }: SensorCardProps) {
+export default function SensorCard({ type, value, unit, icon, color, chartData, title, isConnected = true }: SensorCardProps) {
   // 툴팁 상태 관리
   const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
   // 모달 상태 관리
@@ -22,7 +23,9 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
   console.log(`📊 ${title} 센서 카드 - 데이터:`, { value, chartDataLength: chartData?.length });
   
   const formatValue = (val: number | string) => {
+    if (!isConnected) return '--';
     if (typeof val === 'string') return val;
+    if (val === 0) return '--';
     if (type === 'ph') {
       return val.toFixed(1);
     }

@@ -115,9 +115,11 @@ export default function BedTierShelfVisualization({
               1단
             </text>
             
-            {/* 작물 정보 표시 */}
+            {/* 작물 정보 표시 또는 클릭 안내 */}
             {(() => {
               const tier = tierStatuses.find(t => t.tierNumber === 1);
+              const isActive = 1 <= activeTiers;
+              
               if (tier?.hasPlants && tier.cropName) {
                 return (
                   <g>
@@ -163,6 +165,33 @@ export default function BedTierShelfVisualization({
                         {tier.startDate}
                       </text>
                     )}
+                  </g>
+                );
+              } else if (isActive && onTierClick) {
+                // 작물이 없고 활성화된 단일 때 클릭 안내 표시
+                return (
+                  <g>
+                    {/* 클릭 안내 아이콘 */}
+                    <text 
+                      x="120" 
+                      y={15 + shelfHeight / 2 - 8} 
+                      fontSize="24" 
+                      fill="#9CA3AF"
+                      textAnchor="middle"
+                    >
+                      👆
+                    </text>
+                    {/* 클릭 안내 텍스트 */}
+                    <text 
+                      x="120" 
+                      y={15 + shelfHeight / 2 + 12} 
+                      fontSize="12" 
+                      fill="#9CA3AF"
+                      textAnchor="middle"
+                      fontWeight="medium"
+                    >
+                      클릭하여 작물 등록
+                    </text>
                   </g>
                 );
               }
@@ -207,9 +236,11 @@ export default function BedTierShelfVisualization({
               2단
             </text>
             
-            {/* 작물 정보 표시 */}
+            {/* 작물 정보 표시 또는 클릭 안내 */}
             {(() => {
               const tier = tierStatuses.find(t => t.tierNumber === 2);
+              const isActive = 2 <= activeTiers;
+              
               if (tier?.hasPlants && tier.cropName) {
                 return (
                   <g>
@@ -257,6 +288,33 @@ export default function BedTierShelfVisualization({
                     )}
                   </g>
                 );
+              } else if (isActive && onTierClick) {
+                // 작물이 없고 활성화된 단일 때 클릭 안내 표시
+                return (
+                  <g>
+                    {/* 클릭 안내 아이콘 */}
+                    <text 
+                      x="120" 
+                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 - 8} 
+                      fontSize="24" 
+                      fill="#9CA3AF"
+                      textAnchor="middle"
+                    >
+                      👆
+                    </text>
+                    {/* 클릭 안내 텍스트 */}
+                    <text 
+                      x="120" 
+                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 + 12} 
+                      fontSize="12" 
+                      fill="#9CA3AF"
+                      textAnchor="middle"
+                      fontWeight="medium"
+                    >
+                      클릭하여 작물 등록
+                    </text>
+                  </g>
+                );
               }
               return null;
             })()}
@@ -299,9 +357,11 @@ export default function BedTierShelfVisualization({
               3단
             </text>
             
-            {/* 작물 정보 표시 */}
+            {/* 작물 정보 표시 또는 클릭 안내 */}
             {(() => {
               const tier = tierStatuses.find(t => t.tierNumber === 3);
+              const isActive = 3 <= activeTiers;
+              
               if (tier?.hasPlants && tier.cropName) {
                 return (
                   <g>
@@ -347,6 +407,33 @@ export default function BedTierShelfVisualization({
                         {tier.startDate}
                       </text>
                     )}
+                  </g>
+                );
+              } else if (isActive && onTierClick) {
+                // 작물이 없고 활성화된 단일 때 클릭 안내 표시
+                return (
+                  <g>
+                    {/* 클릭 안내 아이콘 */}
+                    <text 
+                      x="120" 
+                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 - 8} 
+                      fontSize="24" 
+                      fill="#9CA3AF"
+                      textAnchor="middle"
+                    >
+                      👆
+                    </text>
+                    {/* 클릭 안내 텍스트 */}
+                    <text 
+                      x="120" 
+                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 + 12} 
+                      fontSize="12" 
+                      fill="#9CA3AF"
+                      textAnchor="middle"
+                      fontWeight="medium"
+                    >
+                      클릭하여 작물 등록
+                    </text>
                   </g>
                 );
               }
@@ -416,7 +503,14 @@ export default function BedTierShelfVisualization({
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-200">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-lg font-bold text-gray-800">베드 단 구조</h4>
+        <div>
+          <h4 className="text-lg font-bold text-gray-800">베드 단 구조</h4>
+          {onTierClick && (
+            <p className="text-sm text-gray-500 mt-1">
+              💡 작물이 없는 단을 클릭하여 작물 정보를 등록하세요
+            </p>
+          )}
+        </div>
         {activeCropCount > 0 && (
           <span className="text-sm text-gray-600 bg-green-100 px-3 py-2 rounded-full font-semibold">
             🌱 {activeCropCount}개 작물 활성
@@ -467,7 +561,7 @@ export default function BedTierShelfVisualization({
               <div className="flex items-center space-x-3">
                 {isActive && (
                   <span className="text-sm text-gray-600 font-medium">
-                    {tier?.hasPlants ? '🌱 작물 있음' : '🔄 대기'}
+                    {tier?.hasPlants ? '🌱 작물 있음' : (onTierClick ? '👆 클릭하여 작물 등록' : '🔄 대기')}
                   </span>
                 )}
                 <span className={`text-sm px-3 py-2 rounded-full font-semibold ${

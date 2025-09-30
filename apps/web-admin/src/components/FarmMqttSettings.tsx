@@ -246,12 +246,43 @@ export default function FarmMqttSettings({
 
           {/* 토픽 구조 미리보기 */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-800 mb-3">MQTT 토픽 구조</h4>
-            <div className="space-y-2 text-xs font-mono text-gray-600">
-              <div>센서 데이터: farm/{farmId}/bed/bed_1/tier/tier_1/sensor/temperature</div>
-              <div>제어 명령: farm/{farmId}/bed/bed_1/control/pump_1</div>
-              <div>상태 응답: farm/{farmId}/bed/bed_1/status/pump_1</div>
-              <div>시스템 상태: farm/{farmId}/system/arduino</div>
+            <h4 className="font-semibold text-gray-800 mb-3">MQTT 토픽 구조 (실제 구현)</h4>
+            <div className="space-y-3">
+              <div className="bg-white rounded p-3 border-l-4 border-blue-500">
+                <div className="text-sm font-semibold text-blue-700 mb-1">📊 센서 데이터 수신</div>
+                <div className="text-xs font-mono text-gray-600">
+                  farms/{farmId}/devices/{deviceId}/telemetry
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  브릿지가 이 토픽을 구독하여 센서 데이터를 받습니다
+                </div>
+              </div>
+              
+              <div className="bg-white rounded p-3 border-l-4 border-green-500">
+                <div className="text-sm font-semibold text-green-700 mb-1">🎛️ 제어 명령 전송</div>
+                <div className="text-xs font-mono text-gray-600">
+                  farms/{farmId}/devices/{deviceId}/command
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  브릿지가 이 토픽으로 제어 명령을 전송합니다
+                </div>
+              </div>
+
+              <div className="bg-white rounded p-3 border-l-4 border-purple-500">
+                <div className="text-sm font-semibold text-purple-700 mb-1">📡 기타 토픽</div>
+                <div className="space-y-1 text-xs font-mono text-gray-600">
+                  <div>farms/{farmId}/devices/{deviceId}/registry</div>
+                  <div>farms/{farmId}/devices/{deviceId}/state</div>
+                  <div>farms/{farmId}/devices/{deviceId}/command/ack</div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <div className="text-xs text-yellow-800">
+                  <strong>💡 중요:</strong> 실제 토픽 구조는 가이드 문서와 다를 수 있습니다. 
+                  MQTT 설계 가이드 버튼을 클릭하여 정확한 토픽 구조를 확인하세요.
+                </div>
+              </div>
             </div>
           </div>
         </div>

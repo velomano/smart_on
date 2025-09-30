@@ -241,7 +241,7 @@ export default function LoginPage() {
 
             <div>
                 <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  이메일 또는 사용자 ID *
+                  이메일 *
                 </label>
               <input
                 id="email"
@@ -251,10 +251,10 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                placeholder="test1 또는 test1@test.com"
+                placeholder="이메일을 입력하세요"
               />
               <p className="mt-1 text-xs text-gray-500">
-                전체 이메일 또는 @ 앞부분만 입력하세요 (예: test1, test2, test3...)
+                이메일 주소를 입력하세요 (예: test0@test.com, test1@test.com...)
               </p>
             </div>
 
@@ -353,15 +353,15 @@ export default function LoginPage() {
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
                     <p className="text-sm text-green-700">
                       <strong>테스트 계정 (간편 로그인):</strong><br />
-                      관리자: test1 / 123456<br />
-                   1농장 농장장: test2 / 123456<br />
-                   1농장 팀원: test3 / 123456<br />
-                   2농장 농장장: test4 / 123456<br />
-                   2농장 팀원: test5 / 123456<br />
-                   3농장 농장장: test6 / 123456<br />
-                   3농장 팀원: test7 / 123456<br />
+                      시스템관리자: test0@test.com / 123456<br />
+                     1농장 농장장: test1@test.com / 123456<br />
+                     1농장 팀원: test2@test.com / 123456<br />
+                     2농장 농장장: test3@test.com / 123456<br />
+                     2농장 팀원: test4@test.com / 123456<br />
+                     3농장 농장장: test5@test.com / 123456<br />
+                     3농장 팀원: test6@test.com / 123456<br />
                       <span className="text-xs text-gray-600 mt-2 block">
-                        💡 @ 앞부분만 입력하거나 전체 이메일을 입력하세요
+                        💡 이메일 주소를 입력하세요
                       </span>
                     </p>
             </div>

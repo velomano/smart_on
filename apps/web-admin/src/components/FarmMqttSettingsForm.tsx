@@ -74,7 +74,12 @@ export default function FarmMqttSettingsForm({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h3 className="text-xl font-bold mb-6">MQTT 브로커 설정</h3>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold text-gray-900">MQTT 브로커 설정</h3>
+        <div className="text-sm text-gray-500">
+          농장 ID: {farmId.slice(0, 8)}...
+        </div>
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* 기본 설정 */}
@@ -88,9 +93,12 @@ export default function FarmMqttSettingsForm({
               value={config.broker_url}
               onChange={(e) => setConfig(prev => ({ ...prev, broker_url: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-              placeholder="mqtts://your-broker.com"
+              placeholder="mqtts://your-broker.com 또는 wss://your-broker.com/mqtt"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 SSL/TLS를 사용하려면 mqtts:// 또는 wss://를 사용하세요
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -104,6 +112,9 @@ export default function FarmMqttSettingsForm({
               placeholder="8883"
               required
             />
+            <p className="text-xs text-gray-500 mt-1">
+              💡 일반적으로 1883 (비암호화), 8883 (SSL), 443 (WSS)
+            </p>
           </div>
         </div>
 
