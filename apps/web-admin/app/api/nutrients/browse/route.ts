@@ -50,28 +50,20 @@ export async function GET(req: NextRequest) {
     
     console.log('✅ Supabase 연결 성공');
 
-    // nutrient_recipes와 nutrient_sources를 조인하여 실제 출처 정보와 함께 조회
+    // crop_profiles 테이블에서 실제 데이터 조회 (출처 정보는 metadata에서 추출)
     let query = sb
-      .from('nutrient_recipes')
+      .from('crop_profiles')
       .select(`
         id,
         crop_key,
         crop_name,
         stage,
+        target_ppm,
         target_ec,
         target_ph,
-        macro,
-        micro,
-        source_id,
-        reliability,
-        collected_at,
-        nutrient_sources!inner(
-          id,
-          name,
-          url,
-          org_type,
-          license
-        )
+        metadata,
+        created_at,
+        updated_at
       `);
 
     // 필터링 적용
@@ -93,10 +85,10 @@ export async function GET(req: NextRequest) {
       .order('stage', { ascending: true });
 
     if (error) {
-      console.error('❌ 영양액 레시피 조회 에러:', error);
+      console.error('❌ 작물 프로필 조회 에러:', error);
       return NextResponse.json({ 
         ok: false, 
-        error: `영양액 레시피 조회에 실패했습니다: ${error.message}`,
+        error: `작물 프로필 조회에 실패했습니다: ${error.message}`,
         details: error
       }, { status: 500 });
     }
@@ -104,50 +96,51 @@ export async function GET(req: NextRequest) {
     console.log('✅ 쿼리 성공, 레시피 개수:', profiles?.length || 0);
 
     // 프론트엔드에서 사용할 수 있도록 데이터 변환
-    const recipes = profiles?.map(recipe => {
-      // macro JSON에서 영양소 정보 추출
-      const macro = recipe.macro || {};
-      const npk_ratio = `${macro.N || 0}:${macro.P || 0}:${macro.K || 0}`;
+    const recipes = profiles?.map(profile => {
+      // target_ppm JSON에서 영양소 정보 추출
+      const ppm = profile.target_ppm || {};
+      const npk_ratio = `${ppm.N || 0}:${ppm.P || 0}:${ppm.K || 0}`;
       
-      // 실제 출처 정보 추출
-      const source = recipe.nutrient_sources;
-      const sourceTitle = source?.name || '스마트팜 데이터베이스';
-      const sourceYear = new Date(recipe.collected_at).getFullYear();
-      const sourceUrl = source?.url || null;
-      const license = source?.license || 'CC BY 4.0';
+      // metadata에서 출처 정보 추출
+      const metadata = profile.metadata || {};
+      const sourceTitle = metadata.source_title || '스마트팜 데이터베이스';
+      const sourceYear = metadata.source_year || new Date(profile.created_at).getFullYear();
+      const sourceUrl = metadata.source_url || null;
+      const license = metadata.license || 'CC BY 4.0';
+      const author = metadata.author || '스마트팜 시스템';
       
       return {
-        id: recipe.id,
-        crop: recipe.crop_name,
-        stage: translateStage(recipe.stage),
+        id: profile.id,
+        crop: profile.crop_name,
+        stage: translateStage(profile.stage),
         volume_l: 100, // 기본값
-        ec_target: recipe.target_ec,
-        ph_target: recipe.target_ph,
+        ec_target: profile.target_ec,
+        ph_target: profile.target_ph,
         npk_ratio: npk_ratio,
-        created_at: recipe.collected_at,
+        created_at: profile.created_at,
         source_title: sourceTitle,
         source_year: sourceYear,
         source_url: sourceUrl,
         license: license,
-        description: `${recipe.crop_name} ${translateStage(recipe.stage)}에 최적화된 배양액 레시피입니다.`,
-        growing_conditions: {
-          temperature: getTemperatureRange(recipe.crop_name),
-          humidity: getHumidityRange(recipe.crop_name),
-          light_hours: getLightHours(recipe.crop_name),
-          co2_level: getCO2Level(recipe.crop_name)
+        description: metadata.description || `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
+        growing_conditions: metadata.growing_conditions || {
+          temperature: getTemperatureRange(profile.crop_name),
+          humidity: getHumidityRange(profile.crop_name),
+          light_hours: getLightHours(profile.crop_name),
+          co2_level: getCO2Level(profile.crop_name)
         },
-        nutrients_detail: {
-          nitrogen: macro.N || 0,
-          phosphorus: macro.P || 0,
-          potassium: macro.K || 0,
-          calcium: macro.Ca || 0,
-          magnesium: macro.Mg || 0,
+        nutrients_detail: metadata.nutrients_detail || {
+          nitrogen: ppm.N || 0,
+          phosphorus: ppm.P || 0,
+          potassium: ppm.K || 0,
+          calcium: ppm.Ca || 0,
+          magnesium: ppm.Mg || 0,
           trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
         },
-        usage_notes: getUsageNotes(recipe.crop_name, recipe.stage),
-        warnings: getWarnings(recipe.crop_name, recipe.stage),
-        author: source?.name || '스마트팜 시스템',
-        last_updated: recipe.collected_at
+        usage_notes: metadata.usage_notes || getUsageNotes(profile.crop_name, profile.stage),
+        warnings: metadata.warnings || getWarnings(profile.crop_name, profile.stage),
+        author: author,
+        last_updated: profile.updated_at || profile.created_at
       };
     }) || [];
 
