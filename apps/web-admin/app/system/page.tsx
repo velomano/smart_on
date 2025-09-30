@@ -86,13 +86,23 @@ export default function SystemPage() {
 
       // 각 응답의 상태를 개별적으로 확인
       if (!healthResponse.ok) {
-        const healthError = await healthResponse.json();
+        let healthError;
+        try {
+          healthError = await healthResponse.json();
+        } catch {
+          healthError = { error: '응답을 파싱할 수 없습니다.' };
+        }
         console.error('헬스 API 에러:', healthError);
         throw new Error(`헬스 체크 실패: ${healthResponse.status} ${healthError.error || 'Unknown error'}`);
       }
 
       if (!metricsResponse.ok) {
-        const metricsError = await metricsResponse.json();
+        let metricsError;
+        try {
+          metricsError = await metricsResponse.json();
+        } catch {
+          metricsError = { error: '응답을 파싱할 수 없습니다.' };
+        }
         console.error('메트릭 API 에러:', metricsError);
         throw new Error(`메트릭 수집 실패: ${metricsResponse.status} ${metricsError.error || 'Unknown error'}`);
       }
@@ -102,8 +112,23 @@ export default function SystemPage() {
         metricsResponse.json()
       ]);
 
-      setHealthData(health.data);
-      setMetrics(systemMetrics.data);
+      console.log('헬스 응답:', health);
+      console.log('메트릭 응답:', systemMetrics);
+
+      // 응답 데이터 구조 확인
+      if (health.success && health.data) {
+        setHealthData(health.data);
+      } else {
+        console.error('헬스 데이터 구조 오류:', health);
+        throw new Error('헬스 데이터 형식이 올바르지 않습니다.');
+      }
+
+      if (systemMetrics.success && systemMetrics.data) {
+        setMetrics(systemMetrics.data);
+      } else {
+        console.error('메트릭 데이터 구조 오류:', systemMetrics);
+        throw new Error('메트릭 데이터 형식이 올바르지 않습니다.');
+      }
     } catch (err) {
       console.error('시스템 데이터 로드 오류:', err);
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
