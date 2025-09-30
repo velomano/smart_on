@@ -890,9 +890,9 @@ function BedsManagementContent() {
                 {user && (user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com') && selectedFarmTab && selectedFarmTab !== 'all' && (
                   <button
                     onClick={() => router.push(`/farms/${selectedFarmTab}/settings/mqtt`)}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-2"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -904,7 +904,7 @@ function BedsManagementContent() {
                 {user && (user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com') && (
                   <button
                     onClick={() => setShowAddFarmModal(true)}
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
                   >
                     <span>+</span>
                     <span>새 농장 추가</span>
@@ -1050,9 +1050,9 @@ function BedsManagementContent() {
               console.log('각 농장별 베드들:', farmGroups.map(g => ({ farmId: g.farm.id, farmName: g.farm.name, deviceCount: g.devices.length })));
 
               return farmGroups.map(({ farm, devices }) => (
-                <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
+                <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                   {/* 농장 헤더 */}
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
                     <div className="flex items-center space-x-4">
                       <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
                         <span className="text-3xl">🏠</span>
@@ -1076,7 +1076,7 @@ function BedsManagementContent() {
                       <div className="flex items-center space-x-3">
                         <button
                           onClick={() => handleEditFarm(farm)}
-                          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-2"
+                          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
                         >
                           <span>✏️</span>
                           <span>농장 편집</span>
@@ -1086,13 +1086,13 @@ function BedsManagementContent() {
                   </div>
 
                   {/* 농장에 속한 베드들 */}
-                  <div className="space-y-4">
-                    <h5 className="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+                  <div className="space-y-2 sm:space-y-3">
+                    <h5 className="text-lg font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center">
                       <span className="text-xl mr-2">🌱</span>
                       {farm.name}의 베드 목록
                     </h5>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {devices.length === 0 ? (
                         <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
                           <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-3">
@@ -1106,9 +1106,9 @@ function BedsManagementContent() {
                         const deviceSensors = asArray(sensors).filter(s => s.device_id === device.id);
           
                         return (
-                          <div key={device.id} className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200">
+                          <div key={device.id} className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-2 sm:p-3 lg:p-6 hover:shadow-lg transition-all duration-200">
                             {/* 베드 헤더 */}
-                            <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
                               <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
                                   <span className="text-lg">📡</span>
