@@ -540,12 +540,12 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             {/* Enhanced Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-3xl">🌱</span>
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                  <span className="text-2xl sm:text-3xl">🌱</span>
                 </div>
                 <div>
-                  <h1 className="text-4xl font-bold text-white mb-2">농장 현황</h1>
-                  <p className="text-white/90 text-lg">농장관리에서 대시보드 노출을 허용한 농장만 표시 됩니다.</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 sm:mb-2">농장 현황</h1>
+                  <p className="text-white/90 text-sm sm:text-base">농장관리에서 대시보드 노출을 허용한 농장만 표시 됩니다.</p>
                 </div>
               </div>
                 
