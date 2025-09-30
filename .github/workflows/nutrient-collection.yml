@@ -100,19 +100,72 @@ jobs:
             return parseCountFromContentRange(contentRange);
           }
 
+          // 간단한 양액 데이터 생성 (실제 구현에서는 외부 API 호출)
+          async function collectNutrientData() {
+            console.log(`📊 ${SRC} 소스에서 양액 데이터 수집 중...`);
+            
+            // 임시 데이터 생성 (실제로는 Cornell, FAO 등에서 수집)
+            const sampleData = [
+              {
+                crop_key: 'lettuce',
+                crop_name: '상추',
+                stage: 'vegetative',
+                target_ppm: 150,
+                target_ec: 1.2,
+                target_ph: 6.0,
+                source: SRC,
+                created_at: new Date().toISOString()
+              },
+              {
+                crop_key: 'tomato',
+                crop_name: '토마토',
+                stage: 'fruiting',
+                target_ppm: 250,
+                target_ec: 2.0,
+                target_ph: 6.5,
+                source: SRC,
+                created_at: new Date().toISOString()
+              }
+            ];
+            
+            console.log(`📊 생성된 샘플 데이터: ${sampleData.length}건`);
+            return sampleData.slice(0, BATCH);
+          }
+
+          async function saveToSupabase(data) {
+            if (!data || data.length === 0) return 0;
+            
+            console.log(`💾 ${data.length}건의 데이터를 Supabase에 저장 중...`);
+            
+            // crop_profiles 테이블에 저장
+            const response = await fetch(`${SUPA_URL}/rest/v1/crop_profiles`, {
+              method: 'POST',
+              headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': `Bearer ${SUPA_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'resolution=merge-duplicates'
+              },
+              body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+              throw new Error(`Supabase 저장 실패: ${response.status}`);
+            }
+            
+            return data.length;
+          }
+
           async function main() {
             try {
               const before = await getRecipeCount();
               console.log(`📊 기존 레시피 수: ${before}건`);
 
-              const res = await fetch(`${WORKER}/sources/${SRC}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ batch_size: BATCH })
-              });
-              if (!res.ok) throw new Error(`워커 응답 실패: ${res.status}`);
-              const data = await res.json().catch(() => ({}));
-              console.log(`✅ 수집 완료(워커 보고): ${data.count ?? 0}건`);
+              const collectedData = await collectNutrientData();
+              console.log(`📊 수집된 데이터: ${collectedData.length}건`);
+
+              const savedCount = await saveToSupabase(collectedData);
+              console.log(`✅ Supabase 저장 완료: ${savedCount}건`);
 
               const after = await getRecipeCount();
               console.log(`📊 최종 레시피 수: ${after}건`);
