@@ -87,13 +87,18 @@ export default function NutrientPlanPage() {
   const [recipeName, setRecipeName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([]);
-  const [loadingRecipes, setLoadingRecipes] = useState(false);
   
   // 레시피 브라우징 관련 상태
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCrop, setSelectedCrop] = useState('');
   const [selectedStage, setSelectedStage] = useState('');
+  
+  // 페이지네이션 관련 상태
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loadingRecipes, setLoadingRecipes] = useState(false);
   
   // 레시피 상세 보기 관련 상태
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -129,20 +134,24 @@ export default function NutrientPlanPage() {
     }
   }, [user]);
 
-  // 필터 변경 시 레시피 다시 로드
+  // 필터 변경 시 레시피 다시 로드 (첫 페이지로 리셋)
   useEffect(() => {
     if (user) {
-      loadRecipes();
+      setCurrentPage(1);
+      loadRecipes(1, false);
     }
   }, [searchTerm, selectedCrop, selectedStage, user]);
 
   // 실제 Supabase에서 레시피 브라우징 데이터 로드
-  async function loadRecipes() {
+  async function loadRecipes(page = 1, append = false) {
     try {
+      setLoadingRecipes(true);
       const params = new URLSearchParams();
       if (selectedCrop) params.append('crop', selectedCrop);
       if (selectedStage) params.append('stage', selectedStage);
       if (searchTerm) params.append('search', searchTerm);
+      params.append('page', page.toString());
+      params.append('limit', '21');
       
       const url = `/api/nutrients/browse?${params.toString()}`;
       console.log('🔍 API 호출:', url);
@@ -155,15 +164,27 @@ export default function NutrientPlanPage() {
       
       if (j.ok) {
         console.log('✅ 레시피 로드 성공:', j.recipes.length, '개');
-        setRecipes(j.recipes);
+        console.log('📊 페이지네이션 정보:', j.pagination);
+        
+        if (append && page > 1) {
+          setRecipes(prev => [...prev, ...j.recipes]);
+        } else {
+          setRecipes(j.recipes);
+        }
+        
+        // 페이지네이션 정보 업데이트
+        setTotalCount(j.pagination.total);
+        setTotalPages(j.pagination.totalPages);
+        setCurrentPage(j.pagination.page);
       } else {
         console.error('❌ 레시피 로드 실패:', j.error, j.details);
-        // 에러 시 빈 배열로 설정
         setRecipes([]);
       }
     } catch (error) {
       console.error('❌ 레시피 로드 네트워크 에러:', error);
       setRecipes([]);
+    } finally {
+      setLoadingRecipes(false);
     }
   }
 
@@ -500,6 +521,11 @@ export default function NutrientPlanPage() {
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">배양액 레시피 브라우징</h2>
                   <p className="text-gray-600">다양한 작물과 성장 단계별 배양액 레시피를 제공합니다.</p>
+                  {totalCount > 0 && (
+                    <p className="text-sm text-blue-600 font-medium mt-2">
+                      총 <span className="font-bold">{totalCount.toLocaleString()}</span>개의 레시피가 있습니다
+                    </p>
+                  )}
                 </div>
 
                 {/* 검색 및 필터 */}
@@ -648,7 +674,58 @@ export default function NutrientPlanPage() {
                   ))}
                 </div>
 
-                {recipes.length === 0 && (
+                {/* 페이지네이션 */}
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center space-x-2 mt-8">
+                    <button
+                      onClick={() => loadRecipes(currentPage - 1, false)}
+                      disabled={currentPage === 1 || loadingRecipes}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      이전
+                    </button>
+                    
+                    <div className="flex space-x-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                        if (pageNum > totalPages) return null;
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => loadRecipes(pageNum, false)}
+                            disabled={loadingRecipes}
+                            className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                              currentPage === pageNum
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    <button
+                      onClick={() => loadRecipes(currentPage + 1, false)}
+                      disabled={currentPage === totalPages || loadingRecipes}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
+
+                {/* 로딩 상태 */}
+                {loadingRecipes && (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="text-gray-600 mt-2">레시피를 불러오는 중...</p>
+                  </div>
+                )}
+
+                {recipes.length === 0 && !loadingRecipes && (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <span className="text-2xl text-gray-400">🔍</span>

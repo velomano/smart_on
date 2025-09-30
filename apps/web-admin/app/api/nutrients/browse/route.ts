@@ -36,8 +36,10 @@ export async function GET(req: NextRequest) {
     const crop = searchParams.get('crop');
     const stage = searchParams.get('stage');
     const search = searchParams.get('search');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '21');
     
-    console.log('📋 요청 파라미터:', { crop, stage, search });
+    console.log('📋 요청 파라미터:', { crop, stage, search, page, limit });
 
     const sb = createSbServer();
     if (!sb) {
@@ -103,8 +105,35 @@ export async function GET(req: NextRequest) {
     
     console.log('✅ 쿼리 성공, 레시피 개수:', profiles?.length || 0);
 
+    // 전체 개수 조회 (페이지네이션을 위해)
+    const countQuery = sb
+      .from('crop_profiles')
+      .select('id', { count: 'exact', head: true });
+    
+    // 필터링 적용 (카운트용)
+    if (crop) {
+      countQuery.eq('crop_name', crop);
+    }
+    if (stage) {
+      const englishStage = translateStageToEnglish(stage);
+      countQuery.eq('stage', englishStage);
+    }
+    if (search) {
+      countQuery.or(`crop_name.ilike.%${search}%,stage.ilike.%${search}%`);
+    }
+
+    const { count } = await countQuery;
+    const totalCount = count || 0;
+
+    // 페이지네이션 적용
+    const offset = (page - 1) * limit;
+    const paginatedProfiles = profiles?.slice(offset, offset + limit) || [];
+
+    console.log(`📊 페이지네이션: 페이지 ${page}, 제한 ${limit}, 오프셋 ${offset}`);
+    console.log(`📊 전체: ${totalCount}개, 현재 페이지: ${paginatedProfiles.length}개`);
+
     // 프론트엔드에서 사용할 수 있도록 데이터 변환
-    const recipes = profiles?.map(profile => {
+    const recipes = paginatedProfiles.map(profile => {
       // target_ppm JSON에서 영양소 정보 추출
       const ppm = profile.target_ppm || {};
       const npk_ratio = `${ppm.N || 0}:${ppm.P || 0}:${ppm.K || 0}`;
@@ -153,7 +182,15 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      recipes: recipes
+      recipes: recipes,
+      pagination: {
+        page: page,
+        limit: limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+        hasNext: page < Math.ceil(totalCount / limit),
+        hasPrev: page > 1
+      }
     });
 
   } catch (error) {
