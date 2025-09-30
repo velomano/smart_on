@@ -4,17 +4,6 @@ on:
   schedule:
     - cron: '0 0 * * *'   # Asia/Seoul 오전 9시 = UTC 00시 (GitHub Actions는 UTC 기준)
   workflow_dispatch:
-    inputs:
-      source:
-        description: '수집할 소스 (all, cornell, rda, fao, academic)'
-        required: true
-        default: 'all'
-        type: string
-      batch_size:
-        description: '배치 크기'
-        required: false
-        default: '10'
-        type: string
 
 jobs:
   collect-recipes:
