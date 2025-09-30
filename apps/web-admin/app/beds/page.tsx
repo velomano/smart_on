@@ -865,11 +865,11 @@ function BedsManagementContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {user && <AppHeader user={user} title="농장 관리" subtitle="농장과 베드를 관리하고 모니터링하세요" />}
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8">
         <div className="max-w-7xl mx-auto">
         {/* Main Card Container */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-green-500 to-blue-600 px-8 py-6">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="bg-gradient-to-r from-green-500 to-blue-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
                 <span className="text-4xl">🏠</span>
@@ -880,10 +880,10 @@ function BedsManagementContent() {
               </div>
             </div>
           </div>
-          <div className="px-8 py-8">
+          <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
             {/* 농장별 탭 */}
-            <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-2 sm:mb-3 lg:mb-6">
+            <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
               <h4 className="text-lg font-semibold text-gray-700">농장별 보기</h4>
               <div className="flex items-center space-x-3">
                 {/* MQTT 설정 - 관리자와 농장장 모두 접근 가능 */}
@@ -959,7 +959,7 @@ function BedsManagementContent() {
           </div>
 
           {/* 농장별 베드 목록 */}
-          <div className="space-y-6">
+          <div className="space-y-2 sm:space-y-3 lg:space-y-6">
             {(() => {
               // 선택된 탭에 따라 농장 필터링 - 대시보드에서 농장 클릭시 해당 농장만 표시
               let farmsToShow = farms;
