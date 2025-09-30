@@ -147,6 +147,7 @@ export default function BedTierShelfVisualization({
                       fontSize="16" 
                       fill="#374151" 
                       fontWeight="bold"
+                      textAnchor="middle"
                     >
                       {tier.cropName}
                     </text>
@@ -157,6 +158,7 @@ export default function BedTierShelfVisualization({
                         y={15 + shelfHeight / 2 + 15} 
                         fontSize="12" 
                         fill="#6B7280"
+                        textAnchor="middle"
                       >
                         {tier.growingMethod}
                       </text>
@@ -272,6 +274,7 @@ export default function BedTierShelfVisualization({
                       fontSize="16" 
                       fill="#374151" 
                       fontWeight="bold"
+                      textAnchor="middle"
                     >
                       {tier.cropName}
                     </text>
@@ -282,6 +285,7 @@ export default function BedTierShelfVisualization({
                         y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 + 15} 
                         fontSize="12" 
                         fill="#6B7280"
+                        textAnchor="middle"
                       >
                         {tier.growingMethod}
                       </text>
@@ -397,6 +401,7 @@ export default function BedTierShelfVisualization({
                       fontSize="16" 
                       fill="#374151" 
                       fontWeight="bold"
+                      textAnchor="middle"
                     >
                       {tier.cropName}
                     </text>
@@ -407,6 +412,7 @@ export default function BedTierShelfVisualization({
                         y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 + 15} 
                         fontSize="12" 
                         fill="#6B7280"
+                        textAnchor="middle"
                       >
                         {tier.growingMethod}
                       </text>

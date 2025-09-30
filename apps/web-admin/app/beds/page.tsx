@@ -61,13 +61,12 @@ function BedsManagementContent() {
   });
   const [newBedData, setNewBedData] = useState({
     name: '',
-    cropName: '',
-    growingMethod: '담액식',
+    bedSystemType: 'multi-tier', // 다단 베드 시스템
     totalTiers: 1
   });
   const [editBedData, setEditBedData] = useState({
     name: '',
-    growingMethod: '담액식',
+    bedSystemType: 'multi-tier',
     totalTiers: 1
   });
   
@@ -507,8 +506,8 @@ function BedsManagementContent() {
 
   // 새 베드 추가
   const handleAddBed = async () => {
-    if (!newBedData.name.trim() || !newBedData.cropName.trim()) {
-      alert('베드 이름과 작물 이름을 입력해주세요.');
+    if (!newBedData.name.trim()) {
+      alert('베드 이름을 입력해주세요.');
       return;
     }
 
@@ -541,8 +540,8 @@ function BedsManagementContent() {
       status: { online: true },
       meta: {
               location: normalizedBedName, // 정규화된 이름 저장
-        crop_name: newBedData.cropName,
-        growing_method: newBedData.growingMethod
+        bed_system_type: newBedData.bedSystemType,
+        total_tiers: newBedData.totalTiers
             }
           }
         ])
@@ -559,7 +558,7 @@ function BedsManagementContent() {
       const newBed = data[0];
       console.log('🔄 베드 추가 완료, 데이터 다시 로드 중...');
       await loadData(); // Reload data after adding bed
-      setNewBedData({ name: '', cropName: '', growingMethod: '담액식', totalTiers: 1 });
+      setNewBedData({ name: '', bedSystemType: 'multi-tier', totalTiers: 1 });
       setShowAddBedModal(false);
       alert(`새 베드 "${normalizedBedName}"가 ${targetFarm?.name || '농장'}에 추가되었습니다!`);
     } catch (error) {
@@ -576,7 +575,7 @@ function BedsManagementContent() {
     // 기존 상태 초기화 후 새로운 데이터 설정
     const editData = {
       name: (bed.meta as any)?.location || '',
-      growingMethod: (bed.meta as any)?.growing_method || '담액식',
+      bedSystemType: (bed.meta as any)?.bed_system_type || (bed.meta as any)?.growing_method || 'multi-tier',
       totalTiers: (bed.meta as any)?.total_tiers || 1
     };
     
@@ -618,7 +617,7 @@ function BedsManagementContent() {
       const updateData = {
         meta: {
           location: normalizedBedName, // 정규화된 이름 저장
-          growing_method: editBedData.growingMethod,
+          bed_system_type: editBedData.bedSystemType,
           total_tiers: editBedData.totalTiers
         }
       };
@@ -1808,46 +1807,80 @@ function BedsManagementContent() {
                   <div className="flex items-start space-x-2">
                     <span className="text-blue-500 text-sm">💡</span>
                     <div className="text-sm text-blue-700">
-                      <p className="font-medium mb-1">베드 이름 규칙:</p>
-                      <ul className="text-xs space-y-1">
-                        <li>• <code className="bg-blue-100 px-1 rounded">베드2</code> → 베드-2</li>
-                        <li>• <code className="bg-blue-100 px-1 rounded">3</code> → 베드-3</li>
-                        <li>• <code className="bg-blue-100 px-1 rounded">베드-2</code> → 베드-2</li>
-                        <li>• <code className="bg-blue-100 px-1 rounded">A구역</code> → 베드-A구역</li>
-                      </ul>
+                      <p className="font-medium mb-2">베드 이름은 어떻게 정해지나요?</p>
+                      <div className="text-xs space-y-2">
+                        <div className="bg-white p-2 rounded border-l-4 border-blue-400">
+                          <span className="font-medium text-blue-800">입력하시면 자동으로 정리됩니다:</span>
+                          <div className="mt-1 text-gray-600 space-y-1">
+                            <div className="flex items-center justify-between">
+                              <span className="bg-gray-100 px-2 py-1 rounded text-xs">베드2</span>
+                              <span className="text-gray-400">→</span>
+                              <span className="font-medium text-blue-600">베드-2</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="bg-gray-100 px-2 py-1 rounded text-xs">3</span>
+                              <span className="text-gray-400">→</span>
+                              <span className="font-medium text-blue-600">베드-3</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="bg-gray-100 px-2 py-1 rounded text-xs">A구역</span>
+                              <span className="text-gray-400">→</span>
+                              <span className="font-medium text-blue-600">베드-A구역</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-blue-600 font-medium text-center">
+                          ✨ 어떤 형태로 입력하셔도 깔끔하게 정리됩니다!
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  작물 이름 *
-                </label>
-                <input
-                  type="text"
-                  value={newBedData.cropName}
-                  onChange={(e) => setNewBedData(prev => ({ ...prev, cropName: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-500"
-                  placeholder="예: 토마토, 상추, 딸기"
-                />
-              </div>
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  재배 방식
+                  베드 시스템 유형
                 </label>
                 <select
-                  value={newBedData.growingMethod}
-                  onChange={(e) => setNewBedData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                  value={newBedData.bedSystemType}
+                  onChange={(e) => setNewBedData(prev => ({ ...prev, bedSystemType: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 bg-white"
                 >
-                  <option value="담액식" className="text-gray-900">담액식</option>
-                  <option value="NFT식" className="text-gray-900">NFT식</option>
-                  <option value="분무식" className="text-gray-900">분무식</option>
-                  <option value="점적식" className="text-gray-900">점적식</option>
-                  <option value="기타" className="text-gray-900">기타</option>
+                  <option value="multi-tier" className="text-gray-900">🌱 다단 베드 시스템</option>
+                  <option value="vertical" className="text-gray-900" disabled>🏗️ 수직형 베드 시스템 (준비 중)</option>
                 </select>
+                
+                {/* 베드 시스템 유형 안내 */}
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-green-500 text-sm">🌱</span>
+                    <div className="text-sm text-green-700">
+                      <p className="font-medium mb-1">다단 베드 시스템</p>
+                      <div className="text-xs text-green-600">
+                        <p>• 최대 3단으로 구성된 계단식 베드</p>
+                        <p>• 각 단별로 독립적인 작물 재배 가능</p>
+                        <p>• 공간 효율적인 수직 농업 시스템</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 향후 확장 안내 */}
+                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-amber-500 text-sm">🚀</span>
+                    <div className="text-sm text-amber-700">
+                      <p className="font-medium mb-1">다양한 베드 시스템 추가 예정</p>
+                      <div className="text-xs text-amber-600">
+                        <p>• 수직형 베드 시스템 (탑워터)</p>
+                        <p>• 원형 베드 시스템 (회전형)</p>
+                        <p>• 자동화 베드 시스템 (AI 제어)</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="flex space-x-4 pt-4">
@@ -1963,17 +1996,36 @@ function BedsManagementContent() {
                     placeholder="예: 베드2, 3, A구역"
                   />
                   {/* 베드 이름 규칙 안내 */}
-                  <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div className="flex items-start space-x-2">
-                      <span className="text-purple-500 text-sm">💡</span>
-                      <div className="text-sm text-purple-700">
-                        <p className="font-medium mb-1">베드 이름 규칙:</p>
-                        <ul className="text-xs space-y-1">
-                          <li>• <code className="bg-purple-100 px-1 rounded">베드2</code> → 베드-2</li>
-                          <li>• <code className="bg-purple-100 px-1 rounded">3</code> → 베드-3</li>
-                          <li>• <code className="bg-purple-100 px-1 rounded">베드-2</code> → 베드-2</li>
-                          <li>• <code className="bg-purple-100 px-1 rounded">A구역</code> → 베드-A구역</li>
-                        </ul>
+                      <span className="text-blue-500 text-sm">💡</span>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-2">베드 이름은 어떻게 정해지나요?</p>
+                        <div className="text-xs space-y-2">
+                          <div className="bg-white p-2 rounded border-l-4 border-blue-400">
+                            <span className="font-medium text-blue-800">입력하시면 자동으로 정리됩니다:</span>
+                            <div className="mt-1 text-gray-600 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">베드2</span>
+                                <span className="text-gray-400">→</span>
+                                <span className="font-medium text-blue-600">베드-2</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">3</span>
+                                <span className="text-gray-400">→</span>
+                                <span className="font-medium text-blue-600">베드-3</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">A구역</span>
+                                <span className="text-gray-400">→</span>
+                                <span className="font-medium text-blue-600">베드-A구역</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-blue-600 font-medium text-center">
+                            ✨ 어떤 형태로 입력하셔도 깔끔하게 정리됩니다!
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1983,18 +2035,31 @@ function BedsManagementContent() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  재배 방법
+                  베드 시스템 유형
                 </label>
                 <select
-                  value={editBedData.growingMethod}
-                  onChange={(e) => setEditBedData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                  value={editBedData.bedSystemType}
+                  onChange={(e) => setEditBedData(prev => ({ ...prev, bedSystemType: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                 >
-                  <option value="담액식">담액식</option>
-                  <option value="토경재배">토경재배</option>
-                  <option value="수경재배">수경재배</option>
-                  <option value="복합재배">복합재배</option>
+                  <option value="multi-tier">🌱 다단 베드 시스템</option>
+                  <option value="vertical" disabled>🏗️ 수직형 베드 시스템 (준비 중)</option>
                 </select>
+                
+                {/* 베드 시스템 유형 안내 */}
+                <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-start space-x-2">
+                    <span className="text-green-500 text-sm">🌱</span>
+                    <div className="text-sm text-green-700">
+                      <p className="font-medium mb-1">다단 베드 시스템</p>
+                      <div className="text-xs text-green-600">
+                        <p>• 최대 3단으로 구성된 계단식 베드</p>
+                        <p>• 각 단별로 독립적인 작물 재배 가능</p>
+                        <p>• 공간 효율적인 수직 농업 시스템</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
             </div>
@@ -2233,6 +2298,76 @@ function BedsManagementContent() {
             </div>
 
             <div className="space-y-6">
+              {/* 현재 등록된 작물 정보가 있는 경우 삭제 안내 */}
+              {(() => {
+                const existingCrop = selectedDevice && selectedTier ? bedCropData[selectedDevice.id]?.[selectedTier] : null;
+                return existingCrop?.cropName ? (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-amber-800 mb-1">현재 등록된 작물</h4>
+                        <p className="text-sm text-amber-700">
+                          {existingCrop.cropName} ({existingCrop.growingMethod})
+                        </p>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (confirm('현재 등록된 작물 정보를 삭제하시겠습니까?')) {
+                            try {
+                              // Supabase에서 작물 정보 삭제
+                              const response = await fetch('/api/bed-crop-data', {
+                                method: 'DELETE',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                  deviceId: selectedDevice.id,
+                                  tier: selectedTier
+                                })
+                              });
+
+                              const result = await response.json();
+                              
+                              if (result.success) {
+                                // 로컬 상태에서도 삭제
+                                setBedCropData(prev => {
+                                  const newData = { ...prev };
+                                  if (newData[selectedDevice.id]) {
+                                    const deviceData = { ...newData[selectedDevice.id] };
+                                    delete deviceData[selectedTier];
+                                    newData[selectedDevice.id] = deviceData;
+                                  }
+                                  return newData;
+                                });
+                                
+                                // 입력 폼 초기화
+                                setCropInputData({
+                                  cropName: '',
+                                  growingMethod: '담액식',
+                                  plantType: 'seed',
+                                  startDate: ''
+                                });
+                                
+                                setShowCropInputModal(false);
+                                alert(`${selectedTier}단의 작물 정보 및 관련 데이터가 모두 삭제되었습니다!\n\n• 단별 작물 정보\n• 베드 작물 정보\n• 디바이스 메타데이터\n• 베드 노트`);
+                              } else {
+                                throw new Error(result.error || '삭제 실패');
+                              }
+                            } catch (error) {
+                              console.error('작물 정보 삭제 오류:', error);
+                              alert('작물 정보 삭제에 실패했습니다. 다시 시도해주세요.');
+                            }
+                          }
+                        }}
+                        className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors font-semibold"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
                   작물 이름 *
