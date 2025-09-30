@@ -448,7 +448,7 @@ export default function AppHeader({
 
         {/* 공지사항 모달 */}
         {isNoticeOpen && (
-          <div className="fixed inset-0 z-40 flex items-center justify-center" style={{ paddingTop: '530px' }}>
+          <div className="fixed inset-0 z-[70] flex items-center justify-center" style={{ paddingTop: '530px' }}>
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl sm:w-[700px] max-h-[60vh] overflow-hidden mx-2 sm:mx-4">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-4 sm:px-6 py-4">
                 <div className="flex items-center justify-between">
