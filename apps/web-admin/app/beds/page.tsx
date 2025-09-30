@@ -871,12 +871,9 @@ function BedsManagementContent() {
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
           <div className="bg-gradient-to-r from-green-500 to-blue-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-                <span className="text-4xl">🏠</span>
-              </div>
               <div>
-                <h1 className="text-4xl font-bold text-white mb-2">농장 관리</h1>
-                <p className="text-white/90 text-lg">농장과 베드를 관리하고 모니터링하세요</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">농장 관리</h1>
+                <p className="text-white/90 text-sm sm:text-base lg:text-lg">농장과 베드를 관리하고 모니터링하세요</p>
               </div>
             </div>
           </div>
@@ -1054,9 +1051,6 @@ function BedsManagementContent() {
                   {/* 농장 헤더 */}
                   <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
                     <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
-                        <span className="text-3xl">🏠</span>
-                      </div>
                       <div>
                         <h4 className="text-2xl font-bold text-gray-900">{farm.name}</h4>
                         <p className="text-gray-600 font-medium text-lg">📍 {farm.location || '위치 정보 없음'}</p>
