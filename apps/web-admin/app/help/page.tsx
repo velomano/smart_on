@@ -469,22 +469,22 @@ export default function HelpPage() {
           </div>
 
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
-            <h4 className="text-lg font-semibold text-green-900 mb-3">📚 상세 가이드</h4>
+            <h4 className="text-lg font-semibold text-green-900 mb-3">📚 MQTT 상세 가이드</h4>
             <div className="grid md:grid-cols-3 gap-4">
               <a href="/help/mqtt" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
                 <div className="text-2xl mb-2">📖</div>
-                <h5 className="font-medium text-green-900">종합 가이드</h5>
-                <p className="text-sm text-green-700">전체 아키텍처 및 설정 방법</p>
+                <h5 className="font-medium text-green-900">MQTT 연동 가이드</h5>
+                <p className="text-sm text-green-700">전체 MQTT 연동 방법</p>
               </a>
               
               <a href="/help/mqtt?tab=broker-setup" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
-                <div className="text-2xl mb-2">🐛</div>
+                <div className="text-2xl mb-2">🔧</div>
                 <h5 className="font-medium text-green-900">브로커 설정</h5>
                 <p className="text-sm text-green-700">MQTT 브로커 설정 방법</p>
               </a>
               
               <a href="/help/mqtt?tab=device-integration" className="block bg-white rounded-lg p-4 border border-green-100 hover:shadow-md transition-shadow">
-                <div className="text-2xl mb-2">🐍</div>
+                <div className="text-2xl mb-2">💻</div>
                 <h5 className="font-medium text-green-900">디바이스 연동</h5>
                 <p className="text-sm text-green-700">디바이스 연동 코드</p>
               </a>
