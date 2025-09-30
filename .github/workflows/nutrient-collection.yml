@@ -176,16 +176,40 @@ jobs:
           main();
           EOF
 
-      - name: 수집 결과 알림 (선택사항)
-        # secrets를 if에서 직접 쓰지 말고, env 값을 기준으로 체크
-        if: ${{ always() && env.SLACK_WEBHOOK_URL != '' }}
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: |
-            영양액 레시피 수집 작업 완료
-            상태: ${{ job.status }}
-            소스: ${{ env.SOURCE }}
-            트리거: ${{ github.event_name }}
+      - name: 수집 결과 텔레그램 알림 (선택사항)
+        # 텔레그램 봇 토큰이 설정되어 있을 때만 알림 전송
+        if: ${{ always() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != '' }}
+        run: |
+          set -euo pipefail
+          
+          STATUS="${{ job.status }}"
+          SOURCE="${{ env.SOURCE }}"
+          TRIGGER="${{ github.event_name }}"
+          
+          if [ "$STATUS" = "success" ]; then
+            ICON="✅"
+            MESSAGE="영양액 레시피 수집 작업이 성공적으로 완료되었습니다!"
+          else
+            ICON="❌"
+            MESSAGE="영양액 레시피 수집 작업이 실패했습니다."
+          fi
+          
+          FULL_MESSAGE="$ICON *TeraHub 양액 수집 알림*
+
+          📊 **작업 상태**: $STATUS
+          🌱 **수집 소스**: $SOURCE
+          ⏰ **실행 시간**: $(date '+%Y-%m-%d %H:%M:%S')
+          🔄 **트리거**: $TRIGGER
+          
+          $MESSAGE"
+          
+          curl -s -X POST "https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ env.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"$FULL_MESSAGE\",
+              \"parse_mode\": \"Markdown\"
+            }"
         env:
-          SLACK_WEBHOOK_URL: ${{ env.SLACK_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
