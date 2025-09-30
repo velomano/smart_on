@@ -50,28 +50,17 @@ export async function GET(req: NextRequest) {
     
     console.log('✅ Supabase 연결 성공');
 
-    // nutrient_recipes와 nutrient_sources를 조인해서 실제 출처 정보 포함 조회
+    // crop_profiles에서 레시피 브라우징용 데이터 조회 (기본 레시피들)
     let query = sb
-      .from('nutrient_recipes')
+      .from('crop_profiles')
       .select(`
         id,
         crop_key,
         crop_name,
         stage,
+        target_ppm,
         target_ec,
-        target_ph,
-        macro,
-        micro,
-        source_id,
-        reliability,
-        collected_at,
-        nutrient_sources!inner(
-          id,
-          name,
-          url,
-          org_type,
-          license
-        )
+        target_ph
       `);
 
     // 필터링 적용
@@ -104,52 +93,49 @@ export async function GET(req: NextRequest) {
     console.log('✅ 쿼리 성공, 프로필 개수:', profiles?.length || 0);
 
     // 프론트엔드에서 사용할 수 있도록 데이터 변환
-    const recipes = profiles?.map(recipe => {
-      // macro JSON에서 영양소 정보 추출
-      const macro = recipe.macro || {};
-      const npk_ratio = `${macro.N || 0}:${macro.P || 0}:${macro.K || 0}`;
+    const recipes = profiles?.map(profile => {
+      // target_ppm JSON에서 영양소 정보 추출
+      const ppm = profile.target_ppm || {};
+      const npk_ratio = `${ppm.N_NO3 || 0}:${ppm.P || 0}:${ppm.K || 0}`;
       
-      // nutrient_sources에서 실제 출처 정보 추출
-      const source = recipe.nutrient_sources;
-      
-      // 실제 출처 정보 사용
-      const sourceTitle = source?.name || '스마트팜 데이터베이스';
-      const sourceYear = new Date(recipe.collected_at).getFullYear();
-      const sourceUrl = source?.url || null;
-      const license = source?.license || 'CC BY 4.0';
+      // 기본 출처 정보 (crop_profiles에는 출처 정보가 없음)
+      const sourceTitle = '스마트팜 데이터베이스';
+      const sourceYear = new Date().getFullYear();
+      const sourceUrl = null; // crop_profiles에는 출처 URL이 없음
+      const license = 'CC BY 4.0';
       
       return {
-        id: recipe.id,
-        crop: recipe.crop_name,
-        stage: translateStage(recipe.stage),
+        id: profile.id,
+        crop: profile.crop_name,
+        stage: translateStage(profile.stage),
         volume_l: 100, // 기본값
-        ec_target: recipe.target_ec,
-        ph_target: recipe.target_ph,
+        ec_target: profile.target_ec,
+        ph_target: profile.target_ph,
         npk_ratio: npk_ratio,
-        created_at: recipe.collected_at,
+        created_at: new Date().toISOString(),
         source_title: sourceTitle,
         source_year: sourceYear,
         source_url: sourceUrl,
         license: license,
-        description: `${recipe.crop_name} ${translateStage(recipe.stage)}에 최적화된 배양액 레시피입니다.`,
+        description: `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
         growing_conditions: {
-          temperature: getTemperatureRange(recipe.crop_name),
-          humidity: getHumidityRange(recipe.crop_name),
-          light_hours: getLightHours(recipe.crop_name),
-          co2_level: getCO2Level(recipe.crop_name)
+          temperature: getTemperatureRange(profile.crop_name),
+          humidity: getHumidityRange(profile.crop_name),
+          light_hours: getLightHours(profile.crop_name),
+          co2_level: getCO2Level(profile.crop_name)
         },
         nutrients_detail: {
-          nitrogen: macro.N || 0,
-          phosphorus: macro.P || 0,
-          potassium: macro.K || 0,
-          calcium: macro.Ca || 0,
-          magnesium: macro.Mg || 0,
+          nitrogen: ppm.N_NO3 || 0,
+          phosphorus: ppm.P || 0,
+          potassium: ppm.K || 0,
+          calcium: ppm.Ca || 0,
+          magnesium: ppm.Mg || 0,
           trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
         },
-        usage_notes: getUsageNotes(recipe.crop_name, recipe.stage),
-        warnings: getWarnings(recipe.crop_name, recipe.stage),
-        author: source?.name || '스마트팜 시스템',
-        last_updated: recipe.collected_at
+        usage_notes: getUsageNotes(profile.crop_name, profile.stage),
+        warnings: getWarnings(profile.crop_name, profile.stage),
+        author: '스마트팜 시스템',
+        last_updated: new Date().toISOString()
       };
     }) || [];
 
