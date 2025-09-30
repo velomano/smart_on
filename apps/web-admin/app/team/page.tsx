@@ -383,17 +383,14 @@ export default function TeamPage() {
         {/* Overview Section */}
         <div className="mb-8">
           <div className="mb-6 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">사용자 정보</h2>
-            <p className="text-lg text-gray-600">사용자의 정보를 볼 수 있습니다</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">사용자 정보</h2>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600">사용자의 정보를 볼 수 있습니다</p>
           </div>
         </div>
 
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
-                <span className="text-lg sm:text-2xl lg:text-3xl">👥</span>
-              </div>
               <div>
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">팀 관리 대시보드</h1>
                 <p className="text-white/90 text-sm sm:text-base lg:text-lg">{user?.role === 'system_admin' ? '전체 사용자를 관리합니다' : 
@@ -406,7 +403,7 @@ export default function TeamPage() {
             <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-8">
               <div>
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-900 mb-1 sm:mb-2">
-                  👥 {user?.role === 'system_admin' ? '전체 사용자 목록' : '팀원 목록'}
+                  {user?.role === 'system_admin' ? '전체 사용자 목록' : '팀원 목록'}
                 </h3>
                 <p className="text-gray-600 text-sm sm:text-base">
                   {user?.role === 'system_admin' ? '모든 사용자를 관리합니다' :
@@ -434,42 +431,42 @@ export default function TeamPage() {
               {teamMembers.map((member) => (
                 <div 
                   key={member.id} 
-                  className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+                  className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[80px] sm:min-h-[90px] lg:min-h-[100px]"
                 >
-                  <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
-                    <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-lg sm:text-xl lg:text-2xl">
-                          {(member.role || 'team_member') === 'team_leader' ? '👨‍💼' : '👤'}
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                        <span className="text-sm sm:text-base lg:text-lg text-white font-bold">
+                          {(member.role || 'team_member') === 'team_leader' ? 'L' : 'M'}
                         </span>
                       </div>
-                      <div>
-                        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-6">
-                          <div>
-                            <h4 className="text-lg sm:text-xl font-bold text-gray-900">{member.name || '이름 없음'}</h4>
-                            <p className="text-gray-600 font-medium text-sm sm:text-base">{member.email}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 lg:space-x-3">
+                          <div className="min-w-0">
+                            <h4 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 truncate">{member.name || '이름 없음'}</h4>
+                            <p className="text-gray-600 font-medium text-xs sm:text-sm truncate">{member.email}</p>
                           </div>
-                          {(member as any).company && (
-                            <div className="flex items-center space-x-1 sm:space-x-2">
-                              <span className="text-gray-500 text-sm">🏢</span>
-                              <span className="text-xs sm:text-sm text-gray-700 font-medium">{(member as any).company}</span>
-                            </div>
-                          )}
-                          {(member as any).phone && (
-                            <div className="flex items-center space-x-1 sm:space-x-2">
-                              <span className="text-gray-500 text-sm">📞</span>
-                              <span className="text-xs sm:text-sm text-gray-700 font-medium">{(member as any).phone}</span>
-                            </div>
-                          )}
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                            {(member as any).company && (
+                              <div className="flex items-center space-x-1">
+                                <span className="text-xs text-gray-700 font-medium">{(member as any).company}</span>
+                              </div>
+                            )}
+                            {(member as any).phone && (
+                              <div className="flex items-center space-x-1">
+                                <span className="text-xs text-gray-700 font-medium">{(member as any).phone}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                       <div className="text-right">
-                        <div className="text-sm text-gray-500 font-medium">
+                        <div className="text-xs sm:text-sm text-gray-500 font-medium">
                           {(member.role || 'team_member') === 'team_leader' ? '농장장' : '팀원'}
                         </div>
-                        <div className={`text-xs px-2 py-1 rounded-full ${
+                        <div className={`text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-full ${
                           (member.is_active ?? true) 
                             ? 'bg-green-100 text-green-700' 
                             : 'bg-red-100 text-red-700'
@@ -478,10 +475,10 @@ export default function TeamPage() {
                         </div>
                       </div>
                       {(user?.role === 'team_leader' || user?.role === 'system_admin' || user?.role === 'super_admin') && (
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-1 sm:space-x-2">
                           <button
                             onClick={() => handleEditUser(member)}
-                            className="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition-colors"
+                            className="bg-blue-500 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-blue-600 transition-colors whitespace-nowrap"
                           >
                             편집
                           </button>
