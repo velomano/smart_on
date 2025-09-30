@@ -503,10 +503,10 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-2xl font-bold text-purple-600">
+                <div className="text-lg sm:text-2xl font-bold text-purple-600">
                   {recipeStats.today}
                 </div>
-                <div className="text-sm text-gray-600 font-medium">오늘 추가</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">오늘 추가</div>
               </div>
             </div>
           </div>
@@ -525,8 +525,8 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold text-blue-600">{weatherData.weatherStatus}</div>
-                <div className="text-sm text-gray-600 font-medium">{weatherData.region}</div>
+                <div className="text-sm sm:text-lg font-bold text-blue-600">{weatherData.weatherStatus}</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-medium">{weatherData.region}</div>
                 <div className="text-xs text-gray-500 font-medium">강수확률 {weatherData.precipitation}%</div>
               </div>
             </div>
