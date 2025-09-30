@@ -282,38 +282,35 @@ export default function MarketPage() {
       />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+      <main className="max-w-7xl mx-auto pt-2 sm:pt-4 pb-2 sm:pb-4 lg:pb-8 px-2 sm:px-4 lg:px-8 relative z-10">
         {/* Overview Section */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-8 py-6">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <span className="text-3xl">📊</span>
-              </div>
               <div>
-                <h1 className="text-4xl font-bold text-white mb-2">시세 정보</h1>
-                <p className="text-white/90 text-lg">농산물 시세 정보와 가격 추이를 확인하세요</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">시세 정보</h1>
+                <p className="text-white/90 text-sm sm:text-base lg:text-lg">농산물 시세 정보와 가격 추이를 확인하세요</p>
               </div>
             </div>
           </div>
-          <div className="px-8 py-8">
+          <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
             {/* 검색 및 필터 */}
-            <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 p-6 mb-8">
-          <div className="flex flex-col md:flex-row gap-4">
+            <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 p-2 sm:p-3 lg:p-6 mb-2 sm:mb-4 lg:mb-8">
+          <div className="flex flex-col md:flex-row gap-2 sm:gap-3 lg:gap-4">
             <div className="flex-1">
               <input
                 type="text"
                 placeholder="농산물명을 검색하세요..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg text-gray-900 placeholder-gray-500"
+                className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base lg:text-lg text-gray-900 placeholder-gray-500"
               />
             </div>
             <div className="md:w-48">
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg text-gray-900"
+                className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base lg:text-lg text-gray-900"
               >
                 <option value="all">전체 카테고리</option>
                 {categories.slice(1).map(category => (
@@ -324,7 +321,7 @@ export default function MarketPage() {
             <button
               onClick={loadPriceData}
               disabled={loading}
-              className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-6 py-3 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {loading ? '로딩중...' : '새로고침'}
             </button>
@@ -342,67 +339,62 @@ export default function MarketPage() {
         )}
 
         {/* 시세 데이터 테이블 */}
-        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-2xl font-bold text-gray-900">📊 실시간 시세 정보</h3>
-            <p className="text-gray-600 mt-1">주요 농산물의 최신 가격 정보</p>
+        <div className="bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-white/20 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 border-b border-gray-200">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">실시간 시세 정보</h3>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">주요 농산물의 최신 가격 정보</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">품목</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">카테고리</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">단위</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">최근가격</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">1일전</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">1개월전</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">1년전</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">등락</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">액션</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">품목</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">카테고리</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">단위</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">최근가격</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">1일전</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">1개월전</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">1년전</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">등락</th>
+                  <th className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-left text-xs sm:text-sm font-semibold text-gray-900">액션</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredData.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4">
                       <div className="flex items-center">
-                        <span className="text-2xl mr-3">
-                          {item.category_name === '채소' ? '🥬' : 
-                           item.category_name === '과일' ? '🍎' : 
-                           item.category_name === '곡물' ? '🌾' : '🌱'}
-                        </span>
                         <div>
-                          <div className="font-semibold text-gray-900">{item.productName}</div>
-                          <div className="text-sm text-gray-500">{item.item_name}</div>
+                          <div className="font-semibold text-gray-900 text-sm sm:text-base">{item.productName}</div>
+                          <div className="text-xs sm:text-sm text-gray-500">{item.item_name}</div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{item.category_name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{item.unit}</td>
-                    <td className="px-6 py-4">
-                      <div className="text-lg font-bold text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">{item.category_name}</td>
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">{item.unit}</td>
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4">
+                      <div className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">
                         {(parseInt(item.dpr1) * 1000).toLocaleString()}원
-                        <span className="text-sm text-gray-500 ml-1">/{item.unit}</span>
+                        <span className="text-xs sm:text-sm text-gray-500 ml-1">/{item.unit}</span>
                       </div>
                       <div className="text-xs text-gray-500">{item.day1}</div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">
                       {(parseInt(item.dpr2) * 1000).toLocaleString()}원
                       <span className="text-xs text-gray-500">/{item.unit}</span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">
                       {(parseInt(item.dpr3) * 1000).toLocaleString()}원
                       <span className="text-xs text-gray-500">/{item.unit}</span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4 text-xs sm:text-sm text-gray-900">
                       {(parseInt(item.dpr4) * 1000).toLocaleString()}원
                       <span className="text-xs text-gray-500">/{item.unit}</span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 sm:px-3 lg:px-6 py-2 sm:py-3 lg:py-4">
                       <div className="flex items-center">
-                        <span className="text-xl mr-2">{getDirectionIcon(item.direction)}</span>
-                        <span className={`font-semibold ${getDirectionColor(item.direction)}`}>
+                        <span className="text-sm sm:text-base lg:text-xl mr-1 sm:mr-2">{getDirectionIcon(item.direction)}</span>
+                        <span className={`font-semibold text-xs sm:text-sm ${getDirectionColor(item.direction)}`}>
                           {item.direction === '0' ? '-' : item.direction === '1' ? '+' : ''}{item.value}%
                         </span>
                       </div>
