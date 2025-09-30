@@ -443,19 +443,19 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
         
         {/* Stats Overview */}
-        <div className="mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="mb-4 sm:mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
-            <div className="p-4 sm:p-6 flex items-center justify-between">
+            <div className="p-3 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🏠</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-lg">🏠</span>
                 </div>
                 <div className="ml-4">
-                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
                     농장 수
                   </dt>
-                  <dd className="text-3xl font-black text-gray-900">{totalFarms}</dd>
+                  <dd className="text-2xl font-black text-gray-900">{totalFarms}</dd>
                 </div>
               </div>
               <div className="text-right">
@@ -468,16 +468,16 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
-            <div className="p-4 sm:p-6 flex items-center justify-between">
+            <div className="p-3 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🌱</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-lg">🌱</span>
                 </div>
                 <div className="ml-4">
-                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
                     베드 활성률
                   </dt>
-                  <dd className="text-3xl font-black text-gray-900">{bedActivationRate}%</dd>
+                  <dd className="text-2xl font-black text-gray-900">{bedActivationRate}%</dd>
                 </div>
               </div>
               <div className="text-right">
@@ -488,16 +488,16 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
           <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
-            <div className="p-4 sm:p-6 flex items-center justify-between">
+            <div className="p-3 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🌱</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-lg">🌱</span>
                 </div>
                 <div className="ml-4">
-                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
                     배양액 레시피
                   </dt>
-                  <dd className="text-3xl font-black text-gray-900">
+                  <dd className="text-2xl font-black text-gray-900">
                     {recipeStats.total}
                   </dd>
                 </div>
@@ -512,16 +512,16 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
           </div>
 
             <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
-              <div className="p-4 sm:p-6 flex items-center justify-between">
+              <div className="p-3 sm:p-4 flex items-center justify-between">
               <div className="flex items-center">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-2xl">🌤️</span>
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                  <span className="text-lg">🌤️</span>
                 </div>
                 <div className="ml-4">
-                  <dt className="text-base font-semibold text-gray-700 uppercase tracking-wide mb-1">
+                  <dt className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-1">
                     현재 날씨
                   </dt>
-                  <dd className="text-3xl font-black text-gray-900">{weatherData.temperature}°C</dd>
+                  <dd className="text-2xl font-black text-gray-900">{weatherData.temperature}°C</dd>
                 </div>
               </div>
               <div className="text-right">
