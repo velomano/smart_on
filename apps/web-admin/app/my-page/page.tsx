@@ -334,74 +334,71 @@ export default function MyPage() {
         backButtonText="대시보드"
       />
       
-      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+      <main className="max-w-7xl mx-auto pt-2 sm:pt-4 pb-2 sm:pb-4 lg:pb-8 px-2 sm:px-4 lg:px-8 relative z-10">
         {/* 프로필 정보 섹션 */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <span className="text-3xl">👤</span>
-              </div>
               <div>
-                <h1 className="text-4xl font-bold text-white mb-2">마이 페이지</h1>
-                <p className="text-white/90 text-lg">계정 정보를 확인하고 설정을 관리하세요</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">마이 페이지</h1>
+                <p className="text-white/90 text-sm sm:text-base lg:text-lg">계정 정보를 확인하고 설정을 관리하세요</p>
               </div>
             </div>
           </div>
           
-          <div className="px-8 py-8">
+          <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
             <div className="max-w-4xl mx-auto">
               {/* 기본 정보 카드 */}
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">👤 기본 정보</h2>
+              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
+                <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-6">
+                  <h2 className="text-lg sm:text-xl font-semibold text-gray-900">기본 정보</h2>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                   >
                     {isEditing ? '취소' : '수정'}
                   </button>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">이름</label>
                     <input
                       type="text"
                       value={profileForm.name}
                       onChange={e => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">이메일</label>
                     <input
                       type="email"
                       value={profileForm.email}
                       onChange={e => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">전화번호</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">전화번호</label>
                     <input
                       type="tel"
                       value={profileForm.phone}
                       onChange={e => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="010-1234-5678"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   {/* 사용자 권한 정보 (Supabase 기반 또는 MockAuth 백업) */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-900 mb-2">권한 정보</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="bg-gray-50 rounded-lg p-2 sm:p-3 lg:p-4">
+                    <h3 className="font-medium text-gray-900 mb-1 sm:mb-2 text-sm sm:text-base">권한 정보</h3>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:gap-4 text-xs sm:text-sm">
                       <div>
                         <span className="text-gray-600">역할:</span>
                         <span className="ml-2 font-semibold text-gray-900">{
@@ -456,80 +453,80 @@ export default function MyPage() {
               </div>
 
               {/* 비밀번호 변경 */}
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">🔒 비밀번호 변경</h2>
+              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">비밀번호 변경</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">현재 비밀번호</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">현재 비밀번호</label>
                     <input
                       type="password"
                       value={passwordForm.currentPassword}
                       onChange={e => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">새 비밀번호</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">새 비밀번호</label>
                     <input
                       type="password"
                       value={passwordForm.newPassword}
                       onChange={e => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">새 비밀번호 확인</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">새 비밀번호 확인</label>
                     <input
                       type="password"
                       value={passwordForm.confirmPassword}
                       onChange={e => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                       disabled={!isEditing}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 bg-gray-50 disabled:bg-gray-100"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm sm:text-base text-gray-900 bg-gray-50 disabled:bg-gray-100"
                     />
                   </div>
                 </div>
               </div>
 
               {/* 텔레그램 설정 */}
-              <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">📱 텔레그램 알림 설정</h2>
+              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">텔레그램 알림 설정</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">텔레그램 채팅 ID</label>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">텔레그램 채팅 ID</label>
                     <input
                       type="text"
                       value={settings.telegramChatId}
                       onChange={e => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
                       placeholder="텔레그램 채팅 ID를 입력하세요"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base text-gray-900 bg-white"
                     />
                     
                     {/* 텔레그램 ID 받는 방법 안내 */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-3">
-                      <p className="text-sm text-blue-800 font-medium mb-3">💡 텔레그램 채팅 ID 확인하는 방법</p>
-                      <div className="bg-white rounded-lg p-3 mb-3">
-                        <ol className="text-sm text-blue-700 space-y-1 ml-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 lg:p-4 mt-2 sm:mt-3">
+                      <p className="text-xs sm:text-sm text-blue-800 font-medium mb-2 sm:mb-3">텔레그램 채팅 ID 확인하는 방법</p>
+                      <div className="bg-white rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
+                        <ol className="text-xs sm:text-sm text-blue-700 space-y-1 ml-3">
                           <li>1. 텔레그램에서 @userinfobot 검색하여 대화 시작</li>
                           <li>2. 봇에게 아무 메시지나 전송 (/start 또는 hi 등을 전송)</li>
                           <li>3. 봇이 응답으로 보내는 숫자 ID를 복사</li>
                           <li>4. 위의 입력창에 해당 숫자 ID를 입력</li>
                         </ol>
                       </div>
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-sm text-yellow-800 font-medium mb-2">🔥 필수 확인 단계:</p>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3">
+                        <p className="text-xs sm:text-sm text-yellow-800 font-medium mb-1 sm:mb-2">필수 확인 단계:</p>
                         <ol className="text-xs text-yellow-700 ml-3 space-y-1">
                           <li>• 텔레그램에서 <strong>실제 봇과 1:1 대화</strong>를 시작하셨나요?</li>
                           <li>• 그 봇에게 <strong>"hi"</strong> 또는 <strong>"/start"</strong> 메시지를 보냈나요?</li>
                           <li>• 봇이 당신의 메시지를 읽을 수 있는 상태인가요?</li>
                           <li>• 채팅 ID를 올바르게 입력했나요?</li>
                         </ol>
-                        <p className="text-xs text-red-600 font-medium mt-2">
+                        <p className="text-xs text-red-600 font-medium mt-1 sm:mt-2">
                           ⚠️ 봇을 처음 만든 것이라면 텔레그램 채팅방에서 직접 그 봇(@userinfobot)을 찾아서 대화를 시작해야 합니다!
                         </p>
                       </div>
