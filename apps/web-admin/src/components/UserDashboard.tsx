@@ -942,78 +942,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         </div>
 
         {/* Recent Activity */}
-        <div className="mt-8 bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
-          <div className="px-8 py-8">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h3 className="text-2xl font-black text-gray-900 mb-2">
-                  📈 최근 활동
-                </h3>
-                <p className="text-gray-600">실시간 센서 데이터와 시스템 활동을 확인하세요</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-600 font-medium">실시간</span>
-                </div>
-                <button className="text-blue-600 hover:text-blue-800 font-semibold">
-                  전체보기 →
-                </button>
-              </div>
-            </div>
-            <div className="space-y-4">
-              {(sensorReadings || []).slice(0, 5).map((reading) => {
-                const sensor = (sensors || []).find(s => s.id === reading.sensor_id);
-                const device = (devices || []).find(d => d.id === sensor?.device_id);
-                const farm = (farms || []).find(f => f.id === device?.farm_id);
-                
-                return (
-                  <div key={reading.id} className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                          <span className="text-xl">📊</span>
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">
-                            {farm?.name} - {String(device?.meta?.location || '')}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {sensor?.type} 센서 측정
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-gray-900">
-                          {reading.value}{reading.unit}
-                        </div>
-                        <div className="text-xs text-gray-500 font-medium">
-                          {new Date(reading.ts).toLocaleString('ko-KR')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-              {(sensorReadings || []).length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">📊</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">최근 센서 데이터가 없습니다</h3>
-                  <p className="text-gray-600 mb-6">센서 데이터가 수집되면 여기에 표시됩니다</p>
-                  {canManageFarms && (
-                    <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200">
-                      센서 설정하기
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 모바일용 통계 카드들 - 농장현황 아래 표시 */}
+        {/* 모바일용 통계 카드들 - 최근활동 위에 표시 */}
         <div className="block sm:hidden mb-4">
           <div className="grid grid-cols-2 gap-2">
             {/* 농장 수 카드 */}
@@ -1085,6 +1014,78 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             </div>
           </div>
         </div>
+
+        <div className="mt-8 bg-white/70 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden">
+          <div className="px-8 py-8">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h3 className="text-2xl font-black text-gray-900 mb-2">
+                  📈 최근 활동
+                </h3>
+                <p className="text-gray-600">실시간 센서 데이터와 시스템 활동을 확인하세요</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-gray-600 font-medium">실시간</span>
+                </div>
+                <button className="text-blue-600 hover:text-blue-800 font-semibold">
+                  전체보기 →
+                </button>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {(sensorReadings || []).slice(0, 5).map((reading) => {
+                const sensor = (sensors || []).find(s => s.id === reading.sensor_id);
+                const device = (devices || []).find(d => d.id === sensor?.device_id);
+                const farm = (farms || []).find(f => f.id === device?.farm_id);
+                
+                return (
+                  <div key={reading.id} className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <span className="text-xl">📊</span>
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900">
+                            {farm?.name} - {String(device?.meta?.location || '')}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {sensor?.type} 센서 측정
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-black text-gray-900">
+                          {reading.value}{reading.unit}
+                        </div>
+                        <div className="text-xs text-gray-500 font-medium">
+                          {new Date(reading.ts).toLocaleString('ko-KR')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {(sensorReadings || []).length === 0 && (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl">📊</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">최근 센서 데이터가 없습니다</h3>
+                  <p className="text-gray-600 mb-6">센서 데이터가 수집되면 여기에 표시됩니다</p>
+                  {canManageFarms && (
+                    <button className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200">
+                      센서 설정하기
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
       </main>
 
     </div>
