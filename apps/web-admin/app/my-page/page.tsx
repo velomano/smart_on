@@ -534,20 +534,20 @@ export default function MyPage() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <input
                         type="checkbox"
                         id="telegramEnabled"
                         checked={settings.notificationEnabled}
                         onChange={e => setSettings(prev => ({ ...prev, notificationEnabled: e.target.checked }))}
-                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="telegramEnabled" className="text-gray-900 font-medium">
+                      <label htmlFor="telegramEnabled" className="text-gray-900 font-medium text-sm sm:text-base">
                         텔레그램 알림 활성화
                       </label>
                     </div>
                     
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1 sm:space-x-2">
                       <button
                         onClick={async () => {
                           setLoading(true);
@@ -584,7 +584,7 @@ export default function MyPage() {
                           }
                         }}
                         disabled={loading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                       >
                         {loading ? '저장 중...' : '설정 저장'}
                       </button>
@@ -592,7 +592,7 @@ export default function MyPage() {
                       <button
                         onClick={testTelegramNotification}
                         disabled={!settings.telegramChatId || !settings.notificationEnabled}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
                       >
                         테스트 알림 전송
                       </button>
@@ -601,26 +601,26 @@ export default function MyPage() {
                   
                   {/* 텔레그램 설정 저장 상태 메시지 */}
                   {saveStatus && saveStatus.includes('텔레그램') && (
-                    <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-                      <p className="text-sm text-gray-900">{saveStatus}</p>
+                    <div className="mt-2 sm:mt-3 lg:mt-4 p-2 sm:p-3 bg-gray-100 rounded-lg">
+                      <p className="text-xs sm:text-sm text-gray-900">{saveStatus}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* 날씨 지역 설정 */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">🌤️ 날씨 지역 설정</h2>
+              <div className="bg-white rounded-xl shadow-lg p-2 sm:p-3 lg:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3 lg:mb-4">날씨 지역 설정</h2>
                 
-                <div className="space-y-4">
+                <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       날씨 정보를 제공받을 지역을 선택하세요
                     </label>
                     <select
                       value={settings.weatherRegion}
                       onChange={e => updateWeatherRegion(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+                      className="w-full px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base text-gray-900 bg-white"
                     >
                       <option value="서울">서울</option>
                       <option value="부산">부산</option>
@@ -782,9 +782,9 @@ export default function MyPage() {
                     </select>
                   </div>
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800 font-medium mb-2">💡 날씨 정보 안내</p>
-                    <ul className="text-sm text-blue-700 space-y-1 ml-3">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 lg:p-4">
+                    <p className="text-xs sm:text-sm text-blue-800 font-medium mb-1 sm:mb-2">날씨 정보 안내</p>
+                    <ul className="text-xs sm:text-sm text-blue-700 space-y-1 ml-3">
                       <li>• 선택한 지역의 실시간 날씨 정보를 대시보드에서 확인할 수 있습니다</li>
                       <li>• 기상청 초단기예보 API를 사용하여 정확한 정보를 제공합니다</li>
                       <li>• 온도, 습도, 강수량, 날씨 상태를 확인할 수 있습니다</li>
