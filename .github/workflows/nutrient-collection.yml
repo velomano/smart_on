@@ -112,9 +112,7 @@ jobs:
                 stage: 'vegetative',
                 target_ppm: 150,
                 target_ec: 1.2,
-                target_ph: 6.0,
-                source: SRC,
-                created_at: new Date().toISOString()
+                target_ph: 6.0
               },
               {
                 crop_key: 'tomato',
@@ -122,9 +120,7 @@ jobs:
                 stage: 'fruiting',
                 target_ppm: 250,
                 target_ec: 2.0,
-                target_ph: 6.5,
-                source: SRC,
-                created_at: new Date().toISOString()
+                target_ph: 6.5
               }
             ];
             
