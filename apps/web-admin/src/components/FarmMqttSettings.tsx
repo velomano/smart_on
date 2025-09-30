@@ -251,7 +251,7 @@ export default function FarmMqttSettings({
               <div className="bg-white rounded p-3 border-l-4 border-blue-500">
                 <div className="text-sm font-semibold text-blue-700 mb-1">📊 센서 데이터 수신</div>
                 <div className="text-xs font-mono text-gray-600">
-                  farms/{farmId}/devices/{deviceId}/telemetry
+                  farms/{farmId}/devices/[deviceId]/telemetry
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
                   브릿지가 이 토픽을 구독하여 센서 데이터를 받습니다
@@ -261,7 +261,7 @@ export default function FarmMqttSettings({
               <div className="bg-white rounded p-3 border-l-4 border-green-500">
                 <div className="text-sm font-semibold text-green-700 mb-1">🎛️ 제어 명령 전송</div>
                 <div className="text-xs font-mono text-gray-600">
-                  farms/{farmId}/devices/{deviceId}/command
+                  farms/{farmId}/devices/[deviceId]/command
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
                   브릿지가 이 토픽으로 제어 명령을 전송합니다
@@ -271,9 +271,9 @@ export default function FarmMqttSettings({
               <div className="bg-white rounded p-3 border-l-4 border-purple-500">
                 <div className="text-sm font-semibold text-purple-700 mb-1">📡 기타 토픽</div>
                 <div className="space-y-1 text-xs font-mono text-gray-600">
-                  <div>farms/{farmId}/devices/{deviceId}/registry</div>
-                  <div>farms/{farmId}/devices/{deviceId}/state</div>
-                  <div>farms/{farmId}/devices/{deviceId}/command/ack</div>
+                  <div>farms/{farmId}/devices/[deviceId]/registry</div>
+                  <div>farms/{farmId}/devices/[deviceId]/state</div>
+                  <div>farms/{farmId}/devices/[deviceId]/command/ack</div>
                 </div>
               </div>
 
