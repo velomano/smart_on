@@ -311,24 +311,24 @@ export default function NutrientPlanPage() {
         backButtonText="대시보드"
       />
       
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-emerald-500 to-blue-600 px-8 py-6">
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="bg-gradient-to-r from-emerald-500 to-blue-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center">
-              <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                <span className="text-3xl">🌱</span>
+              <div className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
+                <span className="text-lg sm:text-2xl lg:text-3xl">🌱</span>
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-white mb-2">배양액 제조 시스템</h1>
-                <p className="text-white/90 text-lg">작물별 최적 배양액 제조를 위한 지능형 계산 및 레시피 관리 시스템</p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">배양액 제조 시스템</h1>
+                <p className="text-white/90 text-sm sm:text-base lg:text-lg">작물별 최적 배양액 제조를 위한 지능형 계산 및 레시피 관리 시스템</p>
               </div>
             </div>
           </div>
 
-          <div className="px-8 py-8">
+          <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
           {/* 탭 메뉴 */}
-            <div className="border-b border-gray-200 mb-8">
-            <nav className="-mb-px flex space-x-8">
+            <div className="border-b border-gray-200 mb-2 sm:mb-4 lg:mb-8">
+            <nav className="-mb-px flex space-x-2 sm:space-x-4 lg:space-x-8">
               <button
                 onClick={() => setActiveTab('calculate')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -364,16 +364,16 @@ export default function NutrientPlanPage() {
 
             {/* 배양액 계산 탭 */}
             {activeTab === 'calculate' && (
-              <div className="space-y-6">
+              <div className="space-y-2 sm:space-y-3 lg:space-y-6">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">배양액 계산</h2>
-                  <p className="text-gray-600">작물과 용량을 입력하면 최적의 양액 조성을 계산해드립니다.</p>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">배양액 계산</h2>
+                  <p className="text-gray-600 text-sm sm:text-base">작물과 용량을 입력하면 최적의 양액 조성을 계산해드립니다.</p>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-lg shadow-md p-2 sm:p-3 lg:p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-3 lg:gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">작물 선택</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1 sm:mb-2">작물 선택</label>
                       <select
                       value={crop}
                       onChange={(e) => setCrop(e.target.value)}
@@ -386,7 +386,7 @@ export default function NutrientPlanPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">용량 (L)</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1 sm:mb-2">용량 (L)</label>
                     <input 
                       type="number" 
                       value={volume}
