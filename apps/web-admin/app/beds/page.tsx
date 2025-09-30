@@ -1097,9 +1097,6 @@ function BedsManagementContent() {
                             {/* 베드 헤더 */}
                             <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
                               <div className="flex items-center space-x-3">
-                                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center shadow-lg">
-                                  <span className="text-lg">📡</span>
-                                </div>
                                 <div>
                                   <span className="font-bold text-gray-900 text-lg">
                                     {(() => {

@@ -738,9 +738,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                               <div className="p-3 sm:p-4 lg:p-6">
                               <div className="flex items-center justify-between mb-3 sm:mb-4">
                             <div className="flex items-center space-x-4">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                    <span className="text-xl">📡</span>
-                              </div>
                               <div>
                                     <span className="font-bold text-gray-900 text-lg lg:text-xl">
                                       {(() => {
