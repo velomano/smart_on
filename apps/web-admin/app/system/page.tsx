@@ -384,7 +384,7 @@ export default function SystemPage() {
     <div className="min-h-screen bg-gray-50">
       <AppHeader 
         user={user}
-        title="🖥️ 시스템 모니터링" 
+        title="시스템 모니터링" 
         subtitle="실시간 시스템 상태 및 성능 메트릭" 
       />
       

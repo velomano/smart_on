@@ -160,7 +160,7 @@ export default function SystemMonitoringPage() {
         </div>
 
         <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-600 mb-4">🖥️ 시스템 리소스</h3>
+          <h3 className="text-lg font-semibold text-gray-600 mb-4">시스템 리소스</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
               <div className="flex items-center space-x-3">
