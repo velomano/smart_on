@@ -247,11 +247,13 @@ export default function SystemPage() {
                 <p className="text-xs text-gray-500">응답 시간</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{formatUptime(healthData.resources.uptime)}</div>
+                <div className="text-2xl font-bold text-green-600">{formatUptime(healthData.system?.uptime || 0)}</div>
                 <p className="text-xs text-gray-500">가동 시간</p>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{healthData.resources.memory.percentage}%</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {healthData.system?.memoryUsage ? Math.round((healthData.system.memoryUsage.heapUsed / healthData.system.memoryUsage.heapTotal) * 100) : 0}%
+                </div>
                 <p className="text-xs text-gray-500">메모리 사용률</p>
               </div>
             </div>
@@ -272,17 +274,17 @@ export default function SystemPage() {
                   <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(healthData.services.database.status)}`}>
                     {getStatusIcon(healthData.services.database.status)}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{healthData.services.database.responseTime}ms</p>
+                  <p className="text-xs text-gray-500 mt-1">{healthData.services.database.latency_ms}ms</p>
                 </div>
               </div>
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h3 className="font-medium text-gray-900">Node.js</h3>
-                  <p className="text-sm text-gray-600">{healthData.resources.nodeVersion}</p>
+                  <p className="text-sm text-gray-600">시스템 정보</p>
                 </div>
                 <div className="text-right">
                   <div className="text-green-600">✅</div>
-                  <p className="text-xs text-gray-500 mt-1">{healthData.resources.platform}</p>
+                  <p className="text-xs text-gray-500 mt-1">v{process.version}</p>
                 </div>
               </div>
             </div>
