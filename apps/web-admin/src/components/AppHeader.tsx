@@ -128,6 +128,12 @@ export default function AppHeader({
       path: '/nutrients/plan',
       color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
     },
+    // 시스템 관리자만 시스템 모니터링 표시
+    ...(safeUser.role === 'system_admin' ? [{
+      label: '시스템 모니터링',
+      path: '/system',
+      color: 'from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
+    }] : []),
     {
       label: '시세정보',
       path: '/market',
