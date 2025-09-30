@@ -45,6 +45,30 @@ interface HealthData {
   };
 }
 
+interface Device {
+  id: string;
+  name: string;
+  device_type: string;
+  farm_id: string;
+  location?: string;
+  description?: string;
+  mqtt_topic: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  farm?: {
+    name: string;
+  };
+  sensors?: any[];
+  latest_data?: {
+    temperature?: number;
+    humidity?: number;
+    ec_value?: number;
+    ph_value?: number;
+    timestamp: string;
+  };
+}
+
 interface SystemMetrics {
   timestamp: string;
   users: {
@@ -84,10 +108,21 @@ interface SystemMetrics {
 export default function SystemPage() {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
+  const [editingDevice, setEditingDevice] = useState<Device | null>(null);
+  const [deviceForm, setDeviceForm] = useState({
+    name: '',
+    device_type: 'sensor',
+    farm_id: '',
+    location: '',
+    description: '',
+    mqtt_topic: ''
+  });
   const router = useRouter();
 
   // 사용자 인증 확인
@@ -116,9 +151,10 @@ export default function SystemPage() {
       setLoading(true);
       setError(null);
 
-      const [healthResponse, metricsResponse] = await Promise.all([
+      const [healthResponse, metricsResponse, devicesResponse] = await Promise.all([
         fetch('/api/system/simple-health'),
-        fetch('/api/system/simple-metrics')
+        fetch('/api/system/simple-metrics'),
+        fetch('/api/devices')
       ]);
 
       // 각 응답의 상태를 개별적으로 확인
@@ -144,9 +180,10 @@ export default function SystemPage() {
         throw new Error(`메트릭 수집 실패: ${metricsResponse.status} ${metricsError.error || 'Unknown error'}`);
       }
 
-      const [health, systemMetrics] = await Promise.all([
+      const [health, systemMetrics, devicesData] = await Promise.all([
         healthResponse.json(),
-        metricsResponse.json()
+        metricsResponse.json(),
+        devicesResponse.json()
       ]);
 
       console.log('헬스 응답:', health);
@@ -165,6 +202,13 @@ export default function SystemPage() {
       } else {
         console.error('메트릭 데이터 구조 오류:', systemMetrics);
         throw new Error('메트릭 데이터 형식이 올바르지 않습니다.');
+      }
+
+      if (devicesData.ok && devicesData.data) {
+        setDevices(devicesData.data);
+      } else {
+        console.error('디바이스 데이터 구조 오류:', devicesData);
+        // 디바이스 데이터는 필수가 아니므로 에러를 던지지 않음
       }
     } catch (err) {
       console.error('시스템 데이터 로드 오류:', err);
@@ -208,6 +252,56 @@ export default function SystemPage() {
         return '❌';
       default:
         return '⚠️';
+    }
+  };
+
+  const handleDeviceEdit = (device: Device) => {
+    setEditingDevice(device);
+    setDeviceForm({
+      name: device.name,
+      device_type: device.device_type,
+      farm_id: device.farm_id,
+      location: device.location || '',
+      description: device.description || '',
+      mqtt_topic: device.mqtt_topic
+    });
+    setIsDeviceModalOpen(true);
+  };
+
+  const handleDeviceSave = async () => {
+    try {
+      const url = editingDevice ? `/api/devices?id=${editingDevice.id}` : '/api/devices';
+      const method = editingDevice ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(deviceForm)
+      });
+
+      const result = await response.json();
+
+      if (result.ok) {
+        alert(editingDevice ? '디바이스가 수정되었습니다.' : '디바이스가 생성되었습니다.');
+        setIsDeviceModalOpen(false);
+        setEditingDevice(null);
+        setDeviceForm({
+          name: '',
+          device_type: 'sensor',
+          farm_id: '',
+          location: '',
+          description: '',
+          mqtt_topic: ''
+        });
+        fetchData(); // 데이터 새로고침
+      } else {
+        alert(`오류: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('디바이스 저장 오류:', error);
+      alert('디바이스 저장 중 오류가 발생했습니다.');
     }
   };
 
@@ -471,6 +565,109 @@ export default function SystemPage() {
           </div>
         )}
 
+        {/* 디바이스 관리 */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold text-gray-900">디바이스 관리</h2>
+            <button
+              onClick={() => {
+                setEditingDevice(null);
+                setDeviceForm({
+                  name: '',
+                  device_type: 'sensor',
+                  farm_id: '',
+                  location: '',
+                  description: '',
+                  mqtt_topic: ''
+                });
+                setIsDeviceModalOpen(true);
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              새 디바이스 추가
+            </button>
+          </div>
+
+          {devices.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <div className="text-4xl mb-2">📱</div>
+              <p>등록된 디바이스가 없습니다.</p>
+              <p className="text-sm">새 디바이스를 추가해보세요.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {devices.map((device) => (
+                <div key={device.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{device.name}</h3>
+                      <p className="text-sm text-gray-600">{device.farm?.name || '농장 미지정'}</p>
+                    </div>
+                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      device.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {device.status === 'active' ? '활성' : '비활성'}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">타입:</span>
+                      <span className="font-medium text-gray-900">{device.device_type}</span>
+                    </div>
+                    {device.location && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">위치:</span>
+                        <span className="font-medium text-gray-900">{device.location}</span>
+                      </div>
+                    )}
+                    {device.latest_data && (
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-600">최신 데이터:</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {device.latest_data.temperature && (
+                            <div className="bg-blue-50 p-2 rounded">
+                              <div className="text-blue-800 font-medium">온도</div>
+                              <div className="text-blue-900">{device.latest_data.temperature}°C</div>
+                            </div>
+                          )}
+                          {device.latest_data.humidity && (
+                            <div className="bg-green-50 p-2 rounded">
+                              <div className="text-green-800 font-medium">습도</div>
+                              <div className="text-green-900">{device.latest_data.humidity}%</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleDeviceEdit(device)}
+                      className="flex-1 bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-200 transition-colors"
+                    >
+                      수정
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('이 디바이스를 삭제하시겠습니까?')) {
+                          fetch(`/api/devices?id=${device.id}`, { method: 'DELETE' })
+                            .then(() => fetchData())
+                            .catch(error => console.error('삭제 오류:', error));
+                        }
+                      }}
+                      className="flex-1 bg-red-100 text-red-700 px-3 py-1 rounded text-sm hover:bg-red-200 transition-colors"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* 마지막 업데이트 시간 */}
         {healthData && (
           <div className="text-center text-sm text-gray-600 font-medium">
@@ -478,6 +675,127 @@ export default function SystemPage() {
           </div>
         )}
       </div>
+
+      {/* 디바이스 편집 모달 */}
+      {isDeviceModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">
+                  {editingDevice ? '디바이스 수정' : '새 디바이스 추가'}
+                </h2>
+                <button
+                  onClick={() => setIsDeviceModalOpen(false)}
+                  className="text-white hover:text-gray-200 transition-colors"
+                >
+                  <span className="text-2xl">×</span>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    디바이스명 *
+                  </label>
+                  <input
+                    type="text"
+                    value={deviceForm.name}
+                    onChange={(e) => setDeviceForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    placeholder="디바이스 이름을 입력하세요"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    디바이스 타입 *
+                  </label>
+                  <select
+                    value={deviceForm.device_type}
+                    onChange={(e) => setDeviceForm(prev => ({ ...prev, device_type: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  >
+                    <option value="sensor">센서</option>
+                    <option value="actuator">액추에이터</option>
+                    <option value="controller">컨트롤러</option>
+                    <option value="gateway">게이트웨이</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    농장 ID *
+                  </label>
+                  <input
+                    type="text"
+                    value={deviceForm.farm_id}
+                    onChange={(e) => setDeviceForm(prev => ({ ...prev, farm_id: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    placeholder="농장 ID를 입력하세요"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    위치
+                  </label>
+                  <input
+                    type="text"
+                    value={deviceForm.location}
+                    onChange={(e) => setDeviceForm(prev => ({ ...prev, location: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    placeholder="디바이스 위치 (예: 베드-1, 온실-A)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    설명
+                  </label>
+                  <textarea
+                    value={deviceForm.description}
+                    onChange={(e) => setDeviceForm(prev => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 resize-none"
+                    placeholder="디바이스 설명을 입력하세요"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    MQTT 토픽
+                  </label>
+                  <input
+                    type="text"
+                    value={deviceForm.mqtt_topic}
+                    onChange={(e) => setDeviceForm(prev => ({ ...prev, mqtt_topic: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    placeholder="device/sensor_1"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={handleDeviceSave}
+                  className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  {editingDevice ? '수정' : '추가'}
+                </button>
+                <button
+                  onClick={() => setIsDeviceModalOpen(false)}
+                  className="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
