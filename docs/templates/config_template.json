@@ -1,0 +1,108 @@
+{
+  "farm_id": "farm_001",
+  "device_id": "device_001",
+  "broker_url": "your-broker.com",
+  "broker_port": 8883,
+  "username": "your-username",
+  "password": "your-password",
+  "device_type": "sensor_gateway",
+  "firmware_version": "1.0.0",
+  "hardware_version": "v2.1",
+  "capabilities": {
+    "sensors": ["temperature", "humidity", "ec", "ph", "water_level", "light"],
+    "actuators": ["pump", "valve", "led"],
+    "communication": ["wifi", "mqtt", "ethernet"]
+  },
+  "location": {
+    "bed_id": "bed_a1",
+    "tier": 1
+  },
+  "sampling_interval": 30,
+  "telemetry_interval": 30000,
+  "state_interval": 300000,
+  "registry_interval": 3600000,
+  "sensors": {
+    "temperature": {
+      "enabled": true,
+      "pin": 2,
+      "type": "DHT22",
+      "calibrated": true,
+      "offset": 0.0
+    },
+    "humidity": {
+      "enabled": true,
+      "pin": 2,
+      "type": "DHT22",
+      "calibrated": true,
+      "offset": 0.0
+    },
+    "ec": {
+      "enabled": true,
+      "pin": "A0",
+      "type": "analog",
+      "calibrated": false,
+      "offset": 0.0
+    },
+    "ph": {
+      "enabled": true,
+      "pin": "A1",
+      "type": "analog",
+      "calibrated": false,
+      "offset": 0.0
+    },
+    "water_level": {
+      "enabled": true,
+      "pin": "A2",
+      "type": "ultrasonic",
+      "calibrated": true,
+      "offset": 0.0
+    },
+    "light": {
+      "enabled": true,
+      "pin": "A3",
+      "type": "photoresistor",
+      "calibrated": false,
+      "offset": 0.0
+    }
+  },
+  "actuators": {
+    "pump_1": {
+      "enabled": true,
+      "pin": 3,
+      "type": "relay",
+      "default_state": "off"
+    },
+    "valve_1": {
+      "enabled": true,
+      "pin": 5,
+      "type": "servo",
+      "default_position": 0
+    },
+    "led_1": {
+      "enabled": true,
+      "pin": 6,
+      "type": "pwm",
+      "default_brightness": 0
+    }
+  },
+  "logging": {
+    "level": "info",
+    "file": "device.log",
+    "max_size": "10MB",
+    "max_files": 5
+  },
+  "security": {
+    "tls_enabled": true,
+    "cert_validation": false,
+    "client_cert": null,
+    "client_key": null
+  },
+  "network": {
+    "wifi_ssid": "your-wifi-ssid",
+    "wifi_password": "your-wifi-password",
+    "ethernet_enabled": false,
+    "static_ip": null,
+    "gateway": null,
+    "subnet": null
+  }
+}
