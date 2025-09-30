@@ -1,9 +1,9 @@
 import "dotenv/config";
 import fetch from "node-fetch";
-import { fetchCornellLettuce } from "./sources/cornell";
-import { fetchRDARecipes } from "./sources/rda";
-import { fetchFAORecipes } from "./sources/fao";
-import { fetchAcademicRecipes } from "./sources/academic";
+import { fetchCornellLettuce } from "./cornell";
+import { fetchRDARecipes } from "./rda";
+import { fetchFAORecipes } from "./fao";
+import { fetchAcademicRecipes } from "./academic";
 
 // 통합 수집 함수 (배치 처리 지원)
 export async function collectAllRecipes(batchSize: number = 10) {
