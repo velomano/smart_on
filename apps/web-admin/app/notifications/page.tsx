@@ -355,44 +355,29 @@ export default function NotificationsPage() {
 
             <div className="px-4 py-4 sm:px-6 sm:py-6">
               <div className="max-w-4xl mx-auto">
-                {/* 마이페이지 안내 (텔레그램 설정 위주) */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md p-4 border border-blue-200 mb-4">
-                  <h2 className="text-lg font-semibold text-blue-900 mb-3">📱 텔레그램 알림 설정 안내</h2>
-                  <div className="space-y-3 text-blue-800">
-                    <div className="bg-white rounded-lg p-3 border border-blue-100">
-                      <h3 className="font-semibold text-blue-900 mb-2 text-sm">💙 텔레그램 채팅 ID 설정</h3>
-                      <p className="text-xs">텔레그램 채팅 ID는 <strong>마이페이지</strong>에서 설정하는 것이 권장됩니다.</p>
-                      <div className="mt-2">
+                {/* 통합된 텔레그램 설정 */}
+                <div className="bg-white rounded-lg shadow-md p-4 mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3">📱 텔레그램 알림 설정</h2>
+
+                  {/* 설정 안내 */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-blue-600 text-lg">💡</span>
+                      <div className="flex-1">
+                        <p className="text-xs text-blue-800 font-medium mb-1">설정 방법 안내</p>
+                        <p className="text-xs text-blue-700 mb-2">
+                          텔레그램 채팅 ID는 <strong>마이페이지</strong>에서 설정하는 것이 권장됩니다. 
+                          여기서는 알림 활성화와 테스트만 진행하세요.
+                        </p>
                         <a 
                           href="/my-page" 
-                          className="inline-block px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                          className="inline-block px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
                         >
-                          마이페이지에서 설정하기 →
+                          마이페이지에서 ID 설정하기 →
                         </a>
                       </div>
                     </div>
-
-                    <div className="bg-white rounded-lg p-3 border border-blue-100">
-                      <h3 className="font-semibold text-blue-900 mb-2 text-sm">📋 마이페이지 설정 방법</h3>
-                      <p className="text-xs">마이페이지 → 텔레그램 알림 설정에서 ID 입력하고 백업하면 여기서 자동으로 이용 가능합니다.</p>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-3 border border-blue-100">
-                      <h3 className="font-semibold text-blue-900 mb-2 text-sm">🔔 여기서는 알림 활성화</h3>
-                      <p className="text-xs">마이페이지에서 ID 설정 후 여기서 텔레그램 알림을 최종 활성화하고 테스트해보세요.</p>
-                    </div>
-
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2">
-                      <p className="text-xs text-yellow-800 font-medium">
-                        💡 팁: 대부분의 텔레그램 설정은 마이페이지에서 관리하면 편리합니다!
-                      </p>
-                    </div>
                   </div>
-                </div>
-
-                {/* 텔레그램 설정 */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">📱 텔레그램 설정</h2>
 
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
@@ -414,22 +399,13 @@ export default function NotificationsPage() {
                         type="text"
                         value={settings.telegramChatId}
                         onChange={e => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
-                        placeholder="텔레그램 채팅 ID를 입력하세요"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white text-sm"
+                        placeholder="마이페이지에서 설정된 ID가 자동으로 표시됩니다"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50 text-sm"
+                        disabled
                       />
-
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mt-2">
-                        <p className="text-xs text-blue-800 font-medium mb-1">💡 마이페이지에서 텔레그램 ID 관리 권장</p>
-                        <p className="text-xs text-blue-700 mb-1">
-                          텔레그램 채팅 ID는 <a href="/my-page" className="text-blue-700 underline">마이페이지</a>에서 상세한 안내와 함께 설정하세요.
-                        </p>
-                        <a 
-                          href="/my-page" 
-                          className="inline-block px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-                        >
-                          마이페이지에서 설정하기 →
-                        </a>
-                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        이 필드는 마이페이지에서 설정된 값을 자동으로 불러옵니다.
+                      </p>
                     </div>
 
                     <div className="flex flex-col space-y-2">
