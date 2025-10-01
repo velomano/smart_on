@@ -68,14 +68,10 @@ export async function generateSetupToken(
  * - [ ] 데이터 압축
  */
 export function generateQRData(token: SetupToken): string {
-  const data = {
-    server_url: process.env.BRIDGE_SERVER_URL || 'https://bridge.smartfarm.app',
-    setup_token: token.token,
-    tenant_id: token.tenantId,
-    farm_id: token.farmId,
-    protocol: 'http',
-  };
-
-  return JSON.stringify(data);
+  // QR 코드는 모바일 웹 프로비저닝 페이지로 연결
+  const webAdminUrl = process.env.WEB_ADMIN_URL || 'http://localhost:3001';
+  const provisionUrl = `${webAdminUrl}/provision?token=${token.token}&tenant=${token.tenantId}&farm=${token.farmId || ''}`;
+  
+  return provisionUrl;
 }
 
