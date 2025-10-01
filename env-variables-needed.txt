@@ -1,0 +1,26 @@
+# Web Admin (.env.local)에 필요한 환경변수들
+# ================================================
+
+# Universal Bridge 설정
+NEXT_PUBLIC_BRIDGE_URL=http://localhost:3001
+
+# Supabase 설정 (기존 값들 - 이미 있으면 그대로 사용)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Universal Bridge (.env)에 필요한 환경변수들
+# ================================================
+
+# Supabase 설정
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# 서버 설정
+BRIDGE_HTTP_PORT=3001
+BRIDGE_SERVER_URL=http://localhost:3001
+WEB_ADMIN_URL=http://localhost:3000
+
+# 개발용 설정
+SIGNATURE_VERIFY_OFF=true

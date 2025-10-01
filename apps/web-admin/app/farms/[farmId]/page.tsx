@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import AppHeader from '@/components/AppHeader';
-import { FarmAutoDashboard } from '@/components/farm/FarmAutoDashboard';
+import FarmAutoDashboard from '@/components/farm/FarmAutoDashboard';
 
-export default function FarmDetailPage({ params }: { params: { id: string } }) {
-  const farmId = params.id;
+export default function FarmDetailPage({ params }: { params: Promise<{ farmId: string }> }) {
+  const { farmId } = use(params);
   const router = useRouter();
 
   // 환경 변수로 레거시 대시보드 강제 사용 가능

@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const deviceId = params.id;
+  const { id: deviceId } = await params;
 
   if (!deviceId) {
     return NextResponse.json(

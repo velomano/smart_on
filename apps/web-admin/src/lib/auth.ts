@@ -1,4 +1,5 @@
 import { getSupabaseClient, getFarms } from './supabase';
+import { getClientTenantId } from './tenant';
 
 // 데이터베이스 사용자 타입
 export interface DatabaseUser {

@@ -6,7 +6,6 @@
 
 import 'dotenv/config';
 import { createHttpServer } from './protocols/http/server.js';
-import { createWebSocketServer } from './protocols/websocket/server.js';
 import { UniversalMessageBus } from './core/messagebus.js';
 import { initSupabase } from './db/index.js';
 
@@ -39,15 +38,11 @@ async function main() {
   const messageBus = new UniversalMessageBus();
   console.log('✅ Message Bus initialized');
 
-  // HTTP 서버 시작
-  const httpServer = createHttpServer();
-  httpServer.listen(config.http.port, () => {
-    console.log(`✅ HTTP Server listening on port ${config.http.port}`);
+  // HTTP + WebSocket 통합 서버 시작
+  const { app, server } = createHttpServer();
+  server.listen(config.http.port, () => {
+    console.log(`✅ HTTP + WebSocket Server listening on port ${config.http.port}`);
   });
-
-  // WebSocket 서버 시작
-  const wsServer = createWebSocketServer(config.websocket.port);
-  console.log(`✅ WebSocket Server listening on port ${config.websocket.port}`);
 
   // TODO: MQTT 클라이언트 시작 (옵션)
   // TODO: Observability 초기화
@@ -55,7 +50,7 @@ async function main() {
 
   console.log('🚀 Universal IoT Bridge v2.0 Started!');
   console.log(`   HTTP: http://localhost:${config.http.port}`);
-  console.log(`   WebSocket: ws://localhost:${config.websocket.port}`);
+  console.log(`   WebSocket: ws://localhost:${config.http.port}`);
 }
 
 // Graceful Shutdown

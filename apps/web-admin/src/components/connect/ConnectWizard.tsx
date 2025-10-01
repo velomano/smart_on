@@ -215,7 +215,8 @@ function CodeGenerateStep({ config, onBack, onNext }: { config: DeviceConfig; on
       setError('');
 
       // Step 1: Setup Token 발급
-      const claimResponse = await fetch('http://localhost:3000/api/provisioning/claim', {
+      const bridgeUrl = process.env.NEXT_PUBLIC_BRIDGE_URL || 'http://localhost:3001';
+      const claimResponse = await fetch(`${bridgeUrl}/api/provisioning/claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -515,7 +516,7 @@ function MonitorStep({ config, onBack }: { config: DeviceConfig; onBack: () => v
 
       {/* Preflight Check */}
       <div className="mb-4">
-        <Preflight serverUrl="http://localhost:3000" />
+        <Preflight serverUrl={process.env.NEXT_PUBLIC_BRIDGE_URL || 'http://localhost:3001'} />
       </div>
 
       {/* Live Log */}

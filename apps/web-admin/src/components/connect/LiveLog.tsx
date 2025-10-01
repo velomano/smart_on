@@ -45,7 +45,9 @@ export function LiveLog({ setupToken, deviceId }: LiveLogProps) {
 
   const connectWebSocket = () => {
     try {
-      const ws = new WebSocket(`ws://localhost:8080/monitor/${setupToken}`);
+      const bridgeUrl = 'http://localhost:3001';  // 하드코딩으로 임시 수정
+      const wsUrl = bridgeUrl.replace('http', 'ws') + `/monitor/${setupToken}`;
+      const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
         setIsConnected(true);
@@ -89,7 +91,8 @@ export function LiveLog({ setupToken, deviceId }: LiveLogProps) {
     // 5초마다 폴링
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/provisioning/status/${setupToken}`);
+        const bridgeUrl = 'http://localhost:3001';  // 하드코딩으로 임시 수정
+        const response = await fetch(`${bridgeUrl}/api/provisioning/status/${setupToken}`);
         if (response.ok) {
           const data = await response.json();
           if (data.device_id) {

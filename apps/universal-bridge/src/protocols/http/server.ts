@@ -8,6 +8,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
 
 /**
  * HTTP 서버 생성
@@ -19,6 +21,7 @@ import helmet from 'helmet';
  */
 export function createHttpServer() {
   const app = express();
+  const server = createServer(app);
 
   // 미들웨어
   app.use(helmet());
@@ -297,9 +300,49 @@ export function createHttpServer() {
 
   // 명령 조회 (디바이스 → 서버)
   app.get('/api/bridge/commands/:deviceId', async (req, res) => {
-    // HTTP 폴링용 (WebSocket 미지원 디바이스)
-    // TODO: DB에서 대기 중인 명령 조회
-    res.json({ commands: [] });
+    try {
+      const { deviceId } = req.params;
+      
+      // TODO: DB에서 대기 중인 명령 조회
+      // 임시로 샘플 명령 반환
+      const commands = [
+        {
+          id: 'cmd_001',
+          type: 'relay_control',
+          device_id: deviceId,
+          action: 'set_relay',
+          params: { relay: 1, state: 'on' },
+          created_at: new Date().toISOString()
+        }
+      ];
+      
+      res.json({ 
+        commands: commands,
+        message: '대기 중인 명령이 있습니다.'
+      });
+    } catch (error: any) {
+      console.error('[API] Commands error:', error);
+      res.status(500).json({ error: error.message || 'Failed to get commands' });
+    }
+  });
+
+  // 프로비저닝 상태 조회
+  app.get('/api/provisioning/status/:setupToken', async (req, res) => {
+    try {
+      const { setupToken } = req.params;
+      
+      // TODO: DB에서 setup token으로 디바이스 조회
+      // 임시로 성공 응답 반환
+      res.json({
+        setup_token: setupToken,
+        status: 'active',
+        device_id: null,  // 아직 바인딩되지 않음
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()  // 10분 후 만료
+      });
+    } catch (error: any) {
+      console.error('[API] Status error:', error);
+      res.status(500).json({ error: error.message || 'Failed to get status' });
+    }
   });
 
   // 명령 ACK (디바이스 → 서버)
@@ -325,6 +368,42 @@ export function createHttpServer() {
     res.status(500).json({ error: 'Internal Server Error' });
   });
 
-  return app;
+  // WebSocket 서버 설정
+  const wss = new WebSocketServer({ server });
+  
+  wss.on('connection', (ws, req) => {
+    const url = new URL(req.url || '', `http://${req.headers.host}`);
+    const pathname = url.pathname;
+    
+    console.log('[WebSocket] Client connected:', pathname);
+    
+    if (pathname.startsWith('/monitor/')) {
+      // 모니터링 연결: /monitor/:setup_token
+      const setupToken = pathname.split('/monitor/')[1];
+      console.log(`[WebSocket] Monitor connected: ${setupToken}`);
+      
+      // 모니터링 메시지 전송
+      ws.send(JSON.stringify({
+        type: 'log',
+        level: 'info',
+        message: '연결 모니터링 시작',
+        timestamp: new Date().toISOString()
+      }));
+    } else if (pathname === '/test') {
+      // 테스트 연결
+      console.log('[WebSocket] Test connection');
+      ws.send(JSON.stringify({
+        type: 'test',
+        message: 'WebSocket 연결 성공',
+        timestamp: new Date().toISOString()
+      }));
+    }
+    
+    ws.on('close', () => {
+      console.log('[WebSocket] Client disconnected');
+    });
+  });
+
+  return { app, server };
 }
 
