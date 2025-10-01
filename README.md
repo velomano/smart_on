@@ -357,3 +357,4 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 # Vercel 배포 테스트
 # Vercel Root Directory 설정 테스트
 # web-admin Git 연결 테스트
+# web-admin Git 연결 성공 테스트
