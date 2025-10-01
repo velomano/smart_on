@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { QRCodeCard } from './QRCodeCard';
+import toast, { Toaster } from 'react-hot-toast';
 
 type Step = 'device-select' | 'protocol-select' | 'code-generate' | 'monitor';
 
@@ -28,6 +29,9 @@ export function ConnectWizard() {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Toast Container */}
+      <Toaster position="top-center" />
+      
       {/* Progress Indicator */}
       <div className="mb-8">
         <StepIndicator current={currentStep} />
@@ -363,20 +367,43 @@ if __name__ == "__main__":
     return '// 코드 생성 준비 중...';
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(generatedCode);
-    alert('코드가 클립보드에 복사되었습니다!');
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedCode);
+      toast.success('✅ 코드가 클립보드에 복사되었습니다!', {
+        duration: 3000,
+        style: {
+          background: '#10B981',
+          color: '#fff',
+        },
+      });
+    } catch (err) {
+      toast.error('❌ 복사에 실패했습니다.');
+    }
   };
 
   const handleDownload = () => {
-    const ext = config.device === 'raspberry-pi' ? 'py' : 'ino';
-    const filename = `smartfarm_device.${ext}`;
-    const blob = new Blob([generatedCode], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
+    try {
+      const ext = config.device === 'raspberry-pi' ? 'py' : 'ino';
+      const filename = `smartfarm_device.${ext}`;
+      const blob = new Blob([generatedCode], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success(`📥 ${filename} 다운로드 완료!`, {
+        duration: 3000,
+        style: {
+          background: '#059669',
+          color: '#fff',
+        },
+      });
+    } catch (err) {
+      toast.error('❌ 다운로드에 실패했습니다.');
+    }
   };
 
   if (loading) {
