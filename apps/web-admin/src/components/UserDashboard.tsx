@@ -32,19 +32,34 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ user, farms, devices, sensors, sensorReadings }: UserDashboardProps) {
-  // 농장별 색상 생성 함수
+  // 농장별 색상 생성 함수 (농장관리 페이지와 동일한 순서)
   const getFarmColor = (farmId: string) => {
     const colors = [
       'text-blue-600', 'text-green-600', 'text-purple-600', 'text-red-600',
       'text-orange-600', 'text-indigo-600', 'text-pink-600', 'text-teal-600',
       'text-cyan-600', 'text-emerald-600', 'text-violet-600', 'text-rose-600'
     ];
-    // 농장 ID를 기반으로 일관된 색상 할당
+    // 농장 ID를 기반으로 일관된 색상 할당 (농장관리 페이지와 동일한 해시 함수)
     const hash = farmId.split('').reduce((a, b) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0);
     return colors[Math.abs(hash) % colors.length];
+  };
+
+  // 농장별 색상 바 그라데이션 생성 함수
+  const getFarmGradient = (farmId: string) => {
+    const gradients = [
+      'from-blue-500 to-blue-600', 'from-green-500 to-green-600', 'from-purple-500 to-purple-600', 'from-red-500 to-red-600',
+      'from-orange-500 to-orange-600', 'from-indigo-500 to-indigo-600', 'from-pink-500 to-pink-600', 'from-teal-500 to-teal-600',
+      'from-cyan-500 to-cyan-600', 'from-emerald-500 to-emerald-600', 'from-violet-500 to-violet-600', 'from-rose-500 to-rose-600'
+    ];
+    // 농장 ID를 기반으로 일관된 그라데이션 할당
+    const hash = farmId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return gradients[Math.abs(hash) % gradients.length];
   };
   const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0 });
   const [weatherData, setWeatherData] = useState({
@@ -712,22 +727,21 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                     : 'border-gray-200'
                 }`}>
                     {/* 농장 헤더 */}
-                    <div className="flex items-center justify-between mb-2 sm:mb-3">
-                      <div className="flex items-center space-x-2 sm:space-x-3">
-                        <div>
-                            <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <h4 className={`text-2xl lg:text-3xl font-bold whitespace-nowrap ${getFarmColor(farm.id)}`}>{farm.name}</h4>
-                            <span className="text-gray-500 font-normal text-xs">🏷️ {farm.id}</span>
-                          </div>
-                          <div className="flex items-center space-x-2 sm:space-x-3">
-                            <span className="text-sm text-blue-600 font-semibold">
+                    <div className={`bg-gradient-to-r ${getFarmGradient(farm.id)} rounded-xl p-4 mb-4`}>
+                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center space-x-6">
+                          <h4 className="text-2xl lg:text-3xl font-bold text-white whitespace-nowrap">{farm.name}</h4>
+                          <div className="flex items-center space-x-4">
+                            <p className="text-white/90 font-medium text-sm">📍 {farm.location || '위치 정보 없음'}</p>
+                            <span className="text-sm text-white/90 font-semibold">
                               📊 총 {farm.visibleDevices.length}개 베드
                             </span>
                             {farmHasAlerts ? (
                               <div className="flex items-center space-x-2">
-                                <div className="flex items-center space-x-1 px-2 py-1 bg-red-100 border border-red-300 rounded-full">
-                                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                                  <span className="text-xs text-red-700 font-bold">
+                                <div className="flex items-center space-x-1 px-2 py-1 bg-red-500/30 border border-red-300 rounded-full backdrop-blur-sm">
+                                  <div className="w-2 h-2 bg-red-300 rounded-full animate-pulse"></div>
+                                  <span className="text-xs text-white font-bold">
                                     ⚠️ {farmAlerts.length}개 알림
                                     {criticalAlerts > 0 && ` (긴급 ${criticalAlerts}개)`}
                                     {highAlerts > 0 && ` (높음 ${highAlerts}개)`}
@@ -737,28 +751,28 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                             ) : (
                               <div className="flex items-center space-x-1">
                                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                                <span className="text-xs text-gray-500">활성</span>
+                                <span className="text-xs text-white/80">활성</span>
                               </div>
                             )}
                           </div>
                         </div>
+                        
+                        {/* 농장별 관리 버튼들 */}
+                        <div className="flex items-center space-x-2">
+                          {canManageFarms && (
+                            <button
+                              onClick={() => {
+                                // 클릭된 농장의 ID를 직접 사용 (항상 해당 농장 관리로 이동)
+                                router.push(`/beds?farm=${farm.id}`);
+                              }}
+                              className="bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-white/30 transition-all duration-200 whitespace-nowrap border border-white/30"
+                            >
+                              농장 관리
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      
-                      {/* 농장별 관리 버튼들 */}
-                      <div className="flex items-center space-x-2">
-                        {canManageFarms && (
-                          <button
-                            onClick={() => {
-                              // 클릭된 농장의 ID를 직접 사용 (항상 해당 농장 관리로 이동)
-                              router.push(`/beds?farm=${farm.id}`);
-                            }}
-                            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200 whitespace-nowrap"
-                          >
-                            농장 관리
-                          </button>
-                        )}
                     </div>
-                  </div>
 
                   {/* 농장에 속한 베드들 - 개별 카드로 변환하고 공간 없이 꽉채우기 */}
                   <div className="space-y-2 sm:space-y-3">
@@ -982,8 +996,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
 
                 </div>
                   );
-                });
-              })()}
+                })}
             </div>
           </div>
         </div>

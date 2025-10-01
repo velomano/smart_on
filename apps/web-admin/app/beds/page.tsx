@@ -21,6 +21,46 @@ import { getBedNoteStats, getTagColor } from '../../src/lib/bedNotes';
 function BedsManagementContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  
+  // 농장별 색상 생성 함수 (대시보드와 동일)
+  const getFarmColor = (farmId: string) => {
+    const colors = [
+      'text-blue-600', 'text-green-600', 'text-purple-600', 'text-red-600',
+      'text-orange-600', 'text-indigo-600', 'text-pink-600', 'text-teal-600',
+      'text-cyan-600', 'text-emerald-600', 'text-violet-600', 'text-rose-600'
+    ];
+    const hash = farmId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const getFarmBgColor = (farmId: string) => {
+    const bgColors = [
+      'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-red-500',
+      'bg-orange-500', 'bg-indigo-500', 'bg-pink-500', 'bg-teal-500',
+      'bg-cyan-500', 'bg-emerald-500', 'bg-violet-500', 'bg-rose-500'
+    ];
+    const hash = farmId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return bgColors[Math.abs(hash) % bgColors.length];
+  };
+
+  const getFarmHoverColor = (farmId: string) => {
+    const hoverColors = [
+      'hover:bg-blue-50', 'hover:bg-green-50', 'hover:bg-purple-50', 'hover:bg-red-50',
+      'hover:bg-orange-50', 'hover:bg-indigo-50', 'hover:bg-pink-50', 'hover:bg-teal-50',
+      'hover:bg-cyan-50', 'hover:bg-emerald-50', 'hover:bg-violet-50', 'hover:bg-rose-50'
+    ];
+    const hash = farmId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return hoverColors[Math.abs(hash) % hoverColors.length];
+  };
   const [user, setUser] = useState<AuthUser | null>(null);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -944,8 +984,8 @@ function BedsManagementContent() {
                     onClick={() => setSelectedFarmTab(farm.id)}
                     className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
                       selectedFarmTab === farm.id
-                        ? 'bg-green-500 text-white shadow-lg'
-                        : 'bg-white/80 text-gray-600 hover:bg-green-50'
+                        ? `${getFarmBgColor(farm.id)} text-white shadow-lg`
+                        : `bg-white/80 text-gray-600 ${getFarmHoverColor(farm.id)}`
                     }`}
                   >
                     {farm.name} ({asArray(devices).filter(d => d.farm_id === farm.id && d.type === 'sensor_gateway').length}개 베드)
@@ -1046,53 +1086,55 @@ function BedsManagementContent() {
               return farmGroups.map(({ farm, devices }) => (
                 <div key={farm.id} className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border border-white/30 rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300">
                   {/* 농장 헤더 */}
-                  <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <h4 className="text-2xl font-bold text-gray-600">{farm.name}</h4>
-                        <p className="text-gray-600 font-medium text-lg">📍 {farm.location || '위치 정보 없음'}</p>
-                        <div className="mt-2 flex items-center space-x-4">
-                          <span className="text-sm text-blue-600 font-semibold">
-                            📊 총 {devices.length}개 베드
-                          </span>
-                          <div className="flex items-center space-x-1">
-                            {(() => {
-                              // 해당 농장의 디바이스들 중 센서가 연결된 것이 있는지 확인
-                              const hasActiveSensors = devices.some(device => {
-                                const deviceSensors = sensors.filter(s => s.device_id === device.id);
-                                return deviceSensors.some(sensor => {
-                                  const reading = sensorReadings.find(r => r.sensor_id === sensor.id);
-                                  return !!reading;
+                  <div className={`bg-gradient-to-r ${getFarmBgColor(farm.id).replace('bg-', 'from-')} ${getFarmBgColor(farm.id).replace('bg-', 'to-').replace('-500', '-600')} rounded-xl p-4 mb-4`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center space-x-6">
+                          <h4 className="text-2xl font-bold text-white">{farm.name}</h4>
+                          <div className="flex items-center space-x-4">
+                            <p className="text-white/90 font-medium text-sm">📍 {farm.location || '위치 정보 없음'}</p>
+                            <span className="text-sm text-white/90 font-semibold">
+                              📊 총 {devices.length}개 베드
+                            </span>
+                            <div className="flex items-center space-x-1">
+                              {(() => {
+                                // 해당 농장의 디바이스들 중 센서가 연결된 것이 있는지 확인
+                                const hasActiveSensors = devices.some(device => {
+                                  const deviceSensors = sensors.filter(s => s.device_id === device.id);
+                                  return deviceSensors.some(sensor => {
+                                    const reading = sensorReadings.find(r => r.sensor_id === sensor.id);
+                                    return !!reading;
+                                  });
                                 });
-                              });
-                              
-                              return (
-                                <>
-                                  <div 
-                                    className={`w-2 h-2 rounded-full ${hasActiveSensors ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}
-                                  ></div>
-                                  <span className="text-xs text-gray-500">
-                                    {hasActiveSensors ? '활성' : '비활성'}
-                                  </span>
-                                </>
-                              );
-                            })()}
+                                
+                                return (
+                                  <>
+                                    <div 
+                                      className={`w-2 h-2 rounded-full ${hasActiveSensors ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`}
+                                    ></div>
+                                    <span className="text-xs text-white/80">
+                                      {hasActiveSensors ? '활성' : '비활성'}
+                                    </span>
+                                  </>
+                                );
+                              })()}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                        </div>
+                        {/* 농장 편집 버튼 */}
+                        {user && user.role !== 'team_member' && (
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() => handleEditFarm(farm)}
+                              className="bg-white/20 backdrop-blur-sm text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold shadow-lg hover:bg-white/30 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 border border-white/30"
+                            >
+                              <span>✏️</span>
+                              <span>농장 편집</span>
+                            </button>
+                          </div>
+                        )}
                     </div>
-                    {/* 농장 편집 버튼 */}
-                    {user && user.role !== 'team_member' && (
-                      <div className="flex items-center space-x-3">
-                        <button
-                          onClick={() => handleEditFarm(farm)}
-                          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
-                        >
-                          <span>✏️</span>
-                          <span>농장 편집</span>
-                        </button>
-                      </div>
-                    )}
                   </div>
 
                   {/* 농장에 속한 베드들 */}
