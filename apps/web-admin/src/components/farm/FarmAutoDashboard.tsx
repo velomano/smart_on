@@ -115,7 +115,7 @@ export function FarmAutoDashboard({ farmId }: FarmAutoDashboardProps) {
 
       {/* 디바이스별 섹션 */}
       {data.devices.map((device: any) => (
-        <DeviceSection key={device.device_uuid} device={device} />
+        <DeviceSection key={device.device_uuid} device={device} farmId={farmId} />
       ))}
     </div>
   );
@@ -125,9 +125,10 @@ export function FarmAutoDashboard({ farmId }: FarmAutoDashboardProps) {
 
 interface DeviceSectionProps {
   device: any;
+  farmId: string;
 }
 
-function DeviceSection({ device }: DeviceSectionProps) {
+function DeviceSection({ device, farmId }: DeviceSectionProps) {
   const { device_id, profile, template, model, online, last_seen_at, warnings } = device;
 
   return (
@@ -172,7 +173,8 @@ function DeviceSection({ device }: DeviceSectionProps) {
       <TemplateRenderer 
         template={template} 
         deviceId={device_id} 
-        model={model} 
+        model={model}
+        farmId={farmId}
       />
     </div>
   );
@@ -184,9 +186,10 @@ interface TemplateRendererProps {
   template: any;
   deviceId: string;
   model: any;
+  farmId: string;
 }
 
-function TemplateRenderer({ template, deviceId, model }: TemplateRendererProps) {
+function TemplateRenderer({ template, deviceId, model, farmId }: TemplateRendererProps) {
   if (!template?.cards || template.cards.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -203,7 +206,7 @@ function TemplateRenderer({ template, deviceId, model }: TemplateRendererProps) 
 
         return (
           <div key={index} className={colSpanClass}>
-            {renderCard(card, deviceId, model)}
+            {renderCard(card, deviceId, model, farmId)}
           </div>
         );
       })}
@@ -211,13 +214,13 @@ function TemplateRenderer({ template, deviceId, model }: TemplateRendererProps) 
   );
 }
 
-function renderCard(card: any, deviceId: string, model: any) {
+function renderCard(card: any, deviceId: string, model: any, farmId: string) {
   switch (card.type) {
     case 'line-chart':
-      return <LineChartCard series={card.series} deviceId={deviceId} model={model} />;
+      return <LineChartCard series={card.series} deviceId={deviceId} model={model} farmId={farmId} />;
     
     case 'gauge':
-      return <GaugeCard metric={card.metric} thresholds={card.thresholds} deviceId={deviceId} model={model} />;
+      return <GaugeCard metric={card.metric} thresholds={card.thresholds} deviceId={deviceId} model={model} farmId={farmId} />;
     
     case 'actuator':
       return <ActuatorPanel spec={card} deviceId={deviceId} model={model} />;
@@ -256,10 +259,46 @@ function LineChartCard({ series, deviceId, model }: any) {
   );
 }
 
-function GaugeCard({ metric, thresholds, deviceId, model }: any) {
+function GaugeCard({ metric, thresholds, deviceId, model, farmId }: any) {
+  const [sensorValue, setSensorValue] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const sensor = model?.sensors?.find((s: any) => 
     s.canonical_key === metric || s.key === metric
   );
+  
+  useEffect(() => {
+    if (!sensor || !farmId) return;
+
+    const fetchValue = async () => {
+      try {
+        const res = await fetch(
+          `/api/farms/${farmId}/sensors/latest?deviceId=${deviceId}&keys=${metric}`,
+          { cache: 'no-store' }
+        );
+        
+        if (res.ok) {
+          const data = await res.json();
+          setSensorValue(data[metric]);
+          setError('');
+        } else {
+          setError('데이터 소스 일시 중단');
+        }
+        setLoading(false);
+      } catch (err: any) {
+        setError('연결 오류');
+        setLoading(false);
+      }
+    };
+
+    fetchValue();
+    
+    // 5초마다 갱신
+    const interval = setInterval(fetchValue, 5000);
+    
+    return () => clearInterval(interval);
+  }, [sensor, deviceId, metric, farmId]);
   
   if (!sensor) {
     return (
@@ -269,11 +308,46 @@ function GaugeCard({ metric, thresholds, deviceId, model }: any) {
     );
   }
 
+  // Threshold 색상 결정
+  let bgColor = 'from-blue-50 to-blue-100';
+  let borderColor = 'border-blue-200';
+  let valueColor = 'text-blue-600';
+  
+  if (sensorValue && thresholds) {
+    const value = sensorValue.value;
+    if (thresholds.danger && value >= thresholds.danger) {
+      bgColor = 'from-red-50 to-red-100';
+      borderColor = 'border-red-300';
+      valueColor = 'text-red-600';
+    } else if (thresholds.warn && value >= thresholds.warn) {
+      bgColor = 'from-yellow-50 to-yellow-100';
+      borderColor = 'border-yellow-300';
+      valueColor = 'text-yellow-600';
+    }
+  }
+
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+    <div className={`bg-gradient-to-br ${bgColor} border ${borderColor} rounded-lg p-4`}>
       <h3 className="font-bold mb-2">{sensor.label || sensor.key}</h3>
-      <div className="text-3xl font-bold text-blue-600 mb-1">--</div>
-      <div className="text-sm text-gray-600">{sensor.display_unit || sensor.unit}</div>
+      
+      {loading ? (
+        <div className="text-2xl text-gray-400 mb-1">로딩...</div>
+      ) : error ? (
+        <div className="text-sm text-red-600 mb-1">⚠️ {error}</div>
+      ) : sensorValue ? (
+        <>
+          <div className={`text-3xl font-bold ${valueColor} mb-1`}>
+            {sensorValue.value.toFixed(1)}
+          </div>
+          <div className="text-sm text-gray-600">{sensorValue.unit || sensor.unit}</div>
+          <div className="text-xs text-gray-400 mt-1">
+            {new Date(sensorValue.ts).toLocaleTimeString('ko-KR')}
+          </div>
+        </>
+      ) : (
+        <div className="text-2xl text-gray-400 mb-1">--</div>
+      )}
+      
       {thresholds && (
         <div className="text-xs text-gray-500 mt-2">
           {thresholds.warn && `⚠️ ${thresholds.warn}${sensor.unit}`}

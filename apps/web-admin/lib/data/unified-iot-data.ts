@@ -246,6 +246,76 @@ export async function sendUnifiedCommand(
 }
 
 // =====================================================
+// Get Latest Sensor Value (단일 센서 최신값)
+// =====================================================
+
+export async function getLatestSensorValue(
+  farmId: string,
+  deviceId: string,
+  key: string
+): Promise<{ value: number; unit: string; ts: string } | null> {
+  const supabase = await createClient();
+
+  // 1. Universal Bridge 우선 (최신 1개)
+  const { data: ubReading } = await supabase
+    .from('iot_readings')
+    .select(`
+      value,
+      unit,
+      ts,
+      iot_devices!inner(device_id, farm_id)
+    `)
+    .eq('iot_devices.farm_id', farmId)
+    .eq('iot_devices.device_id', deviceId)
+    .eq('key', key)
+    .order('ts', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (ubReading) {
+    return {
+      value: ubReading.value,
+      unit: ubReading.unit || '',
+      ts: ubReading.ts,
+    };
+  }
+
+  // 2. MQTT Bridge Fallback (TODO: 기존 MQTT 데이터)
+  // const mqttValue = await getMqttLatest(farmId, deviceId, key);
+  // if (mqttValue) return mqttValue;
+
+  // 3. Tuya Fallback (TODO: 기존 Tuya 데이터)
+  // const tuyaValue = await getTuyaLatest(farmId, deviceId, key);
+  // if (tuyaValue) return tuyaValue;
+
+  return null;
+}
+
+// =====================================================
+// Get Latest Sensor Values (배치 조회)
+// =====================================================
+
+export async function getLatestSensorValues(
+  farmId: string,
+  deviceId: string,
+  keys: string[]
+): Promise<Record<string, { value: number; unit: string; ts: string }>> {
+  const result: Record<string, any> = {};
+
+  // 병렬로 모든 키 조회
+  const promises = keys.map(async (key) => {
+    const value = await getLatestSensorValue(farmId, deviceId, key);
+    if (value) {
+      result[key] = value;
+    }
+  });
+
+  await Promise.all(promises);
+
+  return result;
+}
+
+// =====================================================
 // Helper Functions
 // =====================================================
 
@@ -265,5 +335,61 @@ function deduplicateSensors(sensors: UnifiedSensor[]): UnifiedSensor[] {
   }
   
   return Array.from(map.values());
+}
+
+// =====================================================
+// Key Normalization (정규화)
+// =====================================================
+
+const KEY_MAPPING: Record<string, string> = {
+  temperature: 'temp',
+  humidity: 'hum',
+  co2: 'co2',
+  // 추가 매핑 정의
+};
+
+export function normalizeKey(key: string): string {
+  return KEY_MAPPING[key.toLowerCase()] || key;
+}
+
+// =====================================================
+// MQTT Bridge Integration (TODO)
+// =====================================================
+
+async function getMqttLatest(
+  farmId: string,
+  deviceId: string,
+  key: string
+): Promise<{ value: number; unit: string; ts: string } | null> {
+  // TODO: 기존 MQTT Bridge 데이터 조회
+  // const supabase = await createClient();
+  // const { data } = await supabase
+  //   .from('sensor_readings')  // 기존 MQTT 테이블
+  //   .select('value, unit, timestamp')
+  //   .eq('farm_id', farmId)
+  //   .eq('device_id', deviceId)
+  //   .eq('sensor_type', key)
+  //   .order('timestamp', { ascending: false })
+  //   .limit(1)
+  //   .maybeSingle();
+  // 
+  // if (data) {
+  //   return {
+  //     value: data.value,
+  //     unit: data.unit,
+  //     ts: data.timestamp,
+  //   };
+  // }
+
+  return null;
+}
+
+async function getTuyaLatest(
+  farmId: string,
+  deviceId: string,
+  key: string
+): Promise<{ value: number; unit: string; ts: string } | null> {
+  // TODO: Tuya API 데이터 조회
+  return null;
 }
 
