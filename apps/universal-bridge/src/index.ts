@@ -4,6 +4,7 @@
  * Main Entry Point
  */
 
+import 'dotenv/config';
 import { createHttpServer } from './protocols/http/server.js';
 import { createWebSocketServer } from './protocols/websocket/server.js';
 import { UniversalMessageBus } from './core/messagebus.js';

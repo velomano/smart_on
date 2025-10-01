@@ -9,7 +9,7 @@ import type { Reading } from '../types.js';
 
 export interface ReadingRecord {
   tenant_id: string;
-  device_id: string;  // UUID
+  device_id: string;  // UUID (iot_devices.id)
   ts: string;
   key: string;
   value: number;
@@ -21,17 +21,21 @@ export interface ReadingRecord {
 
 /**
  * 센서 데이터 배치 저장
+ * 
+ * @param tenantId - 테넌트 ID
+ * @param deviceUuid - 디바이스 UUID (iot_devices.id)
+ * @param readings - 센서 데이터 배열
  */
 export async function insertReadings(
   tenantId: string,
-  deviceId: string,
+  deviceUuid: string,  // iot_devices.id (UUID)
   readings: Reading[]
 ) {
   const supabase = getSupabase();
   
   const records: ReadingRecord[] = readings.map(reading => ({
     tenant_id: tenantId,
-    device_id: deviceId,
+    device_id: deviceUuid,  // UUID 사용
     ts: reading.ts,
     key: reading.key,
     value: reading.value,
