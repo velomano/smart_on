@@ -134,11 +134,19 @@ export default function UserDashboard({
         const today = new Date().toISOString().split('T')[0];
         
         // 오늘 생성된 레시피 개수 계산
-        const todayCount = allResult.recipes?.filter((recipe: any) => {
+        console.log('🔍 레시피 통계 계산 - 오늘 날짜:', today);
+        console.log('🔍 레시피 통계 계산 - 전체 레시피 수:', allResult.recipes?.length || 0);
+        
+        const todayRecipes = allResult.recipes?.filter((recipe: any) => {
           if (!recipe.created_at) return false;
           const recipeDate = new Date(recipe.created_at).toISOString().split('T')[0];
+          console.log('🔍 레시피 날짜 확인:', recipe.crop, recipeDate, '===', today, '?', recipeDate === today);
           return recipeDate === today;
-        }).length || 0;
+        }) || [];
+        
+        const todayCount = todayRecipes.length;
+        console.log('🔍 레시피 통계 계산 - 오늘 생성된 레시피:', todayCount, '개');
+        console.log('🔍 레시피 통계 계산 - 오늘 레시피 목록:', todayRecipes.map(r => `${r.crop} (${r.created_at})`));
         
         setRecipeStats({
           total: totalResult.pagination?.total || 0,
