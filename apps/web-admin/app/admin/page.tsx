@@ -460,7 +460,9 @@ export default function AdminPage() {
                         : '농장별 사용자 보기'}
                     </h1>
                     <div className="text-white/90 text-sm sm:text-base font-semibold">
-                      총 {activeTab === 'pending' ? pendingUsers.length : activeTab === 'approved' ? approvedUsers.length : Object.values(usersByFarm).reduce((total, farm) => total + farm.users.length, 0)}명
+                      {activeTab === 'pending' ? `총 ${pendingUsers.length}명` : 
+                       activeTab === 'approved' ? `총 ${approvedUsers.length}명` : 
+                       `${Object.keys(usersByFarm).length}개 농장`}
                     </div>
                   </div>
                   <p className="text-white/90 text-xs sm:text-sm lg:text-base hidden sm:block">
@@ -670,9 +672,6 @@ export default function AdminPage() {
               {/* 농장별 */}
               {activeTab === 'farms' && (
                 <div>
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="text-sm text-gray-500">{Object.keys(usersByFarm).length}개 농장</div>
-                  </div>
 
                   <div className="space-y-8">
                     {Object.entries(usersByFarm).map(([farmName, farmData]) => (
