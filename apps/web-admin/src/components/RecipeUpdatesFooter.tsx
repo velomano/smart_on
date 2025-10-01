@@ -286,7 +286,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
 
       {/* 상세 보기 모달 */}
       {showDetailModal && selectedRecipe && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4 rounded-t-xl">
               <div className="flex items-center justify-between">
