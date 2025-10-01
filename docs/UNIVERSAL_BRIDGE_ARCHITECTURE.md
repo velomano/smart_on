@@ -410,12 +410,30 @@ async function toggleDevice(deviceId: string, action: string) {
 
 **구현 시간:** 2-3일
 
-### 📌 **우선순위 3: 네이티브 앱 API** (별도)
+### 📌 **우선순위 3: 프로비저닝 전용 앱** (IoT 연결 도구)
 
-**장점:**
-- ✅ 스마트폰으로 제어
-- ✅ 푸시 알림
-- ✅ 사용자 친화적
+**목적:** 스마트폰을 IoT 디바이스 설정 도구로 사용
+- ✅ WiFi/BLE로 디바이스 자격 증명 전달
+- ✅ 농장 ID 자동 바인딩
+- ✅ QR 스캔 → 자동 프로비저닝
+- ✅ **제어 기능 없음** (웹 어드민이 담당)
+
+**사용 시나리오:**
+```
+시나리오 A: 농장 먼저 생성
+1. 웹 어드민에서 농장 생성
+2. 앱 실행 → 농장 ID 선택
+3. 새 IoT 디바이스 스캔/연결
+4. WiFi 정보 + 농장 ID 전달
+5. 디바이스 자동 등록 완료
+
+시나리오 B: 디바이스 먼저 연결
+1. 앱 실행 → IoT 디바이스 연결
+2. 디바이스 정보 임시 저장
+3. 웹 어드민에서 농장 생성
+4. 대기 중인 디바이스 → 농장 할당
+5. 바인딩 완료
+```
 
 **구현 시간:** 1주일
 
@@ -894,10 +912,1319 @@ Arduino 연결 가이드
 
 ---
 
+---
+
+## 🏗️ **v2.0 Production-Ready 설계**
+
+### 📐 **개요**
+
+기존 사용자 친화성 중심 설계에 **프로덕션 레벨의 보안, 신뢰성, 확장성**을 추가한 통합 설계
+
+### 🔐 **1. 디바이스 신원 & 프로비저닝**
+
+#### **Claim → Bind → Rotate 3단계 보안**
+
+```typescript
+// 1단계: Claim (클레임)
+interface SetupToken {
+  token: string;              // 10분 유효 임시 토큰
+  tenant_id: string;          // 테넌트 범위 제한
+  farm_id?: string;           // 선택적 농장 제한
+  ip_whitelist?: string[];    // IP 제한 (옵션)
+  user_agent?: string;        // User-Agent 제한 (옵션)
+  expires_at: Date;           // 만료 시간
+}
+
+// 웹 마법사에서 발급
+POST /api/provisioning/claim
+{
+  "tenant_id": "tenant-xxx",
+  "farm_id": "farm-yyy",
+  "ttl": 600  // 10분
+}
+
+Response:
+{
+  "setup_token": "ST_xxxxxxxxxxxx",
+  "expires_at": "2025-10-01T18:50:00Z",
+  "qr_code": "data:image/png;base64,..."
+}
+```
+
+```typescript
+// 2단계: Bind (바인딩)
+// 디바이스가 Setup-Token으로 최초 등록
+POST /api/provisioning/bind
+Headers:
+  x-setup-token: ST_xxxxxxxxxxxx
+Body:
+{
+  "device_id": "esp32-abc123",
+  "device_type": "esp32",
+  "capabilities": ["temperature", "humidity"],
+  "public_key": "..." // 옵션: X.509 사용 시
+}
+
+Response:
+{
+  "device_key": "DK_yyyyyyyyyyyy",  // 영구 PSK (Pre-Shared Key)
+  "tenant_id": "tenant-xxx",
+  "farm_id": "farm-yyy",
+  "server_url": "https://bridge.smartfarm.app",
+  "mqtt_broker": "mqtts://mqtt.smartfarm.app:8883"  // 옵션
+}
+```
+
+```typescript
+// 3단계: Rotate (키 회전)
+// 키 유출/교체 시 무중단 교체
+POST /api/provisioning/rotate
+Headers:
+  x-device-id: esp32-abc123
+  x-device-key: DK_yyyyyyyyyyyy  // 현재 키
+Body:
+{
+  "reason": "scheduled_rotation" | "key_compromised"
+}
+
+Response:
+{
+  "new_device_key": "DK_zzzzzzzzzz",
+  "grace_period": 3600,  // 1시간 유예 (두 키 모두 유효)
+  "expires_at": "2025-10-01T19:50:00Z"
+}
+```
+
+#### **인증 방식 선택**
+
+##### **기본: PSK + HMAC-SHA256**
+```typescript
+// 모든 요청에 서명 헤더 포함
+Headers:
+  x-device-id: esp32-abc123
+  x-signature: HMAC-SHA256(device_key, body + timestamp)
+  x-timestamp: 1696176000
+  x-tenant-id: tenant-xxx
+
+// 서버 검증
+function verifySignature(req: Request): boolean {
+  const { device_id, signature, timestamp, tenant_id } = req.headers;
+  
+  // 1. Timestamp 검증 (5분 이내)
+  if (Date.now() - timestamp > 300000) return false;
+  
+  // 2. Device Key 조회 (tenant_id 스코프)
+  const device_key = await getDeviceKey(device_id, tenant_id);
+  
+  // 3. 서명 검증
+  const expected = hmacSHA256(device_key, req.body + timestamp);
+  return signature === expected;
+}
+```
+
+##### **고급: X.509 인증서 (ESP32)**
+```typescript
+// ESP32 Secure Element 사용
+interface DeviceCertificate {
+  cert_pem: string;           // X.509 인증서
+  private_key: "secure";      // Secure Element 저장
+  ca_cert: string;            // 루트 CA
+}
+
+// mTLS 연결
+const tlsOptions = {
+  cert: fs.readFileSync('device.crt'),
+  key: 'secure_element',
+  ca: fs.readFileSync('ca.crt')
+};
+```
+
+##### **JWT 방식 (선택)**
+```typescript
+// 테넌트별 SigningKey (KMS 관리)
+interface DeviceJWT {
+  sub: string;        // device_id
+  tenant_id: string;
+  farm_id: string;
+  iat: number;
+  exp: number;
+}
+
+// 발급
+const jwt = signJWT(deviceInfo, tenantSigningKey);
+
+// 검증
+const decoded = verifyJWT(jwt, tenantSigningKey);
+```
+
+---
+
+### 🏢 **2. 멀티테넌트 & 권한**
+
+#### **Supabase RLS 정책**
+
+```sql
+-- devices 테이블 파티셔닝
+CREATE TABLE devices (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  farm_id UUID REFERENCES farms(id),
+  device_id TEXT NOT NULL,
+  device_key_hash TEXT NOT NULL,  -- bcrypt 해시
+  profile_id UUID REFERENCES device_profiles(id),
+  fw_version TEXT,
+  last_seen_at TIMESTAMPTZ,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(tenant_id, device_id)
+);
+
+CREATE INDEX idx_devices_tenant_farm ON devices(tenant_id, farm_id);
+CREATE INDEX idx_devices_last_seen ON devices(last_seen_at) WHERE status = 'active';
+
+-- RLS 정책
+ALTER TABLE devices ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Tenant isolation" ON devices
+  USING (tenant_id = current_tenant_id());
+
+-- device_claims 테이블 (Setup Token)
+CREATE TABLE device_claims (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL,
+  setup_token_hash TEXT NOT NULL,  -- bcrypt
+  farm_id UUID,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at TIMESTAMPTZ,
+  used_by_device_id TEXT,
+  ip_bound INET[],
+  created_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_claims_expires ON device_claims(expires_at) WHERE used_at IS NULL;
+
+-- readings 테이블
+CREATE TABLE readings (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL,
+  device_id UUID NOT NULL REFERENCES devices(id),
+  ts TIMESTAMPTZ NOT NULL,
+  key TEXT NOT NULL,
+  value NUMERIC,
+  unit TEXT,
+  raw JSONB,
+  schema_version TEXT DEFAULT 'v1',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_readings_tenant_device_ts ON readings(tenant_id, device_id, ts DESC);
+CREATE INDEX idx_readings_ts ON readings(ts) WHERE ts > NOW() - INTERVAL '7 days';
+
+-- commands 테이블
+CREATE TABLE commands (
+  id UUID PRIMARY KEY,
+  tenant_id UUID NOT NULL,
+  device_id UUID NOT NULL REFERENCES devices(id),
+  msg_id TEXT NOT NULL,  -- Idempotency Key
+  issued_at TIMESTAMPTZ DEFAULT NOW(),
+  type TEXT NOT NULL,
+  payload JSONB,
+  status TEXT DEFAULT 'pending',  -- pending, sent, acked, failed, timeout
+  ack_at TIMESTAMPTZ,
+  retry_count INT DEFAULT 0,
+  last_error TEXT,
+  UNIQUE(tenant_id, msg_id)
+);
+
+CREATE INDEX idx_commands_pending ON commands(tenant_id, device_id, status) 
+  WHERE status IN ('pending', 'sent');
+```
+
+#### **테넌트 간 데이터 격리**
+
+```typescript
+// 마법사 진입 시
+async function generateSetupToken(userId: string): Promise<SetupToken> {
+  // 1. 현재 사용자의 tenant_id 확인
+  const tenant_id = await getCurrentTenantId(userId);
+  
+  // 2. 토큰 생성 (테넌트 스코프)
+  const token = await createSetupToken({
+    tenant_id,
+    farm_id: selectedFarmId,  // 옵션
+    ttl: 600
+  });
+  
+  return token;
+}
+
+// 서버 검증
+async function validateBinding(setupToken: string, deviceInfo: any) {
+  const claim = await getClaim(setupToken);
+  
+  // tenant_id 검증
+  if (claim.tenant_id !== deviceInfo.tenant_id) {
+    throw new Error('Tenant mismatch');
+  }
+  
+  // farm_id → tenant_id 매핑 검증
+  if (deviceInfo.farm_id) {
+    const farm = await getFarm(deviceInfo.farm_id);
+    if (farm.tenant_id !== claim.tenant_id) {
+      throw new Error('Farm not in tenant');
+    }
+  }
+}
+```
+
+---
+
+### 📋 **3. 메시지 스키마 & 버전 관리**
+
+#### **Schema Registry (Zod 기반)**
+
+```typescript
+// schemas/telemetry.v1.ts
+import { z } from 'zod';
+
+export const TelemetryV1 = z.object({
+  device_id: z.string(),
+  readings: z.array(z.object({
+    key: z.string(),
+    value: z.number(),
+    unit: z.enum(['celsius', 'fahrenheit', 'percent', 'ms_cm', 'ph', 'lux']),
+    ts: z.string().datetime(),
+    tier: z.number().int().min(1).max(3).optional()
+  })),
+  schema_version: z.literal('telemetry.v1'),
+  timestamp: z.string().datetime()
+});
+
+export type TelemetryV1 = z.infer<typeof TelemetryV1>;
+
+// schemas/command.v1.ts
+export const CommandV1 = z.object({
+  msg_id: z.string().uuid(),  // Idempotency Key
+  device_id: z.string(),
+  command: z.enum(['on', 'off', 'set_value']),
+  payload: z.record(z.unknown()).optional(),
+  schema_version: z.literal('command.v1'),
+  timestamp: z.string().datetime()
+});
+```
+
+#### **정규화 규칙**
+
+```typescript
+// 단위 표준화
+const UNIT_CONVERSIONS = {
+  // 온도
+  'fahrenheit': (f: number) => ({ value: (f - 32) * 5/9, unit: 'celsius' }),
+  'kelvin': (k: number) => ({ value: k - 273.15, unit: 'celsius' }),
+  
+  // EC
+  'us_cm': (us: number) => ({ value: us / 1000, unit: 'ms_cm' }),
+  
+  // 습도는 항상 percent
+  'rh': (rh: number) => ({ value: rh, unit: 'percent' })
+};
+
+function normalizeReading(reading: any) {
+  const converter = UNIT_CONVERSIONS[reading.unit];
+  if (converter) {
+    return converter(reading.value);
+  }
+  return reading;
+}
+```
+
+#### **호환성 전략**
+
+```typescript
+// 서버는 v1/v2 모두 수락, canonical vX로 저장
+async function processMessage(raw: any) {
+  // 1. 스키마 버전 감지
+  const version = raw.schema_version || 'legacy';
+  
+  // 2. 마이그레이션
+  let canonical: TelemetryV1;
+  switch (version) {
+    case 'legacy':
+      canonical = migrateLegacyToV1(raw);
+      break;
+    case 'telemetry.v1':
+      canonical = TelemetryV1.parse(raw);
+      break;
+    case 'telemetry.v2':
+      canonical = migrateV2ToV1(raw);  // 하위 호환
+      break;
+  }
+  
+  // 3. 정규화
+  canonical.readings = canonical.readings.map(normalizeReading);
+  
+  // 4. 저장
+  await saveToDatabase(canonical);
+}
+```
+
+---
+
+### 🔄 **4. 신뢰성 & 멱등성**
+
+#### **Idempotency (중복 방지)**
+
+```typescript
+// HTTP 헤더
+Headers:
+  Idempotency-Key: uuid-or-msg-id
+
+// Redis 캐시 (TTL 24h)
+async function handleTelemetry(req: Request) {
+  const key = req.headers['idempotency-key'];
+  
+  // 1. 캐시 확인
+  const cached = await redis.get(`idempotency:${key}`);
+  if (cached) {
+    return JSON.parse(cached);  // 동일 응답 반환
+  }
+  
+  // 2. 처리
+  const result = await processTelemetry(req.body);
+  
+  // 3. 캐시 저장
+  await redis.setex(`idempotency:${key}`, 86400, JSON.stringify(result));
+  
+  return result;
+}
+```
+
+#### **QoS & ACK 시스템**
+
+```typescript
+// 명령 발행 → ACK 대기 → 타임아웃 재전송
+class CommandDispatcher {
+  async sendCommand(cmd: Command) {
+    // 1. DB 저장 (status: pending)
+    await db.commands.insert({
+      ...cmd,
+      msg_id: uuid(),
+      status: 'pending',
+      retry_count: 0
+    });
+    
+    // 2. 발행
+    await publishToDevice(cmd);
+    
+    // 3. ACK 대기 (타임아웃: 10초)
+    const ack = await waitForAck(cmd.msg_id, 10000);
+    
+    if (!ack) {
+      // 4. 재전송 (지수 백오프)
+      await this.retryWithBackoff(cmd);
+    }
+  }
+  
+  async retryWithBackoff(cmd: Command, attempt = 1) {
+    const maxRetries = 3;
+    if (attempt > maxRetries) {
+      // Dead Letter Queue로 이동
+      await moveToDeadLetter(cmd);
+      return;
+    }
+    
+    // 지수 백오프: 2^attempt초
+    await sleep(Math.pow(2, attempt) * 1000);
+    
+    await publishToDevice(cmd);
+    await db.commands.update(cmd.id, { retry_count: attempt });
+    
+    const ack = await waitForAck(cmd.msg_id, 10000);
+    if (!ack) {
+      await this.retryWithBackoff(cmd, attempt + 1);
+    }
+  }
+}
+```
+
+#### **오프라인 버퍼**
+
+```cpp
+// ESP32/Arduino 오프라인 큐
+#include <Preferences.h>
+
+Preferences nvs;
+const int MAX_QUEUE_SIZE = 50;
+
+void queueReading(Reading reading) {
+  nvs.begin("smartfarm", false);
+  
+  int queueSize = nvs.getInt("queue_size", 0);
+  if (queueSize >= MAX_QUEUE_SIZE) {
+    // 가장 오래된 항목 제거 (FIFO)
+    nvs.remove("reading_0");
+    for (int i = 1; i < queueSize; i++) {
+      // 앞으로 이동
+      String val = nvs.getString(("reading_" + String(i)).c_str());
+      nvs.putString(("reading_" + String(i-1)).c_str(), val);
+    }
+    queueSize--;
+  }
+  
+  // 새 항목 추가
+  nvs.putString(("reading_" + String(queueSize)).c_str(), 
+                serializeReading(reading));
+  nvs.putInt("queue_size", queueSize + 1);
+  nvs.end();
+}
+
+void flushQueue() {
+  if (!WiFi.isConnected()) return;
+  
+  nvs.begin("smartfarm", false);
+  int queueSize = nvs.getInt("queue_size", 0);
+  
+  for (int i = 0; i < queueSize; i++) {
+    String data = nvs.getString(("reading_" + String(i)).c_str());
+    if (sendToServer(data)) {
+      nvs.remove(("reading_" + String(i)).c_str());
+    } else {
+      break;  // 실패 시 중단
+    }
+  }
+  
+  // 큐 크기 업데이트
+  nvs.putInt("queue_size", 0);
+  nvs.end();
+}
+```
+
+#### **시간 동기화**
+
+```cpp
+// NTP 동기화
+#include <time.h>
+
+void syncTime() {
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo, 5000)) {
+    Serial.println("NTP sync failed, using server timestamp");
+    useServerTimestamp = true;
+  } else {
+    Serial.println("NTP synced");
+    useServerTimestamp = false;
+  }
+}
+
+String getTimestamp() {
+  if (useServerTimestamp) {
+    // 서버에서 타임스탬프 받아오기
+    return requestServerTimestamp();
+  } else {
+    // 로컬 시간 사용
+    return getCurrentISOTime();
+  }
+}
+```
+
+---
+
+### 📊 **5. 관측성 & 운영**
+
+#### **OpenTelemetry 통합**
+
+```typescript
+import { trace, metrics } from '@opentelemetry/api';
+
+const tracer = trace.getTracer('universal-bridge');
+const meter = metrics.getMeter('universal-bridge');
+
+// 텔레메트리 수집 추적
+async function ingestTelemetry(req: Request) {
+  const span = tracer.startSpan('ingestion.telemetry', {
+    attributes: {
+      'device.id': req.body.device_id,
+      'tenant.id': req.headers['x-tenant-id']
+    }
+  });
+  
+  try {
+    // 1. 디코딩
+    const decoded = await span.startChild('decode').run(() => {
+      return JSON.parse(req.body);
+    });
+    
+    // 2. 검증
+    await span.startChild('validate').run(async () => {
+      return TelemetryV1.parse(decoded);
+    });
+    
+    // 3. 정규화
+    const normalized = await span.startChild('normalize').run(() => {
+      return normalizeReadings(decoded);
+    });
+    
+    // 4. 저장
+    await span.startChild('upsert').run(async () => {
+      return db.readings.insert(normalized);
+    });
+    
+    span.setStatus({ code: SpanStatusCode.OK });
+  } catch (error) {
+    span.recordException(error);
+    span.setStatus({ code: SpanStatusCode.ERROR });
+    throw error;
+  } finally {
+    span.end();
+  }
+}
+```
+
+#### **핵심 지표**
+
+```typescript
+// Prometheus 지표
+const ingestLatency = meter.createHistogram('ingest_latency_ms', {
+  description: 'Telemetry ingestion latency',
+  unit: 'ms'
+});
+
+const cmdAckLatency = meter.createHistogram('cmd_ack_latency_ms', {
+  description: 'Command ACK roundtrip latency',
+  unit: 'ms'
+});
+
+const deviceOnlineRatio = meter.createGauge('device_online_ratio', {
+  description: 'Ratio of online devices'
+});
+
+const dropRate = meter.createCounter('message_drop_rate', {
+  description: 'Dropped messages due to errors'
+});
+
+const schemaErrorRate = meter.createCounter('schema_error_rate', {
+  description: 'Schema validation errors'
+});
+
+// 수집
+ingestLatency.record(Date.now() - startTime, {
+  protocol: 'http',
+  tenant_id: req.tenant_id
+});
+```
+
+#### **헬스 대시보드**
+
+```typescript
+// 디바이스 헬스 정보
+interface DeviceHealth {
+  device_id: string;
+  online: boolean;
+  rssi: number;          // WiFi 신호 강도
+  battery: number;       // 배터리 (%)
+  fw_version: string;
+  last_seen: Date;
+  error_log: ErrorEntry[];
+  retry_rate: number;    // 재시도 비율
+  uptime: number;        // 초
+}
+
+// API 엔드포인트
+GET /api/health/devices/:device_id
+{
+  "device_id": "esp32-abc123",
+  "status": "online",
+  "metrics": {
+    "rssi": -65,
+    "battery": 85,
+    "fw_version": "1.2.3",
+    "uptime": 86400,
+    "last_seen": "2025-10-01T18:45:00Z"
+  },
+  "recent_errors": [
+    {
+      "ts": "2025-10-01T17:30:00Z",
+      "type": "wifi_reconnect",
+      "detail": "Connection timeout after 30s"
+    }
+  ],
+  "statistics": {
+    "messages_sent_24h": 2880,
+    "retry_rate": 0.02,
+    "avg_latency_ms": 145
+  }
+}
+```
+
+---
+
+### 🛡️ **6. 보안 & 레이트리밋**
+
+#### **레이트리밋 (Token Bucket)**
+
+```typescript
+import { RateLimiterRedis } from 'rate-limiter-flexible';
+
+// 테넌트별 제한
+const tenantLimiter = new RateLimiterRedis({
+  points: 10000,        // 1만 req/min
+  duration: 60,
+  blockDuration: 60
+});
+
+// 디바이스별 제한
+const deviceLimiter = new RateLimiterRedis({
+  points: 60,          // 60 req/min
+  duration: 60,
+  blockDuration: 300,  // 5분 차단
+  burst: 120           // 버스트 허용
+});
+
+async function checkRateLimit(req: Request) {
+  const tenant_id = req.headers['x-tenant-id'];
+  const device_id = req.headers['x-device-id'];
+  
+  // 테넌트 체크
+  await tenantLimiter.consume(tenant_id);
+  
+  // 디바이스 체크
+  await deviceLimiter.consume(`${tenant_id}:${device_id}`);
+}
+```
+
+#### **WebSocket 보안**
+
+```typescript
+// 토큰 재검증 (5분마다)
+class SecureWebSocket {
+  private refreshInterval = 300000; // 5분
+  
+  constructor(private ws: WebSocket) {
+    setInterval(() => this.refreshToken(), this.refreshInterval);
+  }
+  
+  async refreshToken() {
+    const newToken = await requestNewToken();
+    this.ws.send(JSON.stringify({
+      type: 'auth_refresh',
+      token: newToken
+    }));
+  }
+  
+  // 메시지 크기 제한
+  onMessage(data: any) {
+    if (data.length > 1024 * 1024) {  // 1MB
+      this.ws.close(1009, 'Message too large');
+      return;
+    }
+    
+    // 처리...
+  }
+  
+  // Ping/Pong watchdog
+  startWatchdog() {
+    setInterval(() => {
+      this.ws.ping();
+      
+      setTimeout(() => {
+        if (!this.pongReceived) {
+          this.ws.close(1001, 'Ping timeout');
+        }
+      }, 5000);
+    }, 30000);
+  }
+}
+```
+
+#### **CORS & 보안 헤더**
+
+```typescript
+// 테넌트 도메인 화이트리스트
+const allowedOrigins = [
+  'https://acme.smartfarm.app',
+  'https://demo.smartfarm.app',
+  'https://xyz.smartfarm.app'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // 서브도메인 패턴 검증
+    if (!origin || /^https:\/\/[\w-]+\.smartfarm\.app$/.test(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// 보안 헤더
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: ["'self'", "wss://*.smartfarm.app"]
+    }
+  }
+}));
+```
+
+#### **로그 마스킹**
+
+```typescript
+// PII/시크릿 자동 마스킹
+function sanitizeLog(obj: any): any {
+  const sensitive = ['password', 'device_key', 'setup_token', 'auth_token'];
+  
+  return Object.keys(obj).reduce((acc, key) => {
+    if (sensitive.includes(key)) {
+      acc[key] = '***REDACTED***';
+    } else if (typeof obj[key] === 'object') {
+      acc[key] = sanitizeLog(obj[key]);
+    } else {
+      acc[key] = obj[key];
+    }
+    return acc;
+  }, {} as any);
+}
+
+logger.info('Device registered', sanitizeLog(deviceInfo));
+```
+
+---
+
+### ☁️ **7. 배포 & 비용 전략**
+
+#### **HTTP/WS 엔드포인트**
+
+```typescript
+// Vercel Edge Functions
+// api/bridge/telemetry.ts
+export const config = {
+  runtime: 'edge',
+  regions: ['icn1', 'pdx1', 'fra1']  // Seoul, Portland, Frankfurt
+};
+
+export default async function handler(req: Request) {
+  // 지역별 가장 가까운 Supabase 연결
+  const supabase = createClient(process.env.SUPABASE_URL);
+  
+  // 처리...
+}
+
+// 고트래픽 테넌트는 Cloudflare Workers로
+// workers/bridge.ts
+export default {
+  async fetch(req: Request, env: Env) {
+    // Cloudflare D1 or Supabase
+    const result = await processTelemetry(req);
+    return new Response(JSON.stringify(result));
+  }
+}
+```
+
+#### **백그라운드 처리**
+
+```typescript
+// Cloudflare Queues
+interface TelemetryJob {
+  device_id: string;
+  readings: Reading[];
+  priority: 'high' | 'normal' | 'low';
+}
+
+// Producer
+await env.TELEMETRY_QUEUE.send({
+  device_id: 'esp32-abc',
+  readings: data.readings,
+  priority: 'normal'
+});
+
+// Consumer
+export default {
+  async queue(batch: MessageBatch<TelemetryJob>) {
+    for (const msg of batch.messages) {
+      await processReadings(msg.body);
+      msg.ack();
+    }
+  }
+}
+```
+
+#### **MQTT 브로커 선택**
+
+```typescript
+// 환경 변수로 스위치
+const mqttConfig = {
+  broker: process.env.MQTT_BROKER_TYPE === 'managed'
+    ? 'mqtts://mqtt.smartfarm.app:8883'  // Managed (HiveMQ Cloud)
+    : 'mqtts://self-hosted.smartfarm.app:8883',  // Self-hosted (Mosquitto)
+  
+  username: process.env.MQTT_USERNAME,
+  password: process.env.MQTT_PASSWORD
+};
+```
+
+#### **저장 비용 제어**
+
+```sql
+-- Cold partition (30일 이상 데이터)
+CREATE TABLE readings_archive (
+  LIKE readings INCLUDING ALL
+) PARTITION BY RANGE (ts);
+
+-- 자동 아카이브 (일일 cron)
+INSERT INTO readings_archive
+SELECT * FROM readings
+WHERE ts < NOW() - INTERVAL '30 days';
+
+DELETE FROM readings
+WHERE ts < NOW() - INTERVAL '30 days';
+
+-- 집계 테이블 (Materialized View)
+CREATE MATERIALIZED VIEW readings_hourly AS
+SELECT
+  device_id,
+  date_trunc('hour', ts) as hour,
+  key,
+  AVG(value) as avg_value,
+  MIN(value) as min_value,
+  MAX(value) as max_value,
+  COUNT(*) as count
+FROM readings
+GROUP BY device_id, hour, key;
+
+-- 대시보드는 집계 테이블 사용
+SELECT * FROM readings_hourly
+WHERE device_id = 'esp32-abc'
+  AND hour >= NOW() - INTERVAL '7 days';
+```
+
+---
+
+### 🧪 **8. 온보딩 마법사 보강**
+
+#### **Preflight 체크**
+
+```typescript
+// 연결 전 사전 점검
+interface PreflightCheck {
+  name: string;
+  status: 'pending' | 'checking' | 'passed' | 'failed';
+  message?: string;
+}
+
+async function runPreflightChecks(): Promise<PreflightCheck[]> {
+  return [
+    {
+      name: 'Port reachability',
+      status: await checkPort(8883) ? 'passed' : 'failed',
+      message: 'MQTT port 8883 accessible'
+    },
+    {
+      name: 'Broker availability',
+      status: await pingBroker() ? 'passed' : 'failed',
+      message: 'MQTT broker responding'
+    },
+    {
+      name: 'User permissions',
+      status: await checkPermissions() ? 'passed' : 'failed',
+      message: 'User has device:create permission'
+    },
+    {
+      name: 'Rate limit',
+      status: await checkRateLimit() ? 'passed' : 'failed',
+      message: 'Within rate limit'
+    },
+    {
+      name: 'Time sync',
+      status: 'checking',
+      message: 'Checking device time sync...'
+    }
+  ];
+}
+```
+
+#### **라이브 로그 스트림**
+
+```typescript
+// 실시간 로그 WebSocket
+const ws = new WebSocket('wss://api.smartfarm.app/logs/device/esp32-abc');
+
+ws.onmessage = (event) => {
+  const log = JSON.parse(event.data);
+  
+  // UI에 표시
+  appendLog({
+    timestamp: log.ts,
+    level: log.level,  // info, warn, error
+    message: log.message,
+    source: log.source  // ingestion, validation, storage
+  });
+};
+
+// 예시 로그
+{
+  "ts": "2025-10-01T18:50:12.345Z",
+  "level": "info",
+  "source": "ingestion",
+  "message": "Telemetry received: 3 readings",
+  "device_id": "esp32-abc"
+}
+
+{
+  "ts": "2025-10-01T18:50:12.456Z",
+  "level": "success",
+  "source": "storage",
+  "message": "Stored 3 readings to database",
+  "latency_ms": 45
+}
+```
+
+#### **실패 처방 카드**
+
+```typescript
+// 오류별 자동 가이드
+const troubleshootingGuides = {
+  'WIFI_CONNECT_FAILED': {
+    title: 'WiFi 연결 실패',
+    steps: [
+      '1. WiFi SSID와 비밀번호 확인',
+      '2. 2.4GHz WiFi인지 확인 (ESP32는 5GHz 미지원)',
+      '3. 공유기와의 거리 확인',
+      '4. 방화벽 설정 확인'
+    ],
+    codeSnippet: `
+// WiFi 연결 디버깅
+WiFi.begin(ssid, password);
+Serial.print("Connecting");
+while (WiFi.status() != WL_CONNECTED) {
+  delay(500);
+  Serial.print(".");
+  Serial.println(WiFi.status());  // 상태 코드 확인
+}
+    `,
+    videoUrl: 'https://docs.smartfarm.app/videos/wifi-troubleshooting'
+  },
+  
+  'AUTH_FAILED': {
+    title: '인증 실패',
+    steps: [
+      '1. Setup Token이 만료되지 않았는지 확인 (10분 유효)',
+      '2. QR 코드 다시 스캔',
+      '3. 웹 어드민에서 새 토큰 발급',
+      '4. Device Key가 올바른지 확인'
+    ],
+    codeSnippet: `
+// 토큰 확인
+Serial.println("Setup Token: " + setupToken);
+Serial.println("Expires: " + expiresAt);
+    `
+  },
+  
+  'SCHEMA_VALIDATION_ERROR': {
+    title: '데이터 형식 오류',
+    steps: [
+      '1. JSON 형식이 올바른지 확인',
+      '2. 필수 필드 누락 확인 (device_id, readings, timestamp)',
+      '3. 단위가 표준 단위인지 확인 (celsius, percent 등)',
+      '4. 타임스탬프 형식 확인 (ISO 8601)'
+    ],
+    codeSnippet: `
+// 올바른 JSON 형식
+{
+  "device_id": "esp32-abc",
+  "readings": [
+    {
+      "key": "temperature",
+      "value": 25.5,
+      "unit": "celsius",
+      "ts": "2025-10-01T18:50:00Z"
+    }
+  ],
+  "schema_version": "telemetry.v1",
+  "timestamp": "2025-10-01T18:50:00Z"
+}
+    `
+  }
+};
+```
+
+---
+
+### 📊 **9. 수락 기준 (KPI/SLO)**
+
+#### **성능 목표**
+
+```typescript
+interface AcceptanceCriteria {
+  // 연결 시간
+  connection_time_p95: {
+    target: 300,  // 5분 이하
+    unit: 'seconds',
+    measurement: 'from wizard start to dashboard data'
+  },
+  
+  // 텔레메트리 지연
+  telemetry_latency_p95: {
+    http_ws: { target: 2, unit: 'seconds' },
+    mqtt: { target: 5, unit: 'seconds' }
+  },
+  
+  // 명령 왕복 시간
+  command_roundtrip_p95: {
+    ws_mqtt: { target: 1, unit: 'seconds' },
+    http_polling: { target: 3, unit: 'seconds' }
+  },
+  
+  // 성공률
+  first_attempt_success_rate: {
+    target: 0.90,  // 90% 이상
+    measurement: 'successful connections on first try'
+  },
+  
+  // 재연결 실패율
+  reconnect_failure_rate_24h: {
+    target: 0.01,  // 1% 이하
+    measurement: 'failed reconnections within 24h'
+  },
+  
+  // 보안
+  setup_token_expiry_compliance: {
+    target: 1.0,  // 100%
+    measurement: 'tokens expire within 10 minutes'
+  },
+  
+  key_rotation_test: {
+    target: 'pass',
+    measurement: 'zero-downtime key rotation successful'
+  }
+}
+```
+
+#### **모니터링 쿼리**
+
+```sql
+-- 연결 시간 p95
+SELECT
+  PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY connection_time_seconds)
+FROM device_connections
+WHERE created_at >= NOW() - INTERVAL '24 hours';
+
+-- 텔레메트리 지연 p95
+SELECT
+  protocol,
+  PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY latency_ms)
+FROM telemetry_metrics
+WHERE ts >= NOW() - INTERVAL '1 hour'
+GROUP BY protocol;
+
+-- 첫 시도 성공률
+SELECT
+  COUNT(*) FILTER (WHERE attempt = 1 AND status = 'success')::FLOAT
+    / COUNT(*) as success_rate
+FROM device_connections
+WHERE created_at >= NOW() - INTERVAL '7 days';
+```
+
+---
+
+### 🗂️ **10. 파일 구조 (구체안)**
+
+```
+apps/universal-bridge/
+├── src/
+│   ├── index.ts                    # 메인 진입점
+│   ├── core/
+│   │   ├── messagebus.ts          # 프로토콜 독립적 메시지 버스
+│   │   ├── validation.ts          # Zod 스키마 검증
+│   │   ├── schemaRegistry.ts      # 버전별 스키마 관리
+│   │   ├── idempotency.ts         # 중복 방지
+│   │   └── retry.ts               # 재시도 로직
+│   ├── security/
+│   │   ├── auth.ts                # PSK/JWT/X.509 인증
+│   │   ├── signer.ts              # HMAC 서명
+│   │   └── ratelimit.ts           # 레이트리밋
+│   ├── provisioning/
+│   │   ├── claim.ts               # Setup Token 발급
+│   │   ├── bind.ts                # 디바이스 바인딩
+│   │   └── rotate.ts              # 키 회전
+│   ├── protocols/
+│   │   ├── http/
+│   │   │   ├── server.ts          # Express 서버
+│   │   │   └── routes.ts          # REST 엔드포인트
+│   │   ├── websocket/
+│   │   │   └── server.ts          # WebSocket 서버
+│   │   ├── mqtt/
+│   │   │   ├── client.ts          # MQTT 클라이언트 (기존)
+│   │   │   └── handler.ts         # MQTT 핸들러 (기존)
+│   │   └── serial/
+│   │       ├── ble.ts             # BLE 통신
+│   │       └── usb.ts             # USB Serial
+│   ├── observability/
+│   │   ├── tracing.ts             # OpenTelemetry
+│   │   ├── metrics.ts             # Prometheus 지표
+│   │   └── logging.ts             # 구조화 로깅
+│   └── templates/
+│       ├── payloads/              # 메시지 예시
+│       ├── rules/                 # 검증 규칙
+│       └── dashboards/            # Grafana 대시보드
+│
+├── package.json
+├── tsconfig.json
+└── README.md
+
+apps/web-admin/
+├── src/
+│   ├── app/
+│   │   ├── connect/
+│   │   │   └── page.tsx          # 연결 마법사 페이지
+│   │   └── health/
+│   │       └── page.tsx          # 디바이스 헬스 대시보드
+│   ├── components/
+│   │   └── connect/
+│   │       ├── ConnectWizard.tsx # 메인 마법사
+│   │       ├── DeviceSelector.tsx
+│   │       ├── QRCodeCard.tsx    # QR 생성/표시
+│   │       ├── CopySnippet.tsx   # 코드 복사
+│   │       ├── LiveLog.tsx       # 실시간 로그
+│   │       ├── Preflight.tsx     # 사전 점검
+│   │       └── DiagCard.tsx      # 진단 카드
+│   └── lib/
+│       └── connect/
+│           ├── api.ts            # API 래퍼
+│           └── snippet.ts        # 코드 생성기
+│
+├── package.json
+└── tsconfig.json
+
+docs/
+├── 13_UNIVERSAL_BRIDGE_V2.md          # v2.0 전체 설계
+├── 14_DEVICE_PROFILES.md              # 디바이스 프로필
+├── 15_CONNECTION_WIZARD.md            # 연결 마법사 가이드
+├── 16_INTEGRATION_KITS.md             # 통합 키트
+├── 17_TEST_SIMULATORS.md              # 테스트 시뮬레이터
+├── 18_SDK_GUIDES.md                   # SDK 가이드
+└── 12_ACCEPTANCE_CHECKS.md (updated)  # 수락 기준
+
+packages/
+└── device-sdk/                         # 디바이스용 SDK
+    ├── arduino/
+    │   ├── SmartFarmClient.h
+    │   └── SmartFarmClient.cpp
+    ├── python/
+    │   └── smartfarm_client.py
+    └── javascript/
+        └── smartfarm-client.ts
+```
+
+---
+
+### ⚠️ **11. 위험 & 비용 체크**
+
+#### **트래픽 비용**
+
+```typescript
+// 고트래픽 테넌트 감지
+async function checkTrafficCost(tenant_id: string) {
+  const monthlyRequests = await getMonthlyRequests(tenant_id);
+  
+  if (monthlyRequests > 10_000_000) {  // 1천만 req/월
+    // MQTT 우선 권장
+    await notifyTenantAdmin(tenant_id, {
+      type: 'cost_optimization',
+      message: 'HTTP/WS 트래픽이 높습니다. MQTT로 전환하면 비용 절감 가능',
+      estimated_savings: calculateSavings(monthlyRequests)
+    });
+  }
+}
+```
+
+#### **보안 주의사항**
+
+```typescript
+// QR 코드에 민감 정보 넣지 않기
+interface QRCodeData {
+  server_url: string;
+  setup_token: string;  // 10분 단기 토큰
+  tenant_id: string;
+  farm_id?: string;
+  
+  // ❌ 포함하지 말 것
+  // device_key: string;
+  // user_password: string;
+  // api_secret: string;
+}
+
+// 디바이스 영구키는 안전 저장
+// ESP32: NVS (Encrypted)
+nvs_set_str(nvs_handle, "device_key", encrypted_key);
+
+// Android: Keychain
+KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+```
+
+#### **LoRa/Zigbee 게이트웨이**
+
+```
+Phase 1-3: MQTT/HTTP/WS 직접 연결
+                ↓
+Phase 4: 게이트웨이 패턴
+┌──────────┐
+│ LoRa 센서 │
+└─────┬────┘
+      │
+┌─────▼────────┐
+│ LoRaWAN GW   │ ← 별도 게이트웨이
+└─────┬────────┘
+      │ MQTT/HTTP
+┌─────▼────────┐
+│Universal     │
+│Bridge        │
+└──────────────┘
+```
+
+---
+
+### 🚀 **12. 구현 시작 (Cursor Prompt)**
+
+```
+You are refactoring to "Universal IoT Bridge — v2.0 Production-Ready".
+
+Create branch: feat/universal-bridge-v2
+
+Objectives:
+- Device provisioning (claim→bind→rotate) with tenant security
+- Idempotency, retry, schema registry (Zod)
+- Connect Wizard with preflight, live logs, QR + code generator
+- Keep MQTT flow, add HTTP/WS without breaking changes
+- OpenTelemetry hooks, acceptance KPIs
+
+Deliverables (create TODO stubs with comments):
+1) Server/bridge files in apps/universal-bridge/src/
+2) Web admin onboarding in apps/web-admin/src/app/connect/
+3) Docs: 13_UNIVERSAL_BRIDGE_V2.md, 14-18 series
+4) DB migration SQL in docs/13_UNIVERSAL_BRIDGE_V2.md
+5) Simulator + CI test
+
+Constraints:
+- No env key renames; add BRIDGE_* prefixes
+- Type-safe TS, Zod validation
+- Clear TODOs for future engineers
+
+Output:
+- Commit stubs passing typecheck
+```
+
+---
+
 바로 시작할까요? 어느 부분부터 구현하시겠어요? 🚀
 
 **제안하는 첫 단계:**
-1. 🎨 디바이스 연결 마법사 UI 프로토타입
-2. 🧩 Arduino WiFi-HTTP 템플릿 완성
-3. 🔗 QR 코드 자동 설정 기능
+1. 🎨 Connect Wizard UI 프로토타입 + Preflight
+2. 🧩 Arduino HTTP 템플릿 + PSK 인증
+3. 🔗 QR 코드 Setup Token 시스템
 
