@@ -9,6 +9,10 @@ interface GenerateCodeRequest {
   protocol: 'http' | 'mqtt';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
+  wifi: {
+    ssid: string;
+    password: string;
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
 }
 
 function generateArduinoCode(req: GenerateCodeRequest): string {
-  const { device, protocol, sensors: sensorSpecs, controls: controlSpecs } = req;
+  const { device, protocol, sensors: sensorSpecs, controls: controlSpecs, wifi } = req;
   
   // 헤더 생성
   const headers = [
@@ -118,8 +122,8 @@ function generateArduinoCode(req: GenerateCodeRequest): string {
   // WiFi 설정
   const wifiConfig = [
     '// WiFi 설정',
-    'const char* ssid = "YOUR_WIFI_SSID";',
-    'const char* password = "YOUR_WIFI_PASSWORD";',
+    `const char* ssid = "${wifi.ssid || 'YOUR_WIFI_SSID'}";`,
+    `const char* password = "${wifi.password || 'YOUR_WIFI_PASSWORD'}";`,
     '',
     '// 서버 설정',
     protocol === 'http' 

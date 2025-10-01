@@ -13,6 +13,10 @@ interface SystemSpec {
   protocol: 'http' | 'mqtt';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
+  wifi: {
+    ssid: string;
+    password: string;
+  };
 }
 
 export default function IoTDesignerPage() {
@@ -20,7 +24,11 @@ export default function IoTDesignerPage() {
     device: 'esp32',
     protocol: 'http',
     sensors: [],
-    controls: []
+    controls: [],
+    wifi: {
+      ssid: '',
+      password: ''
+    }
   });
   
   const [generatedCode, setGeneratedCode] = useState('');
@@ -109,6 +117,54 @@ export default function IoTDesignerPage() {
               </select>
             </div>
           </div>
+        </div>
+        
+        {/* 2.5. WiFi 설정 */}
+        <div className="bg-white border rounded-lg p-6">
+          <h3 className="text-lg font-bold mb-4">📶 WiFi 설정</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">WiFi 네트워크 이름 (SSID)</label>
+              <input
+                type="text"
+                value={spec.wifi.ssid}
+                onChange={(e) => setSpec(prev => ({ 
+                  ...prev, 
+                  wifi: { ...prev.wifi, ssid: e.target.value }
+                }))}
+                placeholder="예: MyHomeWiFi"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">ESP32가 연결할 WiFi 네트워크 이름</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">WiFi 비밀번호</label>
+              <input
+                type="password"
+                value={spec.wifi.password}
+                onChange={(e) => setSpec(prev => ({ 
+                  ...prev, 
+                  wifi: { ...prev.wifi, password: e.target.value }
+                }))}
+                placeholder="WiFi 비밀번호 입력"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">WiFi 네트워크의 비밀번호</p>
+            </div>
+          </div>
+          
+          {spec.wifi.ssid && spec.wifi.password && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-green-600 mr-2">✅</span>
+                <span className="text-sm text-green-800">
+                  WiFi 설정 완료: <strong>{spec.wifi.ssid}</strong>
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* 3. 센서/제어 선택 */}
