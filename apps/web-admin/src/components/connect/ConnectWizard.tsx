@@ -9,6 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { QRCodeCard } from './QRCodeCard';
+import { LiveLog } from './LiveLog';
 import toast, { Toaster } from 'react-hot-toast';
 
 type Step = 'device-select' | 'protocol-select' | 'code-generate' | 'monitor';
@@ -499,20 +500,18 @@ function MonitorStep({ config, onBack }: { config: DeviceConfig; onBack: () => v
       </div>
 
       <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg mb-4">
-        <p className="font-bold">현재 상태:</p>
-        <p>⏳ {deviceNames[config.device]} 업로드 대기 중</p>
-        <p className="text-sm text-gray-600 mt-2">
-          💡 생성된 코드를 디바이스에 업로드하고 시리얼 모니터를 확인하세요.
-        </p>
+        <p className="font-bold">📋 다음 단계:</p>
+        <ol className="list-decimal list-inside text-sm text-gray-700 mt-2 space-y-1">
+          <li>{deviceNames[config.device]}에 코드를 업로드하세요</li>
+          <li>시리얼 모니터를 열어 로그를 확인하세요</li>
+          <li>WiFi 연결이 완료되면 자동으로 등록됩니다</li>
+          <li>아래 실시간 로그에서 연결 상태를 확인하세요</li>
+        </ol>
       </div>
 
-      <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm mb-4">
-        <div>[시리얼 모니터]</div>
-        <div>WiFi 연결 중...</div>
-        <div>WiFi 연결 성공!</div>
-        <div>서버 연결 중...</div>
-        <div>✅ 연결 성공!</div>
-        <div className="text-gray-400 mt-2">실제 디바이스에서 연결 시 여기에 실시간 로그가 표시됩니다.</div>
+      {/* Live Log */}
+      <div className="mb-4">
+        <LiveLog setupToken={config.setupToken || ''} />
       </div>
 
       <div className="flex gap-4">
