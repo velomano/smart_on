@@ -460,7 +460,7 @@ export default function AdminPage() {
                         : '농장별 사용자 보기'}
                     </h1>
                     <div className="text-white/90 text-sm sm:text-base font-semibold">
-                      총 {activeTab === 'pending' ? pendingUsers.length : activeTab === 'approved' ? approvedUsers.length : usersByFarm().reduce((total, farm) => total + farm.users.length, 0)}명
+                      총 {activeTab === 'pending' ? pendingUsers.length : activeTab === 'approved' ? approvedUsers.length : Object.values(usersByFarm).reduce((total, farm) => total + farm.users.length, 0)}명
                     </div>
                   </div>
                   <p className="text-white/90 text-xs sm:text-sm lg:text-base hidden sm:block">
@@ -671,11 +671,11 @@ export default function AdminPage() {
               {activeTab === 'farms' && (
                 <div>
                   <div className="flex items-center justify-between mb-8">
-                    <div className="text-sm text-gray-500">{Object.keys(usersByFarm()).length}개 농장</div>
+                    <div className="text-sm text-gray-500">{Object.keys(usersByFarm).length}개 농장</div>
                   </div>
 
                   <div className="space-y-8">
-                    {Object.entries(usersByFarm()).map(([farmName, farmData]) => (
+                    {Object.entries(usersByFarm).map(([farmName, farmData]) => (
                       <div key={farmName} className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6 shadow-xl">
                         <div className="flex items-center mb-6">
                           <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg mr-4">
