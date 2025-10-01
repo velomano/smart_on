@@ -133,7 +133,7 @@ export default function IoTDesignerPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">🚀 IoT Designer</h1>
-          <p className="text-gray-800">자연어로 IoT 시스템을 설계하고 완벽한 코드를 생성하세요</p>
+          <p className="text-gray-900 font-medium">자연어로 IoT 시스템을 설계하고 완벽한 코드를 생성하세요</p>
         </div>
         
         {/* 1. 자연어 입력 */}
@@ -141,15 +141,15 @@ export default function IoTDesignerPage() {
         
         {/* 2. 시스템 설정 */}
         <div className="bg-white border rounded-lg p-6">
-          <h3 className="text-lg font-bold mb-4">⚙️ 시스템 설정</h3>
+          <h3 className="text-lg font-bold mb-4 text-gray-900">⚙️ 시스템 설정</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">디바이스</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">디바이스</label>
               <select
                 value={spec.device}
                 onChange={(e) => setSpec(prev => ({ ...prev, device: e.target.value }))}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-gray-900"
               >
                 <option value="esp32">ESP32</option>
                 <option value="esp8266">ESP8266</option>
@@ -160,11 +160,11 @@ export default function IoTDesignerPage() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">통신 프로토콜</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">통신 프로토콜</label>
               <select
                 value={spec.protocol}
                 onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' }))}
-                className="w-full p-2 border rounded-lg"
+                className="w-full p-2 border rounded-lg text-gray-900"
               >
                 <option value="http">HTTP</option>
                 <option value="mqtt">MQTT</option>
@@ -181,11 +181,11 @@ export default function IoTDesignerPage() {
         
         {/* 2.5. WiFi 설정 */}
         <div className="bg-white border rounded-lg p-6">
-          <h3 className="text-lg font-bold mb-4">📶 WiFi 설정</h3>
+          <h3 className="text-lg font-bold mb-4 text-gray-900">📶 WiFi 설정</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium mb-2">WiFi 네트워크 이름 (SSID)</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">WiFi 네트워크 이름 (SSID)</label>
               <input
                 type="text"
                 value={spec.wifi.ssid}
@@ -194,13 +194,13 @@ export default function IoTDesignerPage() {
                   wifi: { ...prev.wifi, ssid: e.target.value }
                 }))}
                 placeholder="예: MyHomeWiFi"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
               <p className="text-xs text-gray-700 mt-1">ESP32가 연결할 WiFi 네트워크 이름</p>
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">WiFi 비밀번호</label>
+              <label className="block text-sm font-medium mb-2 text-gray-900">WiFi 비밀번호</label>
               <input
                 type="password"
                 value={spec.wifi.password}
@@ -209,7 +209,7 @@ export default function IoTDesignerPage() {
                   wifi: { ...prev.wifi, password: e.target.value }
                 }))}
                 placeholder="WiFi 비밀번호 입력"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
               <p className="text-xs text-gray-700 mt-1">WiFi 네트워크의 비밀번호</p>
             </div>
@@ -242,7 +242,7 @@ export default function IoTDesignerPage() {
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, plcVendor: e.target.value }
                   }))}
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 >
                   <option value="generic">Generic</option>
                   <option value="siemens">Siemens</option>
@@ -263,7 +263,7 @@ export default function IoTDesignerPage() {
                     modbusConfig: { ...prev.modbusConfig!, host: e.target.value }
                   }))}
                   placeholder="192.168.1.100"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 />
               </div>
               <div>
@@ -276,7 +276,7 @@ export default function IoTDesignerPage() {
                     modbusConfig: { ...prev.modbusConfig!, port: parseInt(e.target.value) }
                   }))}
                   placeholder="502"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 />
               </div>
               <div>
@@ -289,7 +289,7 @@ export default function IoTDesignerPage() {
                     modbusConfig: { ...prev.modbusConfig!, unitId: parseInt(e.target.value) }
                   }))}
                   placeholder="1"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 />
               </div>
             </div>
@@ -306,7 +306,7 @@ export default function IoTDesignerPage() {
                     modbusConfig: { ...prev.modbusConfig!, pollMs: parseInt(e.target.value) }
                   }))}
                   placeholder="1000"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 />
               </div>
               <div>
@@ -319,7 +319,7 @@ export default function IoTDesignerPage() {
                     modbusConfig: { ...prev.modbusConfig!, timeout: parseInt(e.target.value) }
                   }))}
                   placeholder="5000"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 />
               </div>
               <div>
@@ -332,7 +332,7 @@ export default function IoTDesignerPage() {
                     modbusConfig: { ...prev.modbusConfig!, retries: parseInt(e.target.value) }
                   }))}
                   placeholder="3"
-                  className="w-full p-2 border rounded-lg"
+                  className="w-full p-2 border rounded-lg text-gray-900"
                 />
               </div>
             </div>
@@ -616,11 +616,11 @@ export default function IoTDesignerPage() {
         
         {/* 3. 센서/제어 선택 */}
         <div className="bg-white border rounded-lg p-6">
-          <h3 className="text-lg font-bold mb-4">📊 센서 및 제어 장치</h3>
+          <h3 className="text-lg font-bold mb-4 text-gray-900">📊 센서 및 제어 장치</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium mb-2">센서</h4>
+              <h4 className="font-medium mb-2 text-gray-900">센서</h4>
               
               {/* 센서 추가 버튼 */}
               <div className="mb-4">
@@ -634,7 +634,7 @@ export default function IoTDesignerPage() {
                       e.target.value = ''; // 선택 초기화
                     }
                   }}
-                  className="w-full p-2 border rounded-lg mb-2"
+                  className="w-full p-2 border rounded-lg mb-2 text-gray-900"
                 >
                   <option value="">센서 선택...</option>
                   <option value="dht22">DHT22 (온도/습도)</option>
@@ -691,7 +691,7 @@ export default function IoTDesignerPage() {
             </div>
             
             <div>
-              <h4 className="font-medium mb-2">제어 장치</h4>
+              <h4 className="font-medium mb-2 text-gray-900">제어 장치</h4>
               
               {/* 제어장치 추가 버튼 */}
               <div className="mb-4">
@@ -705,7 +705,7 @@ export default function IoTDesignerPage() {
                       e.target.value = ''; // 선택 초기화
                     }
                   }}
-                  className="w-full p-2 border rounded-lg mb-2"
+                  className="w-full p-2 border rounded-lg mb-2 text-gray-900"
                 >
                   <option value="">제어장치 선택...</option>
                   <option value="relay">릴레이</option>
