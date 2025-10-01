@@ -35,6 +35,10 @@ export default function AppHeader({
   const [newNoticeType, setNewNoticeType] = useState<'new' | 'update' | 'general'>('general');
   const [notices, setNotices] = useState<any[]>([]);
   const [isLoadingNotices, setIsLoadingNotices] = useState(false);
+  const [editingNoticeId, setEditingNoticeId] = useState<string | null>(null);
+  const [editNoticeTitle, setEditNoticeTitle] = useState('');
+  const [editNoticeContent, setEditNoticeContent] = useState('');
+  const [editNoticeType, setEditNoticeType] = useState<'new' | 'update' | 'general'>('general');
   const menuRef = useRef<HTMLDivElement>(null);
   
   // user가 없을 때 기본값 사용 (로딩 중일 때는 null로 처리)
@@ -193,6 +197,99 @@ export default function AppHeader({
     } catch (error) {
       console.error('공지사항 작성 오류:', error);
       alert('공지사항 작성 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 공지사항 편집 시작
+  const handleStartEdit = (notice: any) => {
+    setEditingNoticeId(notice.id);
+    setEditNoticeTitle(notice.title);
+    setEditNoticeContent(notice.content);
+    setEditNoticeType(notice.type);
+  };
+
+  // 공지사항 편집 취소
+  const handleCancelEdit = () => {
+    setEditingNoticeId(null);
+    setEditNoticeTitle('');
+    setEditNoticeContent('');
+    setEditNoticeType('general');
+  };
+
+  // 공지사항 편집 저장
+  const handleSaveEdit = async (noticeId: string) => {
+    if (!editNoticeTitle.trim() || !editNoticeContent.trim()) {
+      alert('제목과 내용을 모두 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/notices', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: noticeId,
+          title: editNoticeTitle,
+          content: editNoticeContent,
+          type: editNoticeType
+        })
+      });
+
+      if (!response.ok) {
+        console.error('공지사항 수정 API 응답 오류:', response.status, response.statusText);
+        alert('공지사항 수정 중 서버 오류가 발생했습니다.');
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.ok) {
+        alert('공지사항이 성공적으로 수정되었습니다!');
+        handleCancelEdit();
+        fetchNotices();
+      } else {
+        alert('공지사항 수정에 실패했습니다: ' + result.error);
+      }
+    } catch (error) {
+      console.error('공지사항 수정 오류:', error);
+      alert('공지사항 수정 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 공지사항 삭제
+  const handleDeleteNotice = async (noticeId: string) => {
+    if (!confirm('정말 이 공지사항을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/notices', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: noticeId })
+      });
+
+      if (!response.ok) {
+        console.error('공지사항 삭제 API 응답 오류:', response.status, response.statusText);
+        alert('공지사항 삭제 중 서버 오류가 발생했습니다.');
+        return;
+      }
+
+      const result = await response.json();
+
+      if (result.ok) {
+        alert('공지사항이 성공적으로 삭제되었습니다!');
+        fetchNotices();
+      } else {
+        alert('공지사항 삭제에 실패했습니다: ' + result.error);
+      }
+    } catch (error) {
+      console.error('공지사항 삭제 오류:', error);
+      alert('공지사항 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -616,26 +713,109 @@ export default function AppHeader({
                       
                       const typeColor = getTypeColor(notice.type);
                       
+                      // 편집 모드인지 확인
+                      const isEditing = editingNoticeId === notice.id;
+
                       return (
                         <div key={notice.id} className={`border-l-4 ${typeColor.border} pl-4 py-3 ${typeColor.bg} rounded-r-lg`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-gray-600 text-lg">{notice.title}</h3>
-                            <div className="flex items-center space-x-2">
-                              {notice.isNew && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  NEW
-                                </span>
-                              )}
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeColor.badge}`}>
-                                {typeColor.text}
-                              </span>
+                          {isEditing ? (
+                            // 편집 모드
+                            <div className="space-y-4">
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-2">
+                                  제목 *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={editNoticeTitle}
+                                  onChange={(e) => setEditNoticeTitle(e.target.value)}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-2">
+                                  내용 *
+                                </label>
+                                <textarea
+                                  value={editNoticeContent}
+                                  onChange={(e) => setEditNoticeContent(e.target.value)}
+                                  rows={4}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600 resize-none"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-600 mb-2">
+                                  공지 유형
+                                </label>
+                                <select
+                                  value={editNoticeType}
+                                  onChange={(e) => setEditNoticeType(e.target.value as 'new' | 'update' | 'general')}
+                                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
+                                >
+                                  <option value="general">일반</option>
+                                  <option value="new">새 기능</option>
+                                  <option value="update">업데이트</option>
+                                </select>
+                              </div>
+
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleSaveEdit(notice.id)}
+                                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                                >
+                                  저장
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                                >
+                                  취소
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                          <p className="text-gray-600 mb-2">{notice.content}</p>
-                          <div className="flex items-center text-sm text-gray-500">
-                            <span className="mr-2">📅</span>
-                            <span>{notice.date}</span>
-                          </div>
+                          ) : (
+                            // 일반 표시 모드
+                            <>
+                              <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-bold text-gray-600 text-lg">{notice.title}</h3>
+                                <div className="flex items-center space-x-2">
+                                  {notice.isNew && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                      NEW
+                                    </span>
+                                  )}
+                                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeColor.badge}`}>
+                                    {typeColor.text}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="text-gray-600 mb-2 whitespace-pre-wrap">{notice.content}</p>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center text-sm text-gray-500">
+                                  <span className="mr-2">📅</span>
+                                  <span>{notice.date}</span>
+                                </div>
+                                {safeUser.role === 'system_admin' && (
+                                  <div className="flex items-center space-x-2">
+                                    <button
+                                      onClick={() => handleStartEdit(notice)}
+                                      className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-lg transition-colors duration-200"
+                                    >
+                                      ✏️ 편집
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteNotice(notice.id)}
+                                      className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg transition-colors duration-200"
+                                    >
+                                      🗑️ 삭제
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
                         </div>
                       );
                     })
