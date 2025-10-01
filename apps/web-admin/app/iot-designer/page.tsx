@@ -17,6 +17,14 @@ interface SystemSpec {
     ssid: string;
     password: string;
   };
+  modbusConfig?: {
+    host: string;
+    port: number;
+    unitId: number;
+    registerMappings: Record<string, number>;
+    dataTypes: Record<string, 'U16' | 'S16' | 'U32' | 'S32' | 'float'>;
+    safeLimits: Record<string, { min: number; max: number }>;
+  };
 }
 
 export default function IoTDesignerPage() {
@@ -28,6 +36,14 @@ export default function IoTDesignerPage() {
     wifi: {
       ssid: '',
       password: ''
+    },
+    modbusConfig: {
+      host: '192.168.1.100',
+      port: 502,
+      unitId: 1,
+      registerMappings: {},
+      dataTypes: {},
+      safeLimits: {}
     }
   });
   
@@ -174,6 +190,153 @@ export default function IoTDesignerPage() {
             </div>
           )}
         </div>
+
+        {/* 2.6. Modbus TCP 설정 */}
+        {(spec.protocol === 'modbus-tcp' || spec.protocol === 'rs485') && spec.modbusConfig ? (
+          <div className="bg-white border rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4">🔌 Modbus 설정</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium mb-2">호스트 주소</label>
+                <input
+                  type="text"
+                  value={spec.modbusConfig.host}
+                  onChange={(e) => setSpec(prev => ({ 
+                    ...prev, 
+                    modbusConfig: { ...prev.modbusConfig!, host: e.target.value }
+                  }))}
+                  placeholder="192.168.1.100"
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">포트</label>
+                <input
+                  type="number"
+                  value={spec.modbusConfig.port}
+                  onChange={(e) => setSpec(prev => ({ 
+                    ...prev, 
+                    modbusConfig: { ...prev.modbusConfig!, port: parseInt(e.target.value) }
+                  }))}
+                  placeholder="502"
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Unit ID</label>
+                <input
+                  type="number"
+                  value={spec.modbusConfig.unitId}
+                  onChange={(e) => setSpec(prev => ({ 
+                    ...prev, 
+                    modbusConfig: { ...prev.modbusConfig!, unitId: parseInt(e.target.value) }
+                  }))}
+                  placeholder="1"
+                  className="w-full p-2 border rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* 레지스터 매핑 */}
+            <div className="mb-6">
+              <h4 className="font-semibold mb-3">📋 레지스터 매핑</h4>
+              <div className="space-y-2">
+                {[...spec.sensors, ...spec.controls].map((item, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium">{item.type} ({item.count}개)</span>
+                    <input
+                      type="number"
+                      placeholder="레지스터 주소"
+                      value={spec.modbusConfig.registerMappings[item.type] || ''}
+                      onChange={(e) => setSpec(prev => ({
+                        ...prev,
+                        modbusConfig: {
+                          ...prev.modbusConfig!,
+                          registerMappings: {
+                            ...prev.modbusConfig!.registerMappings,
+                            [item.type]: parseInt(e.target.value) || 0
+                          }
+                        }
+                      }))}
+                      className="w-32 p-2 border rounded"
+                    />
+                    <select
+                      value={spec.modbusConfig.dataTypes[item.type] || 'U16'}
+                      onChange={(e) => setSpec(prev => ({
+                        ...prev,
+                        modbusConfig: {
+                          ...prev.modbusConfig!,
+                          dataTypes: {
+                            ...prev.modbusConfig!.dataTypes,
+                            [item.type]: e.target.value as 'U16' | 'S16' | 'U32' | 'S32' | 'float'
+                          }
+                        }
+                      }))}
+                      className="w-24 p-2 border rounded"
+                    >
+                      <option value="U16">U16</option>
+                      <option value="S16">S16</option>
+                      <option value="U32">U32</option>
+                      <option value="S32">S32</option>
+                      <option value="float">Float</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 안전 한계값 */}
+            <div>
+              <h4 className="font-semibold mb-3">⚠️ 안전 한계값</h4>
+              <div className="space-y-2">
+                {spec.controls.map((item, index) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-yellow-50 rounded-lg">
+                    <span className="font-medium">{item.type}</span>
+                    <input
+                      type="number"
+                      placeholder="최소값"
+                      value={spec.modbusConfig.safeLimits[item.type]?.min || ''}
+                      onChange={(e) => setSpec(prev => ({
+                        ...prev,
+                        modbusConfig: {
+                          ...prev.modbusConfig!,
+                          safeLimits: {
+                            ...prev.modbusConfig!.safeLimits,
+                            [item.type]: {
+                              ...prev.modbusConfig!.safeLimits[item.type],
+                              min: parseInt(e.target.value) || 0
+                            }
+                          }
+                        }
+                      }))}
+                      className="w-24 p-2 border rounded"
+                    />
+                    <span>~</span>
+                    <input
+                      type="number"
+                      placeholder="최대값"
+                      value={spec.modbusConfig.safeLimits[item.type]?.max || ''}
+                      onChange={(e) => setSpec(prev => ({
+                        ...prev,
+                        modbusConfig: {
+                          ...prev.modbusConfig!,
+                          safeLimits: {
+                            ...prev.modbusConfig!.safeLimits,
+                            [item.type]: {
+                              ...prev.modbusConfig!.safeLimits[item.type],
+                              max: parseInt(e.target.value) || 100
+                            }
+                          }
+                        }
+                      }))}
+                      className="w-24 p-2 border rounded"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
         
         {/* 3. 센서/제어 선택 */}
         <div className="bg-white border rounded-lg p-6">
