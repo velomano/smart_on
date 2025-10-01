@@ -39,19 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_iot_devices_last_seen
 CREATE INDEX IF NOT EXISTS idx_iot_devices_tenant_status 
   ON iot_devices(tenant_id, status);
 
--- RLS 정책
+-- RLS 정책 (Service Role만 허용)
 ALTER TABLE iot_devices ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Tenant isolation for iot_devices" ON iot_devices;
-CREATE POLICY "Tenant isolation for iot_devices" ON iot_devices
-  FOR ALL
-  USING (
-    tenant_id IN (
-      SELECT tenant_id 
-      FROM farm_memberships 
-      WHERE user_id = auth.uid()
-    )
-  );
 
 -- Service role은 모든 접근 허용
 DROP POLICY IF EXISTS "Service role full access to iot_devices" ON iot_devices;
@@ -60,6 +49,11 @@ CREATE POLICY "Service role full access to iot_devices" ON iot_devices
   TO service_role
   USING (true)
   WITH CHECK (true);
+
+-- TODO: 일반 사용자 정책은 추후 추가
+-- CREATE POLICY "Tenant isolation for iot_devices" ON iot_devices
+--   FOR ALL TO authenticated
+--   USING (tenant_id IN (SELECT tenant_id FROM farm_memberships WHERE user_id = auth.uid()));
 
 -- 트리거: updated_at 자동 갱신
 CREATE OR REPLACE FUNCTION update_iot_devices_updated_at()
@@ -100,19 +94,8 @@ CREATE INDEX IF NOT EXISTS idx_device_claims_expires
 CREATE INDEX IF NOT EXISTS idx_device_claims_tenant 
   ON device_claims(tenant_id, expires_at);
 
--- RLS 정책
+-- RLS 정책 (Service Role만 허용)
 ALTER TABLE device_claims ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Tenant isolation for device_claims" ON device_claims;
-CREATE POLICY "Tenant isolation for device_claims" ON device_claims
-  FOR ALL
-  USING (
-    tenant_id IN (
-      SELECT tenant_id 
-      FROM farm_memberships 
-      WHERE user_id = auth.uid()
-    )
-  );
 
 -- Service role 전체 접근
 DROP POLICY IF EXISTS "Service role full access to device_claims" ON device_claims;
@@ -159,19 +142,8 @@ CREATE INDEX IF NOT EXISTS idx_iot_readings_ts
 CREATE INDEX IF NOT EXISTS idx_iot_readings_device_key 
   ON iot_readings(device_id, key, ts DESC);
 
--- RLS 정책
+-- RLS 정책 (Service Role만 허용)
 ALTER TABLE iot_readings ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Tenant isolation for iot_readings" ON iot_readings;
-CREATE POLICY "Tenant isolation for iot_readings" ON iot_readings
-  FOR ALL
-  USING (
-    tenant_id IN (
-      SELECT tenant_id 
-      FROM farm_memberships 
-      WHERE user_id = auth.uid()
-    )
-  );
 
 -- Service role 전체 접근
 DROP POLICY IF EXISTS "Service role full access to iot_readings" ON iot_readings;
@@ -208,19 +180,8 @@ CREATE INDEX IF NOT EXISTS idx_iot_commands_pending
 CREATE INDEX IF NOT EXISTS idx_iot_commands_device_status 
   ON iot_commands(device_id, status, issued_at DESC);
 
--- RLS 정책
+-- RLS 정책 (Service Role만 허용)
 ALTER TABLE iot_commands ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "Tenant isolation for iot_commands" ON iot_commands;
-CREATE POLICY "Tenant isolation for iot_commands" ON iot_commands
-  FOR ALL
-  USING (
-    tenant_id IN (
-      SELECT tenant_id 
-      FROM farm_memberships 
-      WHERE user_id = auth.uid()
-    )
-  );
 
 -- Service role 전체 접근
 DROP POLICY IF EXISTS "Service role full access to iot_commands" ON iot_commands;
