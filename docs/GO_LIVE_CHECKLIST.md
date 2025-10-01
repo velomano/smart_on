@@ -352,12 +352,350 @@ GROUP BY tenant_id;
 
 ---
 
+---
+
+## 🔒 **필수 보강 체크 (운영에서 자주 터지는 것)**
+
+### **인프라/보안**
+
+#### **TLS/도메인 체인**
+```bash
+# SSL 인증서 만료일 확인
+openssl s_client -connect bridge.smartfarm.app:443 -servername bridge.smartfarm.app </dev/null 2>/dev/null | openssl x509 -noout -dates
+
+# 알림 설정 (30일, 7일 전)
+- [ ] 30일 전 알림 설정 (Telegram/Slack)
+- [ ] 7일 전 긴급 알림
+```
+
+#### **CORS 화이트리스트**
+```typescript
+// apps/universal-bridge/src/protocols/http/server.ts
+app.use(cors({
+  origin: (origin, callback) => {
+    const whitelist = [
+      /^https:\/\/[\w-]+\.smartfarm\.app$/,  // 테넌트 도메인
+      'http://localhost:3001',  // 개발용
+    ];
+    
+    if (!origin || whitelist.some(pattern => 
+      typeof pattern === 'string' ? pattern === origin : pattern.test(origin)
+    )) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-device-id', 'x-tenant-id', 'x-sig', 'x-ts', 'x-setup-token'],
+  maxAge: 300,  // Preflight 캐시 5분
+}));
+```
+
+#### **로그 마스킹**
+```typescript
+// 중요: device_key, x-sig, Authorization 마스킹
+function maskSensitiveData(log: any) {
+  if (log.device_key) log.device_key = '**********';
+  if (log.headers?.['x-sig']) log.headers['x-sig'] = '**********';
+  if (log.headers?.authorization) log.headers.authorization = '**********';
+  return log;
+}
+```
+
+**체크리스트:**
+- [ ] CORS 화이트리스트 설정
+- [ ] Preflight 캐시 300s
+- [ ] 로그에서 device_key, x-sig 마스킹
+- [ ] WAF 룰 적용 (/api/bridge/* IP 평판)
+- [ ] SSL 인증서 만료 알림
+
+---
+
+### **데이터베이스/성능**
+
+#### **파티셔닝 & 인덱스**
+```sql
+-- Covering Index (중요!)
+CREATE INDEX IF NOT EXISTS idx_readings_device_key_ts 
+ON iot_readings (device_id, key, ts DESC);
+
+-- 파티셔닝 (30일 이후 cold storage)
+-- TODO: TimescaleDB 또는 수동 파티션 테이블 생성
+```
+
+#### **백업 & 복구 연습**
+```bash
+# PITR (Point-In-Time Recovery) 리허설
+1. Supabase 대시보드 → Database → Backups
+2. "Restore to 24h ago" 테스트 (READ ONLY 복구)
+3. 데이터 확인 → 롤백
+```
+
+#### **롤백 스크립트**
+```sql
+-- down.sql (Phase 1-4 롤백)
+DROP TABLE IF EXISTS device_ui_templates CASCADE;
+DROP TABLE IF EXISTS device_registry CASCADE;
+DROP TABLE IF EXISTS device_profiles CASCADE;
+DROP TABLE IF EXISTS iot_commands CASCADE;
+DROP TABLE IF EXISTS iot_readings CASCADE;
+DROP TABLE IF EXISTS iot_devices CASCADE;
+DROP TABLE IF EXISTS device_claims CASCADE;
+```
+
+**체크리스트:**
+- [ ] 커버링 인덱스 생성
+- [ ] PITR 복구 리허설 완료
+- [ ] down.sql 롤백 스크립트 준비
+- [ ] 커넥션 풀 한계 확인 (Supabase 대시보드)
+
+---
+
+### **신뢰성/큐잉**
+
+#### **Dead-Letter Queue**
+```typescript
+// 실패한 메시지 보존
+interface DLQMessage {
+  id: string;
+  device_id: string;
+  type: 'telemetry' | 'command' | 'ack';
+  payload: any;
+  error: string;
+  retry_count: number;
+  created_at: Date;
+}
+
+// DB 테이블
+CREATE TABLE IF NOT EXISTS dlq_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  device_id TEXT NOT NULL,
+  type TEXT NOT NULL,
+  payload JSONB NOT NULL,
+  error TEXT,
+  retry_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+#### **Idempotency (멱등성)**
+```typescript
+// Idempotency-Key로 중복 방지
+const idempotencyCache = new Map<string, any>();
+
+app.use((req, res, next) => {
+  const key = req.headers['idempotency-key'];
+  if (key && idempotencyCache.has(key)) {
+    return res.json(idempotencyCache.get(key));
+  }
+  next();
+});
+```
+
+**체크리스트:**
+- [ ] DLQ 테이블 생성
+- [ ] Idempotency-Key 처리
+- [ ] 스파이크 시뮬레이션 (×10 트래픽)
+
+---
+
+### **배포/가용성**
+
+#### **무중단 배포 (WS 드레이닝)**
+```bash
+# 1. 새 인스턴스 시작
+# 2. Health check 통과 대기
+# 3. 구 인스턴스에 SIGTERM 전송
+# 4. WS 연결 드레이닝 (30초)
+# 5. 종료
+
+process.on('SIGTERM', async () => {
+  console.log('Draining WebSocket connections...');
+  wss.clients.forEach(ws => {
+    ws.send(JSON.stringify({ type: 'server_shutdown', reconnect_in: 5 }));
+    ws.close();
+  });
+  setTimeout(() => process.exit(0), 30000);
+});
+```
+
+#### **Feature Flags**
+```typescript
+// 환경 변수로 제어
+const FEATURE_FLAGS = {
+  HMAC_ENFORCED: process.env.HMAC_ENFORCED === 'true',
+  PREFLIGHT_STRICT: process.env.PREFLIGHT_STRICT === 'true',
+  WS_FALLBACK_HTTP: process.env.WS_FALLBACK_HTTP === 'true',
+};
+```
+
+**체크리스트:**
+- [ ] WS 드레이닝 구현
+- [ ] Feature Flags 설정
+- [ ] SLO 정의 (99.5% uptime)
+- [ ] Error Budget 산정
+
+---
+
+### **관측/모니터링**
+
+#### **알람 임계치**
+```yaml
+# 모니터링 알람 설정
+alerts:
+  - name: high_401_rate
+    condition: 401_rate > 2%
+    severity: warning
+    
+  - name: high_429_rate
+    condition: 429_rate > 5%
+    severity: warning
+    
+  - name: ws_disconnect_spike
+    condition: ws_disconnects > 30/hour
+    severity: critical
+    
+  - name: low_device_online
+    condition: device_online_ratio < 90%
+    severity: critical
+```
+
+#### **추적 상관키 (Correlation ID)**
+```typescript
+// 모든 요청에 x-request-id 추가
+app.use((req, res, next) => {
+  req.id = req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  res.setHeader('x-request-id', req.id);
+  next();
+});
+
+// 로그에 포함
+console.log(`[${req.id}] ${message}`);
+```
+
+**체크리스트:**
+- [ ] 알람 임계치 설정 (6개 지표)
+- [ ] 합성 모니터링 (5분 간격)
+- [ ] x-request-id 추가
+- [ ] 로그/메트릭 상관키 통합
+
+---
+
+### **펌웨어/현장**
+
+#### **ESP32 펌웨어 롤백**
+```cpp
+// OTA 실패 시 자동 롤백
+#include <Update.h>
+
+void performOTA() {
+  // NVS에 현재 버전 백업
+  preferences.putString("fw_version_backup", FW_VERSION);
+  
+  // OTA 시도
+  if (updateSuccess) {
+    preferences.putString("fw_version_current", NEW_VERSION);
+  } else {
+    // 롤백
+    esp_ota_set_boot_partition(previous_partition);
+    ESP.restart();
+  }
+}
+```
+
+#### **NTP 실패 대안**
+```cpp
+// 서버 시각 허용 (부팅 시 1회)
+if (!ntpSynced && bootCount == 1) {
+  // 서버 응답의 Date 헤더 사용
+  String serverTime = http.header("Date");
+  useServerTime(serverTime);
+  Serial.println("⚠️ NTP 실패, 서버 시각 사용");
+}
+```
+
+**체크리스트:**
+- [ ] OTA 롤백 로직 구현
+- [ ] NTP 실패 대안 구현
+- [ ] 100회 재부팅 스트레스 테스트
+
+---
+
+## 🔴 **레드팀 시나리오 (보안 테스트)**
+
+### **1. Replay Attack**
+```bash
+# 같은 서명으로 3회 전송
+for i in {1..3}; do
+  curl -H "x-sig: SAME_SIG" -H "x-ts: SAME_TS" ...
+done
+
+# 기대: 409 Conflict 또는 멱등 무시
+```
+
+### **2. 대용량 Payload**
+```bash
+# 1,000개 readings 전송
+readings=$(for i in {1..1000}; do echo '{"key":"temp","value":25}'; done)
+curl -d "{\"readings\":[$readings]}" ...
+
+# 기대: 413 Request Entity Too Large 또는 배치 분할
+```
+
+### **3. WebSocket 폭주**
+```bash
+# 1디바이스가 10Hz로 전송 (초당 10개)
+for i in {1..100}; do
+  wscat -c ws://localhost:8080/ws/DEVICE -x '{"type":"telemetry",...}'
+  sleep 0.1
+done
+
+# 관찰: CPU/RAM, Rate Limit 작동
+```
+
+### **4. 테넌트 혼동**
+```bash
+# 다른 테넌트의 키로 요청
+curl -H "x-tenant-id: OTHER_TENANT" -H "x-sig: OTHER_KEY" ...
+
+# 기대: 403 Forbidden (RLS 차단)
+```
+
+### **5. QR 만료/탈취**
+```bash
+# 만료된 Setup Token으로 Bind
+curl -H "x-setup-token: EXPIRED_TOKEN" ...
+
+# 기대: 401 + "Token expired, please generate new QR"
+```
+
+**체크리스트:**
+- [ ] Replay Attack 방어 확인
+- [ ] 대용량 Payload 처리 (1,000개)
+- [ ] WS 폭주 시 Rate Limit
+- [ ] 테넌트 RLS 차단 확인
+- [ ] QR 만료 친절한 에러
+
+---
+
 ## 🎊 **최종 승인 기준**
 
-- ✅ 모든 체크리스트 통과
+### **필수 체크**
+- ✅ 모든 환경 변수 설정
+- ✅ 6가지 기능 테스트 통과
+- ✅ 보안 추가 항목 (CORS, 마스킹, WAF)
+- ✅ DB 백업/복구 리허설
+- ✅ 무중단 배포 준비
+- ✅ 6개 지표 모니터링 대시보드
+- ✅ 레드팀 시나리오 5개 통과
 - ✅ 24시간 스테이징 soak 성공
-- ✅ 모니터링 지표 정상
-- ✅ 운영 런북 준비 완료
+
+### **선택 체크**
+- ⏳ 합성 모니터링 (외부 2개 리전)
+- ⏳ Feature Flags 구현
+- ⏳ DLQ 테이블 생성
+- ⏳ 파티셔닝 설정
 
 **통과 시 → Go-Live 승인!** 🚀
 
