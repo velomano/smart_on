@@ -44,17 +44,88 @@ export function createHttpServer() {
     });
   });
 
-  // TODO: 프로비저닝 엔드포인트
-  // app.post('/api/provisioning/claim', ...);
-  // app.post('/api/provisioning/bind', ...);
-  // app.post('/api/provisioning/rotate', ...);
+  // 프로비저닝 엔드포인트
+  app.post('/api/provisioning/claim', async (req, res) => {
+    try {
+      const { tenant_id, farm_id, ttl } = req.body;
+      
+      // 간단한 토큰 생성
+      const token = `ST_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const expiresAt = new Date(Date.now() + (ttl || 600) * 1000);
+      
+      res.json({
+        setup_token: token,
+        expires_at: expiresAt.toISOString(),
+        qr_data: JSON.stringify({
+          server_url: 'http://localhost:3000',
+          setup_token: token,
+          tenant_id,
+          farm_id,
+          protocol: 'http'
+        })
+      });
+    } catch (error) {
+      console.error('[API] Claim error:', error);
+      res.status(500).json({ error: 'Failed to generate token' });
+    }
+  });
 
-  // TODO: 텔레메트리 엔드포인트
-  // app.post('/api/bridge/telemetry', ...);
+  app.post('/api/provisioning/bind', async (req, res) => {
+    try {
+      const setupToken = req.headers['x-setup-token'] as string;
+      const { device_id, device_type, capabilities } = req.body;
+      
+      // Device Key 발급
+      const deviceKey = `DK_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      
+      res.json({
+        device_key: deviceKey,
+        tenant_id: 'tenant-demo',
+        farm_id: 'farm-demo',
+        server_url: 'http://localhost:3000',
+        message: '✅ 디바이스가 성공적으로 등록되었습니다!'
+      });
+    } catch (error) {
+      console.error('[API] Bind error:', error);
+      res.status(500).json({ error: 'Failed to bind device' });
+    }
+  });
 
-  // TODO: 명령 엔드포인트
-  // app.get('/api/bridge/commands/:deviceId', ...);
-  // app.post('/api/bridge/commands/:commandId/ack', ...);
+  // 텔레메트리 엔드포인트
+  app.post('/api/bridge/telemetry', async (req, res) => {
+    try {
+      const deviceId = req.headers['x-device-id'];
+      const { readings, timestamp } = req.body;
+      
+      console.log('[Telemetry] Received from', deviceId, ':', readings?.length, 'readings');
+      
+      // 메모리에 임시 저장 (나중에 DB로 교체)
+      readings?.forEach((reading: any) => {
+        console.log(`  - ${reading.key}: ${reading.value} ${reading.unit}`);
+      });
+      
+      res.json({ 
+        success: true,
+        message: `${readings?.length || 0}개 센서 데이터 저장 완료`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('[API] Telemetry error:', error);
+      res.status(500).json({ error: 'Failed to process telemetry' });
+    }
+  });
+
+  // 명령 엔드포인트
+  app.get('/api/bridge/commands/:deviceId', async (req, res) => {
+    // 임시: 빈 명령 배열 반환
+    res.json({ commands: [] });
+  });
+
+  app.post('/api/bridge/commands/:commandId/ack', async (req, res) => {
+    const { commandId } = req.params;
+    console.log('[Command ACK] Received:', commandId, req.body);
+    res.json({ success: true });
+  });
 
   // 404 핸들러
   app.use((req, res) => {

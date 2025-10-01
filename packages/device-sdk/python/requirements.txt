@@ -1,0 +1,3 @@
+requests>=2.31.0
+Adafruit-DHT>=1.4.0  # 선택적 (DHT22 센서 사용 시)
+
