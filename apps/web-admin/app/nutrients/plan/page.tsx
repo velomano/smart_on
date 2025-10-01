@@ -106,6 +106,9 @@ export default function NutrientPlanPage() {
   
   // 탭 상태
   const [activeTab, setActiveTab] = useState<'calculate' | 'recipes' | 'saved'>('calculate');
+  
+  // 레시피 통계 상태
+  const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0 });
 
   // 인증 확인
   useEffect(() => {
@@ -126,6 +129,43 @@ export default function NutrientPlanPage() {
     };
     checkAuth();
   }, []);
+
+  // 레시피 통계 로드
+  useEffect(() => {
+    const fetchRecipeStats = async () => {
+      try {
+        // 전체 레시피 수 조회
+        const totalResponse = await fetch('/api/nutrients/browse?limit=1');
+        const totalResult = await totalResponse.json();
+        
+        // 모든 레시피를 가져와서 클라이언트에서 오늘 날짜 필터링
+        const allResponse = await fetch('/api/nutrients/browse?limit=1000');
+        const allResult = await allResponse.json();
+        
+        // 오늘 날짜 계산
+        const today = new Date().toISOString().split('T')[0];
+        
+        // 오늘 생성된 레시피 개수 계산
+        const todayCount = allResult.recipes?.filter((recipe: any) => {
+          if (!recipe.created_at) return false;
+          const recipeDate = new Date(recipe.created_at).toISOString().split('T')[0];
+          return recipeDate === today;
+        }).length || 0;
+        
+        setRecipeStats({
+          total: totalResult.pagination?.total || 0,
+          today: todayCount,
+        });
+      } catch (e) {
+        console.error('레시피 통계 가져오기 실패:', e);
+        setRecipeStats({ total: 0, today: 0 });
+      }
+    };
+    
+    if (user) {
+      fetchRecipeStats();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -314,13 +354,27 @@ export default function NutrientPlanPage() {
       <main className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8">
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
           <div className="bg-gradient-to-r from-emerald-500 to-blue-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
-            <div className="flex items-center">
-              <div className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
-                <span className="text-lg sm:text-2xl lg:text-3xl">🌱</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
+                  <span className="text-lg sm:text-2xl lg:text-3xl">🌱</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">배양액 제조 시스템</h1>
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">작물별 최적 배양액 제조를 위한 지능형 계산 및 레시피 관리 시스템</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">배양액 제조 시스템</h1>
-                <p className="text-white/90 text-sm sm:text-base lg:text-lg">작물별 최적 배양액 제조를 위한 지능형 계산 및 레시피 관리 시스템</p>
+              
+              {/* 레시피 통계 */}
+              <div className="hidden sm:flex flex-col items-end text-white">
+                <div className="bg-white/20 rounded-lg px-3 py-2 mb-2">
+                  <div className="text-sm text-white/90">오늘 찾은 레시피</div>
+                  <div className="text-xl font-bold">{recipeStats.today}</div>
+                </div>
+                <div className="bg-white/20 rounded-lg px-3 py-2">
+                  <div className="text-sm text-white/90">총 레시피</div>
+                  <div className="text-xl font-bold">{recipeStats.total}</div>
+                </div>
               </div>
             </div>
           </div>
