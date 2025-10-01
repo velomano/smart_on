@@ -151,16 +151,63 @@ export function createHttpServer() {
     }
   });
 
-  // 명령 엔드포인트
+  // 명령 발행 (웹어드민 → 디바이스)
+  app.post('/api/bridge/commands', async (req, res) => {
+    try {
+      const { device_id, type, payload } = req.body;
+      
+      if (!device_id || !type) {
+        return res.status(400).json({ error: 'device_id and type are required' });
+      }
+
+      // WebSocket으로 명령 푸시
+      const { pushCommandToDevice } = await import('../websocket/server.js');
+      
+      const commandId = `CMD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const command = {
+        id: commandId,
+        type,
+        payload: payload || {},
+      };
+
+      const pushed = pushCommandToDevice(device_id, command);
+      
+      if (pushed) {
+        res.json({ 
+          success: true,
+          command_id: commandId,
+          status: 'pushed',
+          message: '명령이 디바이스로 전송되었습니다.'
+        });
+      } else {
+        res.status(503).json({ 
+          error: 'Device not connected',
+          message: '디바이스가 WebSocket에 연결되어 있지 않습니다.'
+        });
+      }
+    } catch (error: any) {
+      console.error('[API] Command error:', error);
+      res.status(500).json({ error: error.message || 'Failed to push command' });
+    }
+  });
+
+  // 명령 조회 (디바이스 → 서버)
   app.get('/api/bridge/commands/:deviceId', async (req, res) => {
-    // 임시: 빈 명령 배열 반환
+    // HTTP 폴링용 (WebSocket 미지원 디바이스)
+    // TODO: DB에서 대기 중인 명령 조회
     res.json({ commands: [] });
   });
 
+  // 명령 ACK (디바이스 → 서버)
   app.post('/api/bridge/commands/:commandId/ack', async (req, res) => {
     const { commandId } = req.params;
-    console.log('[Command ACK] Received:', commandId, req.body);
-    res.json({ success: true });
+    const { status, detail } = req.body;
+    
+    console.log('[Command ACK] Received:', commandId, status);
+    
+    // TODO: DB 업데이트 (iot_commands.status = 'acked', ack_at = NOW())
+    
+    res.json({ success: true, message: 'ACK received' });
   });
 
   // 404 핸들러

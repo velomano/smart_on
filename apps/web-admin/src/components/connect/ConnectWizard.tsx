@@ -202,7 +202,10 @@ function CodeGenerateStep({ config, onBack, onNext }: { config: DeviceConfig; on
   const [generatedCode, setGeneratedCode] = useState('');
 
   useEffect(() => {
-    generateCode();
+    // 이미 토큰이 있으면 재호출 안 함
+    if (!setupToken) {
+      generateCode();
+    }
   }, []);
 
   const generateCode = async () => {
