@@ -363,3 +363,4 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 # Root Directory 설정 수정 후 배포 테스트
 # vercel.json 빌드 명령어 제거 후 배포 테스트
 # 루트 vercel.json 빌드 명령어 제거 후 배포 테스트
+# 누락된 파일들 생성 후 배포 테스트
