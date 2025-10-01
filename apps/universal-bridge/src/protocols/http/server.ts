@@ -12,6 +12,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { createAdapter, MultiAdapter } from '../../adapters';
 import { Telemetry, Command } from '../../types/core';
+import rpcRouter from '../rpc';
 
 /**
  * HTTP 서버 생성
@@ -46,10 +47,13 @@ export function createHttpServer() {
   }));
   app.use(express.json({ limit: '1mb' }));
 
+  // RPC API 라우트 (내부 API)
+  app.use('/rpc', rpcRouter);
+
   // Rate Limiting 미들웨어
   app.use(async (req, res, next) => {
-    // Health check는 레이트 리밋 제외
-    if (req.path === '/health') {
+    // Health check와 RPC는 레이트 리밋 제외
+    if (req.path === '/health' || req.path.startsWith('/rpc')) {
       return next();
     }
 

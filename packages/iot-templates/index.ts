@@ -1,7 +1,7 @@
 // IoT Designer - 센서/제어 카탈로그 및 디바이스 핀맵
 export type Voltage = 3.3 | 5 | 12 | 24;
 export type ControlType = 'boolean' | 'pwm' | 'servo' | 'stepper';
-export type Protocol = 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485';
+export type Protocol = 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp';
 
 // 디바이스별 핀맵 정의
 export const devicePinmaps = {
