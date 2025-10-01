@@ -136,8 +136,7 @@ CREATE INDEX IF NOT EXISTS idx_iot_readings_tenant_device_ts
   ON iot_readings(tenant_id, device_id, ts DESC);
 
 CREATE INDEX IF NOT EXISTS idx_iot_readings_ts 
-  ON iot_readings(ts DESC) 
-  WHERE ts > NOW() - INTERVAL '7 days';
+  ON iot_readings(ts DESC);
 
 CREATE INDEX IF NOT EXISTS idx_iot_readings_device_key 
   ON iot_readings(device_id, key, ts DESC);
@@ -220,7 +219,6 @@ SELECT
   STDDEV(value) as stddev_value,
   COUNT(*) as count
 FROM iot_readings
-WHERE ts > NOW() - INTERVAL '30 days'
 GROUP BY device_id, tenant_id, hour, key;
 
 -- 인덱스
