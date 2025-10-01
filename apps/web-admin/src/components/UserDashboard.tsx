@@ -122,14 +122,27 @@ export default function UserDashboard({
   useEffect(() => {
     const fetchRecipeStats = async () => {
       try {
+        // 전체 레시피 수 조회
         const totalResponse = await fetch('/api/nutrients/browse?limit=1');
         const totalResult = await totalResponse.json();
+        
+        // 모든 레시피를 가져와서 클라이언트에서 오늘 날짜 필터링
+        const allResponse = await fetch('/api/nutrients/browse?limit=1000');
+        const allResult = await allResponse.json();
+        
+        // 오늘 날짜 계산
         const today = new Date().toISOString().split('T')[0];
-        const todayResponse = await fetch(`/api/nutrients/browse?limit=100&created_after=${today}`);
-        const todayResult = await todayResponse.json();
+        
+        // 오늘 생성된 레시피 개수 계산
+        const todayCount = allResult.recipes?.filter((recipe: any) => {
+          if (!recipe.created_at) return false;
+          const recipeDate = new Date(recipe.created_at).toISOString().split('T')[0];
+          return recipeDate === today;
+        }).length || 0;
+        
         setRecipeStats({
           total: totalResult.pagination?.total || 0,
-          today: todayResult.recipes?.length || 0,
+          today: todayCount,
         });
       } catch (e) {
         console.error('레시피 통계 가져오기 실패:', e);
