@@ -426,7 +426,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                       <div className="mt-3">
                         <span className="font-medium text-purple-700 text-sm">미량원소:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {selectedRecipe.nutrients_detail.trace_elements.map((element, index) => (
+                          {selectedRecipe.nutrients_detail.trace_elements.map((element: string, index: number) => (
                             <span key={index} className="px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded">
                               {element}
                             </span>
