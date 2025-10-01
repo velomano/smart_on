@@ -1127,7 +1127,7 @@ function BedsManagementContent() {
                           <div className="flex items-center space-x-3">
                             <button
                               onClick={() => handleEditFarm(farm)}
-                              className="bg-white/20 backdrop-blur-sm text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold shadow-lg hover:bg-white/30 transition-all duration-200 flex items-center space-x-1 sm:space-x-2 border border-white/30"
+                              className="bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-semibold shadow-lg hover:bg-white/30 transition-all duration-200 flex items-center justify-center space-x-2 border border-white/30 whitespace-nowrap"
                             >
                               <span>✏️</span>
                               <span>농장 편집</span>
