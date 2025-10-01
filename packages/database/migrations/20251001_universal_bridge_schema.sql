@@ -8,6 +8,14 @@
 --
 -- =====================================================
 
+-- ==================== 0. Tenants 테이블 확장 ====================
+-- 기존 tenants 테이블에 subdomain, description 컬럼 추가
+
+ALTER TABLE tenants 
+ADD COLUMN IF NOT EXISTS subdomain TEXT UNIQUE,
+ADD COLUMN IF NOT EXISTS description TEXT,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 -- ==================== 1. IoT Devices 테이블 (새로 생성) ====================
 -- 기존 devices 테이블과 분리하여 IoT 전용 테이블 생성
 
