@@ -11,6 +11,7 @@ export type Allocation = {
 export function allocatePins(req: {
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
+  protocol?: string; // 통신 프로토콜 (UART/RS-485용)
 }): Allocation {
   const used = new Set<number|string>();
   const assigned: Record<string, AssignedPin[]> = {};
@@ -29,6 +30,35 @@ export function allocatePins(req: {
   // I2C 예약 (고정 핀)
   used.add(esp32Pinmap.i2c.sda);
   used.add(esp32Pinmap.i2c.scl);
+
+  // UART/RS-485 핀 예약 (프로토콜에 따라)
+  if (req.protocol === 'serial' || req.protocol === 'rs485' || req.protocol === 'modbus-tcp') {
+    // UART 핀 예약 (TX, RX) - 첫 번째 UART 사용
+    if (esp32Pinmap.uart && esp32Pinmap.uart.length > 0) {
+      const uart = esp32Pinmap.uart[0]; // 첫 번째 UART 사용
+      used.add(uart.tx);
+      used.add(uart.rx);
+      assigned['uart_comm'] = [
+        { role: 'TX', pin: uart.tx },
+        { role: 'RX', pin: uart.rx }
+      ];
+    }
+    
+    // RS-485의 경우 DE(Data Enable) 핀도 예약
+    if (req.protocol === 'rs485') {
+      // DE 핀은 디지털 핀 중 하나 사용
+      const dePin = take(esp32Pinmap.digital, 'RS-485 DE');
+      if (dePin) {
+        assigned['rs485_de'] = [{ role: 'DE', pin: dePin }];
+      }
+      
+      // RS-485 종단 저항 제어 핀 (선택적)
+      const termPin = take(esp32Pinmap.digital, 'RS-485 Term');
+      if (termPin) {
+        assigned['rs485_term'] = [{ role: 'TERM', pin: termPin }];
+      }
+    }
+  }
 
   // 센서 핀 할당
   req.sensors.forEach(({ type, count }) => {

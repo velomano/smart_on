@@ -10,6 +10,7 @@ export interface PowerRequirement {
 export function calculatePowerRequirements(req: {
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
+  protocol?: string; // 통신 프로토콜 (RS-485용)
 }): PowerRequirement[] {
   const powerItems: Array<{ voltage: number; current_mA: number; count: number; device: string }> = [];
 
@@ -85,4 +86,45 @@ export function suggestPowerSupplies(requirements: PowerRequirement[]): string[]
   suggestions.push(`⚠️ 릴레이/모터는 역기전력 보호 다이오드 권장`);
   
   return suggestions;
+}
+
+// RS-485 종단/바이어스 저항 체크
+export function checkRS485Resistors(req: {
+  protocol?: string;
+  deviceCount?: number;
+  cableLength?: number; // 미터 단위
+}): string[] {
+  const checks: string[] = [];
+  
+  if (req.protocol === 'rs485') {
+    // 기본 저항 체크
+    checks.push(`🔌 RS-485 종단 저항: 120Ω (버스 양 끝단에만)`);
+    checks.push(`🔌 RS-485 바이어스 저항: 4.7kΩ (A선과 B선에 각각)`);
+    
+    // 거리 및 노드 제한
+    const maxDistance = req.cableLength || 1200;
+    const nodeCount = req.deviceCount || 32;
+    checks.push(`🔌 최대 거리: ${Math.min(maxDistance, 1200)}m`);
+    checks.push(`🔌 최대 노드 수: ${Math.min(nodeCount, 32)}개`);
+    
+    // 설치 규칙
+    checks.push(`⚠️ 종단 저항은 버스 양 끝단에만 설치`);
+    checks.push(`⚠️ 바이어스 저항은 마스터에만 설치`);
+    checks.push(`⚠️ 케이블 길이에 따른 신호 품질 고려`);
+    
+    // 추가 안전 체크
+    if (req.cableLength && req.cableLength > 1000) {
+      checks.push(`⚠️ 장거리 통신: 신호 증폭기 또는 리피터 고려`);
+    }
+    
+    if (req.deviceCount && req.deviceCount > 20) {
+      checks.push(`⚠️ 다중 노드: 각 노드별 고유 주소 확인`);
+    }
+    
+    // 전원 요구사항
+    checks.push(`⚡ RS-485 트랜시버 전원: 3.3V 또는 5V (5mA)`);
+    checks.push(`⚡ DE 핀 제어: 디지털 출력 핀 필요`);
+  }
+  
+  return checks;
 }
