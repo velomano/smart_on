@@ -2427,7 +2427,12 @@ function BedsManagementContent() {
                                   cropName: '',
                                   growingMethod: '담액식',
                                   plantType: 'seed',
-                                  startDate: ''
+                                  startDate: '',
+                                  harvestDate: '',
+                                  stageBoundaries: {
+                                    seed: [15, 45, 85],
+                                    seedling: [40, 80]
+                                  }
                                 });
                                 
                                 setShowCropInputModal(false);
