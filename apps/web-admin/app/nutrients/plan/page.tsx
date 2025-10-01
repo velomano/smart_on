@@ -108,7 +108,7 @@ export default function NutrientPlanPage() {
   const [activeTab, setActiveTab] = useState<'calculate' | 'recipes' | 'saved'>('calculate');
   
   // 레시피 통계 상태
-  const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0 });
+  const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0, lastUpdate: '' });
 
   // 인증 확인
   useEffect(() => {
@@ -152,13 +152,21 @@ export default function NutrientPlanPage() {
           return recipeDate === today;
         }).length || 0;
         
+        // 가장 최근 업데이트 날짜 찾기
+        const lastUpdate = allResult.recipes?.length > 0 
+          ? allResult.recipes
+              .filter((recipe: any) => recipe.created_at)
+              .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at
+          : '';
+        
         setRecipeStats({
           total: totalResult.pagination?.total || 0,
           today: todayCount,
+          lastUpdate: lastUpdate ? new Date(lastUpdate).toLocaleDateString('ko-KR') : '',
         });
       } catch (e) {
         console.error('레시피 통계 가져오기 실패:', e);
-        setRecipeStats({ total: 0, today: 0 });
+        setRecipeStats({ total: 0, today: 0, lastUpdate: '' });
       }
     };
     
@@ -367,9 +375,9 @@ export default function NutrientPlanPage() {
               
               {/* 레시피 통계 */}
               <div className="hidden sm:flex items-center space-x-3 text-white">
-                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[80px]">
-                  <div className="text-xs text-white/80 mb-1">오늘 찾은 레시피</div>
-                  <div className="text-lg font-bold">{recipeStats.today}</div>
+                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[100px]">
+                  <div className="text-xs text-white/80 mb-1">업데이트 날짜</div>
+                  <div className="text-sm font-bold">{recipeStats.lastUpdate || '-'}</div>
                 </div>
                 <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[80px]">
                   <div className="text-xs text-white/80 mb-1">총 레시피</div>
