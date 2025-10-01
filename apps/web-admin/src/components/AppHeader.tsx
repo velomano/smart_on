@@ -336,6 +336,11 @@ export default function AppHeader({
   // 햄버거 메뉴용 메뉴 아이템들 (사용설명서를 가장 상단에 배치)
   const menuItems = [
     {
+      label: '🚀 IoT Designer',
+      path: '/iot-designer',
+      color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
+    },
+    {
       label: '사용설명서',
       path: '/help',
       color: 'from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700'
@@ -463,15 +468,21 @@ export default function AppHeader({
               </div>
 
 
-                  {/* 주요 메뉴 버튼들 - 관리자는 관리자 페이지가 먼저, 모든 계정이 사용자 관리 */}
-                  {canManageUsers && (
-                    <button
-                      onClick={() => router.push('/admin')}
-                      className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      승인 관리
-                    </button>
-                  )}
+              {/* 주요 메뉴 버튼들 - IoT Designer를 가장 상단에 배치 */}
+              <button
+                onClick={() => router.push('/iot-designer')}
+                className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+              >
+                🚀 IoT Designer
+              </button>
+              {canManageUsers && (
+                <button
+                  onClick={() => router.push('/admin')}
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                >
+                  승인 관리
+                </button>
+              )}
                   {canAccessUserManagement && (
                     <button
                       onClick={() => router.push('/team')}
