@@ -1232,19 +1232,6 @@ export default function NutrientPlanPage() {
       {/* 레시피 업데이트 푸터 */}
       <RecipeUpdatesFooter 
         onViewAllRecipes={() => setActiveTab('recipes')}
-        onViewTodayRecipes={() => {
-          setActiveTab('recipes');
-          // 오늘 날짜로 필터링
-          const today = new Date().toISOString().split('T')[0];
-          setSearchTerm('');
-          setSelectedCrop('');
-          setSelectedStage('');
-          // API에서 오늘 생성된 레시피만 가져오도록 설정
-          setTimeout(() => {
-            // 오늘 생성된 레시피만 표시하도록 필터링
-            loadRecipes(1, false, today);
-          }, 100);
-        }}
       />
 
       {/* 법적 고지 */}

@@ -56,13 +56,14 @@ interface RecipeUpdatesData {
 
 interface RecipeUpdatesFooterProps {
   onViewAllRecipes?: () => void;
-  onViewTodayRecipes?: () => void;
 }
 
-export default function RecipeUpdatesFooter({ onViewAllRecipes, onViewTodayRecipes }: RecipeUpdatesFooterProps) {
+export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesFooterProps) {
   const [data, setData] = useState<RecipeUpdatesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<RecipeUpdate | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -156,6 +157,16 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes, onViewTodayRecip
     return () => clearInterval(interval);
   }, []);
 
+  const handleRecipeClick = (recipe: RecipeUpdate) => {
+    setSelectedRecipe(recipe);
+    setShowDetailModal(true);
+  };
+
+  const closeDetailModal = () => {
+    setShowDetailModal(false);
+    setSelectedRecipe(null);
+  };
+
   if (loading) {
     return (
       <div className="bg-gray-50 border-t border-gray-200 p-4">
@@ -196,19 +207,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes, onViewTodayRecip
                 최신 배양액 레시피 업데이트
               </h3>
               <p className="text-sm text-gray-600">
-                {todayLog ? (
-                  <span>
-                    오늘 추가 {todayLog.added_count}건
-                    {todayLog.added_count > 0 && (
-                      <button 
-                        onClick={onViewTodayRecipes}
-                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                      >
-                        (오늘 추가된 레시피 보기)
-                      </button>
-                    )}
-                  </span>
-                ) : '오늘 추가 없음'}
+                {todayLog ? `오늘 추가 ${todayLog.added_count}건` : '오늘 추가 없음'}
                 {lastUpdate && (
                   <span className="ml-2">
                     • 마지막 갱신 {formatKoreanTime(lastUpdate)} (한국시간)
@@ -224,79 +223,179 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes, onViewTodayRecip
           </div>
         </div>
 
-        {/* 최근 레시피 목록 */}
+        {/* 오늘 추가된 레시피 목록 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {data.recent_recipes.slice(0, 6).map((recipe) => (
-            <div key={recipe.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">
-                    {recipe.crop} - {recipe.stage}
-                  </h4>
-                  <p className="text-sm text-gray-600 mb-2">
-                    용량: {recipe.volume_l}L
-                  </p>
-                  {recipe.source_title && (
-                    <p className="text-xs text-gray-500 mb-1">
-                      출처: {recipe.source_url && isValidUrl(recipe.source_url) ? (
-                        <a 
-                          href={recipe.source_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
-                          onClick={(e) => {
-                            if (!window.confirm('외부 링크로 이동합니다. 계속하시겠습니까?')) {
-                              e.preventDefault();
-                            }
-                          }}
-                        >
-                          {recipe.source_title}
-                          {recipe.source_year && ` (${recipe.source_year})`}
-                          <span className="ml-1">🔗</span>
-                        </a>
-                      ) : (
-                        <>
-                          {recipe.source_title}
-                          {recipe.source_year && ` (${recipe.source_year})`}
-                          {recipe.source_url && !isValidUrl(recipe.source_url) && (
-                            <span className="ml-1 text-gray-400" title="링크 접속 불가">⚠️</span>
-                          )}
-                        </>
-                      )}
+          {(() => {
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecipes = data.recent_recipes.filter(recipe => 
+              recipe.created_at && recipe.created_at.startsWith(today)
+            );
+            
+            return todayRecipes.length > 0 ? todayRecipes.map((recipe) => (
+              <div 
+                key={recipe.id} 
+                className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md hover:border-green-300 cursor-pointer transition-all duration-200"
+                onClick={() => handleRecipeClick(recipe)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900 mb-1">
+                      {recipe.crop} - {recipe.stage}
+                    </h4>
+                    <p className="text-sm text-gray-600 mb-2">
+                      용량: {recipe.volume_l}L
                     </p>
-                  )}
-                  {recipe.license && (
-                    <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                      {recipe.license}
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-gray-400 ml-2">
-                  {new Date(recipe.created_at).toLocaleDateString()}
+                    {recipe.source_title && (
+                      <p className="text-xs text-gray-500 mb-1">
+                        출처: {recipe.source_title}
+                        {recipe.source_year && ` (${recipe.source_year})`}
+                      </p>
+                    )}
+                    {recipe.license && (
+                      <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                        {recipe.license}
+                      </span>
+                    )}
+                    <div className="mt-2 text-xs text-green-600 font-medium">
+                      클릭하여 상세 보기 →
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 ml-2">
+                    {new Date(recipe.created_at).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )) : (
+              <div className="col-span-full text-center py-8 text-gray-500">
+                오늘 추가된 레시피가 없습니다.
+              </div>
+            );
+          })()}
         </div>
 
         {/* 전체 보기 링크 */}
-        <div className="mt-4 text-center space-x-4">
+        <div className="mt-4 text-center">
           <button 
             onClick={onViewAllRecipes}
             className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
           >
             전체 레시피 보기 →
           </button>
-          {todayLog && todayLog.added_count > 0 && (
-            <button 
-              onClick={onViewTodayRecipes}
-              className="text-green-600 hover:text-green-800 font-medium text-sm transition-colors"
-            >
-              오늘 추가된 레시피만 보기 →
-            </button>
-          )}
         </div>
       </div>
+
+      {/* 상세 보기 모달 */}
+      {showDetailModal && selectedRecipe && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-green-500 to-blue-600 px-6 py-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-white">🌱 레시피 상세 정보</h2>
+                <button
+                  onClick={closeDetailModal}
+                  className="text-white hover:text-gray-200 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {selectedRecipe.crop} - {selectedRecipe.stage}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">용량:</span>
+                      <span className="ml-2 text-gray-900">{selectedRecipe.volume_l}L</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">생성일:</span>
+                      <span className="ml-2 text-gray-900">
+                        {new Date(selectedRecipe.created_at).toLocaleDateString('ko-KR')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedRecipe.source_title && (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">📚 출처 정보</h4>
+                    <div className="space-y-1 text-sm">
+                      <div>
+                        <span className="font-medium text-blue-700">제목:</span>
+                        <span className="ml-2 text-blue-800">{selectedRecipe.source_title}</span>
+                      </div>
+                      {selectedRecipe.source_year && (
+                        <div>
+                          <span className="font-medium text-blue-700">연도:</span>
+                          <span className="ml-2 text-blue-800">{selectedRecipe.source_year}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.source_url && isValidUrl(selectedRecipe.source_url) && (
+                        <div>
+                          <span className="font-medium text-blue-700">링크:</span>
+                          <a 
+                            href={selectedRecipe.source_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                            onClick={(e) => {
+                              if (!window.confirm('외부 링크로 이동합니다. 계속하시겠습니까?')) {
+                                e.preventDefault();
+                              }
+                            }}
+                          >
+                            {selectedRecipe.source_url}
+                            <span className="ml-1">🔗</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRecipe.license && (
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <h4 className="font-medium text-green-900 mb-2">📄 라이선스</h4>
+                    <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-sm rounded">
+                      {selectedRecipe.license}
+                    </span>
+                  </div>
+                )}
+
+                <div className="bg-yellow-50 rounded-lg p-4">
+                  <h4 className="font-medium text-yellow-900 mb-2">💡 안내</h4>
+                  <p className="text-sm text-yellow-800">
+                    이 레시피는 오늘 새롭게 추가된 배양액 제조 레시피입니다. 
+                    자세한 성분 정보나 사용법이 필요한 경우 전체 레시피 목록에서 확인하실 수 있습니다.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={closeDetailModal}
+                  className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  닫기
+                </button>
+                <button
+                  onClick={() => {
+                    closeDetailModal();
+                    if (onViewAllRecipes) onViewAllRecipes();
+                  }}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  전체 레시피 보기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
