@@ -1,33 +1,62 @@
 /**
  * QR Code Card
  * 
- * QR 코드 생성 및 표시
- * TODO: 실제 QR 코드 생성 라이브러리 연동
+ * Setup Token QR 코드 표시
  */
 
 'use client';
 
-export function QRCodeCard({ data }: { data: any }) {
-  return (
-    <div className="p-6 bg-white rounded-lg shadow">
-      <h3 className="text-xl font-bold mb-4">QR 코드로 빠른 설정</h3>
-      
-      <div className="flex flex-col items-center">
-        {/* TODO: 실제 QR 코드 생성 */}
-        <div className="w-48 h-48 bg-gray-200 flex items-center justify-center mb-4">
-          <span className="text-gray-500">QR Code</span>
-        </div>
-        
-        <p className="text-sm text-gray-600 text-center mb-4">
-          스마트폰으로 QR 코드를 스캔하면<br />
-          WiFi 정보와 디바이스 ID가 자동으로 설정됩니다
-        </p>
+import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
-        <button className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          QR 코드 다운로드
-        </button>
+interface QRCodeCardProps {
+  qrData: string;
+  setupToken: string;
+}
+
+export function QRCodeCard({ qrData, setupToken }: QRCodeCardProps) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(setupToken);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-white border-2 border-blue-200 rounded-lg p-6 shadow-lg">
+      <div className="flex items-center mb-4">
+        <div className="text-2xl mr-3">📱</div>
+        <div>
+          <h3 className="font-bold text-lg">모바일 앱으로 연결</h3>
+          <p className="text-sm text-gray-600">QR 코드를 스캔하세요</p>
+        </div>
       </div>
+      
+      <div className="bg-white border border-gray-300 p-4 rounded-lg flex items-center justify-center mx-auto mb-4">
+        <QRCodeSVG 
+          value={qrData}
+          size={200}
+          level="H"
+          includeMargin={true}
+        />
+      </div>
+      
+      <div className="bg-gray-50 p-3 rounded mb-4">
+        <p className="text-xs text-gray-500 mb-1">Setup Token:</p>
+        <code className="text-xs text-blue-700 break-all">{setupToken}</code>
+      </div>
+      
+      <button 
+        onClick={handleCopy} 
+        className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+      >
+        {copied ? '✅ 복사 완료!' : '📋 토큰 복사하기'}
+      </button>
+      
+      <p className="text-xs text-gray-500 text-center mt-3">
+        💡 모바일 앱이 없다면 수동으로 토큰을 입력하세요
+      </p>
     </div>
   );
 }
-

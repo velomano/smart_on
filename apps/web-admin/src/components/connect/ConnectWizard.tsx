@@ -8,6 +8,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { QRCodeCard } from './QRCodeCard';
 
 type Step = 'device-select' | 'protocol-select' | 'code-generate' | 'monitor';
 
@@ -192,6 +193,7 @@ function CodeGenerateStep({ config, onBack, onNext }: { config: DeviceConfig; on
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [setupToken, setSetupToken] = useState('');
+  const [qrData, setQrData] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
 
   useEffect(() => {
@@ -220,6 +222,7 @@ function CodeGenerateStep({ config, onBack, onNext }: { config: DeviceConfig; on
 
       const claimData = await claimResponse.json();
       setSetupToken(claimData.setup_token);
+      setQrData(claimData.qr_data);
 
       // Step 2: 디바이스별 코드 생성
       const code = generateDeviceCode(config, claimData.setup_token);
@@ -398,27 +401,37 @@ if __name__ == "__main__":
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">🎉 연결 코드가 준비되었습니다!</h2>
+      <h2 className="text-2xl font-bold mb-6">🎉 연결 코드가 준비되었습니다!</h2>
       
-      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
-        <p className="font-bold text-blue-900">Setup Token (10분간 유효):</p>
-        <code className="text-sm text-blue-700 break-all">{setupToken}</code>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        {/* 코드 영역 - 2/3 */}
+        <div className="md:col-span-2">
+          <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
+            <p className="font-bold text-blue-900">Setup Token (10분간 유효):</p>
+            <code className="text-sm text-blue-700 break-all">{setupToken}</code>
+          </div>
+
+          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
+            <pre className="text-xs">{generatedCode}</pre>
+          </div>
+
+          <div className="flex gap-4">
+            <button onClick={handleCopy} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+              📋 복사하기
+            </button>
+            <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+              📥 다운로드
+            </button>
+          </div>
+        </div>
+
+        {/* QR 코드 영역 - 1/3 */}
+        <div>
+          <QRCodeCard qrData={qrData} setupToken={setupToken} />
+        </div>
       </div>
 
-      <div className="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
-        <pre className="text-xs">{generatedCode}</pre>
-      </div>
-
-      <div className="flex gap-4 mb-8">
-        <button onClick={handleCopy} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-          📋 복사하기
-        </button>
-        <button onClick={handleDownload} className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-          📥 다운로드
-        </button>
-      </div>
-
-      <div className="flex gap-4">
+      <div className="flex gap-4 justify-between border-t pt-6">
         <button onClick={onBack} className="text-blue-600 hover:text-blue-800 font-medium">
           ← 이전
         </button>
