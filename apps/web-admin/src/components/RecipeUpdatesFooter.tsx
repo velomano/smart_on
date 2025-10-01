@@ -369,27 +369,17 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                 <div className="bg-yellow-50 rounded-lg p-4">
                   <h4 className="font-medium text-yellow-900 mb-2">💡 안내</h4>
                   <p className="text-sm text-yellow-800">
-                    이 레시피는 오늘 새롭게 추가된 배양액 제조 레시피입니다. 
-                    자세한 성분 정보나 사용법이 필요한 경우 전체 레시피 목록에서 확인하실 수 있습니다.
+                    이 레시피는 오늘 새롭게 추가된 배양액 제조 레시피입니다.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end space-x-3">
+              <div className="mt-6 flex justify-end">
                 <button
                   onClick={closeDetailModal}
-                  className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
                   닫기
-                </button>
-                <button
-                  onClick={() => {
-                    closeDetailModal();
-                    if (onViewAllRecipes) onViewAllRecipes();
-                  }}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  전체 레시피 보기
                 </button>
               </div>
             </div>
