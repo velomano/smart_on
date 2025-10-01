@@ -301,76 +301,184 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
             </div>
             
             <div className="p-6">
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* 📋 기본 정보 */}
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {selectedRecipe.crop} - {selectedRecipe.stage}
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">📋 기본 정보</h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">작물:</span>
+                      <span className="ml-2 text-gray-900">{selectedRecipe.crop}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">성장 단계:</span>
+                      <span className="ml-2 text-gray-900">{selectedRecipe.stage}</span>
+                    </div>
                     <div>
                       <span className="font-medium text-gray-600">용량:</span>
                       <span className="ml-2 text-gray-900">{selectedRecipe.volume_l}L</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-600">생성일:</span>
-                      <span className="ml-2 text-gray-900">
-                        {new Date(selectedRecipe.created_at).toLocaleDateString('ko-KR')}
-                      </span>
+                      <span className="font-medium text-gray-600">NPK 비율:</span>
+                      <span className="ml-2 text-gray-900">{selectedRecipe.npk_ratio}</span>
                     </div>
                   </div>
                 </div>
 
-                {selectedRecipe.source_title && (
+                {/* 📝 레시피 설명 */}
+                {selectedRecipe.description && (
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <h4 className="font-medium text-green-900 mb-2">📝 레시피 설명</h4>
+                    <p className="text-sm text-green-800">{selectedRecipe.description}</p>
+                  </div>
+                )}
+
+                {/* 🌡️ 재배 환경 조건 */}
+                {selectedRecipe.growing_conditions && (
                   <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-900 mb-2">📚 출처 정보</h4>
-                    <div className="space-y-1 text-sm">
-                      <div>
-                        <span className="font-medium text-blue-700">제목:</span>
-                        <span className="ml-2 text-blue-800">{selectedRecipe.source_title}</span>
-                      </div>
-                      {selectedRecipe.source_year && (
+                    <h4 className="font-medium text-blue-900 mb-3">🌡️ 재배 환경 조건</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {selectedRecipe.growing_conditions.temperature && (
                         <div>
-                          <span className="font-medium text-blue-700">연도:</span>
-                          <span className="ml-2 text-blue-800">{selectedRecipe.source_year}</span>
+                          <span className="font-medium text-blue-700">온도:</span>
+                          <span className="ml-2 text-blue-800">{selectedRecipe.growing_conditions.temperature}</span>
                         </div>
                       )}
-                      {selectedRecipe.source_url && isValidUrl(selectedRecipe.source_url) && (
+                      {selectedRecipe.growing_conditions.humidity && (
                         <div>
-                          <span className="font-medium text-blue-700">링크:</span>
-                          <a 
-                            href={selectedRecipe.source_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="ml-2 text-blue-600 hover:text-blue-800 underline"
-                            onClick={(e) => {
-                              if (!window.confirm('외부 링크로 이동합니다. 계속하시겠습니까?')) {
-                                e.preventDefault();
-                              }
-                            }}
-                          >
-                            {selectedRecipe.source_url}
-                            <span className="ml-1">🔗</span>
-                          </a>
+                          <span className="font-medium text-blue-700">습도:</span>
+                          <span className="ml-2 text-blue-800">{selectedRecipe.growing_conditions.humidity}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.growing_conditions.light_hours && (
+                        <div>
+                          <span className="font-medium text-blue-700">조명 시간:</span>
+                          <span className="ml-2 text-blue-800">{selectedRecipe.growing_conditions.light_hours}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.growing_conditions.co2_level && (
+                        <div>
+                          <span className="font-medium text-blue-700">CO₂ 농도:</span>
+                          <span className="ml-2 text-blue-800">{selectedRecipe.growing_conditions.co2_level}</span>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
 
-                {selectedRecipe.license && (
-                  <div className="bg-green-50 rounded-lg p-4">
-                    <h4 className="font-medium text-green-900 mb-2">📄 라이선스</h4>
-                    <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-sm rounded">
-                      {selectedRecipe.license}
-                    </span>
+                {/* 🧪 영양소 상세 정보 */}
+                {selectedRecipe.nutrients_detail && (
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <h4 className="font-medium text-purple-900 mb-3">🧪 영양소 상세 정보 (ppm)</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      {selectedRecipe.nutrients_detail.nitrogen && (
+                        <div>
+                          <span className="font-medium text-purple-700">질소 (N):</span>
+                          <span className="ml-2 text-purple-800">{selectedRecipe.nutrients_detail.nitrogen}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.nutrients_detail.phosphorus && (
+                        <div>
+                          <span className="font-medium text-purple-700">인산 (P):</span>
+                          <span className="ml-2 text-purple-800">{selectedRecipe.nutrients_detail.phosphorus}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.nutrients_detail.potassium && (
+                        <div>
+                          <span className="font-medium text-purple-700">칼륨 (K):</span>
+                          <span className="ml-2 text-purple-800">{selectedRecipe.nutrients_detail.potassium}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.nutrients_detail.calcium && (
+                        <div>
+                          <span className="font-medium text-purple-700">칼슘 (Ca):</span>
+                          <span className="ml-2 text-purple-800">{selectedRecipe.nutrients_detail.calcium}</span>
+                        </div>
+                      )}
+                      {selectedRecipe.nutrients_detail.magnesium && (
+                        <div>
+                          <span className="font-medium text-purple-700">마그네슘 (Mg):</span>
+                          <span className="ml-2 text-purple-800">{selectedRecipe.nutrients_detail.magnesium}</span>
+                        </div>
+                      )}
+                    </div>
+                    {selectedRecipe.nutrients_detail.trace_elements && (
+                      <div className="mt-3">
+                        <span className="font-medium text-purple-700 text-sm">미량원소:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {selectedRecipe.nutrients_detail.trace_elements.map((element, index) => (
+                            <span key={index} className="px-2 py-1 bg-purple-200 text-purple-800 text-xs rounded">
+                              {element}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* 📋 사용법 */}
+                {selectedRecipe.usage_notes && selectedRecipe.usage_notes.length > 0 && (
+                  <div className="bg-indigo-50 rounded-lg p-4">
+                    <h4 className="font-medium text-indigo-900 mb-2">📋 사용법</h4>
+                    <ul className="space-y-1">
+                      {selectedRecipe.usage_notes.map((note, index) => (
+                        <li key={index} className="text-sm text-indigo-800 flex items-start">
+                          <span className="text-indigo-600 mr-2">•</span>
+                          <span>{note}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* ⚠️ 주의사항 */}
+                {selectedRecipe.warnings && selectedRecipe.warnings.length > 0 && (
+                  <div className="bg-red-50 rounded-lg p-4">
+                    <h4 className="font-medium text-red-900 mb-2">⚠️ 주의사항</h4>
+                    <ul className="space-y-1">
+                      {selectedRecipe.warnings.map((warning, index) => (
+                        <li key={index} className="text-sm text-red-800 flex items-start">
+                          <span className="text-red-600 mr-2">•</span>
+                          <span>{warning}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 📚 출처 및 메타 정보 */}
                 <div className="bg-yellow-50 rounded-lg p-4">
-                  <h4 className="font-medium text-yellow-900 mb-2">💡 안내</h4>
-                  <p className="text-sm text-yellow-800">
-                    이 레시피는 오늘 새롭게 추가된 배양액 제조 레시피입니다.
-                  </p>
+                  <h4 className="font-medium text-yellow-900 mb-3">📚 출처 및 메타 정보</h4>
+                  <div className="space-y-2 text-sm">
+                    {selectedRecipe.source_title && (
+                      <div>
+                        <span className="font-medium text-yellow-700">출처:</span>
+                        <span className="ml-2 text-yellow-800">
+                          {selectedRecipe.source_title}
+                          {selectedRecipe.source_year && ` (${selectedRecipe.source_year})`}
+                        </span>
+                      </div>
+                    )}
+                    {selectedRecipe.author && (
+                      <div>
+                        <span className="font-medium text-yellow-700">작성자:</span>
+                        <span className="ml-2 text-yellow-800">{selectedRecipe.author}</span>
+                      </div>
+                    )}
+                    {selectedRecipe.license && (
+                      <div>
+                        <span className="font-medium text-yellow-700">라이선스:</span>
+                        <span className="ml-2 text-yellow-800">{selectedRecipe.license}</span>
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-medium text-yellow-700">최종 업데이트:</span>
+                      <span className="ml-2 text-yellow-800">
+                        {selectedRecipe.last_updated || selectedRecipe.created_at}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
