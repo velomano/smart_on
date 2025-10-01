@@ -285,25 +285,74 @@ Device Profile 추가 → DB INSERT → 즉시 사용 가능!
 
 ---
 
+## 🔥 **보완 포인트 TOP 10 (실전 운영용)**
+
+### **1. 버전/호환성** ✅
+- `profile.version`, `ui_template.version`, `registry.version` (semver)
+- 서버는 호환 버전만 선택 (^1.0.0)
+
+### **2. 정규화 & 라벨링** ✅
+- `canonical_key`로 변형 매핑 (soil_moisture/soilMoisture)
+- 단위 자동 변환 (°C/°F)
+- `display_unit` 지정
+
+### **3. 캐시 & 변경 감지** ✅
+- ETag/Last-Modified 추가
+- WebSocket으로 `registry_changed` 이벤트
+- `If-None-Match` 재요청
+
+### **4. 권한 & RLS** ✅
+- `scope: "public" | "tenant"`
+- `tenant_id` 컬럼 및 RLS 정책
+
+### **5. 실시간 값 바인딩** ✅
+- UI는 구조만, 값은 `/readings` + WS
+- 서버 집계 API 사용
+
+### **6. 템플릿 우선순위 & 머지** ✅
+- `user_template > profile.ui_template > auto_generated`
+- Overlay 규칙 (순서만 재배치)
+
+### **7. 안전 규칙 (Safety)** ✅
+- `safety_rules` JSONB 필드
+- 제어 전/후 훅 (duration, interlock)
+- UI에서 사전 차단
+
+### **8. 에러 토폴로지** ✅
+- `warnings[]` 포함
+- 노란 배지로 표시
+- 클릭 시 가이드
+
+### **9. i18n** ✅
+- `labels{ko, en, ...}`
+- 클라이언트 locale 선택
+
+### **10. 성능** ✅
+- 인덱스: `device_registry(device_id)`, `readings(device_id, key, ts DESC)`
+- CDN 캐시 가능
+
+---
+
 ## 🎯 **권장 순서**
 
-### **지금 당장 (30분)**
-1. ✅ Phase 3 완료 (방금 끝냄!)
-2. ✅ 문서 정리 (지금 하는 중)
-3. ⏸️ 오늘 휴식
+### **Phase 4A: 기반 구조 (완료!)** ✅
+1. ✅ DB 스키마 추가 (`device_profiles`, `device_registry`, `device_ui_templates`)
+2. ✅ `/api/devices/:id/ui-model` API 구현
+3. ✅ `<DeviceAutoDashboard>` 컴포넌트
+4. ✅ 2개 샘플 프로파일 (esp32-dht22, esp32-relay2ch)
+5. ✅ Normalization, Warnings, ETag 구현
 
-### **다음 작업 시 (2-3일)**
-1. DB 스키마 추가 (`device_profiles`, `device_registry`)
-2. `/api/devices/:id/ui-model` API
-3. `<DeviceAutoDashboard>` 컴포넌트
-4. 1-2개 템플릿 JSON 작성
-5. 기존 대시보드에 "Auto" 탭 추가
+### **Phase 4B: 템플릿 시스템 (다음)**
+1. 기존 대시보드에 "Auto" 탭 추가
+2. 실시간 값 바인딩 (`/readings` API 연결)
+3. 사용자 템플릿 저장 기능
+4. Safety Rules 검증
 
-### **장기 (1-2주)**
+### **Phase 4C: 완성 (장기)**
 1. 모든 하드코딩을 템플릿으로 전환
-2. 사용자 커스터마이징
-3. Command 자동 생성
-4. 안전 규칙 (Safety Rules)
+2. WebSocket 구독 (polling → WS)
+3. 다국어 (i18n)
+4. 성능 최적화
 
 ---
 
