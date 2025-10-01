@@ -32,6 +32,20 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ user, farms, devices, sensors, sensorReadings }: UserDashboardProps) {
+  // 농장별 색상 생성 함수
+  const getFarmColor = (farmId: string) => {
+    const colors = [
+      'text-blue-600', 'text-green-600', 'text-purple-600', 'text-red-600',
+      'text-orange-600', 'text-indigo-600', 'text-pink-600', 'text-teal-600',
+      'text-cyan-600', 'text-emerald-600', 'text-violet-600', 'text-rose-600'
+    ];
+    // 농장 ID를 기반으로 일관된 색상 할당
+    const hash = farmId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    return colors[Math.abs(hash) % colors.length];
+  };
   const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0 });
   const [weatherData, setWeatherData] = useState({
     temperature: 0,
@@ -702,7 +716,7 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                       <div className="flex items-center space-x-2 sm:space-x-3">
                         <div>
                             <div className="flex items-center space-x-2 sm:space-x-3 mb-1 sm:mb-2">
-                            <h4 className="text-2xl lg:text-3xl font-bold text-gray-600 whitespace-nowrap">{farm.name}</h4>
+                            <h4 className={`text-2xl lg:text-3xl font-bold whitespace-nowrap ${getFarmColor(farm.id)}`}>{farm.name}</h4>
                             <span className="text-gray-500 font-normal text-xs">🏷️ {farm.id}</span>
                           </div>
                           <div className="flex items-center space-x-2 sm:space-x-3">
