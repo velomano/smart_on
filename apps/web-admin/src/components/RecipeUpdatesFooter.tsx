@@ -47,8 +47,8 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
       try {
         setLoading(true);
         
-        // 실제 API에서 최근 레시피 데이터 가져오기
-        const response = await fetch('/api/nutrients/browse?limit=6');
+        // 실제 API에서 최근 레시피 데이터 가져오기 (더 많은 데이터를 가져와서 정확한 계산)
+        const response = await fetch('/api/nutrients/browse?limit=100');
         const result = await response.json();
         
         if (result.ok && result.recipes) {
@@ -66,7 +66,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
           
           const today = new Date().toISOString().split('T')[0];
           const todayRecipes = recentRecipes.filter((recipe: any) => 
-            recipe.created_at.startsWith(today)
+            recipe.created_at && recipe.created_at.startsWith(today)
           );
           
           const data: RecipeUpdatesData = {
