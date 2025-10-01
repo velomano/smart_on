@@ -54,7 +54,7 @@ export async function insertReadings(
     throw error;
   }
 
-  console.log(`[DB] Inserted ${data.length} readings for device ${deviceId}`);
+  console.log(`[DB] Inserted ${data.length} readings for device ${deviceUuid}`);
   return data;
 }
 
