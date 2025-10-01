@@ -514,88 +514,88 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
         {/* Stats Overview - 모든 화면에서 상단 표시 */}
         <div className="mb-4 sm:mb-6">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
-            <div className="p-2 sm:p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-lg">🏠</span>
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
+              <div className="p-2 sm:p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                    <span className="text-lg">🏠</span>
+                  </div>
+                  <div className="ml-4">
+                    <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                      농장 수
+                    </dt>
+                    <dd className="text-lg sm:text-2xl font-black text-gray-600">{totalFarms}</dd>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                    농장 수
-                  </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-600">{totalFarms}</dd>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {teamsLoading ? '...' : activeMembers}
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">활성 팀원</div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">
-                  {teamsLoading ? '...' : activeMembers}
-                </div>
-                <div className="text-sm text-gray-600 font-medium">활성 팀원</div>
               </div>
             </div>
-          </div>
 
-          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
-            <div className="p-2 sm:p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                    베드 활성률
-                  </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-600">{bedActivationRate}%</dd>
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
+              <div className="p-2 sm:p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="ml-4">
+                    <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                      베드 활성률
+                    </dt>
+                    <dd className="text-lg sm:text-2xl font-black text-gray-600">{bedActivationRate}%</dd>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-green-600">{activeBeds}/{totalBeds}</div>
+                  <div className="text-sm text-gray-600 font-medium">활성/전체</div>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-green-600">{activeBeds}/{totalBeds}</div>
-                <div className="text-sm text-gray-600 font-medium">활성/전체</div>
-              </div>
             </div>
-          </div>
 
-          <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
-            <div className="p-2 sm:p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                    배양액 레시피
-                  </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-600">
-                    {recipeStats.total}
-                  </dd>
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
+              <div className="p-2 sm:p-4 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="ml-4">
+                    <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                      배양액 레시피
+                    </dt>
+                    <dd className="text-lg sm:text-2xl font-black text-gray-600">
+                      {recipeStats.total}
+                    </dd>
+                  </div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg sm:text-2xl font-bold text-purple-600">
-                  {recipeStats.today}
+                <div className="text-right">
+                  <div className="text-lg sm:text-2xl font-bold text-purple-600">
+                    {recipeStats.today}
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-600 font-medium">오늘 추가</div>
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 font-medium">오늘 추가</div>
               </div>
             </div>
-          </div>
 
             <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
               <div className="p-2 sm:p-4 flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
-                  <span className="text-lg">🌤️</span>
+                <div className="flex items-center">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
+                    <span className="text-lg">🌤️</span>
+                  </div>
+                  <div className="ml-4">
+                    <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                      현재 날씨
+                    </dt>
+                    <dd className="text-lg sm:text-2xl font-black text-gray-600">{weatherData.temperature}°C</dd>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                    현재 날씨
-                  </dt>
-                  <dd className="text-lg sm:text-2xl font-black text-gray-600">{weatherData.temperature}°C</dd>
+                <div className="text-right">
+                  <div className="text-sm sm:text-lg font-bold text-blue-600">{weatherData.weatherStatus}</div>
+                  <div className="text-xs sm:text-sm text-gray-600 font-medium">{weatherData.region}</div>
+                  <div className="text-xs text-gray-500 font-medium">강수확률 {weatherData.precipitation}%</div>
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm sm:text-lg font-bold text-blue-600">{weatherData.weatherStatus}</div>
-                <div className="text-xs sm:text-sm text-gray-600 font-medium">{weatherData.region}</div>
-                <div className="text-xs text-gray-500 font-medium">강수확률 {weatherData.precipitation}%</div>
               </div>
             </div>
           </div>
         </div>
-        
         {/* Farm Overview Section */}
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-4 sm:mb-6">
           <div className="bg-gradient-to-r from-green-500 to-green-600 px-3 sm:px-4 py-3 sm:py-4">
