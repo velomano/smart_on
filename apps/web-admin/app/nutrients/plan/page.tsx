@@ -191,7 +191,7 @@ export default function NutrientPlanPage() {
   }, [searchTerm, selectedCrop, selectedStage, user]);
 
   // 실제 Supabase에서 레시피 브라우징 데이터 로드
-  async function loadRecipes(page = 1, append = false) {
+  async function loadRecipes(page = 1, append = false, filterDate?: string) {
     try {
       setLoadingRecipes(true);
       const params = new URLSearchParams();
@@ -199,7 +199,7 @@ export default function NutrientPlanPage() {
       if (selectedStage) params.append('stage', selectedStage);
       if (searchTerm) params.append('search', searchTerm);
       params.append('page', page.toString());
-      params.append('limit', '21');
+      params.append('limit', '1000'); // 더 많은 데이터를 가져와서 클라이언트에서 필터링
       
       const url = `/api/nutrients/browse?${params.toString()}`;
       console.log('🔍 API 호출:', url);
@@ -211,13 +211,23 @@ export default function NutrientPlanPage() {
       console.log('📋 응답 데이터:', j);
       
       if (j.ok) {
-        console.log('✅ 레시피 로드 성공:', j.recipes.length, '개');
+        let filteredRecipes = j.recipes;
+        
+        // 날짜 필터링 적용
+        if (filterDate) {
+          filteredRecipes = j.recipes.filter((recipe: any) => 
+            recipe.created_at && recipe.created_at.startsWith(filterDate)
+          );
+          console.log('📅 날짜 필터링 적용:', filterDate, '→', filteredRecipes.length, '개');
+        }
+        
+        console.log('✅ 레시피 로드 성공:', filteredRecipes.length, '개');
         console.log('📊 페이지네이션 정보:', j.pagination);
         
         if (append && page > 1) {
-          setRecipes(prev => [...prev, ...j.recipes]);
+          setRecipes(prev => [...prev, ...filteredRecipes]);
         } else {
-          setRecipes(j.recipes);
+          setRecipes(filteredRecipes);
         }
         
         // 페이지네이션 정보 업데이트
@@ -1222,6 +1232,19 @@ export default function NutrientPlanPage() {
       {/* 레시피 업데이트 푸터 */}
       <RecipeUpdatesFooter 
         onViewAllRecipes={() => setActiveTab('recipes')}
+        onViewTodayRecipes={() => {
+          setActiveTab('recipes');
+          // 오늘 날짜로 필터링
+          const today = new Date().toISOString().split('T')[0];
+          setSearchTerm('');
+          setSelectedCrop('');
+          setSelectedStage('');
+          // API에서 오늘 생성된 레시피만 가져오도록 설정
+          setTimeout(() => {
+            // 오늘 생성된 레시피만 표시하도록 필터링
+            loadRecipes(1, false, today);
+          }, 100);
+        }}
       />
 
       {/* 법적 고지 */}

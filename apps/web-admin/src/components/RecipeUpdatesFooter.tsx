@@ -10,6 +10,27 @@ function isValidUrl(url: string): boolean {
   }
 }
 
+// 한국시간 변환 함수
+function formatKoreanTime(utcTimeString: string): string {
+  try {
+    const date = new Date(utcTimeString);
+    const koreanTime = new Date(date.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+    return koreanTime.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  } catch {
+    return new Date().toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  }
+}
+
 interface RecipeUpdate {
   id: string;
   crop: string;
@@ -35,9 +56,10 @@ interface RecipeUpdatesData {
 
 interface RecipeUpdatesFooterProps {
   onViewAllRecipes?: () => void;
+  onViewTodayRecipes?: () => void;
 }
 
-export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesFooterProps) {
+export default function RecipeUpdatesFooter({ onViewAllRecipes, onViewTodayRecipes }: RecipeUpdatesFooterProps) {
   const [data, setData] = useState<RecipeUpdatesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -174,10 +196,22 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                 최신 배양액 레시피 업데이트
               </h3>
               <p className="text-sm text-gray-600">
-                {todayLog ? `오늘 추가 ${todayLog.added_count}건` : '오늘 추가 없음'}
+                {todayLog ? (
+                  <span>
+                    오늘 추가 {todayLog.added_count}건
+                    {todayLog.added_count > 0 && (
+                      <button 
+                        onClick={onViewTodayRecipes}
+                        className="ml-2 text-blue-600 hover:text-blue-800 underline"
+                      >
+                        (오늘 추가된 레시피 보기)
+                      </button>
+                    )}
+                  </span>
+                ) : '오늘 추가 없음'}
                 {lastUpdate && (
                   <span className="ml-2">
-                    • 마지막 갱신 {new Date(lastUpdate).toLocaleTimeString()}
+                    • 마지막 갱신 {formatKoreanTime(lastUpdate)} (한국시간)
                   </span>
                 )}
               </p>
@@ -246,13 +280,21 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
         </div>
 
         {/* 전체 보기 링크 */}
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center space-x-4">
           <button 
             onClick={onViewAllRecipes}
             className="text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
           >
             전체 레시피 보기 →
           </button>
+          {todayLog && todayLog.added_count > 0 && (
+            <button 
+              onClick={onViewTodayRecipes}
+              className="text-green-600 hover:text-green-800 font-medium text-sm transition-colors"
+            >
+              오늘 추가된 레시피만 보기 →
+            </button>
+          )}
         </div>
       </div>
     </div>
