@@ -374,14 +374,13 @@ export default function NutrientPlanPage() {
               </div>
               
               {/* 레시피 통계 */}
-              <div className="hidden sm:flex items-center space-x-3 text-white">
-                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[100px]">
-                  <div className="text-xs text-white/80 mb-1">업데이트 날짜</div>
-                  <div className="text-sm font-bold">{recipeStats.lastUpdate || '-'}</div>
-                </div>
-                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[80px]">
-                  <div className="text-xs text-white/80 mb-1">총 레시피</div>
-                  <div className="text-lg font-bold">{recipeStats.total}</div>
+              <div className="hidden sm:flex items-center text-white">
+                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[120px]">
+                  <div className="text-xs text-white/80 mb-1">레시피 현황</div>
+                  <div className="text-lg font-bold">
+                    {recipeStats.today} / {recipeStats.total}
+                  </div>
+                  <div className="text-xs text-white/70 mt-1">오늘 추가 / 전체</div>
                 </div>
               </div>
             </div>
