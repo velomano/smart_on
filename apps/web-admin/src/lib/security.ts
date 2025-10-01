@@ -333,8 +333,18 @@ export function validateSessionSecurity(request: NextRequest): {
   
   // Referer 검증 (선택적)
   const referer = request.headers.get('referer');
-  if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')) {
-    issues.push('외부 도메인에서의 접근');
+  if (referer) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://web-admin-snowy.vercel.app',
+      'https://web-admin-smart-ons-projects.vercel.app',
+      process.env.NEXT_PUBLIC_APP_URL
+    ].filter(Boolean);
+    
+    const isAllowedReferer = allowedOrigins.some(origin => referer.startsWith(origin as string));
+    if (!isAllowedReferer) {
+      issues.push('외부 도메인에서의 접근');
+    }
   }
   
   // 요청 헤더 검증

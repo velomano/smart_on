@@ -167,7 +167,6 @@ export default function BedTierShelfVisualization({
                 width={segmentWidth}
                 height={barHeight}
                 fill="#E5E7EB"
-                rx={index === 0 ? "10 0 0 10" : (index === growthInfo.stages.length - 1 ? "0 10 10 0" : "0")}
               />
               
               {/* 단계 진행 바 */}
@@ -177,7 +176,6 @@ export default function BedTierShelfVisualization({
                 width={(segmentWidth * stage.progress) / 100}
                 height={barHeight}
                 fill={stage.color}
-                rx={index === 0 ? "10 0 0 10" : (index === growthInfo.stages.length - 1 ? "0 10 10 0" : "0")}
               />
               
               {/* 단계 구분선 (마지막 단계 제외) */}
