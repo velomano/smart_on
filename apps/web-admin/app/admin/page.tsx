@@ -451,13 +451,18 @@ export default function AdminPage() {
                   <span className="text-2xl sm:text-3xl">{activeTab === 'pending' ? '⏳' : activeTab === 'approved' ? '✅' : '🏢'}</span>
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">
-                    {activeTab === 'pending'
-                      ? '승인 대기 사용자 목록'
-                      : activeTab === 'approved'
-                      ? '승인된 사용자 목록'
-                      : '농장별 사용자 보기'}
-                  </h1>
+                  <div className="flex items-center justify-between">
+                    <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">
+                      {activeTab === 'pending'
+                        ? '승인 대기 사용자 목록'
+                        : activeTab === 'approved'
+                        ? '승인된 사용자 목록'
+                        : '농장별 사용자 보기'}
+                    </h1>
+                    <div className="text-white/90 text-sm sm:text-base font-semibold">
+                      총 {activeTab === 'pending' ? pendingUsers.length : activeTab === 'approved' ? approvedUsers.length : usersByFarm().reduce((total, farm) => total + farm.users.length, 0)}명
+                    </div>
+                  </div>
                   <p className="text-white/90 text-xs sm:text-sm lg:text-base hidden sm:block">
                     {activeTab === 'pending'
                       ? '승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다'
@@ -473,13 +478,6 @@ export default function AdminPage() {
               {/* 대기 */}
               {activeTab === 'pending' && (
                 <div>
-                  <div className="flex items-center justify-between mb-3 sm:mb-3 lg:mb-8">
-                    <div>
-                      <h3 className="text-base sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">⏳ 승인 대기 사용자 목록</h3>
-                      <p className="text-gray-600 text-xs sm:text-base hidden sm:block">승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다</p>
-                    </div>
-                    <div className="text-xs sm:text-sm text-gray-500">총 {pendingUsers.length}명</div>
-                  </div>
 
                   <div className="space-y-2 sm:space-y-3 lg:space-y-6">
                     {pendingUsers.map((u) => (
@@ -539,12 +537,8 @@ export default function AdminPage() {
               {activeTab === 'approved' && (
                 <div>
                   <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-6">
-                    <div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">✅ 승인된 사용자 목록</h3>
-                      <p className="text-gray-600 text-sm sm:text-base">시스템에 등록된 모든 승인된 사용자를 관리합니다</p>
-                    </div>
                     <div className="text-xs sm:text-sm text-gray-500">
-                      총 {approvedUsers.length}명 (검색결과: {filteredApprovedUsers.length}명)
+                      검색결과: {filteredApprovedUsers.length}명
                     </div>
                   </div>
 
@@ -677,15 +671,11 @@ export default function AdminPage() {
               {activeTab === 'farms' && (
                 <div>
                   <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h3 className="text-2xl font-black text-gray-600 mb-2">🏢 농장별 사용자 보기</h3>
-                      <p className="text-gray-600">농장별로 분류된 사용자 목록을 확인할 수 있습니다</p>
-                    </div>
-                    <div className="text-sm text-gray-500">{Object.keys(usersByFarm).length}개 농장</div>
+                    <div className="text-sm text-gray-500">{Object.keys(usersByFarm()).length}개 농장</div>
                   </div>
 
                   <div className="space-y-8">
-                    {Object.entries(usersByFarm).map(([farmName, farmData]) => (
+                    {Object.entries(usersByFarm()).map(([farmName, farmData]) => (
                       <div key={farmName} className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-2xl p-6 shadow-xl">
                         <div className="flex items-center mb-6">
                           <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-500 rounded-xl flex items-center justify-center shadow-lg mr-4">
