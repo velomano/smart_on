@@ -7,6 +7,10 @@ export async function POST(req: NextRequest) {
     
     console.log('🔧 기본 팀 생성 시작');
     
+    // 기본 테넌트 ID (초기 설정용 - 하드코딩됨)
+    // 실제 운영 시에는 각 테넌트별로 별도 설정 필요
+    const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
+    
     // 기본 팀들 생성
     const { data: teams, error: teamsError } = await supabase
       .from('teams')
@@ -52,19 +56,19 @@ export async function POST(req: NextRequest) {
       .upsert([
         {
           id: '00000000-0000-0000-0000-000000000001',
-          tenant_id: '00000000-0000-0000-0000-000000000001',
+          tenant_id: DEFAULT_TENANT_ID,
           name: '1조 농장',
           location: '서울시 강남구'
         },
         {
           id: '00000000-0000-0000-0000-000000000002',
-          tenant_id: '00000000-0000-0000-0000-000000000001',
+          tenant_id: DEFAULT_TENANT_ID,
           name: '2조 농장',
           location: '서울시 서초구'
         },
         {
           id: '00000000-0000-0000-0000-000000000003',
-          tenant_id: '00000000-0000-0000-0000-000000000001',
+          tenant_id: DEFAULT_TENANT_ID,
           name: '3조 농장',
           location: '서울시 송파구'
         }

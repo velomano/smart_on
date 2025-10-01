@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getTenantIdFromRequest, DEFAULT_TENANT_ID } from '@/lib/tenant';
 
 // 환경 변수가 없을 때를 위한 조건부 클라이언트 생성
 const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -92,10 +93,11 @@ export async function GET(request: NextRequest) {
         }
         
         // farm_memberships에 데이터 삽입
+        const tenantId = getTenantIdFromRequest(request);
         const { data: membershipData, error: membershipError } = await supabase
           .from('farm_memberships')
           .insert({
-            tenant_id: '00000000-0000-0000-0000-000000000001', // 기본 테넌트
+            tenant_id: tenantId,
             farm_id: farmData.id,
             user_id: userData.id,
             role: testUser.role

@@ -179,7 +179,7 @@ export const signUp = async (data: SignUpData) => {
           company: data.company,
           phone: data.phone,
           role: 'team_member', // 기본 역할
-          tenant_id: '00000000-0000-0000-0000-000000000001', // 기본 테넌트
+          tenant_id: getClientTenantId(), // 동적 테넌트
           is_approved: false, // 승인 대기 상태
           is_active: true
         });

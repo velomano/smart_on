@@ -13,6 +13,7 @@ import {
   type AuthUser,
 } from '../../src/lib/auth';
 import { getFarms, getSupabaseClient, type Farm } from '../../src/lib/supabase';
+import { getClientTenantId } from '../../src/lib/tenant';
 
 // 안전 배열 유틸
 const asArray = <T,>(v: T[] | null | undefined) => (Array.isArray(v) ? v : []);
@@ -273,7 +274,7 @@ export default function AdminPage() {
       const supabase = getSupabaseClient();
 
       if (selectedFarmId) {
-        const tenantId = '00000000-0000-0000-0000-000000000001';
+        const tenantId = getClientTenantId();
         await (supabase as any).from('farm_memberships').delete().eq('user_id', editingUserInfo.id);
 
         const farmRole = selectedRole === 'system_admin' || selectedRole === 'team_leader' ? 'owner' : 'operator';

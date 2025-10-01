@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCurrentUser, getApprovedUsers, updateUser, AuthUser, getTeams } from '../../src/lib/auth';
 import AppHeader from '../../src/components/AppHeader';
+import { getClientTenantId } from '../../src/lib/tenant';
 
 interface TeamMember extends AuthUser {
   team_name?: string | null;
@@ -175,7 +176,7 @@ export default function TeamPage() {
         if (selectedFarmId !== undefined) {
           const { getSupabaseClient } = await import('../../src/lib/supabase');
           const supabase = getSupabaseClient();
-          const tenantId = '00000000-0000-0000-0000-000000000001';
+          const tenantId = getClientTenantId();
           
           if (selectedFarmId) {
             // 농장 배정
