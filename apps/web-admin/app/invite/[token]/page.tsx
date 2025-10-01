@@ -142,7 +142,12 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader user={null} />
+      <AppHeader 
+        user={undefined}
+        title="초대 수락"
+        subtitle="팀 초대를 수락하고 계정을 생성하세요"
+        showBackButton={false}
+      />
       
       <div className="max-w-md mx-auto py-12 px-4">
         <div className="bg-white rounded-lg shadow-md p-6">

@@ -863,7 +863,7 @@ function BedsManagementContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {user && <AppHeader user={user} title="농장 관리" subtitle="농장과 베드를 관리하고 모니터링하세요" />}
+      {user && <AppHeader user={user} />}
       
       <main className="container mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8">
         <div className="max-w-7xl mx-auto">

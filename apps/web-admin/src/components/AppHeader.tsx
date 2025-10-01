@@ -6,8 +6,8 @@ import { AuthUser } from '../lib/auth';
 
 interface AppHeaderProps {
   user?: AuthUser;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   showBackButton?: boolean;
   backButtonText?: string;
   onBackClick?: () => void;
@@ -278,25 +278,33 @@ export default function AppHeader({
                 onClick={handleTitleClick}
               >
                 <div>
-                  {isDashboard ? (
+                  {(title || subtitle) && (isDashboard ? (
                     <>
-                      <h1 className="text-4xl font-black bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
-                        {title}
-                      </h1>
-                      <p className="text-xs text-gray-600 font-semibold bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">
-                        {subtitle}
-                      </p>
+                      {title && (
+                        <h1 className="text-4xl font-black bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                          {title}
+                        </h1>
+                      )}
+                      {subtitle && (
+                        <p className="text-xs text-gray-600 font-semibold bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">
+                          {subtitle}
+                        </p>
+                      )}
                     </>
                   ) : (
                     <>
-                      <h1 className="text-3xl font-black text-gray-600 tracking-tight">
-                        {title}
-                      </h1>
-                      <p className="text-sm text-gray-500 font-medium">
-                        {subtitle}
-                      </p>
+                      {title && (
+                        <h1 className="text-3xl font-black text-gray-600 tracking-tight">
+                          {title}
+                        </h1>
+                      )}
+                      {subtitle && (
+                        <p className="text-sm text-gray-500 font-medium">
+                          {subtitle}
+                        </p>
+                      )}
                     </>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>

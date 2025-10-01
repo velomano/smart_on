@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// 환경 변수가 없을 때를 위한 조건부 클라이언트 생성
+const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+  : null;
 
 interface InviteRequest {
   email: string;
@@ -16,6 +19,14 @@ interface InviteRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Supabase 클라이언트가 없으면 환경 변수 오류 반환
+    if (!supabase) {
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'Supabase 설정이 필요합니다. 환경 변수를 확인해주세요.' 
+      }, { status: 500 });
+    }
+
     const body: InviteRequest = await request.json();
     const { email, role, message, invited_by, invited_by_name } = body;
 
@@ -198,6 +209,14 @@ Tera Hub 팀
 // 초대 목록 조회
 export async function GET(request: NextRequest) {
   try {
+    // Supabase 클라이언트가 없으면 환경 변수 오류 반환
+    if (!supabase) {
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'Supabase 설정이 필요합니다. 환경 변수를 확인해주세요.' 
+      }, { status: 500 });
+    }
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status') || 'all';
 

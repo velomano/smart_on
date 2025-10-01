@@ -317,14 +317,7 @@ export default function TeamPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
       {user && (
-        <AppHeader
-          user={user}
-          title={user.role === 'system_admin' ? '전체 사용자 관리' : 
-                 user.team_name ? `${user.team_name} 팀원 관리` : '팀원 관리'}
-          subtitle={user.role === 'system_admin' ? '시스템 관리자 권한으로 모든 사용자를 관리합니다' :
-                   user.role === 'team_leader' ? '농장장 권한으로 팀원을 관리합니다' : 
-                   '팀원 정보를 확인합니다'}
-        />
+        <AppHeader user={user} />
       )}
 
       {/* User Info Card */}

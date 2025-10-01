@@ -13,8 +13,13 @@
   },
   "name": "smart_on",
   "version": "1.0.0",
+  "workspaces": ["apps/*"],
   "scripts": {
     "android": "expo run:android",
-    "ios": "expo run:ios"
+    "ios": "expo run:ios",
+    "build:web-admin": "npm run build -w apps/web-admin",
+    "dev:web-admin": "npm run dev -w apps/web-admin",
+    "build:worker": "npm run build -w apps/worker",
+    "build:bridge": "npm run build -w apps/mqtt-bridge"
   }
 }
