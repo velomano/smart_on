@@ -366,14 +366,14 @@ export default function NutrientPlanPage() {
               </div>
               
               {/* 레시피 통계 */}
-              <div className="hidden sm:flex flex-col items-end text-white">
-                <div className="bg-white/20 rounded-lg px-3 py-2 mb-2">
-                  <div className="text-sm text-white/90">오늘 찾은 레시피</div>
-                  <div className="text-xl font-bold">{recipeStats.today}</div>
+              <div className="hidden sm:flex items-center space-x-3 text-white">
+                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[80px]">
+                  <div className="text-xs text-white/80 mb-1">오늘 찾은 레시피</div>
+                  <div className="text-lg font-bold">{recipeStats.today}</div>
                 </div>
-                <div className="bg-white/20 rounded-lg px-3 py-2">
-                  <div className="text-sm text-white/90">총 레시피</div>
-                  <div className="text-xl font-bold">{recipeStats.total}</div>
+                <div className="bg-white/20 rounded-lg px-4 py-2 text-center min-w-[80px]">
+                  <div className="text-xs text-white/80 mb-1">총 레시피</div>
+                  <div className="text-lg font-bold">{recipeStats.total}</div>
                 </div>
               </div>
             </div>
