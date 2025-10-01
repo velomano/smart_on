@@ -1,0 +1,77 @@
+{
+  "id": "esp32-dht22-v1",
+  "version": "1.0.0",
+  "scope": "public",
+  "tenant_id": null,
+  "name": "ESP32 + DHT22 온습도 센서",
+  "manufacturer": "Generic",
+  "capabilities": {
+    "sensors": [
+      {
+        "key": "temperature",
+        "canonical_key": "temp",
+        "label": "온도",
+        "labels": {
+          "en": "Temperature",
+          "ko": "온도"
+        },
+        "unit": "°C",
+        "display_unit": "°C",
+        "kind": "temperature",
+        "range": {
+          "min": -40,
+          "max": 80
+        },
+        "accuracy": 0.5
+      },
+      {
+        "key": "humidity",
+        "canonical_key": "hum",
+        "label": "습도",
+        "labels": {
+          "en": "Humidity",
+          "ko": "습도"
+        },
+        "unit": "%",
+        "display_unit": "%",
+        "kind": "humidity",
+        "range": {
+          "min": 0,
+          "max": 100
+        },
+        "accuracy": 2
+      }
+    ],
+    "actuators": []
+  },
+  "ui_template": {
+    "version": "1",
+    "layout": "grid-2col",
+    "cards": [
+      {
+        "type": "line-chart",
+        "series": ["temp", "hum"],
+        "span": 12
+      },
+      {
+        "type": "gauge",
+        "metric": "temp",
+        "span": 6,
+        "thresholds": {
+          "warn": 30,
+          "danger": 35
+        }
+      },
+      {
+        "type": "gauge",
+        "metric": "hum",
+        "span": 6,
+        "thresholds": {
+          "warn": 80
+        }
+      }
+    ]
+  },
+  "safety_rules": null
+}
+

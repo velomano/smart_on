@@ -1,0 +1,81 @@
+{
+  "id": "esp32-relay2ch-v1",
+  "version": "1.0.0",
+  "scope": "public",
+  "tenant_id": null,
+  "name": "ESP32 + 2채널 릴레이",
+  "manufacturer": "Generic",
+  "capabilities": {
+    "sensors": [],
+    "actuators": [
+      {
+        "type": "relay",
+        "canonical_key": "relay",
+        "channels": 2,
+        "label": "릴레이",
+        "labels": {
+          "en": "Relay",
+          "ko": "릴레이"
+        },
+        "commands": [
+          {
+            "id": "on",
+            "label": "켜기",
+            "labels": {
+              "en": "ON",
+              "ko": "켜기"
+            },
+            "payload": {
+              "state": "on"
+            }
+          },
+          {
+            "id": "off",
+            "label": "끄기",
+            "labels": {
+              "en": "OFF",
+              "ko": "끄기"
+            },
+            "payload": {
+              "state": "off"
+            }
+          },
+          {
+            "id": "toggle",
+            "label": "토글",
+            "labels": {
+              "en": "Toggle",
+              "ko": "토글"
+            },
+            "payload": {
+              "state": "toggle"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "ui_template": {
+    "version": "1",
+    "layout": "grid-2col",
+    "cards": [
+      {
+        "type": "actuator",
+        "actuatorType": "relay",
+        "channels": 2,
+        "span": 12
+      },
+      {
+        "type": "event-log",
+        "metric": "commands",
+        "span": 12
+      }
+    ]
+  },
+  "safety_rules": {
+    "cooldown": 5,
+    "interlock": [1, 2],
+    "max_duration": 300
+  }
+}
+
