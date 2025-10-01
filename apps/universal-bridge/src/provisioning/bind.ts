@@ -30,12 +30,16 @@ export interface BindRequest {
 export async function bindDevice(
   req: BindRequest
 ): Promise<DeviceBinding> {
-  // TODO: Setup Token 검증
-  console.log('[Bind] TODO: Verify setup token', req.setupToken);
+  // Setup Token 검증
+  const { getClaimByToken, markClaimAsUsed } = await import('../db/index.js');
   
-  // 임시 테넌트 정보 (실제로는 토큰에서 추출)
-  const tenantId = 'tenant-xxx';
-  const farmId = 'farm-yyy';
+  const claim = await getClaimByToken(req.setupToken);
+  if (!claim) {
+    throw new Error('Invalid or expired setup token');
+  }
+  
+  const tenantId = claim.tenant_id;
+  const farmId = claim.farm_id;
 
   // Device Key 발급 (PSK)
   const deviceKey = `DK_${crypto.randomBytes(32).toString('hex')}`;
@@ -50,11 +54,23 @@ export async function bindDevice(
     publicKey: req.publicKey,
   };
 
-  // TODO: DB에 저장 (device_key는 bcrypt 해시로)
-  console.log('[Bind] TODO: Save device to DB', binding);
+  // DB에 디바이스 저장
+  const { createDevice, hashDeviceKey } = await import('../db/index.js');
+  
+  const device = await createDevice({
+    tenant_id: tenantId,
+    farm_id: farmId,
+    device_id: req.deviceId,
+    device_key_hash: hashDeviceKey(deviceKey),
+    device_type: req.deviceType,
+    capabilities: req.capabilities,
+  });
+  
+  console.log('[Bind] Device saved to DB:', device.id);
 
-  // TODO: Setup Token을 사용됨 처리
-  console.log('[Bind] TODO: Mark setup token as used');
+  // Setup Token을 사용됨 처리
+  await markClaimAsUsed(claim.id, req.deviceId);
+  console.log('[Bind] Setup token marked as used');
 
   return binding;
 }

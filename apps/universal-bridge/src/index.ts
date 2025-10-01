@@ -7,17 +7,22 @@
 import { createHttpServer } from './protocols/http/server.js';
 import { createWebSocketServer } from './protocols/websocket/server.js';
 import { UniversalMessageBus } from './core/messagebus.js';
+import { initSupabase } from './db/index.js';
 
 /**
  * 메인 함수
- * 
- * TODO:
- * - [ ] 설정 로드
- * - [ ] 서비스 초기화
- * - [ ] Graceful shutdown
  */
 async function main() {
   console.log('🌉 Universal IoT Bridge v2.0 Starting...');
+
+  // Supabase 초기화
+  try {
+    initSupabase();
+    console.log('✅ Supabase connected');
+  } catch (error: any) {
+    console.warn('⚠️  Supabase not configured (메모리 모드로 실행)');
+    console.warn('   환경 변수를 설정하면 DB 연동이 활성화됩니다.');
+  }
 
   // 설정 로드
   const config = {
