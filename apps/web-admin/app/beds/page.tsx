@@ -118,7 +118,8 @@ function BedsManagementContent() {
     cropName: '',
     growingMethod: '담액식',
     plantType: 'seed' as 'seed' | 'seedling',
-    startDate: ''
+    startDate: '',
+    harvestDate: ''
   });
   
   // 각 베드의 작물 정보 저장 (deviceId -> tier -> cropInfo)
@@ -138,6 +139,7 @@ function BedsManagementContent() {
             growingMethod: item.growing_method,
             plantType: item.plant_type,
             startDate: item.start_date,
+            harvestDate: item.harvest_date,
             savedAt: item.created_at
           };
         });
@@ -1215,7 +1217,8 @@ function BedsManagementContent() {
                                       cropName: cropInfo?.cropName,
                                       growingMethod: cropInfo?.growingMethod,
                                       plantType: cropInfo?.plantType,
-                                      startDate: cropInfo?.startDate
+                                      startDate: cropInfo?.startDate,
+                                      harvestDate: cropInfo?.harvestDate
                                     };
                                   })}
                                   waterLevelStatus={(() => {
@@ -1239,7 +1242,8 @@ function BedsManagementContent() {
                                       cropName: existingCrop?.cropName || '',
                                       growingMethod: existingCrop?.growingMethod || '담액식',
                                       plantType: existingCrop?.plantType || 'seed',
-                                      startDate: existingCrop?.startDate || ''
+                                      startDate: existingCrop?.startDate || '',
+                                      harvestDate: existingCrop?.harvestDate || ''
                                     });
                                     setShowCropInputModal(true);
                                   }}
@@ -2493,12 +2497,24 @@ function BedsManagementContent() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-600 mb-2">
-                  생육 시작일자
+                  정식 시작일자
                 </label>
                 <input
                   type="date"
                   value={cropInputData.startDate}
                   onChange={(e) => setCropInputData(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-600 mb-2">
+                  수확 예정일자
+                </label>
+                <input
+                  type="date"
+                  value={cropInputData.harvestDate || ''}
+                  onChange={(e) => setCropInputData(prev => ({ ...prev, harvestDate: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
                 />
               </div>
@@ -2546,11 +2562,14 @@ function BedsManagementContent() {
                           }
                         }));
                         
-                        console.log('작물 정보 저장 성공:', {
+                        console.log('✅ 작물 정보 저장 성공:', {
                           deviceId: selectedDevice.id,
                           tier: selectedTier,
                           cropData: cropInputData
                         });
+                        
+                        // 서버에서 최신 데이터 다시 로드
+                        await loadCropData(selectedDevice.id);
                         
                         setShowCropInputModal(false);
                         alert(`${selectedTier}단에 ${cropInputData.cropName} 작물 정보가 저장되었습니다!`);

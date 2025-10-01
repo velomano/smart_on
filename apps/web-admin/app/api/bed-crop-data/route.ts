@@ -19,6 +19,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       growingMethod?: string;
       plantType?: string;
       startDate?: string;
+      harvestDate?: string;
     };
   } => {
     return !!(
@@ -46,6 +47,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       growing_method: body.cropData.growingMethod,
       plant_type: body.cropData.plantType,
       start_date: body.cropData.startDate || null,
+      harvest_date: body.cropData.harvestDate || null,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'device_id,tier_number'

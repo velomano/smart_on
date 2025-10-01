@@ -1,4 +1,5 @@
 import React from 'react';
+import { calculateGrowthStage, GrowthStageInfo } from '@/lib/growthStageCalculator';
 
 interface BedTierShelfVisualizationProps {
   activeTiers: number; // 1~3 중 활성화할 단수
@@ -8,7 +9,8 @@ interface BedTierShelfVisualizationProps {
     cropName?: string;
     growingMethod?: string;
     plantType?: 'seed' | 'seedling'; // 파종/육묘
-    startDate?: string; // 생육 시작일자
+    startDate?: string; // 정식 시작일자
+    harvestDate?: string; // 수확 예정일자
   }>;
   waterLevelStatus?: 'high' | 'low' | 'normal' | 'disconnected';
   onTierClick?: (tierNumber: number) => void;
@@ -23,12 +25,214 @@ export default function BedTierShelfVisualization({
   compact = false
 }: BedTierShelfVisualizationProps) {
   
+  // 생육 단계 프로그레스 바 컴포넌트 (사용 안 함 - SVG 내부로 이동)
+  const GrowthProgressBar = ({ tierNumber }: { tierNumber: number }) => {
+    const tier = tierStatuses.find(t => t.tierNumber === tierNumber);
+    
+    if (!tier || !tier.hasPlants || !tier.startDate || !tier.harvestDate || !tier.plantType) {
+      return null;
+    }
+    
+    const growthInfo = calculateGrowthStage(tier.plantType, tier.startDate, tier.harvestDate);
+    
+    if (!growthInfo) {
+      return null;
+    }
+    
+    return (
+      <div className="w-full mt-2 px-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-semibold text-gray-600">
+            {growthInfo.currentStageLabel}
+          </span>
+          <span className="text-xs text-gray-500">
+            {growthInfo.daysElapsed}일 / {growthInfo.totalDays}일
+          </span>
+        </div>
+        
+        {/* 프로그레스 바 */}
+        <div className="w-full h-6 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+          <div className="h-full flex">
+            {growthInfo.stages.map((stage, index) => {
+              const stageWidth = tier.plantType === 'seed' 
+                ? (index === 0 ? 15 : index === 1 ? 30 : index === 2 ? 40 : 15)
+                : (index === 0 ? 40 : index === 1 ? 40 : 20);
+              
+              return (
+                <div
+                  key={stage.stage}
+                  className="relative transition-all duration-500"
+                  style={{
+                    width: `${stageWidth}%`,
+                    backgroundColor: '#E5E7EB'
+                  }}
+                >
+                  <div
+                    className="h-full transition-all duration-500"
+                    style={{
+                      width: `${stage.progress}%`,
+                      backgroundColor: stage.color
+                    }}
+                  />
+                  {/* 단계 라벨 */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-bold text-gray-700 drop-shadow-sm">
+                      {stage.label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        {/* 남은 일수 표시 */}
+        {growthInfo.daysRemaining > 0 && (
+          <div className="text-xs text-gray-500 mt-1 text-right">
+            수확까지 {growthInfo.daysRemaining}일 남음
+          </div>
+        )}
+        {growthInfo.daysRemaining <= 0 && (
+          <div className="text-xs text-red-500 font-semibold mt-1 text-right">
+            수확 시기입니다!
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  // SVG용 프로그레스 바 렌더링 함수
+  const renderSVGProgressBar = (tierNumber: number, yPosition: number) => {
+    const tier = tierStatuses.find(t => t.tierNumber === tierNumber);
+    
+    if (!tier || !tier.hasPlants || !tier.startDate || !tier.harvestDate || !tier.plantType) {
+      return null;
+    }
+    
+    const growthInfo = calculateGrowthStage(tier.plantType, tier.startDate, tier.harvestDate);
+    
+    if (!growthInfo) {
+      return null;
+    }
+    
+    const barWidth = 280;
+    const barHeight = 20;
+    const barX = 47;
+    
+    // 각 단계의 날짜 계산
+    const startDate = new Date(tier.startDate);
+    const calculateStageDate = (percentage: number) => {
+      const days = Math.round((growthInfo.totalDays * percentage) / 100);
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + days);
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    };
+    
+    return (
+      <g>
+        {/* 단계별 프로그레스 */}
+        {growthInfo.stages.map((stage, index) => {
+          const stageWidth = tier.plantType === 'seed' 
+            ? (index === 0 ? 15 : index === 1 ? 30 : index === 2 ? 40 : 15)
+            : (index === 0 ? 40 : index === 1 ? 40 : 20);
+          
+          const segmentWidth = (barWidth * stageWidth) / 100;
+          const segmentX = barX + growthInfo.stages.slice(0, index).reduce((sum, s) => {
+            const w = tier.plantType === 'seed' 
+              ? (growthInfo.stages.indexOf(s) === 0 ? 15 : growthInfo.stages.indexOf(s) === 1 ? 30 : growthInfo.stages.indexOf(s) === 2 ? 40 : 15)
+              : (growthInfo.stages.indexOf(s) === 0 ? 40 : growthInfo.stages.indexOf(s) === 1 ? 40 : 20);
+            return sum + (barWidth * w / 100);
+          }, 0);
+          
+          // 각 단계의 시작 퍼센트 계산
+          const stageStartPercent = tier.plantType === 'seed'
+            ? (index === 0 ? 0 : index === 1 ? 15 : index === 2 ? 45 : 85)
+            : (index === 0 ? 0 : index === 1 ? 40 : 80);
+          
+          return (
+            <g key={stage.stage}>
+              {/* 단계 배경 (회색) */}
+              <rect
+                x={segmentX}
+                y={yPosition}
+                width={segmentWidth}
+                height={barHeight}
+                fill="#E5E7EB"
+                rx={index === 0 ? "10 0 0 10" : (index === growthInfo.stages.length - 1 ? "0 10 10 0" : "0")}
+              />
+              
+              {/* 단계 진행 바 */}
+              <rect
+                x={segmentX}
+                y={yPosition}
+                width={(segmentWidth * stage.progress) / 100}
+                height={barHeight}
+                fill={stage.color}
+                rx={index === 0 ? "10 0 0 10" : (index === growthInfo.stages.length - 1 ? "0 10 10 0" : "0")}
+              />
+              
+              {/* 단계 구분선 (마지막 단계 제외) */}
+              {index < growthInfo.stages.length - 1 && (
+                <line
+                  x1={segmentX + segmentWidth}
+                  y1={yPosition}
+                  x2={segmentX + segmentWidth}
+                  y2={yPosition + barHeight}
+                  stroke="#9CA3AF"
+                  strokeWidth="1.5"
+                  strokeDasharray="2,2"
+                />
+              )}
+              
+              {/* 단계 라벨 */}
+              <text
+                x={segmentX + segmentWidth / 2}
+                y={yPosition + barHeight / 2 + 3}
+                fontSize="9"
+                fill="#374151"
+                fontWeight="bold"
+                textAnchor="middle"
+              >
+                {stage.label}
+              </text>
+              
+              {/* 단계 시작 날짜 (위쪽) */}
+              {index > 0 && (
+                <text
+                  x={segmentX}
+                  y={yPosition - 3}
+                  fontSize="7"
+                  fill="#9CA3AF"
+                  textAnchor="middle"
+                >
+                  {calculateStageDate(stageStartPercent)}
+                </text>
+              )}
+            </g>
+          );
+        })}
+        
+        {/* 현재 단계 및 진행 정보 - 게이지 아래로 이동 */}
+        <text
+          x={barX}
+          y={yPosition + barHeight + 14}
+          fontSize="9"
+          fill="#6B7280"
+          fontWeight="600"
+        >
+          {growthInfo.currentStageLabel} ({growthInfo.daysElapsed}/{growthInfo.totalDays}일)
+        </text>
+      </g>
+    );
+  };
+  
   // 고정된 3단 + 저수조 SVG 컴포넌트
   const FixedBedSVG = () => {
     const shelfHeight = 90;  // 선반 높이 증가
     const waterTankHeight = 110;  // 저수조 높이 증가
     const shelfWidth = 320;  // 선반 너비 증가
     const shelfSpacing = 90; // 선반 간격 증가
+    const progressBarSpace = 30; // 프로그레스 바 공간
     const totalHeight = (3 * shelfHeight) + (2 * shelfSpacing) + waterTankHeight + shelfSpacing + 40;
     
     // 저수조 색상 결정
@@ -221,6 +425,9 @@ export default function BedTierShelfVisualization({
               return null;
             })()}
           </g>
+          
+          {/* 1단 프로그레스 바 */}
+          {renderSVGProgressBar(1, 15 + shelfHeight + 8)}
 
           {/* 2단 */}
           <g 
@@ -348,6 +555,9 @@ export default function BedTierShelfVisualization({
               return null;
             })()}
           </g>
+          
+          {/* 2단 프로그레스 바 */}
+          {renderSVGProgressBar(2, 15 + shelfHeight + shelfSpacing + shelfHeight + 8)}
 
           {/* 3단 */}
           <g 
@@ -475,6 +685,9 @@ export default function BedTierShelfVisualization({
               return null;
             })()}
           </g>
+          
+          {/* 3단 프로그레스 바 */}
+          {renderSVGProgressBar(3, 15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight + 8)}
 
           {/* 저수조 (맨 아래, 항상 표시) - 개선된 디자인 */}
           <g>
@@ -594,52 +807,54 @@ export default function BedTierShelfVisualization({
           return (
             <div
               key={tierNumber}
-              className={`flex items-center justify-between p-5 rounded-2xl transition-all duration-300 ${
+              className={`p-5 rounded-2xl transition-all duration-300 ${
                 isActive 
                   ? tier?.hasPlants 
                     ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 shadow-md' 
                     : 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 shadow-md hover:shadow-lg'
                   : 'bg-gradient-to-r from-gray-50 to-slate-50 border-2 border-gray-300'
-              } ${onTierClick ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
-              onClick={() => onTierClick?.(tierNumber)}
+              } ${onTierClick && !tier?.hasPlants ? 'cursor-pointer hover:scale-[1.02]' : ''}`}
+              onClick={() => !tier?.hasPlants && onTierClick?.(tierNumber)}
             >
-              <div className="flex items-center space-x-4">
-                <div className={`w-5 h-5 rounded-full border-2 ${
-                  isActive 
-                    ? tier?.hasPlants 
-                      ? 'bg-green-500 border-green-600' 
-                      : 'bg-amber-400 border-amber-500'
-                    : 'bg-gray-300 border-gray-400'
-                }`} />
-                <div>
-                  <span className={`text-lg font-bold ${
-                    isActive ? 'text-gray-800' : 'text-gray-500'
-                  }`}>
-                    {tierNumber}단
-                  </span>
-                  {tier?.cropName && (
-                    <span className="text-sm text-gray-600 ml-2">({tier.cropName})</span>
-                  )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className={`w-5 h-5 rounded-full border-2 ${
+                    isActive 
+                      ? tier?.hasPlants 
+                        ? 'bg-green-500 border-green-600' 
+                        : 'bg-amber-400 border-amber-500'
+                      : 'bg-gray-300 border-gray-400'
+                  }`} />
+                  <div>
+                    <span className={`text-lg font-bold ${
+                      isActive ? 'text-gray-800' : 'text-gray-500'
+                    }`}>
+                      {tierNumber}단
+                    </span>
+                    {tier?.cropName && (
+                      <span className="text-sm text-gray-600 ml-2">({tier.cropName})</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                {isActive && (
-                  <span className={`text-sm font-medium px-3 py-2 rounded-full ${
-                    tier?.hasPlants 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-amber-100 text-amber-700'
+                
+                <div className="flex items-center space-x-4">
+                  {isActive && (
+                    <span className={`text-sm font-medium px-3 py-2 rounded-full ${
+                      tier?.hasPlants 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {tier?.hasPlants ? '🌱 작물 있음' : (onTierClick ? '➕ 작물 등록하기' : '🔄 대기')}
+                    </span>
+                  )}
+                  <span className={`text-sm px-4 py-2 rounded-full font-bold ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
+                      : 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-500 border border-gray-200'
                   }`}>
-                    {tier?.hasPlants ? '🌱 작물 있음' : (onTierClick ? '➕ 작물 등록하기' : '🔄 대기')}
+                    {isActive ? '활성' : '비활성'}
                   </span>
-                )}
-                <span className={`text-sm px-4 py-2 rounded-full font-bold ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200' 
-                    : 'bg-gradient-to-r from-gray-100 to-slate-100 text-gray-500 border border-gray-200'
-                }`}>
-                  {isActive ? '활성' : '비활성'}
-                </span>
+                </div>
               </div>
             </div>
           );

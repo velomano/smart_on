@@ -858,21 +858,31 @@ export default function AdminPage() {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-600 mb-2">농장 배정 *</label>
-                    <select
-                      value={approveFormData.team_id}
-                      onChange={(e) => setApproveFormData((prev) => ({ ...prev, team_id: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
-                    >
-                      <option value="">농장을 선택하세요</option>
-                      {teams.map((team) => (
-                        <option key={team.id} value={team.id}>
-                          {team.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {approveFormData.role !== 'system_admin' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-600 mb-2">농장 배정 *</label>
+                      <select
+                        value={approveFormData.team_id}
+                        onChange={(e) => setApproveFormData((prev) => ({ ...prev, team_id: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
+                      >
+                        <option value="">농장을 선택하세요</option>
+                        {teams.map((team) => (
+                          <option key={team.id} value={team.id}>
+                            {team.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {approveFormData.role === 'system_admin' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-blue-800 text-sm">
+                        ℹ️ 시스템 관리자는 농장 배정이 필요하지 않습니다. 모든 농장에 접근할 수 있습니다.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end space-x-4 mt-8">
@@ -885,7 +895,7 @@ export default function AdminPage() {
                   </button>
                   <button
                     onClick={handleConfirmApprove}
-                    disabled={approveLoading || !approveFormData.team_id}
+                    disabled={approveLoading || (approveFormData.role !== 'system_admin' && !approveFormData.team_id)}
                     className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {approveLoading ? '승인 중...' : '승인하기'}
