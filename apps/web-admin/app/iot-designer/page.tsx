@@ -111,11 +111,15 @@ export default function IoTDesignerPage() {
               <label className="block text-sm font-medium mb-2">통신 프로토콜</label>
               <select
                 value={spec.protocol}
-                onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'http' | 'mqtt' }))}
+                onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' }))}
                 className="w-full p-2 border rounded-lg"
               >
                 <option value="http">HTTP</option>
                 <option value="mqtt">MQTT</option>
+                <option value="websocket">WebSocket</option>
+                <option value="webhook">Webhook</option>
+                <option value="serial">Serial</option>
+                <option value="ble">Bluetooth LE</option>
               </select>
             </div>
           </div>
