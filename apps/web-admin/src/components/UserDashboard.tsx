@@ -595,7 +595,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
             </div>
           </div>
         </div>
-        </div>
         
         {/* Farm Overview Section */}
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-4 sm:mb-6">
