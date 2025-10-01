@@ -74,6 +74,20 @@ export default function AppHeader({
     setIsLoadingNotices(true);
     try {
       const response = await fetch('/api/notices');
+      
+      // 응답 상태 확인
+      if (!response.ok) {
+        console.error('공지사항 API 응답 오류:', response.status, response.statusText);
+        return;
+      }
+      
+      // Content-Type 확인
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('공지사항 API가 JSON을 반환하지 않음:', contentType);
+        return;
+      }
+      
       const data = await response.json();
       if (data.ok && data.notices) {
         setNotices(data.notices);
@@ -147,20 +161,35 @@ export default function AppHeader({
         })
       });
 
+      // 응답 상태 확인
+      if (!response.ok) {
+        console.error('공지사항 작성 API 응답 오류:', response.status, response.statusText);
+        alert('공지사항 작성 중 서버 오류가 발생했습니다.');
+        return;
+      }
+      
+      // Content-Type 확인
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('공지사항 작성 API가 JSON을 반환하지 않음:', contentType);
+        alert('공지사항 작성 중 응답 형식 오류가 발생했습니다.');
+        return;
+      }
+
       const result = await response.json();
 
-           if (result.ok) {
-             alert('공지사항이 성공적으로 작성되었습니다!');
-             // 폼 초기화
-             setNewNoticeTitle('');
-             setNewNoticeContent('');
-             setNewNoticeType('general');
-             setIsWritingNotice(false);
-             // 공지사항 목록 새로고침
-             fetchNotices();
-           } else {
-             alert('공지사항 작성에 실패했습니다: ' + result.error);
-           }
+      if (result.ok) {
+        alert('공지사항이 성공적으로 작성되었습니다!');
+        // 폼 초기화
+        setNewNoticeTitle('');
+        setNewNoticeContent('');
+        setNewNoticeType('general');
+        setIsWritingNotice(false);
+        // 공지사항 목록 새로고침
+        fetchNotices();
+      } else {
+        alert('공지사항 작성에 실패했습니다: ' + result.error);
+      }
     } catch (error) {
       console.error('공지사항 작성 오류:', error);
       alert('공지사항 작성 중 오류가 발생했습니다.');
