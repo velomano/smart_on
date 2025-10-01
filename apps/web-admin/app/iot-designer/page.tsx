@@ -26,7 +26,7 @@ interface SystemSpec {
     timeout?: number;
     retries?: number;
     registerMappings: Record<string, number>;
-    dataTypes: Record<string, 'U16' | 'S16' | 'U32' | 'S32' | 'float'>;
+    dataTypes: Record<string, 'U16' | 'S16' | 'U32' | 'S32' | 'float' | 'FLOAT_ABCD' | 'FLOAT_BADC'>;
     scaleFactors: Record<string, number>;
     deadbands: Record<string, number>;
     units: Record<string, string>;
@@ -71,185 +71,22 @@ export default function IoTDesignerPage() {
   
   const [generatedCode, setGeneratedCode] = useState('');
   
-  // 코드 생성 함수
-  const generateCode = () => {
-    let code = '';
-    
-    // 헤더 및 라이브러리
-    code += `// IoT Designer 자동 생성 코드\n`;
-    code += `// 프로토콜: ${spec.protocol}\n`;
-    code += `// 디바이스: ${spec.device}\n\n`;
-    
-    // 라이브러리 임포트
-    if (spec.protocol === 'http' || spec.protocol === 'mqtt' || spec.protocol === 'websocket') {
-      code += `#include <WiFi.h>\n`;
-      code += `#include <HTTPClient.h>\n`;
-      if (spec.protocol === 'mqtt') {
-        code += `#include <PubSubClient.h>\n`;
+  // 코드 생성 함수 (API 호출 방식)
+  const generateCode = async () => {
+    try {
+      const response = await fetch('/api/iot/generate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(spec)
+      });
+      
+      if (response.ok) {
+        const code = await response.text();
+        setGeneratedCode(code);
       }
+    } catch (error) {
+      console.error('코드 생성 오류:', error);
     }
-    
-    if (spec.protocol === 'rs485' || spec.protocol === 'modbus-tcp') {
-      code += `#include <ModbusMaster.h>\n`;
-    }
-    
-    // 센서 라이브러리
-    spec.sensors.forEach(({ type }) => {
-      if (type === 'dht22') {
-        code += `#include <DHT.h>\n`;
-      } else if (type === 'ds18b20') {
-        code += `#include <OneWire.h>\n`;
-        code += `#include <DallasTemperature.h>\n`;
-      }
-    });
-    
-    code += `\n`;
-    
-    // 전송 어댑터 블록
-    code += generateTransportBlock();
-    
-    // 센서 초기화 블록
-    code += generateSensorBlock();
-    
-    // 제어 초기화 블록
-    code += generateControlBlock();
-    
-    // 메인 루프
-    code += generateMainLoop();
-    
-    setGeneratedCode(code);
-  };
-  
-  // 전송 어댑터 블록 생성
-  const generateTransportBlock = () => {
-    let block = '';
-    
-    switch (spec.protocol) {
-      case 'http':
-        block += `// HTTP 전송 어댑터\n`;
-        block += `const char* ssid = "${spec.wifi.ssid}";\n`;
-        block += `const char* password = "${spec.wifi.password}";\n`;
-        block += `const char* serverUrl = "http://your-bridge-url/api/bridge/telemetry";\n\n`;
-        break;
-        
-      case 'mqtt':
-        block += `// MQTT 전송 어댑터\n`;
-        block += `const char* ssid = "${spec.wifi.ssid}";\n`;
-        block += `const char* password = "${spec.wifi.password}";\n`;
-        block += `const char* mqttServer = "your-mqtt-broker";\n`;
-        block += `const int mqttPort = 1883;\n\n`;
-        break;
-        
-      case 'rs485':
-        block += `// RS-485 전송 어댑터\n`;
-        block += `ModbusMaster node;\n`;
-        if (spec.modbusConfig) {
-          block += `const int slaveId = ${spec.modbusConfig.unitId};\n`;
-        }
-        block += `\n`;
-        break;
-        
-      case 'modbus-tcp':
-        block += `// Modbus TCP 전송 어댑터\n`;
-        block += `const char* ssid = "${spec.wifi.ssid}";\n`;
-        block += `const char* password = "${spec.wifi.password}";\n`;
-        if (spec.modbusConfig) {
-          block += `const char* modbusHost = "${spec.modbusConfig.host}";\n`;
-          block += `const int modbusPort = ${spec.modbusConfig.port};\n`;
-          block += `const int unitId = ${spec.modbusConfig.unitId};\n`;
-        }
-        block += `\n`;
-        break;
-    }
-    
-    return block;
-  };
-  
-  // 센서 블록 생성
-  const generateSensorBlock = () => {
-    let block = `// 센서 초기화\n`;
-    
-    spec.sensors.forEach(({ type, count }) => {
-      if (type === 'dht22') {
-        block += `DHT dht(2, DHT22); // 핀 2에 DHT22 연결\n`;
-      } else if (type === 'ds18b20') {
-        block += `OneWire oneWire(4); // 핀 4에 DS18B20 연결\n`;
-        block += `DallasTemperature sensors(&oneWire);\n`;
-      } else if (type === 'soil_moisture') {
-        block += `const int soilMoisturePin = A0; // 아날로그 핀 A0\n`;
-      }
-    });
-    
-    block += `\n`;
-    return block;
-  };
-  
-  // 제어 블록 생성
-  const generateControlBlock = () => {
-    let block = `// 제어 장치 초기화\n`;
-    
-    spec.controls.forEach(({ type, count }) => {
-      if (type === 'relay') {
-        block += `const int relayPin = 5; // 핀 5에 릴레이 연결\n`;
-        block += `pinMode(relayPin, OUTPUT);\n`;
-      } else if (type === 'pwm_motor') {
-        block += `const int motorPin = 6; // 핀 6에 PWM 모터 연결\n`;
-        block += `pinMode(motorPin, OUTPUT);\n`;
-      }
-    });
-    
-    block += `\n`;
-    return block;
-  };
-  
-  // 메인 루프 생성
-  const generateMainLoop = () => {
-    let block = `void setup() {\n`;
-    block += `  Serial.begin(9600);\n`;
-    
-    if (spec.protocol === 'http' || spec.protocol === 'mqtt' || spec.protocol === 'websocket') {
-      block += `  WiFi.begin(ssid, password);\n`;
-      block += `  while (WiFi.status() != WL_CONNECTED) {\n`;
-      block += `    delay(1000);\n`;
-      block += `    Serial.println("WiFi 연결 중...");\n`;
-      block += `  }\n`;
-      block += `  Serial.println("WiFi 연결됨");\n`;
-    }
-    
-    block += `}\n\n`;
-    
-    block += `void loop() {\n`;
-    block += `  // 센서 데이터 읽기\n`;
-    
-    spec.sensors.forEach(({ type }) => {
-      if (type === 'dht22') {
-        block += `  float temperature = dht.readTemperature();\n`;
-        block += `  float humidity = dht.readHumidity();\n`;
-      } else if (type === 'soil_moisture') {
-        block += `  int soilMoisture = analogRead(soilMoisturePin);\n`;
-      }
-    });
-    
-    block += `\n`;
-    block += `  // 데이터 전송\n`;
-    
-    switch (spec.protocol) {
-      case 'http':
-        block += `  sendHttpData();\n`;
-        break;
-      case 'mqtt':
-        block += `  sendMqttData();\n`;
-        break;
-      case 'rs485':
-        block += `  sendModbusData();\n`;
-        break;
-    }
-    
-    block += `\n`;
-    block += `  delay(5000); // 5초 대기\n`;
-    block += `}\n`;
-    
-    return block;
   };
   
   // 코드 다운로드 함수
@@ -288,24 +125,6 @@ export default function IoTDesignerPage() {
       sensors: result.sensors,
       controls: result.controls
     }));
-  };
-  
-  // 코드 생성
-  const generateCode = async () => {
-    try {
-      const response = await fetch('/api/iot/generate-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(spec)
-      });
-      
-      if (response.ok) {
-        const code = await response.text();
-        setGeneratedCode(code);
-      }
-    } catch (error) {
-      console.error('코드 생성 오류:', error);
-    }
   };
   
   
@@ -418,7 +237,7 @@ export default function IoTDesignerPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">PLC 제조사</label>
                 <select
-                  value={spec.modbusConfig.plcVendor || 'generic'}
+                  value={spec.modbusConfig?.plcVendor || 'generic'}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, plcVendor: e.target.value }
@@ -438,7 +257,7 @@ export default function IoTDesignerPage() {
                 <label className="block text-sm font-medium mb-2">호스트 주소</label>
                 <input
                   type="text"
-                  value={spec.modbusConfig.host}
+                  value={spec.modbusConfig?.host || ''}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, host: e.target.value }
@@ -451,7 +270,7 @@ export default function IoTDesignerPage() {
                 <label className="block text-sm font-medium mb-2">포트</label>
                 <input
                   type="number"
-                  value={spec.modbusConfig.port}
+                  value={spec.modbusConfig?.port || 502}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, port: parseInt(e.target.value) }
@@ -464,7 +283,7 @@ export default function IoTDesignerPage() {
                 <label className="block text-sm font-medium mb-2">Unit ID</label>
                 <input
                   type="number"
-                  value={spec.modbusConfig.unitId}
+                  value={spec.modbusConfig?.unitId || 1}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, unitId: parseInt(e.target.value) }
@@ -481,7 +300,7 @@ export default function IoTDesignerPage() {
                 <label className="block text-sm font-medium mb-2">폴링 주기 (ms)</label>
                 <input
                   type="number"
-                  value={spec.modbusConfig.pollMs || 1000}
+                  value={spec.modbusConfig?.pollMs || 1000}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, pollMs: parseInt(e.target.value) }
@@ -494,7 +313,7 @@ export default function IoTDesignerPage() {
                 <label className="block text-sm font-medium mb-2">타임아웃 (ms)</label>
                 <input
                   type="number"
-                  value={spec.modbusConfig.timeout || 5000}
+                  value={spec.modbusConfig?.timeout || 5000}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, timeout: parseInt(e.target.value) }
@@ -507,7 +326,7 @@ export default function IoTDesignerPage() {
                 <label className="block text-sm font-medium mb-2">재시도 횟수</label>
                 <input
                   type="number"
-                  value={spec.modbusConfig.retries || 3}
+                  value={spec.modbusConfig?.retries || 3}
                   onChange={(e) => setSpec(prev => ({ 
                     ...prev, 
                     modbusConfig: { ...prev.modbusConfig!, retries: parseInt(e.target.value) }
@@ -534,7 +353,7 @@ export default function IoTDesignerPage() {
                         <input
                           type="number"
                           placeholder="30001"
-                          value={spec.modbusConfig.registerMappings[sensor.type] || ''}
+                          value={spec.modbusConfig?.registerMappings[sensor.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -551,7 +370,7 @@ export default function IoTDesignerPage() {
                       <div>
                         <label className="block text-xs font-medium mb-1">데이터 타입</label>
                         <select
-                          value={spec.modbusConfig.dataTypes[sensor.type] || 'U16'}
+                          value={spec.modbusConfig?.dataTypes[sensor.type] || 'U16'}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -578,7 +397,7 @@ export default function IoTDesignerPage() {
                           type="number"
                           step="0.01"
                           placeholder="0.1"
-                          value={spec.modbusConfig.scaleFactors[sensor.type] || ''}
+                          value={spec.modbusConfig?.scaleFactors[sensor.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -598,7 +417,7 @@ export default function IoTDesignerPage() {
                           type="number"
                           step="0.01"
                           placeholder="0.1"
-                          value={spec.modbusConfig.deadbands[sensor.type] || ''}
+                          value={spec.modbusConfig?.deadbands[sensor.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -617,7 +436,7 @@ export default function IoTDesignerPage() {
                         <input
                           type="text"
                           placeholder="°C"
-                          value={spec.modbusConfig.units[sensor.type] || ''}
+                          value={spec.modbusConfig?.units[sensor.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -653,7 +472,7 @@ export default function IoTDesignerPage() {
                         <input
                           type="number"
                           placeholder="40001"
-                          value={spec.modbusConfig.controlMappings[control.type] || ''}
+                          value={spec.modbusConfig?.controlMappings[control.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -672,7 +491,7 @@ export default function IoTDesignerPage() {
                         <input
                           type="number"
                           placeholder="1"
-                          value={spec.modbusConfig.controlOnValues[control.type] || ''}
+                          value={spec.modbusConfig?.controlOnValues[control.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -691,7 +510,7 @@ export default function IoTDesignerPage() {
                         <input
                           type="number"
                           placeholder="0"
-                          value={spec.modbusConfig.controlOffValues[control.type] || ''}
+                          value={spec.modbusConfig?.controlOffValues[control.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
@@ -710,7 +529,7 @@ export default function IoTDesignerPage() {
                         <input
                           type="number"
                           placeholder="30"
-                          value={spec.modbusConfig.maxRunTimes[control.type] || ''}
+                          value={spec.modbusConfig?.maxRunTimes[control.type] || ''}
                           onChange={(e) => setSpec(prev => ({
                             ...prev,
                             modbusConfig: {
