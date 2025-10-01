@@ -11,6 +11,10 @@ interface BedTierShelfVisualizationProps {
     plantType?: 'seed' | 'seedling'; // 파종/육묘
     startDate?: string; // 정식 시작일자
     harvestDate?: string; // 수확 예정일자
+    stageBoundaries?: {
+      seed: number[];
+      seedling: number[];
+    };
   }>;
   waterLevelStatus?: 'high' | 'low' | 'normal' | 'disconnected';
   onTierClick?: (tierNumber: number) => void;
@@ -109,7 +113,12 @@ export default function BedTierShelfVisualization({
       return null;
     }
     
-    const growthInfo = calculateGrowthStage(tier.plantType, tier.startDate, tier.harvestDate);
+    // 커스텀 경계 사용
+    const customBoundaries = tier.stageBoundaries
+      ? (tier.plantType === 'seed' ? tier.stageBoundaries.seed : tier.stageBoundaries.seedling)
+      : undefined;
+    
+    const growthInfo = calculateGrowthStage(tier.plantType, tier.startDate, tier.harvestDate, customBoundaries);
     
     if (!growthInfo) {
       return null;
@@ -196,11 +205,11 @@ export default function BedTierShelfVisualization({
                 {stage.label}
               </text>
               
-              {/* 단계 시작 날짜 (위쪽) */}
+              {/* 단계 시작 날짜 (위쪽에서 살짝 아래로) */}
               {index > 0 && (
                 <text
                   x={segmentX}
-                  y={yPosition - 3}
+                  y={yPosition - 1}
                   fontSize="7"
                   fill="#9CA3AF"
                   textAnchor="middle"

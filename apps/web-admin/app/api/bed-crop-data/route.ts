@@ -20,6 +20,10 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       plantType?: string;
       startDate?: string;
       harvestDate?: string;
+      stageBoundaries?: {
+        seed: number[];
+        seedling: number[];
+      };
     };
   } => {
     return !!(
@@ -48,6 +52,7 @@ export const POST = withApiMiddleware(async (request: NextRequest) => {
       plant_type: body.cropData.plantType,
       start_date: body.cropData.startDate || null,
       harvest_date: body.cropData.harvestDate || null,
+      stage_boundaries: body.cropData.stageBoundaries || null,
       updated_at: new Date().toISOString()
     }, {
       onConflict: 'device_id,tier_number'

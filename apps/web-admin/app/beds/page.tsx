@@ -119,7 +119,11 @@ function BedsManagementContent() {
     growingMethod: '담액식',
     plantType: 'seed' as 'seed' | 'seedling',
     startDate: '',
-    harvestDate: ''
+    harvestDate: '',
+    stageBoundaries: {
+      seed: [15, 45, 85], // 발아 끝, 생식생장 끝, 영양생장 끝 (%)
+      seedling: [40, 80]  // 생식생장 끝, 영양생장 끝 (%)
+    }
   });
   
   // 각 베드의 작물 정보 저장 (deviceId -> tier -> cropInfo)
@@ -140,6 +144,10 @@ function BedsManagementContent() {
             plantType: item.plant_type,
             startDate: item.start_date,
             harvestDate: item.harvest_date,
+            stageBoundaries: item.stage_boundaries || {
+              seed: [15, 45, 85],
+              seedling: [40, 80]
+            },
             savedAt: item.created_at
           };
         });
@@ -1218,7 +1226,8 @@ function BedsManagementContent() {
                                       growingMethod: cropInfo?.growingMethod,
                                       plantType: cropInfo?.plantType,
                                       startDate: cropInfo?.startDate,
-                                      harvestDate: cropInfo?.harvestDate
+                                      harvestDate: cropInfo?.harvestDate,
+                                      stageBoundaries: cropInfo?.stageBoundaries
                                     };
                                   })}
                                   waterLevelStatus={(() => {
@@ -1243,7 +1252,11 @@ function BedsManagementContent() {
                                       growingMethod: existingCrop?.growingMethod || '담액식',
                                       plantType: existingCrop?.plantType || 'seed',
                                       startDate: existingCrop?.startDate || '',
-                                      harvestDate: existingCrop?.harvestDate || ''
+                                      harvestDate: existingCrop?.harvestDate || '',
+                                      stageBoundaries: existingCrop?.stageBoundaries || {
+                                        seed: [15, 45, 85],
+                                        seedling: [40, 80]
+                                      }
                                     });
                                     setShowCropInputModal(true);
                                   }}
@@ -2347,12 +2360,13 @@ function BedsManagementContent() {
 
       {/* 작물 입력 모달 */}
       {showCropInputModal && selectedTier && selectedDevice && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           {/* 배경 오버레이 */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowCropInputModal(false)} />
           {/* 모달창 */}
-          <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="relative bg-white rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* 모달 헤더 (고정) */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h3 className="text-2xl font-bold text-gray-600">
                 {selectedTier}단 작물 정보 입력
               </h3>
@@ -2364,7 +2378,8 @@ function BedsManagementContent() {
               </button>
             </div>
 
-            <div className="space-y-6">
+            {/* 모달 컨텐츠 (스크롤) */}
+            <div className="overflow-y-auto p-6 space-y-6">
               {/* 현재 등록된 작물 정보가 있는 경우 삭제 안내 */}
               {(() => {
                 const existingCrop = selectedDevice && selectedTier ? bedCropData[selectedDevice.id]?.[selectedTier] : null;
@@ -2519,7 +2534,224 @@ function BedsManagementContent() {
                 />
               </div>
 
-              <div className="flex space-x-4 pt-4">
+              {/* 생육 단계 기간 설정 */}
+              {cropInputData.startDate && cropInputData.harvestDate && (() => {
+                const start = new Date(cropInputData.startDate);
+                const end = new Date(cropInputData.harvestDate);
+                const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                
+                if (totalDays <= 0) return null;
+                
+                const boundaries = cropInputData.plantType === 'seed' 
+                  ? cropInputData.stageBoundaries.seed 
+                  : cropInputData.stageBoundaries.seedling;
+                
+                const calculateDay = (percent: number) => Math.round((totalDays * percent) / 100);
+                
+                return (
+                  <div className="col-span-2 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-purple-200 rounded-xl p-6 mt-4">
+                    <h4 className="text-lg font-bold text-gray-700 mb-4 flex items-center">
+                      <span className="mr-2">🌱</span>
+                      생육 단계 기간 설정 <span className="text-sm text-gray-500 ml-2">(총 {totalDays}일)</span>
+                    </h4>
+                    
+                    <div className="space-y-6">
+                      {cropInputData.plantType === 'seed' && (
+                        <>
+                          {/* 발아 기간 */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="text-sm font-semibold text-gray-700">
+                                🟨 발아 기간 종료
+                              </label>
+                              <span className="text-sm font-bold text-purple-600">
+                                {calculateDay(boundaries[0])}일 ({boundaries[0]}%)
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="5"
+                              max="30"
+                              value={boundaries[0]}
+                              onChange={(e) => {
+                                const newValue = parseInt(e.target.value);
+                                setCropInputData(prev => ({
+                                  ...prev,
+                                  stageBoundaries: {
+                                    ...prev.stageBoundaries,
+                                    seed: [newValue, Math.max(newValue + 10, prev.stageBoundaries.seed[1]), prev.stageBoundaries.seed[2]]
+                                  }
+                                }));
+                              }}
+                              className="w-full h-2 bg-yellow-200 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                            />
+                          </div>
+                          
+                          {/* 생식생장 기간 */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="text-sm font-semibold text-gray-700">
+                                🔵 생식생장 기간 종료
+                              </label>
+                              <span className="text-sm font-bold text-purple-600">
+                                {calculateDay(boundaries[1])}일 ({boundaries[1]}%)
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={boundaries[0] + 10}
+                              max="70"
+                              value={boundaries[1]}
+                              onChange={(e) => {
+                                const newValue = parseInt(e.target.value);
+                                setCropInputData(prev => ({
+                                  ...prev,
+                                  stageBoundaries: {
+                                    ...prev.stageBoundaries,
+                                    seed: [prev.stageBoundaries.seed[0], newValue, Math.max(newValue + 10, prev.stageBoundaries.seed[2])]
+                                  }
+                                }));
+                              }}
+                              className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            />
+                          </div>
+                          
+                          {/* 영양생장 기간 */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="text-sm font-semibold text-gray-700">
+                                🟢 영양생장 기간 종료
+                              </label>
+                              <span className="text-sm font-bold text-purple-600">
+                                {calculateDay(boundaries[2])}일 ({boundaries[2]}%)
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={boundaries[1] + 10}
+                              max="95"
+                              value={boundaries[2]}
+                              onChange={(e) => {
+                                const newValue = parseInt(e.target.value);
+                                setCropInputData(prev => ({
+                                  ...prev,
+                                  stageBoundaries: {
+                                    ...prev.stageBoundaries,
+                                    seed: [prev.stageBoundaries.seed[0], prev.stageBoundaries.seed[1], newValue]
+                                  }
+                                }));
+                              }}
+                              className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            />
+                          </div>
+                        </>
+                      )}
+                      
+                      {cropInputData.plantType === 'seedling' && (
+                        <>
+                          {/* 생식생장 기간 */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="text-sm font-semibold text-gray-700">
+                                🔵 생식생장 기간 종료
+                              </label>
+                              <span className="text-sm font-bold text-purple-600">
+                                {calculateDay(boundaries[0])}일 ({boundaries[0]}%)
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="20"
+                              max="60"
+                              value={boundaries[0]}
+                              onChange={(e) => {
+                                const newValue = parseInt(e.target.value);
+                                setCropInputData(prev => ({
+                                  ...prev,
+                                  stageBoundaries: {
+                                    ...prev.stageBoundaries,
+                                    seedling: [newValue, Math.max(newValue + 10, prev.stageBoundaries.seedling[1])]
+                                  }
+                                }));
+                              }}
+                              className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                            />
+                          </div>
+                          
+                          {/* 영양생장 기간 */}
+                          <div>
+                            <div className="flex items-center justify-between mb-2">
+                              <label className="text-sm font-semibold text-gray-700">
+                                🟢 영양생장 기간 종료
+                              </label>
+                              <span className="text-sm font-bold text-purple-600">
+                                {calculateDay(boundaries[1])}일 ({boundaries[1]}%)
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={boundaries[0] + 10}
+                              max="95"
+                              value={boundaries[1]}
+                              onChange={(e) => {
+                                const newValue = parseInt(e.target.value);
+                                setCropInputData(prev => ({
+                                  ...prev,
+                                  stageBoundaries: {
+                                    ...prev.stageBoundaries,
+                                    seedling: [prev.stageBoundaries.seedling[0], newValue]
+                                  }
+                                }));
+                              }}
+                              className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            />
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* 미리보기 게이지 */}
+                      <div className="bg-white rounded-lg p-4 mt-4">
+                        <div className="text-xs text-gray-600 mb-2 font-semibold">미리보기:</div>
+                        <div className="h-8 w-full bg-gray-200 rounded-full overflow-hidden flex">
+                          {cropInputData.plantType === 'seed' ? (
+                            <>
+                              <div style={{ width: `${boundaries[0]}%` }} className="bg-yellow-400 flex items-center justify-center text-xs font-bold text-gray-700">
+                                발아
+                              </div>
+                              <div style={{ width: `${boundaries[1] - boundaries[0]}%` }} className="bg-blue-400 flex items-center justify-center text-xs font-bold text-white">
+                                생식
+                              </div>
+                              <div style={{ width: `${boundaries[2] - boundaries[1]}%` }} className="bg-green-400 flex items-center justify-center text-xs font-bold text-white">
+                                영양
+                              </div>
+                              <div style={{ width: `${100 - boundaries[2]}%` }} className="bg-red-400 flex items-center justify-center text-xs font-bold text-white">
+                                수확
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ width: `${boundaries[0]}%` }} className="bg-blue-400 flex items-center justify-center text-xs font-bold text-white">
+                                생식
+                              </div>
+                              <div style={{ width: `${boundaries[1] - boundaries[0]}%` }} className="bg-green-400 flex items-center justify-center text-xs font-bold text-white">
+                                영양
+                              </div>
+                              <div style={{ width: `${100 - boundaries[1]}%` }} className="bg-red-400 flex items-center justify-center text-xs font-bold text-white">
+                                수확
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* 모달 푸터 (고정) */}
+            <div className="border-t border-gray-200 p-6">
+              <div className="flex space-x-4">
                 <button
                   onClick={() => setShowCropInputModal(false)}
                   className="flex-1 px-6 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-semibold"

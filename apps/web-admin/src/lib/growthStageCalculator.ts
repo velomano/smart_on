@@ -22,12 +22,14 @@ export interface GrowthStageInfo {
  * @param plantType 'seed' (파종) 또는 'seedling' (육묘)
  * @param startDate 정식 시작일자
  * @param harvestDate 수확 예정일자
+ * @param customBoundaries 커스텀 단계 경계 (선택)
  * @returns 생육 단계 정보
  */
 export function calculateGrowthStage(
   plantType: 'seed' | 'seedling',
   startDate: string,
-  harvestDate: string
+  harvestDate: string,
+  customBoundaries?: number[]
 ): GrowthStageInfo | null {
   if (!startDate || !harvestDate) {
     return null;
@@ -63,7 +65,11 @@ export function calculateGrowthStage(
   
   if (plantType === 'seed') {
     // 파종: 4단계
-    // 발아 (0-15%), 생식생장 (15-45%), 영양생장 (45-85%), 수확시기 (85-100%)
+    // 커스텀 경계 또는 기본값 사용
+    const boundaries = customBoundaries || [15, 45, 85];
+    
+    // 발아 (0-boundaries[0]%), 생식생장 (boundaries[0]-boundaries[1]%), 
+    // 영양생장 (boundaries[1]-boundaries[2]%), 수확시기 (boundaries[2]-100%)
     stages = [
       {
         stage: 'germination',
@@ -91,32 +97,35 @@ export function calculateGrowthStage(
       }
     ];
     
-    if (overallProgress < 15) {
+    if (overallProgress < boundaries[0]) {
       currentStage = 'germination';
       currentStageLabel = '발아';
-      stages[0].progress = (overallProgress / 15) * 100;
-    } else if (overallProgress < 45) {
+      stages[0].progress = (overallProgress / boundaries[0]) * 100;
+    } else if (overallProgress < boundaries[1]) {
       currentStage = 'reproductive';
       currentStageLabel = '생식생장';
       stages[0].progress = 100;
-      stages[1].progress = ((overallProgress - 15) / 30) * 100;
-    } else if (overallProgress < 85) {
+      stages[1].progress = ((overallProgress - boundaries[0]) / (boundaries[1] - boundaries[0])) * 100;
+    } else if (overallProgress < boundaries[2]) {
       currentStage = 'vegetative';
       currentStageLabel = '영양생장';
       stages[0].progress = 100;
       stages[1].progress = 100;
-      stages[2].progress = ((overallProgress - 45) / 40) * 100;
+      stages[2].progress = ((overallProgress - boundaries[1]) / (boundaries[2] - boundaries[1])) * 100;
     } else {
       currentStage = 'harvest';
       currentStageLabel = '수확시기';
       stages[0].progress = 100;
       stages[1].progress = 100;
       stages[2].progress = 100;
-      stages[3].progress = ((overallProgress - 85) / 15) * 100;
+      stages[3].progress = ((overallProgress - boundaries[2]) / (100 - boundaries[2])) * 100;
     }
   } else {
     // 육묘: 3단계
-    // 생식생장 (0-40%), 영양생장 (40-80%), 수확시기 (80-100%)
+    // 커스텀 경계 또는 기본값 사용
+    const boundaries = customBoundaries || [40, 80];
+    
+    // 생식생장 (0-boundaries[0]%), 영양생장 (boundaries[0]-boundaries[1]%), 수확시기 (boundaries[1]-100%)
     stages = [
       {
         stage: 'reproductive',
@@ -138,21 +147,21 @@ export function calculateGrowthStage(
       }
     ];
     
-    if (overallProgress < 40) {
+    if (overallProgress < boundaries[0]) {
       currentStage = 'reproductive';
       currentStageLabel = '생식생장';
-      stages[0].progress = (overallProgress / 40) * 100;
-    } else if (overallProgress < 80) {
+      stages[0].progress = (overallProgress / boundaries[0]) * 100;
+    } else if (overallProgress < boundaries[1]) {
       currentStage = 'vegetative';
       currentStageLabel = '영양생장';
       stages[0].progress = 100;
-      stages[1].progress = ((overallProgress - 40) / 40) * 100;
+      stages[1].progress = ((overallProgress - boundaries[0]) / (boundaries[1] - boundaries[0])) * 100;
     } else {
       currentStage = 'harvest';
       currentStageLabel = '수확시기';
       stages[0].progress = 100;
       stages[1].progress = 100;
-      stages[2].progress = ((overallProgress - 80) / 20) * 100;
+      stages[2].progress = ((overallProgress - boundaries[1]) / (100 - boundaries[1])) * 100;
     }
   }
   
