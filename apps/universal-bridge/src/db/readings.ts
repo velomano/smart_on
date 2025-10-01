@@ -41,7 +41,7 @@ export async function insertReadings(
   }));
 
   const { data, error } = await supabase
-    .from('readings')
+    .from('iot_readings')
     .insert(records)
     .select();
 
@@ -64,7 +64,7 @@ export async function getRecentReadings(
   const supabase = getSupabase();
   
   const { data, error } = await supabase
-    .from('readings')
+    .from('iot_readings')
     .select('*')
     .eq('device_id', deviceId)
     .order('ts', { ascending: false })

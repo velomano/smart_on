@@ -27,7 +27,7 @@ export async function createDevice(device: DeviceRecord) {
   const supabase = getSupabase();
   
   const { data, error } = await supabase
-    .from('devices')
+    .from('iot_devices')
     .insert({
       tenant_id: device.tenant_id,
       farm_id: device.farm_id,
@@ -58,7 +58,7 @@ export async function getDeviceByDeviceId(tenantId: string, deviceId: string) {
   const supabase = getSupabase();
   
   const { data, error } = await supabase
-    .from('devices')
+    .from('iot_devices')
     .select('*')
     .eq('tenant_id', tenantId)
     .eq('device_id', deviceId)
@@ -89,7 +89,7 @@ export async function updateDeviceLastSeen(deviceId: string) {
   const supabase = getSupabase();
   
   const { error } = await supabase
-    .from('devices')
+    .from('iot_devices')
     .update({ last_seen_at: new Date().toISOString() })
     .eq('id', deviceId);
 
