@@ -992,8 +992,6 @@ export default function UserDashboard({ user, farms, devices, sensors, sensorRea
                         )}
                     </div>
                   </div>
-
-            </div>
           </div>
         </div>
 
