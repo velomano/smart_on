@@ -38,6 +38,51 @@ export function createHttpServer() {
   }));
   app.use(express.json({ limit: '1mb' }));
 
+  // Rate Limiting 미들웨어
+  app.use(async (req, res, next) => {
+    // Health check는 레이트 리밋 제외
+    if (req.path === '/health') {
+      return next();
+    }
+
+    const { deviceLimiter, tenantLimiter } = await import('../../security/ratelimit.js');
+    
+    const deviceId = req.headers['x-device-id'] as string;
+    const tenantId = req.headers['x-tenant-id'] as string;
+    
+    // 디바이스별 리밋
+    if (deviceId && tenantId) {
+      const key = `device:${tenantId}:${deviceId}`;
+      const allowed = await deviceLimiter.consume(key);
+      
+      if (!allowed) {
+        const remaining = await deviceLimiter.getRemaining(key);
+        res.setHeader('X-RateLimit-Remaining', remaining.toString());
+        return res.status(429).json({ 
+          error: 'Too Many Requests',
+          message: '디바이스 요청 한도 초과 (60 req/min)',
+          retry_after: 60
+        });
+      }
+    }
+    
+    // 테넌트별 리밋
+    if (tenantId) {
+      const key = `tenant:${tenantId}`;
+      const allowed = await tenantLimiter.consume(key);
+      
+      if (!allowed) {
+        return res.status(429).json({ 
+          error: 'Too Many Requests',
+          message: '테넌트 요청 한도 초과',
+          retry_after: 60
+        });
+      }
+    }
+    
+    next();
+  });
+
   // 헬스 체크
   app.get('/health', (req, res) => {
     res.json({
@@ -71,6 +116,37 @@ export function createHttpServer() {
     } catch (error: any) {
       console.error('[API] Claim error:', error);
       res.status(500).json({ error: error.message || 'Failed to generate token' });
+    }
+  });
+
+  // 키 회전 엔드포인트
+  app.post('/api/provisioning/rotate', async (req, res) => {
+    try {
+      const { device_id, current_key, reason } = req.body;
+      
+      if (!device_id || !current_key) {
+        return res.status(400).json({ error: 'device_id and current_key required' });
+      }
+      
+      // Provisioning 함수 호출
+      const { rotateDeviceKey } = await import('../../provisioning/rotate.js');
+      
+      const rotation = await rotateDeviceKey({
+        deviceId: device_id,
+        currentKey: current_key,
+        reason: reason || 'scheduled_rotation',
+      });
+      
+      res.json({
+        device_id: rotation.deviceId,
+        new_device_key: rotation.newKey,
+        grace_period: rotation.gracePeriod,
+        expires_at: rotation.expiresAt.toISOString(),
+        message: '✅ 디바이스 키가 회전되었습니다. Grace Period 동안 두 키 모두 유효합니다.'
+      });
+    } catch (error: any) {
+      console.error('[API] Rotate error:', error);
+      res.status(500).json({ error: error.message || 'Failed to rotate key' });
     }
   });
 
@@ -111,12 +187,40 @@ export function createHttpServer() {
     try {
       const deviceIdStr = req.headers['x-device-id'] as string;
       const tenantId = req.headers['x-tenant-id'] as string;
+      const signature = req.headers['x-sig'] as string;
+      const timestamp = req.headers['x-ts'] as string;
       
       if (!deviceIdStr || !tenantId) {
         return res.status(401).json({ error: 'Device ID and Tenant ID required' });
       }
+
+      // HMAC 서명 검증 (운영 모드)
+      const devMode = process.env.NODE_ENV === 'development' && process.env.SIGNATURE_VERIFY_OFF === 'true';
       
-      const { readings, timestamp } = req.body;
+      if (!devMode) {
+        if (!signature || !timestamp) {
+          return res.status(401).json({ error: 'Signature and timestamp required' });
+        }
+
+        // 디바이스 조회하여 device_key 가져오기
+        const { getDeviceByDeviceId } = await import('../../db/index.js');
+        const device = await getDeviceByDeviceId(tenantId, deviceIdStr);
+        
+        if (!device) {
+          return res.status(404).json({ error: 'Device not found' });
+        }
+
+        // 서명 검증
+        const { verifyRequest } = await import('../../security/signer.js');
+        const body = JSON.stringify(req.body);
+        const ts = parseInt(timestamp);
+        
+        // TODO: device.device_key_hash를 사용하여 검증 (현재는 해시만 저장되어 있음)
+        // 임시로 개발 모드와 동일하게 처리
+        console.log('[Telemetry] Signature verification: (hash-based auth not yet implemented)');
+      }
+      
+      const { readings, timestamp: bodyTimestamp } = req.body;
       
       console.log('[Telemetry] Received from', deviceIdStr, ':', readings?.length, 'readings');
       

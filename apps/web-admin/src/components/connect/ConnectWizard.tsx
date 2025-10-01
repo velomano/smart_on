@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { QRCodeCard } from './QRCodeCard';
 import { LiveLog } from './LiveLog';
+import { Preflight } from './Preflight';
 import toast, { Toaster } from 'react-hot-toast';
 
 type Step = 'device-select' | 'protocol-select' | 'code-generate' | 'monitor';
@@ -510,6 +511,11 @@ function MonitorStep({ config, onBack }: { config: DeviceConfig; onBack: () => v
           <li>WiFi 연결이 완료되면 자동으로 등록됩니다</li>
           <li>아래 실시간 로그에서 연결 상태를 확인하세요</li>
         </ol>
+      </div>
+
+      {/* Preflight Check */}
+      <div className="mb-4">
+        <Preflight serverUrl="http://localhost:3000" />
       </div>
 
       {/* Live Log */}
