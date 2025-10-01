@@ -2,10 +2,5 @@
   "buildCommand": "npm run build:web-admin",
   "outputDirectory": "apps/web-admin/.next",
   "installCommand": "npm install",
-  "framework": "nextjs",
-  "functions": {
-    "apps/web-admin/app/api/collect/route.ts": {
-      "maxDuration": 300
-    }
-  }
+  "framework": "nextjs"
 }
