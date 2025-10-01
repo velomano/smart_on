@@ -355,3 +355,4 @@ tenants (1) → farms (3) → devices (N) → sensors (N) → sensor_readings (N
 - [🎨 UI 디자인 시스템](docs/UI_DESIGN_SYSTEM.md)
 - [📱 프로젝트 기획서](book/스마트팜_제어_모니터링_앱_prd_v_0.md)
 # Vercel 배포 테스트
+# Vercel Root Directory 설정 테스트
