@@ -1,6 +1,3 @@
 {
-  "buildCommand": "npm run build:web-admin",
-  "outputDirectory": "apps/web-admin/.next",
-  "installCommand": "npm install",
   "framework": "nextjs"
 }
