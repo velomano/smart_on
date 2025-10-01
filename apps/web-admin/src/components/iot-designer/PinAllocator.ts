@@ -17,7 +17,7 @@ export function allocatePins(req: {
   const assigned: Record<string, AssignedPin[]> = {};
   const conflicts: string[] = [];
 
-  const take = (prefer: number[], label: string) => {
+  const take = (prefer: readonly (number | string)[], label: string) => {
     const p = prefer.find(x => !used.has(x));
     if (p == null) { 
       conflicts.push(`가용 핀 부족: ${label}`); 
@@ -68,14 +68,14 @@ export function allocatePins(req: {
     const pins: AssignedPin[] = [];
     
     for (let i = 0; i < count; i++) {
-      if (sensor.alloc.i2c) {
+      if ('i2c' in sensor.alloc && sensor.alloc.i2c) {
         // I2C 센서는 고정 핀 사용
         pins.push({ role: 'I2C', pin: 'SDA/SCL' });
-      } else if (sensor.alloc.prefer === 'onewire') {
+      } else if ('prefer' in sensor.alloc && sensor.alloc.prefer === 'onewire') {
         // OneWire는 같은 버스 공유 가능
         const pin = take(esp32Pinmap.onewire, `${sensor.name} ${i+1}`);
         if (pin) pins.push({ role: 'DATA', pin });
-      } else if (sensor.alloc.prefer === 'analog') {
+      } else if ('prefer' in sensor.alloc && sensor.alloc.prefer === 'analog') {
         // 아날로그 센서
         const pin = take(['A0', 'A1', 'A2', 'A3'], `${sensor.name} ${i+1}`);
         if (pin) pins.push({ role: 'SIG', pin });

@@ -5,6 +5,7 @@ interface SchematicProps {
   model: {
     spec: {
       device: string;
+      protocol: string;
       sensors: Array<{ type: string; count: number }>;
       controls: Array<{ type: string; count: number }>;
     };
