@@ -380,15 +380,15 @@ export default function AdminPage() {
         />
       )}
 
-      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
-        <div className="mb-8">
+      <main className="max-w-7xl mx-auto pt-2 pb-4 sm:pt-4 sm:pb-8 px-2 sm:px-6 lg:px-8 relative z-10">
+        <div className="mb-4 sm:mb-8">
 
-          <div className="flex justify-center mb-8">
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/20">
-              <div className="flex space-x-2">
+          <div className="flex justify-center mb-4 sm:mb-8">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1 sm:p-2 shadow-lg border border-white/20">
+              <div className="flex space-x-1 sm:space-x-2">
                 <button
                   onClick={() => setActiveTab('pending')}
-                  className={`px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+                  className={`px-1 sm:px-4 lg:px-6 py-1.5 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-xs sm:text-base ${
                     activeTab === 'pending'
                       ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -398,7 +398,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('approved')}
-                  className={`px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+                  className={`px-1 sm:px-4 lg:px-6 py-1.5 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-xs sm:text-base ${
                     activeTab === 'approved'
                       ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -408,7 +408,7 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('farms')}
-                  className={`px-2 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base ${
+                  className={`px-1 sm:px-4 lg:px-6 py-1.5 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-xs sm:text-base ${
                     activeTab === 'farms'
                       ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg'
                       : 'text-gray-600 hover:bg-gray-100'
@@ -438,7 +438,7 @@ export default function AdminPage() {
         ) : (
           <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-8">
             <div
-              className={`px-8 py-6 ${
+              className={`px-4 py-4 sm:px-8 sm:py-6 ${
                 activeTab === 'pending'
                   ? 'bg-gradient-to-r from-orange-500 to-red-500'
                   : activeTab === 'approved'
@@ -447,18 +447,18 @@ export default function AdminPage() {
               }`}
             >
               <div className="flex items-center">
-                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-3xl">{activeTab === 'pending' ? '⏳' : activeTab === 'approved' ? '✅' : '🏢'}</span>
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center mr-3 sm:mr-4">
+                  <span className="text-2xl sm:text-3xl">{activeTab === 'pending' ? '⏳' : activeTab === 'approved' ? '✅' : '🏢'}</span>
                 </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+                <div className="flex-1">
+                  <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">
                     {activeTab === 'pending'
                       ? '승인 대기 사용자 목록'
                       : activeTab === 'approved'
                       ? '승인된 사용자 목록'
                       : '농장별 사용자 보기'}
                   </h1>
-                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">
+                  <p className="text-white/90 text-xs sm:text-sm lg:text-base hidden sm:block">
                     {activeTab === 'pending'
                       ? '승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다'
                       : activeTab === 'approved'
@@ -469,14 +469,14 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="px-2 sm:px-4 lg:px-8 py-2 sm:py-4 lg:py-8">
+            <div className="px-3 sm:px-4 lg:px-8 py-3 sm:py-4 lg:py-8">
               {/* 대기 */}
               {activeTab === 'pending' && (
                 <div>
-                  <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-8">
+                  <div className="flex items-center justify-between mb-3 sm:mb-3 lg:mb-8">
                     <div>
-                      <h3 className="text-lg sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">⏳ 승인 대기 사용자 목록</h3>
-                      <p className="text-gray-600 text-sm sm:text-base">승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다</p>
+                      <h3 className="text-base sm:text-xl lg:text-2xl font-black text-gray-600 mb-1 sm:mb-2">⏳ 승인 대기 사용자 목록</h3>
+                      <p className="text-gray-600 text-xs sm:text-base hidden sm:block">승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다</p>
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500">총 {pendingUsers.length}명</div>
                   </div>
@@ -485,17 +485,17 @@ export default function AdminPage() {
                     {pendingUsers.map((u) => (
                       <div
                         key={u.id}
-                        className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300"
+                        className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-xl sm:rounded-2xl p-3 sm:p-3 lg:p-6 shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <div className="flex items-center space-x-3 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
+                            <div className="w-10 h-10 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
                               <span className="text-lg sm:text-xl lg:text-2xl">⏳</span>
                             </div>
-                            <div>
-                              <h4 className="text-lg sm:text-xl font-bold text-gray-600">{u.name || '이름 없음'}</h4>
-                              <p className="text-gray-600 font-medium text-sm sm:text-base">{u.email}</p>
-                              <div className="flex items-center space-x-2 sm:space-x-3 mt-1 sm:mt-2">
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-base sm:text-xl font-bold text-gray-600 truncate">{u.name || '이름 없음'}</h4>
+                              <p className="text-gray-600 font-medium text-sm sm:text-base truncate">{u.email}</p>
+                              <div className="flex items-center space-x-2 sm:space-x-3 mt-1 sm:mt-2 flex-wrap">
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                                   승인 대기
                                 </span>
@@ -504,16 +504,16 @@ export default function AdminPage() {
                               <div className="text-xs text-gray-500 mt-1">가입일: {new Date(u.created_at).toLocaleDateString('ko-KR')}</div>
                             </div>
                           </div>
-                          <div className="flex space-x-3">
+                          <div className="flex space-x-2 sm:space-x-3 flex-shrink-0">
                             <button
                               onClick={() => handleRejectUser(u.id)}
-                              className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition-colors"
+                              className="bg-red-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-red-600 transition-colors"
                             >
                               거부
                             </button>
                             <button
                               onClick={() => handleApproveUser(u)}
-                              className="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition-colors"
+                              className="bg-green-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:bg-green-600 transition-colors"
                             >
                               승인
                             </button>
