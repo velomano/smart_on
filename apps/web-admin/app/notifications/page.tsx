@@ -360,60 +360,72 @@ export default function NotificationsPage() {
                   <h2 className="text-lg font-semibold text-gray-900 mb-3">📱 텔레그램 알림 설정</h2>
 
                   {/* 설정 안내 */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                    <div className="flex items-start space-x-2">
-                      <span className="text-blue-600 text-lg">💡</span>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start space-x-3">
+                      <span className="text-blue-600 text-xl">💡</span>
                       <div className="flex-1">
-                        <p className="text-xs text-blue-800 font-medium mb-1">설정 방법 안내</p>
-                        <p className="text-xs text-blue-700 mb-2">
-                          텔레그램 채팅 ID는 <strong>마이페이지</strong>에서 설정하는 것이 권장됩니다. 
-                          여기서는 알림 활성화와 테스트만 진행하세요.
-                        </p>
-                        <a 
-                          href="/my-page" 
-                          className="inline-block px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-                        >
-                          마이페이지에서 ID 설정하기 →
-                        </a>
+                        <p className="text-sm font-medium text-blue-800 mb-2">📋 텔레그램 알림 설정 방법</p>
+                        <div className="space-y-2 text-sm text-blue-700">
+                          <div className="flex items-start space-x-2">
+                            <span className="text-blue-600 mt-0.5">1️⃣</span>
+                            <p><strong>텔레그램 채팅 ID 설정:</strong> 마이페이지에서 @userinfobot과 대화하여 채팅 ID를 확인하고 설정하세요.</p>
+                          </div>
+                          <div className="flex items-start space-x-2">
+                            <span className="text-blue-600 mt-0.5">2️⃣</span>
+                            <p><strong>알림 활성화:</strong> 아래에서 텔레그램 알림을 활성화하고 테스트해보세요.</p>
+                          </div>
+                          <div className="flex items-start space-x-2">
+                            <span className="text-blue-600 mt-0.5">3️⃣</span>
+                            <p><strong>알림 유형 설정:</strong> 원하는 알림 유형을 선택하여 맞춤형 알림을 받으세요.</p>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <a 
+                            href="/my-page" 
+                            className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            📱 마이페이지에서 ID 설정하기 →
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-3">
                       <input
                         type="checkbox"
                         id="telegramEnabled"
                         checked={settings.telegramEnabled}
                         onChange={e => setSettings(prev => ({ ...prev, telegramEnabled: e.target.checked }))}
-                        className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
+                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
                       />
-                      <label htmlFor="telegramEnabled" className="text-gray-900 font-medium text-sm">
+                      <label htmlFor="telegramEnabled" className="text-gray-900 font-medium text-base">
                         텔레그램 알림 활성화
                       </label>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-gray-900 mb-1">텔레그램 채팅 ID</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">텔레그램 채팅 ID</label>
                       <input
                         type="text"
                         value={settings.telegramChatId}
                         onChange={e => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
                         placeholder="마이페이지에서 설정된 ID가 자동으로 표시됩니다"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50 text-sm"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50 text-base"
                         disabled
                       />
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-sm text-gray-500 mt-2">
                         이 필드는 마이페이지에서 설정된 값을 자동으로 불러옵니다.
                       </p>
                     </div>
 
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex flex-col sm:flex-row gap-3">
                         <button
                           onClick={debugEnvironmentVariables}
                           disabled={testing}
-                          className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
                           title="환경변수 상태 확인"
                         >
                           🔧 환경변수 상태
@@ -421,36 +433,36 @@ export default function NotificationsPage() {
                         <button
                           onClick={sendTestNotification}
                           disabled={testing || !settings.telegramChatId}
-                          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
                           title="텔레그램 알림 테스트"
                         >
                           {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
                         </button>
                       </div>
-                      <div className="text-xs text-gray-500">📋 채팅방에서 봇과 먼저 대화를 시작하셨나요?</div>
+                      <div className="text-sm text-gray-500">📋 채팅방에서 봇과 먼저 대화를 시작하셨나요?</div>
                     </div>
 
-                    <div className="flex justify-end mt-3">
+                    <div className="flex justify-end mt-4">
                       <button
                         onClick={saveSettings}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm"
+                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-base"
                       >
                         💾 설정 저장
                       </button>
                     </div>
 
-                    <div className="border-t pt-3 mt-3">
-                      <h3 className="text-base font-medium text-gray-900 mb-2">🌡️ 센서 알림 테스트</h3>
+                    <div className="border-t pt-4 mt-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-3">🌡️ 센서 알림 테스트</h3>
                       
                       {/* 농장 선택 */}
-                      <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                           🏢 테스트할 농장 선택
                         </label>
                         <select
                           value={selectedFarmId}
                           onChange={(e) => setSelectedFarmId(e.target.value)}
-                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white text-sm"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white text-sm"
                         >
                           {farms.map((farm) => (
                             <option key={farm.id} value={farm.id}>
@@ -459,50 +471,50 @@ export default function NotificationsPage() {
                           ))}
                         </select>
                         {farms.length === 0 && (
-                          <p className="text-xs text-gray-500 mt-1">농장이 없습니다. 먼저 농장을 생성해주세요.</p>
+                          <p className="text-sm text-gray-500 mt-1">농장이 없습니다. 먼저 농장을 생성해주세요.</p>
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-1">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         <button
                           onClick={() => testSensorAlert('temperature', 12, '조1-베드1')}
                           disabled={testing || !selectedFarmId}
-                          className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 disabled:opacity-50 transition-colors text-xs"
+                          className="bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           ❄️ 저온 (12°C)
                         </button>
                         <button
                           onClick={() => testSensorAlert('temperature', 35, '조1-베드1')}
                           disabled={testing || !selectedFarmId}
-                          className="bg-orange-500 text-white py-1 px-2 rounded hover:bg-orange-600 disabled:opacity-50 transition-colors text-xs"
+                          className="bg-orange-500 text-white py-2 px-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           🌡️ 고온 (35°C)
                         </button>
                         <button
                           onClick={() => testSensorAlert('ec', 0.5, '조1-베드1')}
                           disabled={testing || !selectedFarmId}
-                          className="bg-yellow-500 text-white py-1 px-2 rounded hover:bg-yellow-600 disabled:opacity-50 transition-colors text-xs"
+                          className="bg-yellow-500 text-white py-2 px-3 rounded-lg hover:bg-yellow-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           💧 EC 부족 (0.5)
                         </button>
                         <button
                           onClick={() => testSensorAlert('ph', 4.5, '조1-베드1')}
                           disabled={testing || !selectedFarmId}
-                          className="bg-purple-500 text-white py-1 px-2 rounded hover:bg-purple-600 disabled:opacity-50 transition-colors text-xs"
+                          className="bg-purple-500 text-white py-2 px-3 rounded-lg hover:bg-purple-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           ⚗️ pH 이상 (4.5)
                         </button>
                         <button
                           onClick={() => testSensorAlert('water', 15, '조1-베드1')}
                           disabled={testing || !selectedFarmId}
-                          className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600 disabled:opacity-50 transition-colors text-xs"
+                          className="bg-blue-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           💧 저수위 (15%)
                         </button>
                         <button
                           onClick={() => testSensorAlert('water', 95, '조1-베드1')}
                           disabled={testing || !selectedFarmId}
-                          className="bg-cyan-500 text-white py-1 px-2 rounded hover:bg-cyan-600 disabled:opacity-50 transition-colors text-xs"
+                          className="bg-cyan-500 text-white py-2 px-3 rounded-lg hover:bg-cyan-600 disabled:opacity-50 transition-colors text-sm"
                         >
                           🌊 고수위 (95%)
                         </button>
@@ -510,8 +522,8 @@ export default function NotificationsPage() {
                     </div>
 
                     {testResult && (
-                      <div className="p-2 bg-gray-100 rounded text-xs">
-                        <p className="text-xs text-gray-900 font-medium whitespace-pre-wrap">{testResult}</p>
+                      <div className="p-3 bg-gray-100 rounded-lg">
+                        <p className="text-sm text-gray-900 font-medium whitespace-pre-wrap">{testResult}</p>
                       </div>
                     )}
                   </div>
@@ -519,14 +531,14 @@ export default function NotificationsPage() {
 
                 {/* 알림 유형 설정 */}
                 <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">🔔 알림 유형 설정</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">🔔 알림 유형 설정</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {Object.entries(notificationTemplates).map(([key, template]) => (
-                      <div key={key} className="border border-gray-200 rounded p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium text-gray-900 text-sm">{template.title}</h3>
+                      <div key={key} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-medium text-gray-900 text-base">{template.title}</h3>
                           <span
-                            className={`px-1 py-0.5 rounded text-xs font-medium ${
+                            className={`px-2 py-1 rounded text-xs font-medium ${
                               template.priority === 'critical'
                                 ? 'bg-red-100 text-red-800'
                                 : template.priority === 'high'
@@ -539,7 +551,7 @@ export default function NotificationsPage() {
                             {template.priority}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-600 mb-2">
+                        <p className="text-sm text-gray-600 mb-3">
                           {template.message.split('\n')[0].replace(/<[^>]*>/g, '')}
                         </p>
                         <div className="flex items-center space-x-2">
@@ -553,9 +565,9 @@ export default function NotificationsPage() {
                                 notifications: { ...prev.notifications, [key]: e.target.checked }
                               }))
                             }
-                            className="w-3 h-3 text-green-600 rounded focus:ring-green-500"
+                            className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
                           />
-                          <label htmlFor={key} className="text-xs text-gray-700">
+                          <label htmlFor={key} className="text-sm text-gray-700">
                             이 알림 받기
                           </label>
                         </div>
