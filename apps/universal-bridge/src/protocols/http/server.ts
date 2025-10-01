@@ -24,8 +24,11 @@ export function createHttpServer() {
   app.use(helmet());
   app.use(cors({
     origin: (origin, callback) => {
-      // TODO: 테넌트 도메인 화이트리스트 검증
-      if (!origin || /^https:\/\/[\w-]+\.smartfarm\.app$/.test(origin)) {
+      // 로컬 개발 환경 허용
+      if (!origin || 
+          origin.includes('localhost') || 
+          origin.includes('127.0.0.1') ||
+          /^https:\/\/[\w-]+\.smartfarm\.app$/.test(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
