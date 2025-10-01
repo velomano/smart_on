@@ -10,6 +10,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
+import { createAdapter, MultiAdapter } from '../../adapters';
+import { Telemetry, Command } from '../../types/core';
 
 /**
  * HTTP 서버 생성
@@ -22,6 +24,9 @@ import { createServer } from 'http';
 export function createHttpServer() {
   const app = express();
   const server = createServer(app);
+  
+  // Transport Adapters 관리
+  const adapters = new Map<string, MultiAdapter>();
 
   // 미들웨어
   app.use(helmet());

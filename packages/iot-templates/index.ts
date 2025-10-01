@@ -1,7 +1,7 @@
 // IoT Designer - 센서/제어 카탈로그 및 디바이스 핀맵
 export type Voltage = 3.3 | 5 | 12 | 24;
 export type ControlType = 'boolean' | 'pwm' | 'servo' | 'stepper';
-export type Protocol = 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble';
+export type Protocol = 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485';
 
 // 디바이스별 핀맵 정의
 export const devicePinmaps = {
@@ -10,35 +10,53 @@ export const devicePinmaps = {
     pwm:     [2,4,5,12,13,14,15,16,17,18,19,21,22,23,25,26,27,32,33],
     onewire: [4,5,12,13,14,15,16,17,18,19,21,22,23,25,26,27,32,33],
     i2c:     { sda: 21, scl: 22 },
-    analog:  [36,39,34,35,32,33]
+    analog:  [36,39,34,35,32,33],
+    uart:    [
+      { tx: 1, rx: 3, name: 'UART0' },    // USB Serial
+      { tx: 17, rx: 16, name: 'UART2' },  // RS-485용
+      { tx: 14, rx: 15, name: 'UART1' }   // 추가 UART
+    ]
   },
   esp8266: {
     digital: [0,1,2,3,4,5,12,13,14,15,16],
     pwm:     [0,1,2,3,4,5,12,13,14,15,16],
     onewire: [2,4,5,12,13,14,15,16],
     i2c:     { sda: 4, scl: 5 },
-    analog:  ['A0']
+    analog:  ['A0'],
+    uart:    [
+      { tx: 1, rx: 3, name: 'UART0' }
+    ]
   },
   arduino_uno: {
     digital: [2,3,4,5,6,7,8,9,10,11,12,13],
     pwm:     [3,5,6,9,10,11],
     onewire: [2,3,4,5,6,7,8,9,10,11,12,13],
     i2c:     { sda: 'A4', scl: 'A5' },
-    analog:  ['A0','A1','A2','A3','A4','A5']
+    analog:  ['A0','A1','A2','A3','A4','A5'],
+    uart:    [
+      { tx: 1, rx: 0, name: 'UART0' }
+    ]
   },
   arduino_r4: {
     digital: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
     pwm:     [3,5,6,9,10,11,14,15,16,17,18,19,20,21,22,23],
     onewire: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],
     i2c:     { sda: 'A4', scl: 'A5' },
-    analog:  ['A0','A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A11']
+    analog:  ['A0','A1','A2','A3','A4','A5','A6','A7','A8','A9','A10','A11'],
+    uart:    [
+      { tx: 1, rx: 0, name: 'UART0' },
+      { tx: 8, rx: 9, name: 'UART1' }
+    ]
   },
   raspberry_pi5: {
     digital: [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],
     pwm:     [12,13,18,19],
     onewire: [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],
     i2c:     { sda: 2, scl: 3 },
-    analog:  [] // ADC 모듈 필요
+    analog:  [], // ADC 모듈 필요
+    uart:    [
+      { tx: 14, rx: 15, name: 'UART0' }
+    ]
   }
 } as const;
 

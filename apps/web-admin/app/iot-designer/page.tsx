@@ -10,7 +10,7 @@ import NaturalLanguageBar from '@/components/iot-designer/NaturalLanguageBar';
 
 interface SystemSpec {
   device: string;
-  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble';
+  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
   wifi: {
@@ -111,7 +111,7 @@ export default function IoTDesignerPage() {
               <label className="block text-sm font-medium mb-2">통신 프로토콜</label>
               <select
                 value={spec.protocol}
-                onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' }))}
+                onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' }))}
                 className="w-full p-2 border rounded-lg"
               >
                 <option value="http">HTTP</option>
@@ -120,6 +120,7 @@ export default function IoTDesignerPage() {
                 <option value="webhook">Webhook</option>
                 <option value="serial">Serial</option>
                 <option value="ble">Bluetooth LE</option>
+                <option value="rs485">RS-485 (Modbus RTU)</option>
               </select>
             </div>
           </div>
