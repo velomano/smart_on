@@ -196,7 +196,7 @@ export default function IoTDesignerPage() {
                 placeholder="예: MyHomeWiFi"
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
-              <p className="text-xs text-gray-700 mt-1">ESP32가 연결할 WiFi 네트워크 이름</p>
+              <p className="text-xs text-gray-900 mt-1">ESP32가 연결할 WiFi 네트워크 이름</p>
             </div>
             
             <div>
@@ -211,7 +211,7 @@ export default function IoTDesignerPage() {
                 placeholder="WiFi 비밀번호 입력"
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               />
-              <p className="text-xs text-gray-700 mt-1">WiFi 네트워크의 비밀번호</p>
+              <p className="text-xs text-gray-900 mt-1">WiFi 네트워크의 비밀번호</p>
             </div>
           </div>
           
@@ -230,12 +230,12 @@ export default function IoTDesignerPage() {
         {/* 2.6. PLC 연동 설정 */}
         {(spec.protocol === 'modbus-tcp' || spec.protocol === 'rs485') && spec.modbusConfig ? (
           <div className="bg-white border rounded-lg p-6">
-            <h3 className="text-lg font-bold mb-4">🏭 PLC 연동 설정</h3>
+            <h3 className="text-lg font-bold mb-4 text-gray-900">🏭 PLC 연동 설정</h3>
             
             {/* PLC 기본 정보 */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-2">PLC 제조사</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">PLC 제조사</label>
                 <select
                   value={spec.modbusConfig?.plcVendor || 'generic'}
                   onChange={(e) => setSpec(prev => ({ 
@@ -254,7 +254,7 @@ export default function IoTDesignerPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">호스트 주소</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">호스트 주소</label>
                 <input
                   type="text"
                   value={spec.modbusConfig?.host || ''}
@@ -267,7 +267,7 @@ export default function IoTDesignerPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">포트</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">포트</label>
                 <input
                   type="number"
                   value={spec.modbusConfig?.port || 502}
@@ -280,7 +280,7 @@ export default function IoTDesignerPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Unit ID</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">Unit ID</label>
                 <input
                   type="number"
                   value={spec.modbusConfig?.unitId || 1}
@@ -297,7 +297,7 @@ export default function IoTDesignerPage() {
             {/* 폴링 설정 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium mb-2">폴링 주기 (ms)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">폴링 주기 (ms)</label>
                 <input
                   type="number"
                   value={spec.modbusConfig?.pollMs || 1000}
@@ -310,7 +310,7 @@ export default function IoTDesignerPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">타임아웃 (ms)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">타임아웃 (ms)</label>
                 <input
                   type="number"
                   value={spec.modbusConfig?.timeout || 5000}
@@ -323,7 +323,7 @@ export default function IoTDesignerPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">재시도 횟수</label>
+                <label className="block text-sm font-medium mb-2 text-gray-900">재시도 횟수</label>
                 <input
                   type="number"
                   value={spec.modbusConfig?.retries || 3}
@@ -349,7 +349,7 @@ export default function IoTDesignerPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                       <div>
-                        <label className="block text-xs font-medium mb-1">레지스터 주소</label>
+                        <label className="block text-xs font-medium mb-1 text-gray-900">레지스터 주소</label>
                         <input
                           type="number"
                           placeholder="30001"
@@ -368,7 +368,7 @@ export default function IoTDesignerPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium mb-1">데이터 타입</label>
+                        <label className="block text-xs font-medium mb-1 text-gray-900">데이터 타입</label>
                         <select
                           value={spec.modbusConfig?.dataTypes[sensor.type] || 'U16'}
                           onChange={(e) => setSpec(prev => ({
@@ -468,7 +468,7 @@ export default function IoTDesignerPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div>
-                        <label className="block text-xs font-medium mb-1">레지스터 주소</label>
+                        <label className="block text-xs font-medium mb-1 text-gray-900">레지스터 주소</label>
                         <input
                           type="number"
                           placeholder="40001"
@@ -655,7 +655,7 @@ export default function IoTDesignerPage() {
                 {spec.sensors.map((sensor, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-blue-50 rounded">
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">{sensor.type}</span>
+                      <span className="font-medium text-gray-900">{sensor.type}</span>
                       <input
                         type="number"
                         min="1"
@@ -667,9 +667,9 @@ export default function IoTDesignerPage() {
                             i === idx ? { ...s, count: parseInt(e.target.value) || 1 } : s
                           )
                         }))}
-                        className="w-16 p-1 border rounded text-center"
+                        className="w-16 p-1 border rounded text-center text-gray-900"
                       />
-                      <span className="text-sm text-gray-700">개</span>
+                      <span className="text-sm text-gray-900">개</span>
                     </div>
                     <button
                       onClick={() => setSpec(prev => ({
@@ -683,7 +683,7 @@ export default function IoTDesignerPage() {
                   </div>
                 ))}
                 {spec.sensors.length === 0 && (
-                  <div className="text-gray-700 text-sm text-center py-4">
+                  <div className="text-gray-900 text-sm text-center py-4">
                     센서를 선택해주세요
                   </div>
                 )}
@@ -726,7 +726,7 @@ export default function IoTDesignerPage() {
                 {spec.controls.map((control, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-orange-50 rounded">
                     <div className="flex items-center space-x-2">
-                      <span className="font-medium">{control.type}</span>
+                      <span className="font-medium text-gray-900">{control.type}</span>
                       <input
                         type="number"
                         min="1"
@@ -738,9 +738,9 @@ export default function IoTDesignerPage() {
                             i === idx ? { ...c, count: parseInt(e.target.value) || 1 } : c
                           )
                         }))}
-                        className="w-16 p-1 border rounded text-center"
+                        className="w-16 p-1 border rounded text-center text-gray-900"
                       />
-                      <span className="text-sm text-gray-700">개</span>
+                      <span className="text-sm text-gray-900">개</span>
                     </div>
                     <button
                       onClick={() => setSpec(prev => ({
@@ -754,7 +754,7 @@ export default function IoTDesignerPage() {
                   </div>
                 ))}
                 {spec.controls.length === 0 && (
-                  <div className="text-gray-700 text-sm text-center py-4">
+                  <div className="text-gray-900 text-sm text-center py-4">
                     제어장치를 선택해주세요
                   </div>
                 )}
@@ -765,7 +765,7 @@ export default function IoTDesignerPage() {
         
         {/* 4. 핀 할당 및 충돌 검사 */}
         <div className="bg-white border rounded-lg p-6">
-          <h3 className="text-lg font-bold mb-4">🔌 핀 할당</h3>
+          <h3 className="text-lg font-bold mb-4 text-gray-900">🔌 핀 할당</h3>
           
           {allocation.conflicts.length > 0 && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -780,11 +780,11 @@ export default function IoTDesignerPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium mb-2">할당된 핀</h4>
+              <h4 className="font-medium mb-2 text-gray-900">할당된 핀</h4>
               <div className="space-y-2">
                 {Object.entries(allocation.assigned).map(([device, pins]) => (
                   <div key={device} className="p-2 bg-gray-50 rounded">
-                    <div className="font-medium">{device}</div>
+                    <div className="font-medium text-gray-900">{device}</div>
                     <div className="text-sm text-gray-800">
                       {pins.map((pin, idx) => (
                         <span key={idx}>{pin.role}: {pin.pin}{idx < pins.length - 1 ? ', ' : ''}</span>
@@ -796,7 +796,7 @@ export default function IoTDesignerPage() {
             </div>
             
             <div>
-              <h4 className="font-medium mb-2">사용 가능한 핀</h4>
+              <h4 className="font-medium mb-2 text-gray-900">사용 가능한 핀</h4>
               <div className="flex flex-wrap gap-2">
                 {allocation.sparePins.map(pin => (
                   <span key={pin} className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
@@ -810,13 +810,13 @@ export default function IoTDesignerPage() {
         
         {/* 5. 전원 요구사항 */}
         <div className="bg-white border rounded-lg p-6">
-          <h3 className="text-lg font-bold mb-4">⚡ 전원 요구사항</h3>
+          <h3 className="text-lg font-bold mb-4 text-gray-900">⚡ 전원 요구사항</h3>
           
           {/* RS-485 저항 체크 */}
           {rs485Checks.length > 0 && (
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h4 className="font-medium text-blue-800 mb-2">🔌 RS-485 저항 체크</h4>
-              <ul className="list-disc list-inside text-blue-700">
+              <h4 className="font-medium text-blue-900 mb-2">🔌 RS-485 저항 체크</h4>
+              <ul className="list-disc list-inside text-blue-900">
                 {rs485Checks.map((check, idx) => (
                   <li key={idx}>{check}</li>
                 ))}
@@ -826,13 +826,13 @@ export default function IoTDesignerPage() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium mb-2">전원 요구량</h4>
+              <h4 className="font-medium mb-2 text-gray-900">전원 요구량</h4>
               <div className="space-y-2">
                 {powerRequirements.map((req, idx) => (
                   <div key={idx} className="p-3 bg-blue-50 rounded-lg">
-                    <div className="font-medium">{req.voltage}V</div>
+                    <div className="font-medium text-gray-900">{req.voltage}V</div>
                     <div className="text-sm text-gray-800">최소 {req.minCurrentA}A</div>
-                    <div className="text-xs text-gray-700">
+                    <div className="text-xs text-gray-900">
                       {req.devices.join(', ')}
                     </div>
                   </div>
@@ -841,10 +841,10 @@ export default function IoTDesignerPage() {
             </div>
             
             <div>
-              <h4 className="font-medium mb-2">전원 공급 제안</h4>
+              <h4 className="font-medium mb-2 text-gray-900">전원 공급 제안</h4>
               <div className="space-y-2">
                 {powerSuggestions.map((suggestion, idx) => (
-                  <div key={idx} className="p-2 bg-yellow-50 rounded text-sm">
+                  <div key={idx} className="p-2 bg-yellow-50 rounded text-sm text-gray-900">
                     {suggestion}
                   </div>
                 ))}
