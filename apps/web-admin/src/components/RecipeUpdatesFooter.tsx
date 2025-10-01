@@ -80,11 +80,21 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
             crop: recipe.crop,
             stage: recipe.stage,
             volume_l: recipe.volume_l,
+            ec_target: recipe.ec_target,
+            ph_target: recipe.ph_target,
+            npk_ratio: recipe.npk_ratio,
             created_at: recipe.created_at,
             source_title: recipe.source_title,
             source_year: recipe.source_year,
             source_url: recipe.source_url,
-            license: recipe.license
+            license: recipe.license,
+            description: recipe.description,
+            growing_conditions: recipe.growing_conditions,
+            nutrients_detail: recipe.nutrients_detail,
+            usage_notes: recipe.usage_notes,
+            warnings: recipe.warnings,
+            author: recipe.author,
+            last_updated: recipe.last_updated
           }));
           
           const today = new Date().toISOString().split('T')[0];
