@@ -73,7 +73,7 @@ export default function CodePreview({ code, onDownload, fileName = 'iot_device.i
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'preview'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-gray-700 hover:text-gray-900'
           }`}
         >
           📄 코드 미리보기
@@ -83,7 +83,7 @@ export default function CodePreview({ code, onDownload, fileName = 'iot_device.i
           className={`px-4 py-2 text-sm font-medium ${
             activeTab === 'analysis'
               ? 'border-b-2 border-blue-500 text-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
+              : 'text-gray-700 hover:text-gray-900'
           }`}
         >
           📊 코드 분석
@@ -93,7 +93,7 @@ export default function CodePreview({ code, onDownload, fileName = 'iot_device.i
       {activeTab === 'preview' ? (
         <div className="space-y-4">
           {/* 파일명 표시 */}
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-gray-800">
             <span>📁 파일명:</span>
             <code className="bg-gray-100 px-2 py-1 rounded">{fileName}</code>
           </div>

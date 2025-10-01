@@ -127,7 +127,7 @@ export default function NaturalLanguageBar({ onParse }: NaturalLanguageBarProps)
           </button>
         </div>
         
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-800">
           <p>💡 예시 입력:</p>
           <ul className="list-disc list-inside ml-4">
             <li>"온도 센서 2개, 습도 센서 1개, 스프링클러 4개, 팬 2개"</li>

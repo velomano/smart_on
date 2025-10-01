@@ -207,7 +207,7 @@ export default function SchematicSVG({ model }: SchematicProps) {
         </svg>
       </div>
       
-      <div className="mt-4 text-sm text-gray-600">
+      <div className="mt-4 text-sm text-gray-800">
         <p>📋 회로도 설명:</p>
         <ul className="list-disc list-inside ml-4">
           <li>ESP32와 센서/제어 장치 간 핀 연결</li>

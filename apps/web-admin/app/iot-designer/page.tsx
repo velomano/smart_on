@@ -133,7 +133,7 @@ export default function IoTDesignerPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">🚀 IoT Designer</h1>
-          <p className="text-gray-600">자연어로 IoT 시스템을 설계하고 완벽한 코드를 생성하세요</p>
+          <p className="text-gray-800">자연어로 IoT 시스템을 설계하고 완벽한 코드를 생성하세요</p>
         </div>
         
         {/* 1. 자연어 입력 */}
@@ -196,7 +196,7 @@ export default function IoTDesignerPage() {
                 placeholder="예: MyHomeWiFi"
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <p className="text-xs text-gray-500 mt-1">ESP32가 연결할 WiFi 네트워크 이름</p>
+              <p className="text-xs text-gray-700 mt-1">ESP32가 연결할 WiFi 네트워크 이름</p>
             </div>
             
             <div>
@@ -211,7 +211,7 @@ export default function IoTDesignerPage() {
                 placeholder="WiFi 비밀번호 입력"
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-              <p className="text-xs text-gray-500 mt-1">WiFi 네트워크의 비밀번호</p>
+              <p className="text-xs text-gray-700 mt-1">WiFi 네트워크의 비밀번호</p>
             </div>
           </div>
           
@@ -669,7 +669,7 @@ export default function IoTDesignerPage() {
                         }))}
                         className="w-16 p-1 border rounded text-center"
                       />
-                      <span className="text-sm text-gray-500">개</span>
+                      <span className="text-sm text-gray-700">개</span>
                     </div>
                     <button
                       onClick={() => setSpec(prev => ({
@@ -683,7 +683,7 @@ export default function IoTDesignerPage() {
                   </div>
                 ))}
                 {spec.sensors.length === 0 && (
-                  <div className="text-gray-500 text-sm text-center py-4">
+                  <div className="text-gray-700 text-sm text-center py-4">
                     센서를 선택해주세요
                   </div>
                 )}
@@ -740,7 +740,7 @@ export default function IoTDesignerPage() {
                         }))}
                         className="w-16 p-1 border rounded text-center"
                       />
-                      <span className="text-sm text-gray-500">개</span>
+                      <span className="text-sm text-gray-700">개</span>
                     </div>
                     <button
                       onClick={() => setSpec(prev => ({
@@ -754,7 +754,7 @@ export default function IoTDesignerPage() {
                   </div>
                 ))}
                 {spec.controls.length === 0 && (
-                  <div className="text-gray-500 text-sm text-center py-4">
+                  <div className="text-gray-700 text-sm text-center py-4">
                     제어장치를 선택해주세요
                   </div>
                 )}
@@ -785,7 +785,7 @@ export default function IoTDesignerPage() {
                 {Object.entries(allocation.assigned).map(([device, pins]) => (
                   <div key={device} className="p-2 bg-gray-50 rounded">
                     <div className="font-medium">{device}</div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-800">
                       {pins.map((pin, idx) => (
                         <span key={idx}>{pin.role}: {pin.pin}{idx < pins.length - 1 ? ', ' : ''}</span>
                       ))}
@@ -831,8 +831,8 @@ export default function IoTDesignerPage() {
                 {powerRequirements.map((req, idx) => (
                   <div key={idx} className="p-3 bg-blue-50 rounded-lg">
                     <div className="font-medium">{req.voltage}V</div>
-                    <div className="text-sm text-gray-600">최소 {req.minCurrentA}A</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-sm text-gray-800">최소 {req.minCurrentA}A</div>
+                    <div className="text-xs text-gray-700">
                       {req.devices.join(', ')}
                     </div>
                   </div>
