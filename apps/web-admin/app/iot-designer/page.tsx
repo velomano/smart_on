@@ -10,7 +10,7 @@ import NaturalLanguageBar from '@/components/iot-designer/NaturalLanguageBar';
 
 interface SystemSpec {
   device: string;
-  protocol: 'http' | 'mqtt';
+  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
   wifi: {
@@ -101,7 +101,9 @@ export default function IoTDesignerPage() {
               >
                 <option value="esp32">ESP32</option>
                 <option value="esp8266">ESP8266</option>
-                <option value="arduino">Arduino Uno</option>
+                <option value="arduino_uno">Arduino Uno</option>
+                <option value="arduino_r4">Arduino R4</option>
+                <option value="raspberry_pi5">Raspberry Pi 5</option>
               </select>
             </div>
             
