@@ -226,13 +226,13 @@ export const GET = withApiMiddleware(async (request: NextRequest) => {
 });
 
 // 성능 메트릭 수집을 위한 미들웨어 헬퍼
-export function recordPerformanceMetrics(responseTime: number, isError: boolean = false): void {
+function recordPerformanceMetrics(responseTime: number, isError: boolean = false): void {
   const requestStats = RequestStats.getInstance();
   requestStats.recordRequest(responseTime, isError);
 }
 
 // 성능 알림 체크
-export function checkPerformanceAlerts(metrics: PerformanceMetrics): string[] {
+function checkPerformanceAlerts(metrics: PerformanceMetrics): string[] {
   const alerts: string[] = [];
 
   // 메모리 사용률 체크

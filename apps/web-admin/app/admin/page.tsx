@@ -372,7 +372,12 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {authUser && (
-        <AppHeader user={authUser} isDashboard={false} />
+        <AppHeader 
+          user={authUser} 
+          title="사용자 관리" 
+          subtitle="사용자 승인 및 권한 관리" 
+          isDashboard={false} 
+        />
       )}
 
       <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
@@ -444,6 +449,22 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center mr-4">
                   <span className="text-3xl">{activeTab === 'pending' ? '⏳' : activeTab === 'approved' ? '✅' : '🏢'}</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+                    {activeTab === 'pending'
+                      ? '승인 대기 사용자 목록'
+                      : activeTab === 'approved'
+                      ? '승인된 사용자 목록'
+                      : '농장별 사용자 보기'}
+                  </h1>
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">
+                    {activeTab === 'pending'
+                      ? '승인을 기다리는 사용자들을 검토하고 승인 또는 거부할 수 있습니다'
+                      : activeTab === 'approved'
+                      ? '시스템에 등록된 모든 승인된 사용자를 관리합니다'
+                      : '농장별로 분류된 사용자 목록을 확인합니다'}
+                  </p>
                 </div>
               </div>
             </div>
