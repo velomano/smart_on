@@ -14,11 +14,12 @@ interface InviteData {
   status: string;
 }
 
-export default function InviteAcceptPage({ params }: { params: { token: string } }) {
+export default function InviteAcceptPage({ params }: { params: Promise<{ token: string }> }) {
   const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
   const [userForm, setUserForm] = useState({
     name: '',
     password: '',
@@ -29,12 +30,22 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
   const router = useRouter();
 
   useEffect(() => {
-    fetchInviteData();
-  }, [params.token]);
+    params.then(p => {
+      setToken(p.token);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (token) {
+      fetchInviteData();
+    }
+  }, [token]);
 
   const fetchInviteData = async () => {
+    if (!token) return;
+    
     try {
-      const response = await fetch(`/api/invite/${params.token}`);
+      const response = await fetch(`/api/invite/${token}`);
       const result = await response.json();
 
       if (result.ok) {
@@ -77,7 +88,7 @@ export default function InviteAcceptPage({ params }: { params: { token: string }
 
     setAccepting(true);
     try {
-      const response = await fetch(`/api/invite/${params.token}/accept`, {
+      const response = await fetch(`/api/invite/${token}/accept`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
