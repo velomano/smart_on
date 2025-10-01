@@ -36,11 +36,21 @@ interface RecipeUpdate {
   crop: string;
   stage: string;
   volume_l: number;
+  ec_target?: number;
+  ph_target?: number;
+  npk_ratio?: string;
   created_at: string;
   source_title?: string;
   source_year?: number;
   source_url?: string;
   license?: string;
+  description?: string;
+  growing_conditions?: any;
+  nutrients_detail?: any;
+  usage_notes?: string[];
+  warnings?: string[];
+  author?: string;
+  last_updated?: string;
 }
 
 interface RecipeUpdatesLog {
