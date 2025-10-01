@@ -180,41 +180,143 @@ export default function IoTDesignerPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h4 className="font-medium mb-2">센서</h4>
+              
+              {/* 센서 추가 버튼 */}
+              <div className="mb-4">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setSpec(prev => ({
+                        ...prev,
+                        sensors: [...prev.sensors, { type: e.target.value, count: 1 }]
+                      }));
+                      e.target.value = ''; // 선택 초기화
+                    }
+                  }}
+                  className="w-full p-2 border rounded-lg mb-2"
+                >
+                  <option value="">센서 선택...</option>
+                  <option value="dht22">DHT22 (온도/습도)</option>
+                  <option value="ds18b20">DS18B20 (온도)</option>
+                  <option value="bh1750">BH1750 (조도)</option>
+                  <option value="soil_moisture">토양 수분</option>
+                  <option value="ph_sensor">pH 센서</option>
+                  <option value="co2_sensor">CO2 센서</option>
+                  <option value="pressure_sensor">압력 센서</option>
+                  <option value="motion_sensor">PIR 모션 센서</option>
+                  <option value="water_level">수위 센서</option>
+                  <option value="camera">카메라 모듈</option>
+                </select>
+              </div>
+              
+              {/* 센서 목록 */}
               <div className="space-y-2">
                 {spec.sensors.map((sensor, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                    <span>{sensor.type} × {sensor.count}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{sensor.type}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={sensor.count}
+                        onChange={(e) => setSpec(prev => ({
+                          ...prev,
+                          sensors: prev.sensors.map((s, i) => 
+                            i === idx ? { ...s, count: parseInt(e.target.value) || 1 } : s
+                          )
+                        }))}
+                        className="w-16 p-1 border rounded text-center"
+                      />
+                      <span className="text-sm text-gray-500">개</span>
+                    </div>
                     <button
                       onClick={() => setSpec(prev => ({
                         ...prev,
                         sensors: prev.sensors.filter((_, i) => i !== idx)
                       }))}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 px-2"
                     >
                       ✕
                     </button>
                   </div>
                 ))}
+                {spec.sensors.length === 0 && (
+                  <div className="text-gray-500 text-sm text-center py-4">
+                    센서를 선택해주세요
+                  </div>
+                )}
               </div>
             </div>
             
             <div>
               <h4 className="font-medium mb-2">제어 장치</h4>
+              
+              {/* 제어장치 추가 버튼 */}
+              <div className="mb-4">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setSpec(prev => ({
+                        ...prev,
+                        controls: [...prev.controls, { type: e.target.value, count: 1 }]
+                      }));
+                      e.target.value = ''; // 선택 초기화
+                    }
+                  }}
+                  className="w-full p-2 border rounded-lg mb-2"
+                >
+                  <option value="">제어장치 선택...</option>
+                  <option value="relay">릴레이</option>
+                  <option value="dc_fan_pwm">DC 팬 (PWM)</option>
+                  <option value="servo">서보</option>
+                  <option value="led_strip">LED 스트립</option>
+                  <option value="solenoid_valve">솔레노이드 밸브</option>
+                  <option value="stepper_motor">스테퍼 모터</option>
+                  <option value="water_pump">워터 펌프</option>
+                  <option value="heater">히터</option>
+                  <option value="buzzer">부저</option>
+                  <option value="lcd_display">LCD 디스플레이</option>
+                </select>
+              </div>
+              
+              {/* 제어장치 목록 */}
               <div className="space-y-2">
                 {spec.controls.map((control, idx) => (
                   <div key={idx} className="flex items-center justify-between p-2 bg-orange-50 rounded">
-                    <span>{control.type} × {control.count}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">{control.type}</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={control.count}
+                        onChange={(e) => setSpec(prev => ({
+                          ...prev,
+                          controls: prev.controls.map((c, i) => 
+                            i === idx ? { ...c, count: parseInt(e.target.value) || 1 } : c
+                          )
+                        }))}
+                        className="w-16 p-1 border rounded text-center"
+                      />
+                      <span className="text-sm text-gray-500">개</span>
+                    </div>
                     <button
                       onClick={() => setSpec(prev => ({
                         ...prev,
                         controls: prev.controls.filter((_, i) => i !== idx)
                       }))}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 px-2"
                     >
                       ✕
                     </button>
                   </div>
                 ))}
+                {spec.controls.length === 0 && (
+                  <div className="text-gray-500 text-sm text-center py-4">
+                    제어장치를 선택해주세요
+                  </div>
+                )}
               </div>
             </div>
           </div>
