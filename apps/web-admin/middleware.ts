@@ -15,13 +15,15 @@ const TENANT_MAPPING: Record<string, string> = {
   'web-admin-snowy': '00000000-0000-0000-0000-000000000001',
   'web-admin-smart-ons-projects': '00000000-0000-0000-0000-000000000001',
   
-  // 프로덕션 도메인 (예시 - 실제 도메인으로 교체 필요)
+  // Terahub 프로덕션 도메인
+  'app': '00000000-0000-0000-0000-000000000001', // 메인 앱
   'demo': '00000000-0000-0000-0000-000000000002', // 데모 테넌트
   'acme': '00000000-0000-0000-0000-000000000003', // ACME 회사
   'farm1': '00000000-0000-0000-0000-000000000004', // 1번 농장
+  'farm2': '00000000-0000-0000-0000-000000000005', // 2번 농장
   
   // 메인 도메인도 기본 테넌트로
-  'smartfarm': '00000000-0000-0000-0000-000000000001',
+  'terahub': '00000000-0000-0000-0000-000000000001',
 };
 
 // 인증이 필요 없는 경로
@@ -52,8 +54,8 @@ export function middleware(request: NextRequest) {
   if (hostname.includes('.vercel.app')) {
     // Vercel 도메인: web-admin-snowy.vercel.app → 'web-admin-snowy'
     subdomain = hostname.split('.vercel.app')[0];
-  } else if (hostname.includes('smartfarm.app')) {
-    // 커스텀 도메인: acme.smartfarm.app → 'acme'
+  } else if (hostname.includes('terahub.ai')) {
+    // Terahub 도메인: farm1.terahub.ai → 'farm1'
     const parts = hostname.split('.');
     subdomain = parts[0];
   } else if (hostname.includes('localhost')) {

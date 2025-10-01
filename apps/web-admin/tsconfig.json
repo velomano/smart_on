@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@/packages/nutrients-engine/*": ["../../packages/nutrients-engine/*"]
+      "@/packages/nutrients-engine/*": ["../../packages/nutrients-engine/*"],
+      "iot-templates": ["../../packages/iot-templates/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

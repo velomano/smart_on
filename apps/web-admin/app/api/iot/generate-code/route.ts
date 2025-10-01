@@ -1,6 +1,9 @@
 // IoT 코드 생성 API 엔드포인트
 import { NextRequest, NextResponse } from 'next/server';
 
+// Edge 런타임 사용 (템플릿 조합만 하므로 빠르고 저렴)
+export const runtime = 'edge';
+
 interface GenerateCodeRequest {
   device: string;
   protocol: 'http' | 'mqtt';
