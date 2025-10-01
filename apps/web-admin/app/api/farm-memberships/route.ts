@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSbServer } from '@/lib/db';
+import { createClient } from '@supabase/supabase-js';
+
+// 환경 변수가 없을 때를 위한 조건부 클라이언트 생성
+const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+  : null;
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createSbServer();
+    // Supabase 클라이언트가 없으면 환경 변수 오류 반환
     if (!supabase) {
-      return NextResponse.json({ error: 'Supabase 클라이언트 초기화 실패' }, { status: 500 });
+      return NextResponse.json({ 
+        ok: false, 
+        error: 'Supabase 설정이 필요합니다. 환경 변수를 확인해주세요.' 
+      }, { status: 500 });
     }
     
     const { searchParams } = new URL(request.url);

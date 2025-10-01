@@ -121,7 +121,7 @@ export async function GET(req: Request) {
     const limit = parseInt(searchParams.get('limit') || '10');
     
     // 최근 수집 작업 조회
-    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     if (!supabaseUrl || !supabaseServiceKey) {

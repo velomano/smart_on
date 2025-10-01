@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     console.log('🔍 요청 데이터:', body);
     
     // 환경변수 확인 (민감한 정보는 로깅하지 않음)
-    const url = process.env.SUPABASE_URL;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     console.log('🔍 환경변수 확인:', {
