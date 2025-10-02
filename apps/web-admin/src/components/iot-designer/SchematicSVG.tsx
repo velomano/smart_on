@@ -263,29 +263,35 @@ function generateComponents(spec: any, allocation: any) {
       const instanceKey = `sensor_${sensor.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
       
-      // 연결 정보를 더 명확하게 표시 (색상별로 구분)
-      const connectionInfo = assignedPins.map((p: any) => {
-        const colorMap: Record<string, string> = {
-          'VCC': '#ff4444',
-          'GND': '#444444', 
-          'I2C': '#0066cc',
-          'DATA': '#00aa00',
-          'SIG': '#aa6600',
-          'OUT': '#aa00aa',
-          'PWM': '#ff0066'
-        };
-        const color = colorMap[p.role] || '#666';
-        return `${p.role}: ${p.pin}`;
-      }).join(', ');
+      // 연결 정보를 색상별로 개별 텍스트로 표시
+      const colorMap: Record<string, string> = {
+        'VCC': '#ff4444',
+        'GND': '#444444', 
+        'I2C': '#0066cc',
+        'DATA': '#00aa00',
+        'SIG': '#aa6600',
+        'OUT': '#aa00aa',
+        'PWM': '#ff0066'
+      };
       
       components.push(
         <g key={`sensor_${sensor.type}_${instance}`}>
           <rect x={300} y={yOffset} width={160} height={90} rx={4} fill="#e3f2fd" stroke="#1976d2" strokeWidth="1"/>
           <text x={310} y={yOffset + 20} fontSize="12" fontWeight="bold">{sensorName}</text>
           <text x={310} y={yOffset + 35} fontSize="10">#{instance + 1}</text>
-          <text x={310} y={yOffset + 50} fontSize="9" fill="#666">
-            연결: {connectionInfo}
-          </text>
+          
+          {/* 연결 정보를 색상별로 표시 */}
+          <text x={310} y={yOffset + 50} fontSize="9" fill="#666">연결:</text>
+          {assignedPins.map((p: any, pinIdx: number) => {
+            const color = colorMap[p.role] || '#666';
+            const textX = 310 + (pinIdx * 45); // 각 연결 정보를 가로로 배치
+            return (
+              <text key={pinIdx} x={textX} y={yOffset + 50} fontSize="9" fill={color} fontWeight="bold">
+                {p.role}: {p.pin}
+              </text>
+            );
+          })}
+          
           <text x={310} y={yOffset + 65} fontSize="9" fill="#666">
             전원: 3.3V/5V
           </text>
@@ -321,30 +327,36 @@ function generateComponents(spec: any, allocation: any) {
       const instanceKey = `control_${control.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
       
-      // 연결 정보를 더 명확하게 표시 (색상별로 구분)
-      const connectionInfo = assignedPins.map((p: any) => {
-        const colorMap: Record<string, string> = {
-          'VCC': '#ff4444',
-          'GND': '#444444', 
-          'I2C': '#0066cc',
-          'DATA': '#00aa00',
-          'SIG': '#aa6600',
-          'OUT': '#aa00aa',
-          'PWM': '#ff0066',
-          'Control': '#ff6600'
-        };
-        const color = colorMap[p.role] || '#666';
-        return `${p.role}: ${p.pin}`;
-      }).join(', ');
+      // 연결 정보를 색상별로 개별 텍스트로 표시
+      const colorMap: Record<string, string> = {
+        'VCC': '#ff4444',
+        'GND': '#444444', 
+        'I2C': '#0066cc',
+        'DATA': '#00aa00',
+        'SIG': '#aa6600',
+        'OUT': '#aa00aa',
+        'PWM': '#ff0066',
+        'Control': '#ff6600'
+      };
       
       components.push(
         <g key={`control_${control.type}_${instance}`}>
           <rect x={300} y={yOffset} width={160} height={90} rx={4} fill="#fff3e0" stroke="#f57c00" strokeWidth="1"/>
           <text x={310} y={yOffset + 20} fontSize="12" fontWeight="bold">{controlName}</text>
           <text x={310} y={yOffset + 35} fontSize="10">#{instance + 1}</text>
-          <text x={310} y={yOffset + 50} fontSize="9" fill="#666">
-            연결: {connectionInfo}
-          </text>
+          
+          {/* 연결 정보를 색상별로 표시 */}
+          <text x={310} y={yOffset + 50} fontSize="9" fill="#666">연결:</text>
+          {assignedPins.map((p: any, pinIdx: number) => {
+            const color = colorMap[p.role] || '#666';
+            const textX = 310 + (pinIdx * 45); // 각 연결 정보를 가로로 배치
+            return (
+              <text key={pinIdx} x={textX} y={yOffset + 50} fontSize="9" fill={color} fontWeight="bold">
+                {p.role}: {p.pin}
+              </text>
+            );
+          })}
+          
           <text x={310} y={yOffset + 65} fontSize="9" fill="#666">
             전원: 5V/12V
           </text>
