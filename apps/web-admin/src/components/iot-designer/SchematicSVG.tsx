@@ -506,6 +506,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
 // 핀 연결 정보 생성 (단순화된 버전)
 function generatePinConnections(spec: any, allocation: any) {
   const connections = [];
+  let deviceIndex = 0; // 간단한 순차 인덱스 사용
   
   console.log('🔍 generatePinConnections 호출됨:', { spec, allocation });
   
@@ -537,32 +538,24 @@ function generatePinConnections(spec: any, allocation: any) {
     'lcd_display': 'LCD 디스플레이'
   };
   
-  // 센서 연결 (새로운 키 형식 사용)
+  // 센서 연결
   spec.sensors.forEach((sensor: any, sensorIdx: number) => {
     const sensorName = sensorNames[sensor.type] || sensor.type.toUpperCase();
     
-    // 각 센서 인스턴스마다 기본 연결선 생성
     for (let instance = 0; instance < sensor.count; instance++) {
       const instanceKey = `sensor_${sensor.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
-      const assignedPin = assignedPins[0] || { pin: 2 }; // 기본 핀
+      const assignedPin = assignedPins[0] || { pin: 2 };
       
-      console.log(`📡 센서 ${sensor.type} 인스턴스 ${instance + 1}:`, { instanceKey, assignedPins, assignedPin });
+      console.log(`📡 센서 ${sensor.type} 인스턴스 ${instance + 1}:`, { instanceKey, assignedPins, assignedPin, deviceIndex });
       
       // VCC, GND, Data 연결선 생성
-      // 전체 인덱스 계산 (센서들 먼저, 그 다음 제어장치들)
-      let globalIndex = 0;
-      for (let i = 0; i < sensorIdx; i++) {
-        globalIndex += spec.sensors[i].count;
-      }
-      globalIndex += instance;
-      
       connections.push({
         pin: 'VCC',
         component: `${sensorName} #${instance + 1} (VCC)`,
         type: 'sensor',
         connectionType: 'VCC',
-        deviceIndex: globalIndex
+        deviceIndex: deviceIndex
       });
       
       connections.push({
@@ -570,7 +563,7 @@ function generatePinConnections(spec: any, allocation: any) {
         component: `${sensorName} #${instance + 1} (GND)`,
         type: 'sensor',
         connectionType: 'GND',
-        deviceIndex: globalIndex
+        deviceIndex: deviceIndex
       });
       
       connections.push({
@@ -578,42 +571,31 @@ function generatePinConnections(spec: any, allocation: any) {
         component: `${sensorName} #${instance + 1} (Data)`,
         type: 'sensor',
         connectionType: 'Data',
-        deviceIndex: globalIndex
+        deviceIndex: deviceIndex
       });
+      
+      deviceIndex++; // 다음 컴포넌트로 이동
     }
   });
   
-  // 제어 연결 (새로운 키 형식 사용)
+  // 제어 연결
   spec.controls.forEach((control: any, controlIdx: number) => {
     const controlName = controlNames[control.type] || control.type.toUpperCase();
     
-    // 각 제어장치 인스턴스마다 기본 연결선 생성
     for (let instance = 0; instance < control.count; instance++) {
       const instanceKey = `control_${control.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
-      const assignedPin = assignedPins[0] || { pin: 4 }; // 기본 핀
+      const assignedPin = assignedPins[0] || { pin: 4 };
       
-      console.log(`🎛️ 제어장치 ${control.type} 인스턴스 ${instance + 1}:`, { instanceKey, assignedPins, assignedPin });
+      console.log(`🎛️ 제어장치 ${control.type} 인스턴스 ${instance + 1}:`, { instanceKey, assignedPins, assignedPin, deviceIndex });
       
       // VCC, GND, Control 연결선 생성
-      // 전체 인덱스 계산 (센서들 먼저, 그 다음 제어장치들)
-      let globalIndex = 0;
-      // 센서들 개수 합산
-      for (let i = 0; i < spec.sensors.length; i++) {
-        globalIndex += spec.sensors[i].count;
-      }
-      // 제어장치들 개수 합산
-      for (let i = 0; i < controlIdx; i++) {
-        globalIndex += spec.controls[i].count;
-      }
-      globalIndex += instance;
-      
       connections.push({
         pin: 'VCC',
         component: `${controlName} #${instance + 1} (VCC)`,
         type: 'control',
         connectionType: 'VCC',
-        deviceIndex: globalIndex
+        deviceIndex: deviceIndex
       });
       
       connections.push({
@@ -621,7 +603,7 @@ function generatePinConnections(spec: any, allocation: any) {
         component: `${controlName} #${instance + 1} (GND)`,
         type: 'control',
         connectionType: 'GND',
-        deviceIndex: globalIndex
+        deviceIndex: deviceIndex
       });
       
       connections.push({
@@ -629,8 +611,10 @@ function generatePinConnections(spec: any, allocation: any) {
         component: `${controlName} #${instance + 1} (Control)`,
         type: 'control',
         connectionType: 'Control',
-        deviceIndex: globalIndex
+        deviceIndex: deviceIndex
       });
+      
+      deviceIndex++; // 다음 컴포넌트로 이동
     }
   });
   
