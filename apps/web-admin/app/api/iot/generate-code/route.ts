@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sensors, controls, devicePinmaps } from '@/lib/iot-templates/index';
 import JSZip from 'jszip';
+import { UniversalCodeGenerator } from './universal-code-generator';
+import { SystemSpec } from './types';
 
 // Node 런타임 강제 및 캐시 회피
 export const runtime = 'nodejs';
@@ -72,10 +74,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '필수 설정이 누락되었습니다' }, { status: 400 });
     }
 
-    // 메인 코드 파일 생성
-    const code = spec.bridgeIntegration 
-      ? await generateUniversalBridgeCode(spec)
-      : generateDeviceCode(spec);
+        // 메인 코드 파일 생성 (80/20 원칙 기반)
+        const codeGenerator = new UniversalCodeGenerator(spec);
+        const code = codeGenerator.generateCode();
     
     const mainFilename = spec.bridgeIntegration 
       ? 'universal_bridge_system.ino'
