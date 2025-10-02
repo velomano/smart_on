@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { keywordMapping } from '../../../../packages/iot-templates/index';
+import { keywordMapping } from '@/lib/iot-templates/index';
 
 interface NaturalLanguageBarProps {
   onParse: (result: { sensors: Array<{ type: string; count: number }>; controls: Array<{ type: string; count: number }> }) => void;
