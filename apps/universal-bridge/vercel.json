@@ -1,12 +1,11 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run vercel-build",
   "installCommand": "npm ci",
   "regions": ["icn1"],
   "functions": {
-    "src/index.ts": {
+    "api/index.ts": {
       "maxDuration": 30
     }
   },
@@ -15,29 +14,21 @@
   },
   "build": {
     "env": {
-      "SUPABASE_URL": "@supabase_url",
-      "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-      "BRIDGE_ENCRYPTION_KEY": "@bridge_encryption_key",
-      "BRIDGE_HTTP_PORT": "@bridge_http_port",
-      "BRIDGE_WS_PORT": "@bridge_ws_port",
-      "BRIDGE_SERVER_URL": "@bridge_server_url",
-      "WEB_ADMIN_URL": "@web_admin_url",
-      "LOG_LEVEL": "@log_level",
-      "SIGNATURE_VERIFY_OFF": "@signature_verify_off"
+      "SUPABASE_URL": "https://placeholder.supabase.co",
+      "SUPABASE_SERVICE_ROLE_KEY": "placeholder-key",
+      "BRIDGE_ENCRYPTION_KEY": "placeholder-encryption-key",
+      "BRIDGE_HTTP_PORT": "3000",
+      "BRIDGE_WS_PORT": "8080",
+      "BRIDGE_SERVER_URL": "https://universal-bridge.vercel.app",
+      "WEB_ADMIN_URL": "https://smart-on-web-admin.vercel.app",
+      "LOG_LEVEL": "info",
+      "SIGNATURE_VERIFY_OFF": "true"
     }
   },
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/src/index.ts"
-    },
-    {
-      "src": "/ws/(.*)",
-      "dest": "/src/index.ts"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/src/index.ts"
+      "dest": "/api/index.ts"
     }
   ]
 }

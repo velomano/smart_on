@@ -10,11 +10,13 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "type-check": "tsc --noEmit",
-    "test": "echo \"TODO: Add tests\" && exit 0"
+    "test": "echo \"TODO: Add tests\" && exit 0",
+    "vercel-build": "tsc"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.7.0",
     "@supabase/supabase-js": "^2.47.4",
+    "@vercel/node": "^3.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
