@@ -112,13 +112,16 @@ export default function NotificationsPage() {
   const handleSettingChange = (key: string, value: any) => {
     if (key.includes('.')) {
       const [parent, child] = key.split('.');
-      setNotificationSettings(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof typeof prev],
-          [child]: value
-        }
-      }));
+      setNotificationSettings(prev => {
+        const parentValue = prev[parent as keyof typeof prev];
+        return {
+          ...prev,
+          [parent]: {
+            ...(typeof parentValue === 'object' && parentValue !== null ? parentValue : {}),
+            [child]: value
+          }
+        };
+      });
       } else {
       setNotificationSettings(prev => ({
         ...prev,
@@ -130,7 +133,7 @@ export default function NotificationsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <AppHeader user={user} title="알림설정" subtitle="텔레그램 알림 설정" />
+        <AppHeader user={user || undefined} title="알림설정" subtitle="텔레그램 알림 설정" />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -143,7 +146,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader user={user} title="알림설정" subtitle="텔레그램 알림 설정" />
+      <AppHeader user={user || undefined} title="알림설정" subtitle="텔레그램 알림 설정" />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           
@@ -162,9 +165,9 @@ export default function NotificationsPage() {
                 >
                   👤 마이페이지에서 ID 등록하기
                 </button>
-                      </div>
-                    </div>
-                  </div>
+                </div>
+              </div>
+            </div>
 
           {/* 텔레그램 봇 설정 */}
           <div className="bg-white rounded-lg shadow-lg p-8">
@@ -179,7 +182,7 @@ export default function NotificationsPage() {
                 <div>
                   <h3 className="text-lg font-semibold text-blue-900">텔레그램 알림 활성화</h3>
                   <p className="text-blue-700 text-sm">텔레그램을 통한 실시간 알림을 받으려면 활성화하세요</p>
-                </div>
+                          </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
@@ -291,7 +294,7 @@ export default function NotificationsPage() {
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                           </label>
-                  </div>
+                        </div>
                 );
               })}
             </div>
@@ -336,11 +339,11 @@ export default function NotificationsPage() {
                 <span className="ml-2 text-gray-600">
                   {new Date().toLocaleString('ko-KR')}
                 </span>
+                  </div>
+                </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
   );
 }
