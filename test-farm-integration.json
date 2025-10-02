@@ -1,0 +1,12 @@
+{
+  "device": "esp32",
+  "protocol": "mqtt",
+  "sensors": [{"type": "BME280", "count": 1}],
+  "controls": [{"type": "AC_Relay_Lamp", "count": 1}],
+  "wifi": {"ssid": "TEST", "password": "TEST"},
+  "pinAssignments": {
+    "sensor_0_0_BME280": "21",
+    "control_0_0_AC_Relay_Lamp": "26"
+  },
+  "farmId": "test-farm-123"
+}

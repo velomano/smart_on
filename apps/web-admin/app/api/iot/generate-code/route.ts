@@ -2,8 +2,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sensors, controls, devicePinmaps } from '@/lib/iot-templates/index';
 import JSZip from 'jszip';
+
+interface SystemSpec {
+  device: string;
+  protocol: 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan';
+  sensors: Array<{ type: string; count: number }>;
+  controls: Array<{ type: string; count: number }>;
+  wifi: {
+    ssid: string;
+    password: string;
+  };
+  bridgeIntegration?: boolean;
+  pinAssignments?: Record<string, string>;
+  farmId?: string;
+}
 // import { EnhancedCodeGenerator, EnhancedSystemSpec } from '../../../../packages/device-templates/enhanced-code-generator';
-import { SystemSpec } from './types';
+// import { SystemSpec } from './types';
 
 // Node 런타임 강제 및 캐시 회피
 export const runtime = 'nodejs';
@@ -14,8 +28,9 @@ function generateSimpleCode(spec: SystemSpec): string {
   // 안전문구 생성
   const safetyWarnings = generateSafetyWarnings(spec);
   
-  // 토픽 규칙 적용
-  const topicBase = `terahub/demo/${spec.device}-${Math.random().toString(36).substr(2, 8)}`;
+  // 토픽 규칙 적용 (농장 ID 사용)
+  const farmId = spec.farmId || 'demo';
+  const topicBase = `terahub/${farmId}/${spec.device}-${Math.random().toString(36).substr(2, 8)}`;
 
   // 센서별 라이브러리 및 핀 정의 생성
   const sensorIncludes = generateSensorIncludes(spec);
@@ -156,6 +171,9 @@ function generateSimpleReadme(spec: SystemSpec): string {
   // 안전문구 생성
   const safetyWarnings = generateSafetyWarnings(spec);
   
+  // 농장 ID 가져오기
+  const farmId = spec.farmId || 'demo';
+  
   return `# ${spec.device.toUpperCase()} ${spec.protocol.toUpperCase()} IoT 시스템
 
 ## 📋 시스템 사양
@@ -213,8 +231,8 @@ ${spec.controls.map(control => `- **${control.type}**: 핀 ${Array.from({ length
 ### MQTT 설정 (브로커 내장)
 - **Universal Bridge 주소**: bridge.local:1883 (또는 브릿지 IP)
 - **토픽 규칙**: terahub/{tenant}/{deviceId}/{kind}/{name}
-- **센서 토픽**: terahub/demo/esp32-xxx/sensors/bme280/temperature
-- **액추에이터 토픽**: terahub/demo/esp32-xxx/actuators/relay1/set
+- **센서 토픽**: terahub/${farmId}/esp32-xxx/sensors/bme280/temperature
+- **액추에이터 토픽**: terahub/${farmId}/esp32-xxx/actuators/relay1/set
 
 ### 연결 방법
 1. Universal Bridge가 실행 중인지 확인
@@ -453,10 +471,10 @@ function generatePlatformIOLibDeps(spec: SystemSpec): string {
       case 'BME280':
         libs.push('    adafruit/Adafruit BME280 Library @ ^2.6.8');
         libs.push('    adafruit/Adafruit Unified Sensor @ ^1.1.14');
-        break;
+      break;
       case 'ENS160':
         libs.push('    sparkfun/SparkFun Indoor Air Quality Sensor - ENS160 Arduino Library @ ^1.0.8');
-        break;
+      break;
     }
   });
   
@@ -465,8 +483,8 @@ function generatePlatformIOLibDeps(spec: SystemSpec): string {
     switch(control.type) {
       case 'WS2812B_NeoPixel':
         libs.push('    adafruit/Adafruit NeoPixel @ ^1.12.3');
-        break;
-    }
+      break;
+  }
   });
   
   return [...new Set(libs)].join('\n');
@@ -498,6 +516,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '필수 설정이 누락되었습니다' }, { status: 400 });
     }
     
+    // 농장 ID 확인 (선택사항)
+    const farmId = spec.farmId || 'demo';
+    
     // 향후 지원 프로토콜 체크
     const futureProtocols = ['serial', 'ble', 'rs485', 'modbus-tcp', 'lorawan'];
     if (futureProtocols.includes(spec.protocol)) {
@@ -508,8 +529,16 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-        // 메인 코드 파일 생성 (기존 방식으로 임시 테스트)
-        const code = generateSimpleCode(spec);
+    // 메인 코드 파일 생성 (기존 방식으로 임시 테스트)
+    console.log('🔧 코드 생성 시작...');
+    let code: string;
+    try {
+      code = generateSimpleCode(spec);
+      console.log('✅ 코드 생성 완료, 길이:', code.length);
+    } catch (codeError) {
+      console.error('❌ 코드 생성 오류:', codeError);
+      return NextResponse.json({ error: `코드 생성 오류: ${codeError.message}` }, { status: 500 });
+    }
     
     const mainFilename = spec.bridgeIntegration 
       ? 'universal_bridge_system.ino'
@@ -663,7 +692,7 @@ function generateSensorDeclarations(spec: SystemSpec): string {
     switch(sensor.type) {
       case 'BME280':
         declarations.push(`Adafruit_BME280 bme${index};`);
-        break;
+      break;
       case 'ENS160':
         declarations.push(`SparkFun_ENS160 ens160_${index};`);
         break;
@@ -707,8 +736,8 @@ function generateActuatorPins(spec: SystemSpec): string {
         break;
       case 'AC_Relay_Lamp':
         pins.push(`// 릴레이 핀: GPIO26 (외부 전원 필요)`);
-        break;
-    }
+      break;
+  }
   });
   
   return pins.join('\n');
@@ -1152,8 +1181,8 @@ ${controls.map(control => `- **${control.type}**: 핀 ${Array.from({ length: con
 ${protocol === 'mqtt' ? `
 - **브로커 주소**: bridge.local:1883
 - **토픽 규칙**: terahub/{tenant}/{deviceId}/{kind}/{name}
-- **센서 토픽**: terahub/demo/esp32-xxx/sensors/bme280/temperature
-- **액추에이터 토픽**: terahub/demo/esp32-xxx/actuators/relay1/set
+- **센서 토픽**: terahub/${farmId}/esp32-xxx/sensors/bme280/temperature
+- **액추에이터 토픽**: terahub/${farmId}/esp32-xxx/actuators/relay1/set
 ` : `
 - **프로토콜**: ${protocol.toUpperCase()} (향후 지원 예정)
 `}

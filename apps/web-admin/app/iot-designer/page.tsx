@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { allocatePins } from '@/components/iot-designer/PinAllocator';
 import { calculatePowerRequirements, suggestPowerSupplies } from '@/components/iot-designer/PowerEstimator';
 import SchematicSVG from '@/components/iot-designer/SchematicSVG';
@@ -10,6 +11,8 @@ import { QRCodeCard } from '@/components/connect/QRCodeCard';
 import { LiveLog } from '@/components/connect/LiveLog';
 import toast, { Toaster } from 'react-hot-toast';
 import LoRaWanForm from '@/components/iot-designer/LoRaWanForm';
+import AppHeader from '@/components/AppHeader';
+import { getCurrentUser, type AuthUser } from '@/lib/auth';
 
 interface SystemSpec {
   device: string;
@@ -66,6 +69,13 @@ const steps = [
 ];
 
 export default function IoTDesignerPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const farmId = searchParams.get('farmId');
+  
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [farmName, setFarmName] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<'design' | 'connect' | 'monitor'>('design');
   const [spec, setSpec] = useState<SystemSpec>({
     device: 'esp32',
@@ -94,6 +104,41 @@ export default function IoTDesignerPage() {
   const [setupToken, setSetupToken] = useState('');
   const [deviceKey, setDeviceKey] = useState('');
   const [isConnected, setIsConnected] = useState(false);
+
+  // 사용자 인증 확인
+  useEffect(() => {
+    const checkAuth = async () => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser || !currentUser.is_approved || !currentUser.is_active) {
+        router.push('/login');
+        return;
+      }
+      setUser(currentUser);
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, [router]);
+
+  // 농장 정보 로드
+  useEffect(() => {
+    const loadFarmInfo = async () => {
+      if (!farmId) return;
+      
+      try {
+        const response = await fetch(`/api/farms/${farmId}`);
+        if (response.ok) {
+          const farmData = await response.json();
+          if (farmData.success && farmData.data) {
+            setFarmName(farmData.data.name || '알 수 없는 농장');
+          }
+        }
+      } catch (error) {
+        console.error('농장 정보 로드 실패:', error);
+      }
+    };
+    
+    loadFarmInfo();
+  }, [farmId]);
 
   // 전원 계산 함수들
   const getSensorPower = (sensorType: string): number => {
@@ -534,7 +579,8 @@ export default function IoTDesignerPage() {
           body: JSON.stringify({
             ...spec,
             bridgeIntegration: false, // 토큰 없이 코드만 생성
-            pinAssignments: savedPinAssignments // 저장된 핀 할당 정보 전송
+            pinAssignments: savedPinAssignments, // 저장된 핀 할당 정보 전송
+            farmId: farmId // 농장 ID 포함
           })
         });
 
@@ -551,7 +597,7 @@ export default function IoTDesignerPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `iot_system_${spec.device}_${spec.protocol}.zip`;
+        a.download = `iot_system_${spec.device}_${spec.protocol}_${farmId || 'demo'}.zip`;
         a.click();
         URL.revokeObjectURL(url);
 
@@ -631,11 +677,51 @@ export default function IoTDesignerPage() {
     }
   };
   
+  // 로그인/권한 체크 완료
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">인증 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader 
+        user={user}
+        title="⚡ 빠른 IoT 빌더"
+        subtitle={farmName ? `${farmName} - ${farmId}` : 'IoT 디바이스 생성'}
+      />
+      
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* Toast Container */}
         <Toaster position="top-center" />
+        
+        {/* 농장 정보 표시 */}
+        {farmId && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-blue-900">농장: {farmName}</h2>
+                <p className="text-sm text-blue-700">농장 ID: {farmId}</p>
+              </div>
+              <button
+                onClick={() => router.push(`/farms/${farmId}`)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                농장으로 돌아가기
+              </button>
+            </div>
+          </div>
+        )}
         
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">⚡ 빠른 IoT 빌더</h1>

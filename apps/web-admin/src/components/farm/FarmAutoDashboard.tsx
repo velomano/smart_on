@@ -127,17 +127,42 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
           )}
         </div>
 
+        {/* IoT Designer 버튼 */}
+        <div className="mb-8 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">⚡ 빠른 IoT 빌더</h2>
+              <p className="text-gray-600">센서와 액추에이터를 선택하고 코드를 자동 생성하여 디바이스를 연결하세요.</p>
+            </div>
+            <button
+              onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+            >
+              <span>🚀</span>
+              <span>IoT 디바이스 생성</span>
+            </button>
+          </div>
+        </div>
+
         {/* 디바이스 섹션 */}
         {devices.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">연결된 디바이스가 없습니다</h3>
             <p className="text-gray-600 mb-4">IoT 디바이스를 연결하여 농장을 모니터링하세요.</p>
-            <button
-              onClick={() => router.push('/connect')}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              디바이스 연결하기
-            </button>
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                ⚡ 빠른 IoT 빌더
+              </button>
+              <button
+                onClick={() => router.push('/connect')}
+                className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                기존 디바이스 연결
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-6">
