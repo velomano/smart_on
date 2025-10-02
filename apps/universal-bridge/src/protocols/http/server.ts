@@ -223,9 +223,13 @@ export function createHttpServer() {
         const body = JSON.stringify(req.body);
         const ts = parseInt(timestamp);
         
-        // TODO: device.device_key_hash를 사용하여 검증 (현재는 해시만 저장되어 있음)
-        // 임시로 개발 모드와 동일하게 처리
-        console.log('[Telemetry] Signature verification: (hash-based auth not yet implemented)');
+        const isValid = verifyRequest(device.device_key, body, ts, signature);
+        
+        if (!isValid) {
+          return res.status(401).json({ error: 'Invalid signature' });
+        }
+        
+        console.log('[Telemetry] Signature verified for device:', deviceIdStr);
       }
       
       const { readings, timestamp: bodyTimestamp } = req.body;
@@ -307,23 +311,24 @@ export function createHttpServer() {
   app.get('/api/bridge/commands/:deviceId', async (req, res) => {
     try {
       const { deviceId } = req.params;
+      const tenantId = req.headers['x-tenant-id'] as string || 'default';
       
-      // TODO: DB에서 대기 중인 명령 조회
-      // 임시로 샘플 명령 반환
-      const commands = [
-        {
-          id: 'cmd_001',
-          type: 'relay_control',
-          device_id: deviceId,
-          action: 'set_relay',
-          params: { relay: 1, state: 'on' },
-          created_at: new Date().toISOString()
-        }
-      ];
+      // DB에서 대기 중인 명령 조회
+      const { getDeviceByDeviceId, getPendingCommands } = await import('../../db/index.js');
+      
+      // 디바이스 조회
+      const device = await getDeviceByDeviceId(tenantId, deviceId);
+      if (!device) {
+        return res.status(404).json({ error: 'Device not found' });
+      }
+      
+      // 대기 중인 명령 조회
+      const commands = await getPendingCommands(device.id);
       
       res.json({ 
         commands: commands,
-        message: '대기 중인 명령이 있습니다.'
+        count: commands.length,
+        message: commands.length > 0 ? '대기 중인 명령이 있습니다.' : '대기 중인 명령이 없습니다.'
       });
     } catch (error: any) {
       console.error('[API] Commands error:', error);
@@ -336,13 +341,23 @@ export function createHttpServer() {
     try {
       const { setupToken } = req.params;
       
-      // TODO: DB에서 setup token으로 디바이스 조회
-      // 임시로 성공 응답 반환
+      // DB에서 setup token으로 상태 조회
+      const { getSetupTokenStatus } = await import('../../db/index.js');
+      
+      const status = await getSetupTokenStatus(setupToken);
+      
+      if (!status) {
+        return res.status(404).json({ error: 'Setup token not found or expired' });
+      }
+      
       res.json({
         setup_token: setupToken,
-        status: 'active',
-        device_id: null,  // 아직 바인딩되지 않음
-        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()  // 10분 후 만료
+        status: status.status,
+        device_id: status.device_id,
+        expires_at: status.expires_at,
+        created_at: status.created_at,
+        tenant_id: status.tenant_id,
+        farm_id: status.farm_id
       });
     } catch (error: any) {
       console.error('[API] Status error:', error);

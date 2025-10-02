@@ -130,7 +130,33 @@ export function pushCommandToDevice(deviceId: string, command: any): boolean {
  */
 async function handleTelemetry(deviceId: string, data: any) {
   console.log(`[WS Telemetry] From ${deviceId}:`, data);
-  // TODO: DB 저장
+  
+  try {
+    // DB 함수들 import
+    const { getDeviceByDeviceId, insertReadings, updateDeviceLastSeen } = await import('../../db/index.js');
+    
+    // 디바이스 조회 (tenant_id는 임시로 'default' 사용)
+    const device = await getDeviceByDeviceId('default', deviceId);
+    if (!device) {
+      console.warn(`[WS Telemetry] Device not found: ${deviceId}`);
+      return;
+    }
+    
+    // 텔레메트리 데이터 저장
+    if (data.readings && data.readings.length > 0) {
+      await insertReadings('default', device.id, data.readings);
+      
+      // 마지막 접속 시간 업데이트
+      await updateDeviceLastSeen(device.id);
+      
+      console.log(`[WS Telemetry] Saved ${data.readings.length} readings for ${deviceId}`);
+      data.readings.forEach((reading: any) => {
+        console.log(`  - ${reading.key}: ${reading.value} ${reading.unit}`);
+      });
+    }
+  } catch (error) {
+    console.error('[WS Telemetry] Error:', error);
+  }
 }
 
 /**
@@ -138,6 +164,22 @@ async function handleTelemetry(deviceId: string, data: any) {
  */
 async function handleCommandAck(deviceId: string, data: any) {
   console.log(`[WS ACK] From ${deviceId}:`, data);
-  // TODO: DB 업데이트 (iot_commands.status = 'acked', ack_at = NOW())
+  
+  try {
+    // DB 함수들 import
+    const { updateCommandStatus } = await import('../../db/index.js');
+    
+    const { command_id, status, detail } = data;
+    
+    if (command_id) {
+      // 명령 상태 업데이트
+      await updateCommandStatus(command_id, status || 'acked', detail);
+      console.log(`[WS ACK] Updated command ${command_id} status to ${status || 'acked'}`);
+    } else {
+      console.warn('[WS ACK] No command_id provided');
+    }
+  } catch (error) {
+    console.error('[WS ACK] Error:', error);
+  }
 }
 

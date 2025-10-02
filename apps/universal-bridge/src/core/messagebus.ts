@@ -49,28 +49,136 @@ export class UniversalMessageBus {
   }
 
   private async handleRegistry(message: DeviceMessage): Promise<void> {
-    // TODO: 디바이스 등록 처리
-    console.log('[MessageBus] TODO: handleRegistry');
+    console.log('[MessageBus] Processing registry:', message.deviceId);
+    
+    try {
+      const { getDeviceByDeviceId, insertDevice, updateDeviceProfile } = await import('../db/index.js');
+      
+      // 디바이스 조회 또는 생성
+      let device = await getDeviceByDeviceId(message.tenantId, message.deviceId);
+      
+      if (!device) {
+        // 새 디바이스 생성
+        device = await insertDevice({
+          deviceId: message.deviceId,
+          tenantId: message.tenantId,
+          farmId: message.farmId,
+          deviceType: message.payload.device_type || 'unknown',
+          capabilities: message.payload.capabilities || {},
+        });
+        console.log('[MessageBus] Created new device:', device.id);
+      } else {
+        // 기존 디바이스 프로필 업데이트
+        await updateDeviceProfile(device.id, {
+          deviceType: message.payload.device_type || device.device_type,
+          capabilities: message.payload.capabilities || device.capabilities,
+        });
+        console.log('[MessageBus] Updated device profile:', device.id);
+      }
+    } catch (error) {
+      console.error('[MessageBus] Registry error:', error);
+    }
   }
 
   private async handleState(message: DeviceMessage): Promise<void> {
-    // TODO: 상태 업데이트 처리
-    console.log('[MessageBus] TODO: handleState');
+    console.log('[MessageBus] Processing state:', message.deviceId);
+    
+    try {
+      const { getDeviceByDeviceId, updateDeviceState } = await import('../db/index.js');
+      
+      // 디바이스 조회
+      const device = await getDeviceByDeviceId(message.tenantId, message.deviceId);
+      if (!device) {
+        console.warn('[MessageBus] Device not found for state update:', message.deviceId);
+        return;
+      }
+      
+      // 디바이스 상태 업데이트
+      await updateDeviceState(device.id, {
+        online: message.payload.online !== false,
+        lastSeenAt: new Date().toISOString(),
+        state: message.payload.state || {},
+      });
+      
+      console.log('[MessageBus] Updated device state:', device.id, message.payload);
+    } catch (error) {
+      console.error('[MessageBus] State error:', error);
+    }
   }
 
   private async handleTelemetry(message: DeviceMessage): Promise<void> {
-    // TODO: 텔레메트리 처리
-    console.log('[MessageBus] TODO: handleTelemetry');
+    console.log('[MessageBus] Processing telemetry:', message.deviceId);
+    
+    try {
+      const { getDeviceByDeviceId, insertReadings, updateDeviceLastSeen } = await import('../db/index.js');
+      
+      // 디바이스 조회
+      const device = await getDeviceByDeviceId(message.tenantId, message.deviceId);
+      if (!device) {
+        console.warn('[MessageBus] Device not found for telemetry:', message.deviceId);
+        return;
+      }
+      
+      // 텔레메트리 데이터 저장
+      if (message.payload.readings && message.payload.readings.length > 0) {
+        await insertReadings(message.tenantId, device.id, message.payload.readings);
+        
+        // 마지막 접속 시간 업데이트
+        await updateDeviceLastSeen(device.id);
+        
+        console.log('[MessageBus] Saved telemetry:', device.id, message.payload.readings.length, 'readings');
+      }
+    } catch (error) {
+      console.error('[MessageBus] Telemetry error:', error);
+    }
   }
 
   private async handleCommand(message: DeviceMessage): Promise<void> {
-    // TODO: 명령 처리
-    console.log('[MessageBus] TODO: handleCommand');
+    console.log('[MessageBus] Processing command:', message.deviceId);
+    
+    try {
+      const { getDeviceByDeviceId, insertCommand } = await import('../db/index.js');
+      
+      // 디바이스 조회
+      const device = await getDeviceByDeviceId(message.tenantId, message.deviceId);
+      if (!device) {
+        console.warn('[MessageBus] Device not found for command:', message.deviceId);
+        return;
+      }
+      
+      // 명령 저장
+      const command = await insertCommand({
+        deviceUuid: device.id,
+        tenantId: message.tenantId,
+        command: message.payload.command || message.payload.type,
+        payload: message.payload.payload || message.payload,
+        status: 'pending',
+      });
+      
+      console.log('[MessageBus] Saved command:', command.id, 'for device:', device.id);
+    } catch (error) {
+      console.error('[MessageBus] Command error:', error);
+    }
   }
 
   private async handleAck(message: DeviceMessage): Promise<void> {
-    // TODO: ACK 처리
-    console.log('[MessageBus] TODO: handleAck');
+    console.log('[MessageBus] Processing ACK:', message.deviceId);
+    
+    try {
+      const { updateCommandStatus } = await import('../db/index.js');
+      
+      const { command_id, status, detail } = message.payload;
+      
+      if (command_id) {
+        // 명령 상태 업데이트
+        await updateCommandStatus(command_id, status || 'acked', detail);
+        console.log('[MessageBus] Updated command status:', command_id, status || 'acked');
+      } else {
+        console.warn('[MessageBus] No command_id in ACK message');
+      }
+    } catch (error) {
+      console.error('[MessageBus] ACK error:', error);
+    }
   }
 }
 

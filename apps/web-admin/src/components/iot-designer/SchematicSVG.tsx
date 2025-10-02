@@ -22,23 +22,26 @@ export default function SchematicSVG({ model }: SchematicProps) {
   // 실제 핀 연결 정보 생성
   const pinConnections = generatePinConnections(spec, allocation);
   
+  // 디바이스별 핀맵과 정보 가져오기
+  const deviceInfo = getDeviceInfo(spec.device);
+  
   return (
     <div className="bg-white border rounded-lg p-6">
       <h3 className="text-lg font-bold mb-4">🔌 회로도</h3>
       
       <svg width="1200" height="800" className="border">
-        {/* ESP32 본체 */}
+        {/* 디바이스 본체 */}
         <rect x={40} y={40} width={200} height={500} rx={12} fill="#f0f0f0" stroke="#333" strokeWidth="2"/>
-        <text x={50} y={60} fontSize="16" fontWeight="bold">ESP32</text>
+        <text x={50} y={60} fontSize="16" fontWeight="bold">{deviceInfo.name}</text>
         
-        {/* ESP32 핀들 */}
-        {generateESP32Pins()}
+        {/* 디바이스 핀들 */}
+        {generateDevicePins(spec.device)}
         
         {/* 센서/제어 장치들 */}
         {generateComponents(spec, allocation)}
         
         {/* 실제 핀 연결선들 */}
-        {generateConnectionLines(pinConnections)}
+        {generateConnectionLines(pinConnections, spec.device)}
         
         {/* 정보 박스들을 동적으로 배치 */}
         {generateInfoBoxes(power, allocation, pinConnections)}
@@ -47,7 +50,7 @@ export default function SchematicSVG({ model }: SchematicProps) {
       <div className="mt-4 text-sm text-gray-600">
         <p>📋 회로도 설명:</p>
         <ul className="list-disc list-inside ml-4">
-          <li>ESP32와 센서/제어 장치 간 실제 핀 연결</li>
+          <li>{deviceInfo.name}와 센서/제어 장치 간 실제 핀 연결</li>
           <li>전원 공급 요구사항 및 부품 목록</li>
           <li>핀 충돌 시 경고 및 해결 방안</li>
           <li>연결 정보 테이블로 정확한 배선 가이드</li>
@@ -57,7 +60,149 @@ export default function SchematicSVG({ model }: SchematicProps) {
   );
 }
 
-// ESP32 핀 생성
+// 디바이스 정보 가져오기
+function getDeviceInfo(device: string) {
+  const deviceMap: Record<string, { name: string; pins: Array<{ num: number | string; x: number; y: number }> }> = {
+    'esp32': {
+      name: 'ESP32',
+      pins: [
+        { num: 2, x: 43, y: 80 },
+        { num: 4, x: 43, y: 100 },
+        { num: 5, x: 43, y: 120 },
+        { num: 12, x: 43, y: 140 },
+        { num: 13, x: 43, y: 160 },
+        { num: 14, x: 43, y: 180 },
+        { num: 15, x: 43, y: 200 },
+        { num: 16, x: 43, y: 220 },
+        { num: 17, x: 43, y: 240 },
+        { num: 18, x: 43, y: 260 },
+        { num: 19, x: 43, y: 280 },
+        { num: 21, x: 43, y: 300 },
+        { num: 22, x: 43, y: 320 },
+        { num: 23, x: 43, y: 340 },
+        { num: 25, x: 43, y: 360 },
+        { num: 26, x: 43, y: 380 },
+        { num: 27, x: 43, y: 400 },
+        { num: 32, x: 43, y: 420 },
+        { num: 33, x: 43, y: 440 },
+        { num: 36, x: 43, y: 460 },
+        { num: 39, x: 43, y: 480 }
+      ]
+    },
+    'esp8266': {
+      name: 'ESP8266',
+      pins: [
+        { num: 'D0', x: 43, y: 80 },
+        { num: 'D1', x: 43, y: 100 },
+        { num: 'D2', x: 43, y: 120 },
+        { num: 'D3', x: 43, y: 140 },
+        { num: 'D4', x: 43, y: 160 },
+        { num: 'D5', x: 43, y: 180 },
+        { num: 'D6', x: 43, y: 200 },
+        { num: 'D7', x: 43, y: 220 },
+        { num: 'D8', x: 43, y: 240 },
+        { num: 'A0', x: 43, y: 260 },
+        { num: '3V3', x: 43, y: 280 },
+        { num: 'GND', x: 43, y: 300 },
+        { num: 'VIN', x: 43, y: 320 }
+      ]
+    },
+    'arduino_uno': {
+      name: 'Arduino Uno',
+      pins: [
+        { num: 'D2', x: 43, y: 80 },
+        { num: 'D3', x: 43, y: 100 },
+        { num: 'D4', x: 43, y: 120 },
+        { num: 'D5', x: 43, y: 140 },
+        { num: 'D6', x: 43, y: 160 },
+        { num: 'D7', x: 43, y: 180 },
+        { num: 'D8', x: 43, y: 200 },
+        { num: 'D9', x: 43, y: 220 },
+        { num: 'D10', x: 43, y: 240 },
+        { num: 'D11', x: 43, y: 260 },
+        { num: 'D12', x: 43, y: 280 },
+        { num: 'D13', x: 43, y: 300 },
+        { num: 'A0', x: 43, y: 320 },
+        { num: 'A1', x: 43, y: 340 },
+        { num: 'A2', x: 43, y: 360 },
+        { num: 'A3', x: 43, y: 380 },
+        { num: 'A4', x: 43, y: 400 },
+        { num: 'A5', x: 43, y: 420 },
+        { num: '5V', x: 43, y: 440 },
+        { num: '3V3', x: 43, y: 460 },
+        { num: 'GND', x: 43, y: 480 }
+      ]
+    },
+    'arduino_r4': {
+      name: 'Arduino R4',
+      pins: [
+        { num: 'D2', x: 43, y: 80 },
+        { num: 'D3', x: 43, y: 100 },
+        { num: 'D4', x: 43, y: 120 },
+        { num: 'D5', x: 43, y: 140 },
+        { num: 'D6', x: 43, y: 160 },
+        { num: 'D7', x: 43, y: 180 },
+        { num: 'D8', x: 43, y: 200 },
+        { num: 'D9', x: 43, y: 220 },
+        { num: 'D10', x: 43, y: 240 },
+        { num: 'D11', x: 43, y: 260 },
+        { num: 'D12', x: 43, y: 280 },
+        { num: 'D13', x: 43, y: 300 },
+        { num: 'A0', x: 43, y: 320 },
+        { num: 'A1', x: 43, y: 340 },
+        { num: 'A2', x: 43, y: 360 },
+        { num: 'A3', x: 43, y: 380 },
+        { num: 'A4', x: 43, y: 400 },
+        { num: 'A5', x: 43, y: 420 },
+        { num: 'A6', x: 43, y: 440 },
+        { num: '5V', x: 43, y: 460 },
+        { num: '3V3', x: 43, y: 480 }
+      ]
+    },
+    'raspberry_pi5': {
+      name: 'Raspberry Pi 5',
+      pins: [
+        { num: 'GPIO2', x: 43, y: 80 },
+        { num: 'GPIO3', x: 43, y: 100 },
+        { num: 'GPIO4', x: 43, y: 120 },
+        { num: 'GPIO5', x: 43, y: 140 },
+        { num: 'GPIO6', x: 43, y: 160 },
+        { num: 'GPIO7', x: 43, y: 180 },
+        { num: 'GPIO8', x: 43, y: 200 },
+        { num: 'GPIO9', x: 43, y: 220 },
+        { num: 'GPIO10', x: 43, y: 240 },
+        { num: 'GPIO11', x: 43, y: 260 },
+        { num: 'GPIO12', x: 43, y: 280 },
+        { num: 'GPIO13', x: 43, y: 300 },
+        { num: 'GPIO14', x: 43, y: 320 },
+        { num: 'GPIO15', x: 43, y: 340 },
+        { num: 'GPIO16', x: 43, y: 360 },
+        { num: 'GPIO17', x: 43, y: 380 },
+        { num: 'GPIO18', x: 43, y: 400 },
+        { num: 'GPIO19', x: 43, y: 420 },
+        { num: 'GPIO20', x: 43, y: 440 },
+        { num: 'GPIO21', x: 43, y: 460 },
+        { num: 'GPIO22', x: 43, y: 480 }
+      ]
+    }
+  };
+  
+  return deviceMap[device] || deviceMap['esp32']; // 기본값은 ESP32
+}
+
+// 디바이스별 핀 생성
+function generateDevicePins(device: string) {
+  const deviceInfo = getDeviceInfo(device);
+  
+  return deviceInfo.pins.map(pin => (
+    <g key={pin.num}>
+      <circle cx={pin.x} cy={pin.y} r="4" fill="#333" stroke="#fff" strokeWidth="1"/>
+      <text x={pin.x + 8} y={pin.y + 3} fontSize="10" fontWeight="bold">{pin.num}</text>
+    </g>
+  ));
+}
+
+// ESP32 핀 생성 (레거시 함수, 호환성을 위해 유지)
 function generateESP32Pins() {
   const pins = [
     { num: 2, x: 43, y: 80 },
@@ -243,36 +388,19 @@ function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[])
 }
 
 // 핀 연결선 생성
-function generateConnectionLines(pinConnections: any[]) {
+function generateConnectionLines(pinConnections: any[], device: string) {
   return pinConnections.map((conn, idx) => {
-    // ESP32 핀 위치 계산 (더 정확한 위치)
-    const esp32Pins = [
-      { num: 2, x: 43, y: 80 },
-      { num: 4, x: 43, y: 100 },
-      { num: 5, x: 43, y: 120 },
-      { num: 12, x: 43, y: 140 },
-      { num: 13, x: 43, y: 160 },
-      { num: 14, x: 43, y: 180 },
-      { num: 15, x: 43, y: 200 },
-      { num: 16, x: 43, y: 220 },
-      { num: 17, x: 43, y: 240 },
-      { num: 18, x: 43, y: 260 },
-      { num: 19, x: 43, y: 280 },
-      { num: 21, x: 43, y: 300 },
-      { num: 22, x: 43, y: 320 },
-      { num: 23, x: 43, y: 340 },
-      { num: 25, x: 43, y: 360 },
-      { num: 26, x: 43, y: 380 },
-      { num: 27, x: 43, y: 400 },
-      { num: 32, x: 43, y: 420 },
-      { num: 33, x: 43, y: 440 },
-      { num: 36, x: 43, y: 460 },
-      { num: 39, x: 43, y: 480 }
-    ];
+    // 디바이스별 핀 위치 계산
+    const deviceInfo = getDeviceInfo(device);
+    const devicePins = deviceInfo.pins;
     
-    // 핀 번호가 숫자인 경우만 ESP32 핀에서 찾기
-    const pinNumber = typeof conn.pin === 'number' ? conn.pin : parseInt(String(conn.pin));
-    const pinInfo = esp32Pins.find(p => p.num === pinNumber);
+    // 핀 번호가 숫자인 경우와 문자열인 경우 모두 처리
+    const pinInfo = devicePins.find(p => 
+      p.num === conn.pin || 
+      p.num === String(conn.pin) ||
+      (typeof conn.pin === 'number' && p.num === conn.pin) ||
+      (typeof conn.pin === 'string' && p.num === conn.pin)
+    );
     
     // VCC, GND 같은 문자열 핀은 특별한 위치에 표시
     if (!pinInfo) {

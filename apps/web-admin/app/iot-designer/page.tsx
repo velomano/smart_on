@@ -45,8 +45,12 @@ export default function IoTDesignerPage() {
   // 핀 할당 및 전원 계산 (동적으로 업데이트)
   const allocation = useMemo(() => {
     console.log('🔄 핀 할당 재계산:', spec);
-    return allocatePins(spec);
-  }, [spec.sensors, spec.controls]);
+    return allocatePins({
+      device: spec.device,
+      sensors: spec.sensors,
+      controls: spec.controls
+    });
+  }, [spec.device, spec.sensors, spec.controls]);
   
   const powerRequirements = useMemo(() => {
     console.log('⚡ 전원 요구사항 재계산:', spec);

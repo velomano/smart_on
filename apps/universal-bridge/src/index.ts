@@ -8,6 +8,9 @@ import 'dotenv/config';
 import { createHttpServer } from './protocols/http/server.js';
 import { UniversalMessageBus } from './core/messagebus.js';
 import { initSupabase } from './db/index.js';
+import { MQTTClientManager } from './protocols/mqtt/client.js';
+import { loadFarmConfigs } from './protocols/mqtt/loadConfig.js';
+import cron from 'node-cron';
 
 /**
  * 메인 함수
@@ -38,15 +41,40 @@ async function main() {
   const messageBus = new UniversalMessageBus();
   console.log('✅ Message Bus initialized');
 
+  // MQTT 클라이언트 매니저 초기화
+  const mqttManager = new MQTTClientManager();
+  console.log('✅ MQTT Client Manager initialized');
+
   // HTTP + WebSocket 통합 서버 시작
   const { app, server } = createHttpServer();
   server.listen(config.http.port, () => {
     console.log(`✅ HTTP + WebSocket Server listening on port ${config.http.port}`);
   });
 
-  // TODO: MQTT 클라이언트 시작 (옵션)
-  // TODO: Observability 초기화
-  // TODO: Cron jobs 설정
+  // MQTT 농장 연결 시작
+  try {
+    const farmConfigs = await loadFarmConfigs(initSupabase());
+    console.log(`📡 Found ${farmConfigs.length} active farm configurations`);
+    
+    for (const farmConfig of farmConfigs) {
+      await mqttManager.connectToFarm(farmConfig);
+      console.log(`✅ Connected to MQTT broker for farm ${farmConfig.farm_id}`);
+    }
+  } catch (error: any) {
+    console.warn('⚠️  MQTT farm connections failed:', error.message);
+    console.warn('   MQTT 기능이 비활성화됩니다. HTTP/WebSocket만 사용 가능합니다.');
+  }
+
+  // Cron jobs 설정
+  // 명령 디스패치 (30초마다)
+  cron.schedule('*/30 * * * * *', async () => {
+    try {
+      await mqttManager.dispatchCommands();
+    } catch (error) {
+      console.error('❌ Command dispatch error:', error);
+    }
+  });
+  console.log('✅ Cron jobs scheduled');
 
   console.log('🚀 Universal IoT Bridge v2.0 Started!');
   console.log(`   HTTP: http://localhost:${config.http.port}`);
