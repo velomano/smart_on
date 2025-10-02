@@ -6,12 +6,14 @@ import AppHeader from '@/components/AppHeader';
 import NotificationButton from '@/components/NotificationButton';
 import { getCurrentUser, AuthUser } from '@/lib/auth';
 import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '@/lib/notificationService';
+import { UserService } from '@/lib/userService';
 
 export default function NotificationsPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
+  const [saveStatus, setSaveStatus] = useState('');
 
   // 사용자 인증 확인
   useEffect(() => {
@@ -23,8 +25,35 @@ export default function NotificationsPage() {
           return;
         }
         setUser(currentUser);
-        // 알림 설정을 다시 로드하여 최신 상태 반영
-        setNotificationSettings(loadNotificationSettings());
+        
+        // 마이페이지의 Supabase 설정을 우선적으로 읽어오기
+        try {
+          const userSettings = await UserService.getUserSettings(currentUser.id);
+          if (userSettings) {
+            // Supabase에서 가져온 설정으로 localStorage 업데이트
+            const currentNotificationSettings = loadNotificationSettings();
+            const updatedSettings = {
+              ...currentNotificationSettings,
+              telegramEnabled: userSettings.notification_preferences?.telegram_notification ?? currentNotificationSettings.telegramEnabled,
+              telegramChatId: userSettings.telegram_chat_id || currentNotificationSettings.telegramChatId
+            };
+            
+            // localStorage 업데이트
+            saveNotificationSettings(updatedSettings);
+            setNotificationSettings(updatedSettings);
+            
+            console.log('📱 알림설정 페이지 - Supabase 설정 동기화:', {
+              telegramEnabled: updatedSettings.telegramEnabled,
+              telegramChatId: updatedSettings.telegramChatId
+            });
+          } else {
+            // Supabase 설정이 없으면 localStorage에서 로드
+            setNotificationSettings(loadNotificationSettings());
+          }
+        } catch (error) {
+          console.warn('Supabase 설정 로드 실패, localStorage 사용:', error);
+          setNotificationSettings(loadNotificationSettings());
+        }
       } catch (err) {
         console.error('인증 확인 실패:', err);
         window.location.href = '/login';
@@ -48,9 +77,28 @@ export default function NotificationsPage() {
 
 
   // 알림 설정 저장
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
     try {
+      // localStorage에 저장
       saveNotificationSettings(notificationSettings);
+      
+      // Supabase에도 저장 (사용자가 로그인되어 있는 경우)
+      if (user) {
+        try {
+          await UserService.updateUserSetting(user.id, 'telegram_chat_id', notificationSettings.telegramChatId);
+          await UserService.updateUserSetting(user.id, 'notification_preferences', {
+            telegram_notification: notificationSettings.telegramEnabled
+          });
+          
+          console.log('📱 알림설정 페이지 - Supabase 저장 완료:', {
+            telegramEnabled: notificationSettings.telegramEnabled,
+            telegramChatId: notificationSettings.telegramChatId
+          });
+        } catch (error) {
+          console.warn('Supabase 저장 실패, localStorage만 저장됨:', error);
+        }
+      }
+      
       setSaveStatus('✅ 설정이 저장되었습니다!');
       setTimeout(() => setSaveStatus(''), 3000);
     } catch (error) {
