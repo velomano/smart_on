@@ -53,7 +53,15 @@ export async function fetchAcademicRecipes(): Promise<NutrientRecipe[]> {
         
         // 웹사이트에서 연구 논문/자료 링크 추출
         const extractedRecipes = extractRecipesFromAcademic(document, university);
-        recipes.push(...extractedRecipes);
+        recipes.push(...extractedRecipes.map(recipe => ({
+          ...recipe,
+          source: {
+            ...university,
+            org_type: 'academic' as const,
+            reliability_default: 0.8
+          },
+          checksum: `${recipe.crop_key}_${recipe.stage}_${Date.now()}`
+        })));
         
       } catch (error) {
         console.warn(`${university.name} 크롤링 실패:`, error);
@@ -64,7 +72,11 @@ export async function fetchAcademicRecipes(): Promise<NutrientRecipe[]> {
     // 2. 학술 데이터베이스 API 시도 (예: Crossref, PubMed)
     try {
       const academicApiRecipes = await fetchFromAcademicAPIs();
-      recipes.push(...academicApiRecipes);
+      recipes.push(...academicApiRecipes.map(recipe => ({
+        ...recipe,
+        source: { name: '학술 데이터베이스', url: 'https://api.crossref.org', org_type: 'academic' as const, license: 'CC BY 4.0', reliability_default: 0.8 },
+        checksum: `${recipe.crop_key}_${recipe.stage}_${Date.now()}`
+      })));
     } catch (error) {
       console.warn('학술 API 호출 실패:', error);
     }
@@ -152,11 +164,12 @@ async function fetchFromAcademicAPIs(): Promise<Omit<NutrientRecipe, 'source' | 
     });
     
     if (response.ok) {
-      const data = await response.json();
-      console.log(`📄 Crossref에서 ${data.message.items.length}건 논문 발견`);
+      const data = await response.json() as any;
+      const items = data?.message?.items || [];
+      console.log(`📄 Crossref에서 ${items.length}건 논문 발견`);
       
       // 논문 제목에서 작물 정보 추출
-      data.message.items.forEach((item: any) => {
+      items.forEach((item: any) => {
         const title = item.title[0].toLowerCase();
         const crops = ['lettuce', 'tomato', 'cucumber', 'pepper', 'strawberry'];
         

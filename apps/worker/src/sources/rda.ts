@@ -77,7 +77,7 @@ export async function fetchRDARecipes() {
   } catch (error) {
     console.error('농촌진흥청 레시피 수집 실패:', error);
     // 실패 시 기본 데이터 반환
-    return getDefaultRDARecipes(rdaUrl);
+    return getDefaultRDARecipes('https://www.rda.go.kr');
   }
 }
 
@@ -104,9 +104,11 @@ function extractRecipesFromRDA(document: Document, sourceUrl: string) {
       crop_key: crop.toLowerCase(),
       crop_name: crop,
       stage: "vegetative",
+      target_ec: 0,
+      target_ph: 0,
       macro: {},
       micro: {},
-      env: {},
+      env: { temp: 0, humidity: 0, lux: 0 },
       source: { 
         name: "농촌진흥청 스마트팜 기술정보센터", 
         url: sourceUrl, 

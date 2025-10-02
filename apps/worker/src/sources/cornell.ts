@@ -65,7 +65,7 @@ export async function fetchCornellLettuce(): Promise<NutrientRecipe[]> {
   } catch (error) {
     console.error('❌ Cornell 수집 실패:', error);
     // 실패 시 기본 샘플 데이터 반환
-    return [getDefaultLettuceRecipe(url)];
+    return [getDefaultLettuceRecipe('https://hort.cornell.edu/greenhouse/crops/factsheets/hydroponic-recipes.pdf')];
   }
 }
 

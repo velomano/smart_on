@@ -1,41 +1,45 @@
-import winston from 'winston';
+// 간단한 로거 구현
+class SimpleLogger {
+  private level: string;
 
-// 로거 설정
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: 'YYYY-MM-DD HH:mm:ss'
-    }),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'nutrient-worker' },
-  transports: [
-    // 콘솔 출력
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    }),
-    
-    // 파일 출력 (개발 환경에서만)
-    ...(process.env.NODE_ENV === 'development' ? [
-      new winston.transports.File({ 
-        filename: 'logs/error.log', 
-        level: 'error' 
-      }),
-      new winston.transports.File({ 
-        filename: 'logs/combined.log' 
-      })
-    ] : [])
-  ]
-});
+  constructor() {
+    this.level = process.env.LOG_LEVEL || 'info';
+  }
 
-// 개발 환경에서는 더 자세한 로그
-if (process.env.NODE_ENV === 'development') {
-  logger.level = 'debug';
+  private shouldLog(level: string): boolean {
+    const levels = ['error', 'warn', 'info', 'debug'];
+    return levels.indexOf(level) <= levels.indexOf(this.level);
+  }
+
+  private formatMessage(level: string, message: string, ...args: any[]): string {
+    const timestamp = new Date().toISOString();
+    return `[${timestamp}] ${level.toUpperCase()}: ${message} ${args.length > 0 ? JSON.stringify(args) : ''}`;
+  }
+
+  error(message: string, ...args: any[]) {
+    if (this.shouldLog('error')) {
+      console.error(this.formatMessage('error', message, ...args));
+    }
+  }
+
+  warn(message: string, ...args: any[]) {
+    if (this.shouldLog('warn')) {
+      console.warn(this.formatMessage('warn', message, ...args));
+    }
+  }
+
+  info(message: string, ...args: any[]) {
+    if (this.shouldLog('info')) {
+      console.info(this.formatMessage('info', message, ...args));
+    }
+  }
+
+  debug(message: string, ...args: any[]) {
+    if (this.shouldLog('debug')) {
+      console.debug(this.formatMessage('debug', message, ...args));
+    }
+  }
 }
 
+export const logger = new SimpleLogger();
 export default logger;
