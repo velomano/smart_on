@@ -27,6 +27,16 @@ export default function FarmsPage() {
     try {
       setLoading(true);
       
+      // 환경변수가 없으면 Mock 데이터 사용
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+        console.log('Supabase 환경변수가 설정되지 않았습니다. Mock 데이터를 사용합니다.');
+        setFarms([
+          { id: '1', name: '테스트 농장 1', description: 'Mock 데이터', created_at: new Date().toISOString() },
+          { id: '2', name: '테스트 농장 2', description: 'Mock 데이터', created_at: new Date().toISOString() }
+        ]);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('farms')
         .select('*')
