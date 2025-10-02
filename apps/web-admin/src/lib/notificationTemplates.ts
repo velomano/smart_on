@@ -162,11 +162,12 @@ export function generateNotificationMessage(
   return `${template.title}\n\n${message}`;
 }
 
-// 알림 전송 함수 - 다시 활성화
+// 알림 전송 함수 - 사용자의 실제 채팅 ID 사용
 export async function sendNotification(
   templateId: string,
   variables: Record<string, string | number>,
-  chatId?: string
+  chatId?: string,
+  userId?: string
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const message = generateNotificationMessage(templateId, variables);
@@ -177,7 +178,8 @@ export async function sendNotification(
       },
       body: JSON.stringify({
         message,
-        chatId
+        chatId,
+        userId
       }),
     });
 

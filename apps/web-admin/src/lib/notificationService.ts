@@ -211,33 +211,154 @@ async function sendNotificationToTelegram(
   }
 }
 
-// 센서 데이터 검증 및 알림 전송 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
+// 센서 데이터 검증 및 알림 전송 - 실제 센서 이상치값 감지 시에만 작동
 export async function checkSensorDataAndNotify(sensorData: SensorData): Promise<void> {
-  console.log('🚫 자동 센서 알림 완전 차단됨 (봇 차단 방지)', sensorData.type);
-  return; // 완전 차단
   try {
-    const chatId = await getCurrentUserTelegramChatId();
-    await sendNotificationToTelegram(sensorData.type, sensorData.location, sensorData.value, sensorData.unit || '', sensorData.timestamp, chatId);
+    console.log('🔍 센서 데이터 체크:', {
+      type: sensorData.type,
+      value: sensorData.value,
+      location: sensorData.location,
+      thresholds: sensorData.thresholds
+    });
+
+    // dashboardAlertManager를 사용하여 센서 데이터 체크 및 알림 생성
+    const alert = dashboardAlertManager.checkSensorDataAndAlert(
+      sensorData.type,
+      sensorData.value,
+      sensorData.location,
+      sensorData.id,
+      sensorData.deviceId,
+      sensorData.thresholds ? { [sensorData.type]: sensorData.thresholds } : undefined
+    );
+
+    // 알림이 생성되었을 때만 텔레그램으로 전송
+    if (alert) {
+      console.log('🚨 센서 이상치 감지, 텔레그램 알림 전송:', alert.title);
+      
+      try {
+        const chatId = await getCurrentUserTelegramChatId();
+        if (chatId) {
+          await sendNotificationToTelegram(
+            sensorData.type, 
+            sensorData.location, 
+            sensorData.value, 
+            sensorData.unit || '', 
+            sensorData.timestamp, 
+            chatId
+          );
+          console.log('✅ 텔레그램 알림 전송 완료');
+        } else {
+          console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+        }
+      } catch (error) {
+        console.error('❌ 텔레그램 알림 전송 실패:', error);
+      }
+    } else {
+      console.log('✅ 센서 데이터 정상 범위');
+    }
   } catch (error) {
-    console.error('센서 데이터 알림 전송 실패:', error);
+    console.error('센서 데이터 알림 처리 실패:', error);
   }
 }
 
-// 시스템 상태 검증 및 알림 전송 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
+// 시스템 상태 검증 및 알림 전송 - 실제 시스템 이상 상황 감지 시에만 작동
 export async function checkSystemStatusAndNotify(systemStatus: SystemStatus): Promise<void> {
-  console.log('🚫 자동 시스템 상태 알림 완전 차단됨 (봇 차단 방지)');
-  return; // 완전 차단
+  try {
+    console.log('🔍 시스템 상태 체크:', {
+      online: systemStatus.online,
+      lastSeen: systemStatus.lastSeen,
+      location: systemStatus.location
+    });
+
+    // 시스템 오프라인 감지
+    if (!systemStatus.online) {
+      const alert = dashboardAlertManager.addAlert({
+        type: 'system',
+        level: 'critical',
+        title: '🔌 시스템 오프라인',
+        message: `${systemStatus.location}에서 시스템이 오프라인 상태입니다.`,
+        location: systemStatus.location,
+        sensorValue: 0,
+        threshold: 0
+      });
+
+      console.log('🚨 시스템 오프라인 감지, 텔레그램 알림 전송:', alert.title);
+      
+      try {
+        const chatId = await getCurrentUserTelegramChatId();
+        if (chatId) {
+          await sendNotificationToTelegram(
+            'system_offline',
+            systemStatus.location,
+            '오프라인',
+            '',
+            systemStatus.lastSeen,
+            chatId
+          );
+          console.log('✅ 시스템 오프라인 텔레그램 알림 전송 완료');
+        } else {
+          console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+        }
+      } catch (error) {
+        console.error('❌ 시스템 오프라인 텔레그램 알림 전송 실패:', error);
+      }
+    } else {
+      console.log('✅ 시스템 정상 온라인 상태');
+    }
+  } catch (error) {
+    console.error('시스템 상태 알림 처리 실패:', error);
+  }
 }
 
-// 제어 시스템 오류 알림 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)
+// 제어 시스템 오류 알림 - 실제 제어 장치 오류 감지 시에만 작동
 export async function notifyControlError(
   deviceType: 'pump' | 'valve',
   deviceId: string,
   location: string,
   error: string
 ): Promise<void> {
-  console.log('🚫 자동 제어 시스템 오류 알림 완전 차단됨 (봇 차단 방지)');
-  return; // 완전 차단
+  try {
+    console.log('🔍 제어 시스템 오류 체크:', {
+      deviceType,
+      deviceId,
+      location,
+      error
+    });
+
+    const alert = dashboardAlertManager.addAlert({
+      type: 'control',
+      level: 'critical',
+      title: deviceType === 'pump' ? '🔧 펌프 고장' : '🚰 밸브 고착',
+      message: `${location}에서 ${deviceType === 'pump' ? '펌프' : '밸브'} 오류가 발생했습니다: ${error}`,
+      location: location,
+      sensorValue: 0,
+      threshold: 0,
+      deviceId: deviceId
+    });
+
+    console.log('🚨 제어 시스템 오류 감지, 텔레그램 알림 전송:', alert.title);
+    
+    try {
+      const chatId = await getCurrentUserTelegramChatId();
+      if (chatId) {
+        await sendNotificationToTelegram(
+          deviceType === 'pump' ? 'pump_failure' : 'valve_stuck',
+          location,
+          error,
+          '',
+          new Date(),
+          chatId
+        );
+        console.log('✅ 제어 시스템 오류 텔레그램 알림 전송 완료');
+      } else {
+        console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+      }
+    } catch (error) {
+      console.error('❌ 제어 시스템 오류 텔레그램 알림 전송 실패:', error);
+    }
+  } catch (error) {
+    console.error('제어 시스템 오류 알림 처리 실패:', error);
+  }
 }
 
 // 사용자 액션 알림 - 완전 차단 (자동 알림으로 인한 봇 차단 방지)

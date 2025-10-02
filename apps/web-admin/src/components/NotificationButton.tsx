@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { sendNotification } from '@/lib/notificationTemplates';
 import { dashboardAlertManager } from '@/lib/dashboardAlerts';
+import { getCurrentUser } from '@/lib/auth';
+import { UserService } from '@/lib/userService';
 
 interface NotificationButtonProps {
   className?: string;
@@ -90,16 +92,65 @@ export default function NotificationButton({ className = '' }: NotificationButto
       let result;
 
       if (template?.id === 'manual_notification_custom' || !template) {
-        // 사용자 지정 메시지 직접 전송
+        // 사용자 지정 메시지 직접 전송 - 사용자의 실제 텔레그램 채팅 ID 사용
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+          setSendResult('❌ 로그인이 필요합니다.');
+          setIsSending(false);
+          return;
+        }
+
+        // 사용자의 텔레그램 채팅 ID 가져오기
+        const userSettings = await UserService.getUserSettings(currentUser.id);
+        const telegramChatId = userSettings?.telegram_chat_id;
+        
+        if (!telegramChatId) {
+          setSendResult('❌ 텔레그램 채팅 ID가 설정되지 않았습니다. 마이페이지에서 설정해주세요.');
+          setIsSending(false);
+          return;
+        }
+
+        console.log('📱 사용자 텔레그램 채팅 ID 사용:', {
+          userId: currentUser.id,
+          telegramChatId: telegramChatId
+        });
+
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
         const response = await fetch(`${baseUrl}/api/notifications/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message })
+          body: JSON.stringify({ 
+            message,
+            chatId: telegramChatId,
+            userId: currentUser.id
+          })
         });
         result = await response.json();
       } else {
-        // 템플릿 기반 알림 전송
+        // 템플릿 기반 알림 전송 - 사용자의 실제 텔레그램 채팅 ID 사용
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+          setSendResult('❌ 로그인이 필요합니다.');
+          setIsSending(false);
+          return;
+        }
+
+        // 사용자의 텔레그램 채팅 ID 가져오기
+        const userSettings = await UserService.getUserSettings(currentUser.id);
+        const telegramChatId = userSettings?.telegram_chat_id;
+        
+        if (!telegramChatId) {
+          setSendResult('❌ 텔레그램 채팅 ID가 설정되지 않았습니다. 마이페이지에서 설정해주세요.');
+          setIsSending(false);
+          return;
+        }
+
+        console.log('📱 템플릿 알림 - 사용자 텔레그램 채팅 ID 사용:', {
+          userId: currentUser.id,
+          telegramChatId: telegramChatId,
+          templateId: template.id
+        });
+
         result = await sendNotification(
           template.id,
           {
@@ -107,7 +158,9 @@ export default function NotificationButton({ className = '' }: NotificationButto
             current: '35',
             threshold: '30',
             timestamp: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-          }
+          },
+          telegramChatId,
+          currentUser.id
         );
       }
 
@@ -116,28 +169,9 @@ export default function NotificationButton({ className = '' }: NotificationButto
         setCustomMessage('');
         setSelectedTemplate('');
       
-        // 텔레그램 전송 성공 시 대시보드 알림에도 추가
-        const alertTitle = template?.title || '📝 사용자 지정 알림';
-        const alertMessage = template?.message || customMessage;
-        
-        console.log('🔔 대시보드 알림 추가 시도:', {
-          title: alertTitle,
-          message: alertMessage,
-          type: 'system',
-          level: 'medium'
-        });
-        
-        const addedAlert = dashboardAlertManager.addAlert({
-          type: 'system',
-          level: 'medium',
-          title: alertTitle,
-          message: alertMessage,
-          location: '시스템',
-          sensorValue: 0,
-          threshold: 0
-        });
-        
-        console.log('🔔 대시보드 알림 추가 완료:', addedAlert);
+        // 텔레그램 전송 성공 - 우측하단 알림은 실제 센서 이상치값 감지 시에만 표시
+        // 테스트용 알림은 추가하지 않음
+        console.log('✅ 텔레그램 알림 전송 완료 - 우측하단 알림은 센서 이상치 감지 시에만 표시');
       
         // 성공 후 2초 뒤 모달 닫기
         setTimeout(() => {
