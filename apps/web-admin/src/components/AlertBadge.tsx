@@ -18,41 +18,45 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
 
   // 인증 사용자 상태 확인
   useEffect(() => {
+    console.log('🔔 AlertBadge - useEffect 시작 (사용자 확인)');
+    
     const checkUser = async () => {
-      const currentUser = await getCurrentUser();
-      console.log('🔔 AlertBadge - 사용자 확인:', {
-        user: currentUser ? {
-          id: currentUser.id,
-          email: currentUser.email,
-          is_approved: currentUser.is_approved,
-          is_active: currentUser.is_active
-        } : null
-      });
+      console.log('🔔 AlertBadge - checkUser 함수 시작');
       
-      if (currentUser && currentUser.is_approved && currentUser.is_active) {
-        setUser(currentUser);
-        console.log('🔔 AlertBadge - 사용자 설정 완료');
-      } else {
-        console.log('🔔 AlertBadge - 사용자 조건 미충족:', {
-          hasUser: !!currentUser,
-          isApproved: currentUser?.is_approved,
-          isActive: currentUser?.is_active
+      try {
+        const currentUser = await getCurrentUser();
+        console.log('🔔 AlertBadge - getCurrentUser 결과:', {
+          user: currentUser ? {
+            id: currentUser.id,
+            email: currentUser.email,
+            is_approved: currentUser.is_approved,
+            is_active: currentUser.is_active
+          } : null
         });
+        
+        if (currentUser && currentUser.is_approved && currentUser.is_active) {
+          console.log('🔔 AlertBadge - 사용자 조건 충족, 사용자 설정');
+          setUser(currentUser);
+          console.log('🔔 AlertBadge - 사용자 설정 완료');
+        } else {
+          console.log('🔔 AlertBadge - 사용자 조건 미충족:', {
+            hasUser: !!currentUser,
+            isApproved: currentUser?.is_approved,
+            isActive: currentUser?.is_active
+          });
+        }
+      } catch (error) {
+        console.error('🔔 AlertBadge - getCurrentUser 오류:', error);
       }
     };
+    
     checkUser();
   }, []);
 
   useEffect(() => {
-    // 사용자가 로그인했을 때만 알림 구독 시작
-    if (!user) {
-      console.log('🔔 AlertBadge - 사용자 없음, 구독 시작 안함');
-      return;
-    }
+    console.log('🔔 AlertBadge - 알림 구독 시작 (사용자 인증 무관)');
     
-    console.log('🔔 AlertBadge - 알림 구독 시작');
-    
-    // 알림 구독
+    // 알림 구독 (사용자 인증 상태와 무관하게 작동)
     const unsubscribe = dashboardAlertManager.subscribe((newAlerts) => {
       console.log('🔔 AlertBadge - 알림 업데이트:', {
         totalAlerts: newAlerts.length,
@@ -83,7 +87,7 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
       console.log('🔔 AlertBadge - 구독 해제');
       unsubscribe();
     };
-  }, [user]); // user가 로그인되었을 때만 구독 시작
+  }, []); // 컴포넌트 마운트 시 즉시 구독 시작
 
   const handleMarkAllAsRead = () => {
     dashboardAlertManager.markAllAsRead();
