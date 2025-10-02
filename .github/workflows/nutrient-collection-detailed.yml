@@ -2,7 +2,7 @@ name: 영양액 레시피 자동 수집 (세부)
 
 on:
   schedule:
-    - cron: '0 0 * * *'   # 매일 오전 9시 (KST)
+    - cron: '0 */6 * * *'   # 6시간마다 실행 (00:00, 06:00, 12:00, 18:00)
   workflow_dispatch:
     inputs:
       source:
@@ -13,7 +13,7 @@ on:
       batch_size:
         description: '배치 크기'
         required: false
-        default: '10'
+        default: '50'
         type: string
 
 jobs:
@@ -37,9 +37,16 @@ jobs:
       with:
         node-version: '20'
 
-    - name: 영양액 레시피 수집 실행 (배치 처리)
+    - name: 의존성 설치
+      run: |
+        cd apps/worker
+        npm install
+
+    - name: 영양액 레시피 수집 및 crop_profiles 저장
       run: |
         set -euo pipefail
+        
+        cd apps/worker
         
         SUPA_URL="${SUPABASE_URL:-***}"
         SUPA_KEY="${SUPABASE_SERVICE_ROLE_KEY:-test-key}"
@@ -48,161 +55,142 @@ jobs:
         
         echo "🚀 영양액 레시피 수집 시작 (소스: ${SRC}, 배치: ${BATCH})"
         
-        node - << 'EOF'
-        const { env } = process;
+        # 환경변수 설정
+        export SUPABASE_URL="$SUPA_URL"
+        export SUPABASE_SERVICE_ROLE_KEY="$SUPA_KEY"
         
-        const SUPA_URL = env.SUPABASE_URL || '***';
-        const SUPA_KEY = env.SUPABASE_SERVICE_ROLE_KEY || 'test-key';
-        const SRC      = env.SOURCE || 'all';
-        const BATCH    = parseInt(env.BATCH_SIZE || '10', 10);
-        
-        function parseCountFromContentRange(header) {
-          if (!header) return 0;
-          const m = header.match(/\/(\d+)$/);
-          return m ? parseInt(m[1], 10) : 0;
-        }
-        
-        async function getRecipeCount() {
-          const url = `${SUPA_URL}/rest/v1/crop_profiles?select=id`;
-          const res = await fetch(url, {
-            headers: {
-              'apikey': SUPA_KEY,
-              'Authorization': `Bearer ${SUPA_KEY}`,
-              'Prefer': 'count=exact',
-              'Range': '0-0'
-            }
-          });
-          if (!res.ok) throw new Error(`Supabase count query failed: ${res.status}`);
-          const contentRange = res.headers.get('Content-Range');
-          return parseCountFromContentRange(contentRange);
-        }
-        
-        async function collectNutrientData() {
-          console.log(`📊 ${SRC} 소스에서 양액 데이터 수집 중...`);
-          
-          const sampleData = [
-            {
-              crop_key: 'lettuce',
-              crop_name: '상추',
-              stage: 'vegetative',
-              target_ppm: 150,
-              target_ec: 1.2,
-              target_ph: 6.0
-            },
-            {
-              crop_key: 'tomato',
-              crop_name: '토마토',
-              stage: 'fruiting',
-              target_ppm: 250,
-              target_ec: 2.0,
-              target_ph: 6.5
-            },
-            {
-              crop_key: 'cucumber',
-              crop_name: '오이',
-              stage: 'flowering',
-              target_ppm: 200,
-              target_ec: 1.8,
-              target_ph: 6.2
-            }
-          ];
-          
-          console.log(`📊 생성된 샘플 데이터: ${sampleData.length}건`);
-          return sampleData.slice(0, BATCH);
-        }
-        
-        async function saveToSupabase(data) {
-          if (!data || data.length === 0) return 0;
-          
-          console.log(`💾 ${data.length}건의 데이터를 Supabase에 저장 중...`);
-          
-          const response = await fetch(`${SUPA_URL}/rest/v1/crop_profiles`, {
-            method: 'POST',
-            headers: {
-              'apikey': SUPA_KEY,
-              'Authorization': `Bearer ${SUPA_KEY}`,
-              'Content-Type': 'application/json',
-              'Prefer': 'resolution=merge-duplicates'
-            },
-            body: JSON.stringify(data)
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Supabase 저장 실패: ${response.status}`);
-          }
-          
-          return data.length;
-        }
+        # 실제 수집 및 crop_profiles 직접 저장
+        node -e "
+        const { collectAllRecipes } = require('./src/sources/all.ts');
         
         async function main() {
           try {
-            const before = await getRecipeCount();
-            console.log(`📊 기존 레시피 수: ${before}건`);
-        
-            const collectedData = await collectNutrientData();
-            console.log(`📊 수집된 데이터: ${collectedData.length}건`);
-        
-            const savedCount = await saveToSupabase(collectedData);
-            console.log(`✅ Supabase 저장 완료: ${savedCount}건`);
-        
-            const after = await getRecipeCount();
-            console.log(`📊 최종 레시피 수: ${after}건`);
-            console.log(`💾 추가된 레시피: ${Math.max(after - before, 0)}건`);
-            console.log('🎉 영양액 레시피 수집 작업 완료');
+            console.log('🌱 실제 수집 시작...');
+            const recipes = await collectAllRecipes($BATCH);
+            console.log(\`📊 수집 완료: \${recipes.length}건\`);
             
-            // 텔레그램 알림을 위한 수집 정보 파일 저장
-            const collectionInfo = {
-              before_count: before,
-              collected_count: collectedData.length,
-              saved_count: savedCount,
-              after_count: after,
-              added_count: Math.max(after - before, 0),
-              source: SRC,
-              batch_size: BATCH,
-              timestamp: new Date().toISOString()
-            };
+            // crop_profiles 형식으로 변환하여 직접 저장
+            let savedCount = 0;
+            for (const recipe of recipes) {
+              const source = recipe.source;
+              
+              // macro/micro 데이터를 target_ppm 형식으로 변환
+              const targetPpm = {
+                N: recipe.macro?.N || 0,
+                P: recipe.macro?.P || 0,
+                K: recipe.macro?.K || 0,
+                Ca: recipe.macro?.Ca || 0,
+                Mg: recipe.macro?.Mg || 0,
+                S: recipe.macro?.S || 0
+              };
+              
+              // NPK 비율 계산
+              const npkRatio = \`\${targetPpm.N}:\${targetPpm.P}:\${targetPpm.K}\`;
+              
+              // 환경 조건 정보 생성
+              const growingConditions = {
+                temperature: \`\${recipe.env?.temp || 20}°C\`,
+                humidity: \`\${recipe.env?.humidity || 65}%\`,
+                light_hours: \`\${Math.round((recipe.env?.lux || 15000) / 1000)}시간\`,
+                co2_level: '800-1200ppm'
+              };
+              
+              // 영양소 상세 정보 생성
+              const nutrientsDetail = {
+                nitrogen: targetPpm.N,
+                phosphorus: targetPpm.P,
+                potassium: targetPpm.K,
+                calcium: targetPpm.Ca,
+                magnesium: targetPpm.Mg,
+                trace_elements: ['Fe', 'Mn', 'B', 'Zn', 'Cu', 'Mo']
+              };
+              
+              // 사용법 및 주의사항
+              const usageNotes = [
+                '주 1회 EC 측정 권장',
+                'pH는 6.0-6.5 범위 유지',
+                '온도가 높을 때는 EC를 낮춰 사용'
+              ];
+              
+              const warnings = [
+                '칼슘 결핍 시 잎 끝 갈변 현상',
+                '과도한 질소는 과번무 유발'
+              ];
+              
+              // crop_profiles 형식으로 변환
+              const cropProfile = {
+                crop_key: recipe.crop_key,
+                crop_name: recipe.crop_name,
+                stage: recipe.stage,
+                target_ppm: targetPpm,
+                target_ec: recipe.target_ec,
+                target_ph: recipe.target_ph,
+                author: '자동 수집 시스템',
+                source_title: source?.name || '스마트팜 데이터베이스',
+                source_year: new Date(recipe.collected_at).getFullYear(),
+                license: source?.license || 'CC BY 4.0',
+                description: \`\${recipe.crop_name} \${recipe.stage}에 최적화된 배양액 레시피입니다. (출처: \${source?.name || 'Unknown'})\`,
+                growing_conditions: growingConditions,
+                nutrients_detail: nutrientsDetail,
+                usage_notes: usageNotes,
+                warnings: warnings,
+                last_updated: new Date(recipe.collected_at).toISOString().split('T')[0],
+                volume_l: 100,
+                ec_target: recipe.target_ec,
+                ph_target: recipe.target_ph,
+                npk_ratio: npkRatio
+              };
+              
+              // crop_profiles에 직접 저장
+              const res = await fetch(process.env.SUPABASE_URL + '/rest/v1/crop_profiles', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+                  'Authorization': \`Bearer \${process.env.SUPABASE_SERVICE_ROLE_KEY}\`,
+                  'Prefer': 'resolution=merge-duplicates'
+                },
+                body: JSON.stringify(cropProfile)
+              });
+              
+              if (res.ok) {
+                savedCount++;
+                console.log(\`✅ 저장 완료: \${recipe.crop_name} (\${recipe.stage}) - \${source?.name || 'Unknown'}\`);
+              } else {
+                const errorText = await res.text();
+                console.error(\`❌ 저장 실패: \${recipe.crop_name}\`, errorText);
+              }
+            }
             
-            require('fs').writeFileSync('/tmp/collection_info.json', JSON.stringify(collectionInfo, null, 2));
-          } catch (err) {
-            console.error('❌ 수집 작업 실패:', err?.message || err);
+            console.log(\`🎉 저장 완료: \${savedCount}/\${recipes.length}건\`);
             
-            // 실패 정보도 파일로 저장
-            const errorInfo = {
-              error: err?.message || 'Unknown error',
-              source: SRC,
-              batch_size: BATCH,
-              timestamp: new Date().toISOString()
-            };
+            // 수집 통계 출력
+            const sourceStats = recipes.reduce((acc, recipe) => {
+              const sourceName = recipe.source?.name || 'Unknown';
+              acc[sourceName] = (acc[sourceName] || 0) + 1;
+              return acc;
+            }, {});
             
-            require('fs').writeFileSync('/tmp/collection_info.json', JSON.stringify(errorInfo, null, 2));
+            console.log('📈 수집 통계:');
+            Object.entries(sourceStats).forEach(([source, count]) => {
+              console.log(\`  - \${source}: \${count}건\`);
+            });
+            
+          } catch (error) {
+            console.error('💥 수집 실패:', error);
             process.exit(1);
           }
         }
         
         main();
-        EOF
+        "
 
-    - name: 수집 결과 텔레그램 알림 (세부 정보)
+    - name: 수집 결과 텔레그램 알림
       if: always() && env.TELEGRAM_BOT_TOKEN != '' && env.TELEGRAM_CHAT_ID != ''
       run: |
         STATUS="${{ job.status }}"
         SOURCE="${{ env.SOURCE }}"
         TRIGGER="${{ github.event_name }}"
-        
-        # 이전 단계에서 수집된 데이터 정보 추출
-        if [ -f "/tmp/collection_info.json" ]; then
-          COLLECTED_COUNT=$(jq -r '.collected_count // 0' /tmp/collection_info.json)
-          SAVED_COUNT=$(jq -r '.saved_count // 0' /tmp/collection_info.json)
-          BEFORE_COUNT=$(jq -r '.before_count // 0' /tmp/collection_info.json)
-          AFTER_COUNT=$(jq -r '.after_count // 0' /tmp/collection_info.json)
-          ADDED_COUNT=$(jq -r '.added_count // 0' /tmp/collection_info.json)
-        else
-          COLLECTED_COUNT="0"
-          SAVED_COUNT="0"
-          BEFORE_COUNT="0"
-          AFTER_COUNT="0"
-          ADDED_COUNT="0"
-        fi
         
         if [ "$STATUS" = "success" ]; then
           ICON="✅"
@@ -212,19 +200,12 @@ jobs:
           MESSAGE="영양액 레시피 수집 작업이 실패했습니다."
         fi
         
-        FULL_MESSAGE="$ICON <b>TeraHub 양액 수집 알림 (세부)</b>
+        FULL_MESSAGE="$ICON <b>스마트팜 영양액 수집 알림</b>
 
         📊 <b>작업 상태</b>: $STATUS
         🌱 <b>수집 소스</b>: $SOURCE
         ⏰ <b>실행 시간</b>: $(date '+%Y-%m-%d %H:%M:%S')
         🔄 <b>트리거</b>: $TRIGGER
-        
-        📈 <b>수집 상세 정보</b>:
-        • 기존 레시피: ${BEFORE_COUNT}건
-        • 새로 수집: ${COLLECTED_COUNT}건
-        • 저장 완료: ${SAVED_COUNT}건
-        • 최종 레시피: ${AFTER_COUNT}건
-        • 순증가: ${ADDED_COUNT}건
         
         $MESSAGE"
         

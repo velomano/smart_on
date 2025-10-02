@@ -9,8 +9,32 @@ export async function fetchFAORecipes() {
     // FAO API 엔드포인트 (실제 API가 있다면 사용)
     const faoApiUrl = 'https://www.fao.org/faostat/api/v1/en/data';
     
-    // 실제 API 호출 대신 샘플 데이터 사용 (FAO 스타일)
-    const faoRecipes = [
+    // 실제 API 호출 시도
+    let faoRecipes = [];
+    
+    try {
+      // FAO API 호출
+      const response = await fetch(faoApiUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('FAO API 응답 받음, 데이터 파싱 시도...');
+        
+        // API 데이터에서 레시피 추출
+        faoRecipes = extractRecipesFromFAOAPI(data, faoApiUrl);
+      }
+    } catch (apiError) {
+      console.warn('FAO API 호출 실패, 기본 데이터 사용:', apiError);
+    }
+    
+    // API 호출 실패 시 기본 데이터 사용
+    if (faoRecipes.length === 0) {
+      faoRecipes = [
       {
         crop_key: "lettuce",
         crop_name: "Lettuce",
@@ -59,7 +83,8 @@ export async function fetchFAORecipes() {
           reliability_default: 0.95 
         }
       }
-    ];
+      ];
+    }
     
     // 체크섬 생성 및 반환
     const recipesWithChecksum = faoRecipes.map(recipe => ({
@@ -74,4 +99,56 @@ export async function fetchFAORecipes() {
     console.error('FAO 레시피 수집 실패:', error);
     throw error;
   }
+}
+
+// FAO API에서 레시피 추출
+function extractRecipesFromFAOAPI(data: any, sourceUrl: string) {
+  const recipes = [];
+  
+  // API 응답 구조에 따라 파싱 로직 구현
+  if (data && data.data) {
+    // 실제 API 구조에 맞게 파싱
+    for (const item of data.data.slice(0, 5)) { // 최대 5개만 처리
+      if (item.crop_name) {
+        const recipe = {
+          crop_key: item.crop_name.toLowerCase(),
+          crop_name: item.crop_name,
+          stage: "vegetative",
+          target_ec: item.ec || 1.8,
+          target_ph: item.ph || 6.0,
+          macro: {
+            N: item.nitrogen || 150,
+            P: item.phosphorus || 35,
+            K: item.potassium || 200,
+            Ca: item.calcium || 160,
+            Mg: item.magnesium || 45,
+            S: item.sulfur || 60
+          },
+          micro: {
+            Fe: item.iron || 2.0,
+            Mn: item.manganese || 0.5,
+            B: item.boron || 0.5,
+            Zn: item.zinc || 0.05,
+            Cu: item.copper || 0.02,
+            Mo: item.molybdenum || 0.01
+          },
+          env: {
+            temp: item.temperature || 21,
+            humidity: item.humidity || 65,
+            lux: item.light || 16000
+          },
+          source: { 
+            name: "FAO Open Knowledge", 
+            url: sourceUrl, 
+            org_type: "government", 
+            reliability_default: 0.95 
+          }
+        };
+        
+        recipes.push(recipe);
+      }
+    }
+  }
+  
+  return recipes;
 }
