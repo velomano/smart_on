@@ -1,9 +1,5 @@
 // 전원 요구사항 계산
-<<<<<<< HEAD
-import { sensors, controls, estimatePower } from '../../../lib/iot-templates/index';
-=======
 import { sensors, controls, estimatePower } from '@/lib/iot-templates/index';
->>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
 
 export interface PowerRequirement {
   voltage: number;
@@ -118,73 +114,6 @@ export function suggestPowerSupplies(requirements: PowerRequirement[]): string[]
   return suggestions;
 }
 
-<<<<<<< HEAD
-// 전원 효율성 분석
-export function analyzePowerEfficiency(requirements: PowerRequirement[]): {
-  totalPower: number;
-  efficiency: string;
-  recommendations: string[];
-} {
-  const totalPower = requirements.reduce((sum, req) => sum + (req.voltage * req.minCurrentA), 0);
-  
-  let efficiency = '양호';
-  const recommendations: string[] = [];
-  
-  if (totalPower > 50) {
-    efficiency = '높음';
-    recommendations.push('고전력 시스템: 전원 분산 공급 권장');
-    recommendations.push('열 관리: 방열판 또는 쿨링 팬 고려');
-  } else if (totalPower > 20) {
-    efficiency = '보통';
-    recommendations.push('중전력 시스템: 전원 모니터링 권장');
-  } else {
-    efficiency = '낮음';
-    recommendations.push('저전력 시스템: 배터리 백업 고려');
-  }
-  
-  // 전압별 효율성 분석
-  const voltageCount = requirements.length;
-  if (voltageCount > 3) {
-    recommendations.push('다중 전압: 전원 통합 고려 (DC-DC 컨버터)');
-  }
-  
-  return {
-    totalPower: Math.round(totalPower * 100) / 100,
-    efficiency,
-    recommendations
-  };
-}
-
-// 전원 공급 비용 추정
-export function estimatePowerCost(requirements: PowerRequirement[]): {
-  totalCost: number;
-  costBreakdown: Array<{ voltage: number; cost: number; reason: string }>;
-} {
-  const costBreakdown = requirements.map(req => {
-    let cost = 0;
-    let reason = '';
-    
-    if (req.voltage === 3.3) {
-      cost = req.minCurrentA <= 1.0 ? 3000 : 8000;
-      reason = req.minCurrentA <= 1.0 ? '레귤레이터' : 'DC-DC 컨버터';
-    } else if (req.voltage === 5) {
-      cost = req.minCurrentA <= 2.0 ? 5000 : req.minCurrentA <= 5.0 ? 15000 : 25000;
-      reason = '어댑터';
-    } else if (req.voltage === 12) {
-      cost = req.minCurrentA <= 3.0 ? 10000 : req.minCurrentA <= 8.0 ? 20000 : 35000;
-      reason = '어댑터';
-    } else if (req.voltage === 24) {
-      cost = req.minCurrentA <= 2.0 ? 15000 : req.minCurrentA <= 5.0 ? 25000 : 40000;
-      reason = '어댑터';
-    }
-    
-    return { voltage: req.voltage, cost, reason };
-  });
-  
-  const totalCost = costBreakdown.reduce((sum, item) => sum + item.cost, 0);
-  
-  return { totalCost, costBreakdown };
-=======
 // RS-485 종단/바이어스 저항 체크
 export function checkRS485Resistors(req: {
   protocol?: string;
@@ -224,5 +153,4 @@ export function checkRS485Resistors(req: {
   }
   
   return checks;
->>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
 }
