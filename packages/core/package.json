@@ -1,0 +1,20 @@
+{
+  "name": "@smart-on/core",
+  "version": "1.0.0",
+  "description": "Universal Bridge Core Types & Schemas",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,5 +1,9 @@
 // 핀 자동 할당 시스템
+<<<<<<< HEAD
 import { esp32Pinmap, sensors, controls } from '../../../lib/iot-templates/index';
+=======
+import { esp32Pinmap, sensors, controls } from '@/lib/iot-templates/index';
+>>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
 
 export type AssignedPin = { role: string; pin: number | string };
 export type Allocation = {
@@ -45,17 +49,22 @@ export function allocatePins(req: {
   device: string;
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
+  protocol?: string; // 통신 프로토콜 (UART/RS-485용)
 }): Allocation {
   console.log('🔧 allocatePins 호출됨:', req);
   const used = new Set<number|string>();
   const assigned: Record<string, AssignedPin[]> = {};
   const conflicts: string[] = [];
 
+<<<<<<< HEAD
   // 디바이스별 핀맵 가져오기
   const pinmap = devicePinmaps[req.device] || devicePinmaps['esp32'];
   console.log(`📌 사용할 핀맵: ${req.device}`, pinmap);
 
   const take = (prefer: readonly number[] | string[], label: string) => {
+=======
+  const take = (prefer: readonly (number | string)[], label: string) => {
+>>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
     const p = prefer.find(x => !used.has(x));
     if (p == null) { 
       conflicts.push(`가용 핀 부족: ${label}`); 
@@ -69,7 +78,40 @@ export function allocatePins(req: {
   // used.add(pinmap.i2c.sda);
   // used.add(pinmap.i2c.scl);
 
+<<<<<<< HEAD
   // 센서 핀 할당 (각 인스턴스마다 별도 키 사용)
+=======
+  // UART/RS-485 핀 예약 (프로토콜에 따라)
+  if (req.protocol === 'serial' || req.protocol === 'rs485' || req.protocol === 'modbus-tcp') {
+    // UART 핀 예약 (TX, RX) - 첫 번째 UART 사용
+    if (esp32Pinmap.uart && esp32Pinmap.uart.length > 0) {
+      const uart = esp32Pinmap.uart[0]; // 첫 번째 UART 사용
+      used.add(uart.tx);
+      used.add(uart.rx);
+      assigned['uart_comm'] = [
+        { role: 'TX', pin: uart.tx },
+        { role: 'RX', pin: uart.rx }
+      ];
+    }
+    
+    // RS-485의 경우 DE(Data Enable) 핀도 예약
+    if (req.protocol === 'rs485') {
+      // DE 핀은 디지털 핀 중 하나 사용
+      const dePin = take(esp32Pinmap.digital, 'RS-485 DE');
+      if (dePin) {
+        assigned['rs485_de'] = [{ role: 'DE', pin: dePin }];
+      }
+      
+      // RS-485 종단 저항 제어 핀 (선택적)
+      const termPin = take(esp32Pinmap.digital, 'RS-485 Term');
+      if (termPin) {
+        assigned['rs485_term'] = [{ role: 'TERM', pin: termPin }];
+      }
+    }
+  }
+
+  // 센서 핀 할당
+>>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
   req.sensors.forEach(({ type, count }) => {
     console.log(`📡 센서 할당: ${type} (${count}개)`);
     const sensor = sensors.find(s => s.type === type);
@@ -80,6 +122,7 @@ export function allocatePins(req: {
 
     // 각 인스턴스마다 별도의 키로 저장
     for (let i = 0; i < count; i++) {
+<<<<<<< HEAD
       const instanceKey = `sensor_${type}_${i}`;
       const pins: AssignedPin[] = [];
       
@@ -98,6 +141,15 @@ export function allocatePins(req: {
           pins.push({ role: 'DATA', pin });
           console.log(`  📌 OneWire 핀 할당: ${pin}`);
         }
+=======
+      if ('i2c' in sensor.alloc && sensor.alloc.i2c) {
+        // I2C 센서는 고정 핀 사용
+        pins.push({ role: 'I2C', pin: 'SDA/SCL' });
+      } else if ('prefer' in sensor.alloc && sensor.alloc.prefer === 'onewire') {
+        // OneWire는 같은 버스 공유 가능
+        const pin = take(esp32Pinmap.onewire, `${sensor.name} ${i+1}`);
+        if (pin) pins.push({ role: 'DATA', pin });
+>>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
       } else if ('prefer' in sensor.alloc && sensor.alloc.prefer === 'analog') {
         // 아날로그 센서
         const pin = take(pinmap.analog, `${sensor.name} ${i+1}`);

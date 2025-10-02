@@ -69,7 +69,8 @@ const translateAuthError = (errorMessage: string): string => {
     'Too many requests': '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.',
     'Network error': '네트워크 오류가 발생했습니다.',
     'Server error': '서버 오류가 발생했습니다.',
-    'Invalid refresh token': '인증 토큰이 만료되었습니다. 다시 로그인해주세요.'
+    'Invalid refresh token': '인증 토큰이 만료되었습니다. 다시 로그인해주세요.',
+    'Refresh Token Not Found': '인증 세션이 만료되었습니다. 다시 로그인해주세요.'
   };
 
   // 정확한 매칭 시도
@@ -206,7 +207,22 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
     
     const { data: { user: authUser }, error: authError } = await (supabase as any).auth.getUser();
     
-    if (authError || !authUser) {
+    // Refresh Token 관련 오류 처리
+    if (authError) {
+      console.warn('인증 오류:', authError.message);
+      
+      // Refresh Token 오류인 경우 세션 정리 후 null 반환
+      if (authError.message.includes('Refresh Token') || 
+          authError.message.includes('Invalid refresh token')) {
+        console.log('Refresh Token 오류 감지, 세션 정리 중...');
+        await supabase.auth.signOut();
+        return null;
+      }
+      
+      return null;
+    }
+    
+    if (!authUser) {
       return null;
     }
 

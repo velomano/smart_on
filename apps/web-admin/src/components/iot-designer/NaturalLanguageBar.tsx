@@ -2,7 +2,11 @@
 'use client';
 
 import { useState } from 'react';
+<<<<<<< HEAD
 import { keywordMapping } from '../../../lib/iot-templates/index';
+=======
+import { keywordMapping } from '@/lib/iot-templates/index';
+>>>>>>> dc17f9bdf342b9bb54af2c88a33587ba61dacf39
 
 interface NaturalLanguageBarProps {
   onParse: (result: { sensors: Array<{ type: string; count: number }>; controls: Array<{ type: string; count: number }> }) => void;
@@ -83,11 +87,11 @@ export default function NaturalLanguageBar({ onParse }: NaturalLanguageBarProps)
   
   return (
     <div className="bg-white border rounded-lg p-6">
-      <h3 className="text-lg font-bold mb-4">🤖 자연어 IoT 설계</h3>
+      <h3 className="text-lg font-bold mb-4 text-gray-900">🤖 자연어 IoT 설계</h3>
       
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">
+          <label className="block text-sm font-medium mb-2 text-gray-900">
             시스템 설명을 자연어로 입력하세요:
           </label>
           <textarea
@@ -107,7 +111,7 @@ export default function NaturalLanguageBar({ onParse }: NaturalLanguageBarProps)
               onChange={(e) => setIsLLMEnabled(e.target.checked)}
               className="mr-2"
             />
-            <span className="text-sm">AI 분석 사용 (LLM)</span>
+            <span className="text-sm text-gray-900">AI 분석 사용 (LLM)</span>
           </label>
         </div>
         
@@ -127,8 +131,8 @@ export default function NaturalLanguageBar({ onParse }: NaturalLanguageBarProps)
           </button>
         </div>
         
-        <div className="text-sm text-gray-600">
-          <p>💡 예시 입력:</p>
+        <div className="text-sm text-gray-900">
+          <p className="font-medium">💡 예시 입력:</p>
           <ul className="list-disc list-inside ml-4">
             <li>"온도 센서 2개, 습도 센서 1개, 스프링클러 4개, 팬 2개"</li>
             <li>"토양 수분 센서 3개와 LED 조명 5개로 식물 재배 시스템"</li>

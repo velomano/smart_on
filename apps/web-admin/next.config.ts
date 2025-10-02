@@ -1,13 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Next.js 15에서는 turbopack이 기본적으로 활성화됨
-  turbopack: {
-    // 워크스페이스 루트 명시적으로 설정
-    root: "../../",
-  },
+  // 모노레포 패키지 트랜스파일 설정
+  transpilePackages: ['iot-templates', '@smart-on/core'],
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
 };
 

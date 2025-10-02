@@ -1,0 +1,47 @@
+{
+  "device_id": "esp32-device-001",
+  "wifi": {
+    "ssid": "YOUR_WIFI_SSID",
+    "password": "YOUR_WIFI_PASSWORD"
+  },
+  "mqtt": {
+    "server": "broker.hivemq.com",
+    "port": 1883,
+    "username": "",
+    "password": "",
+    "telemetry_topic": "device/telemetry",
+    "command_topic": "device/command"
+  },
+  "sensors": {
+    "temperature": {
+      "pin": 34,
+      "type": "analog",
+      "scale": 0.1,
+      "offset": -40.0
+    },
+    "humidity": {
+      "pin": 35,
+      "type": "analog",
+      "scale": 0.1,
+      "offset": 0.0
+    },
+    "soil_moisture": {
+      "pin": 32,
+      "type": "analog",
+      "scale": 0.1,
+      "offset": 0.0
+    }
+  },
+  "controls": {
+    "relay_1": {
+      "pin": 2,
+      "type": "digital"
+    },
+    "relay_2": {
+      "pin": 4,
+      "type": "digital"
+    }
+  },
+  "telemetry_interval": 30000,
+  "debug": true
+}

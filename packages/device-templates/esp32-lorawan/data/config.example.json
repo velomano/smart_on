@@ -1,0 +1,41 @@
+{
+  "device_id": "lorawan-device-001",
+  "lorawan": {
+    "devEui": "YOUR_DEV_EUI",
+    "appEui": "YOUR_APP_EUI",
+    "appKey": "YOUR_APP_KEY",
+    "region": "AS923"
+  },
+  "sensors": {
+    "temperature": {
+      "pin": 34,
+      "type": "analog",
+      "scale": 0.1,
+      "offset": -40.0
+    },
+    "humidity": {
+      "pin": 35,
+      "type": "analog",
+      "scale": 0.1,
+      "offset": 0.0
+    },
+    "soil_moisture": {
+      "pin": 32,
+      "type": "analog",
+      "scale": 0.1,
+      "offset": 0.0
+    }
+  },
+  "controls": {
+    "relay_1": {
+      "pin": 2,
+      "type": "digital"
+    },
+    "relay_2": {
+      "pin": 4,
+      "type": "digital"
+    }
+  },
+  "uplink_interval": 300000,
+  "debug": true
+}

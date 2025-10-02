@@ -1,0 +1,59 @@
+{
+  "device_id": "rpi-gateway-001",
+  "poll_interval": 30,
+  "mqtt": {
+    "host": "broker.hivemq.com",
+    "port": 1883,
+    "username": "",
+    "password": "",
+    "telemetry_topic": "device/telemetry",
+    "command_topic": "device/command"
+  },
+  "http": {
+    "url": "http://localhost:3000/api/telemetry"
+  },
+  "modbus": {
+    "host": "192.168.1.100",
+    "port": 502
+  },
+  "serial": {
+    "port": "/dev/ttyUSB0",
+    "baudrate": 9600,
+    "timeout": 1
+  },
+  "sensors": {
+    "temperature": {
+      "type": "modbus",
+      "address": 30001,
+      "count": 1,
+      "unit_id": 1,
+      "scale": 0.1,
+      "offset": -40.0
+    },
+    "humidity": {
+      "type": "modbus",
+      "address": 30002,
+      "count": 1,
+      "unit_id": 1,
+      "scale": 0.1,
+      "offset": 0.0
+    },
+    "pressure": {
+      "type": "serial",
+      "scale": 1.0,
+      "offset": 0.0
+    }
+  },
+  "controls": {
+    "relay_1": {
+      "type": "modbus",
+      "address": 40001,
+      "unit_id": 1
+    },
+    "relay_2": {
+      "type": "modbus",
+      "address": 40002,
+      "unit_id": 1
+    }
+  }
+}

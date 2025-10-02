@@ -11,9 +11,11 @@ const TENANT_MAPPING: Record<string, string> = {
   'localhost': '00000000-0000-0000-0000-000000000001',
   'localhost:3000': '00000000-0000-0000-0000-000000000001',
   
-  // Vercel 기본 도메인
+  // Vercel 기본 도메인 (와일드카드 패턴)
   'web-admin-snowy': '00000000-0000-0000-0000-000000000001',
   'web-admin-smart-ons-projects': '00000000-0000-0000-0000-000000000001',
+  'web-admin-mg43ix9xe-smart-ons-projects': '00000000-0000-0000-0000-000000000001',
+  'web-admin-pzrj2m7a7-smart-ons-projects': '00000000-0000-0000-0000-000000000001',
   
   // Terahub 프로덕션 도메인
   'app': '00000000-0000-0000-0000-000000000001', // 메인 앱
@@ -69,7 +71,17 @@ export function middleware(request: NextRequest) {
   console.log('🔍 Middleware - subdomain:', subdomain);
   
   // 테넌트 ID 조회
-  const tenantId = TENANT_MAPPING[subdomain] || TENANT_MAPPING['localhost'];
+  let tenantId = TENANT_MAPPING[subdomain];
+  
+  // Vercel 도메인 패턴 매칭 (web-admin-*-smart-ons-projects)
+  if (!tenantId && subdomain.includes('web-admin-') && subdomain.includes('-smart-ons-projects')) {
+    tenantId = TENANT_MAPPING['web-admin-smart-ons-projects'];
+  }
+  
+  // 기본값으로 localhost 테넌트 사용
+  if (!tenantId) {
+    tenantId = TENANT_MAPPING['localhost'];
+  }
   
   if (!tenantId) {
     console.error('❌ Middleware - 알 수 없는 서브도메인:', subdomain);
