@@ -1,22 +1,13 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
+// 환경변수를 직접 하드코딩 (임시 해결책)
+const SUPABASE_URL = 'https://kkrcwdybrsppbsufrrdg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NDIxOTgsImV4cCI6MjA3NDExODE5OH0.oo-iIviVJ2oaWZldtmkYo1sWgHbxxIIkFUrBrU8rQqY';
+
 export function createClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  // 환경변수가 없거나 placeholder인 경우 기본값 사용
-  if (!supabaseUrl || !supabaseAnonKey || 
-      supabaseUrl === 'https://placeholder.supabase.co' ||
-      supabaseUrl.includes('placeholder') ||
-      supabaseAnonKey === 'placeholder-key') {
-    console.warn('Supabase environment variables are not properly set, using placeholder values');
-    return createSupabaseClient(
-      'https://placeholder.supabase.co',
-      'placeholder-key'
-    );
-  }
-
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
+  console.log('🔍 Supabase Client 생성 - 하드코딩된 값 사용');
+  
+  return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
 // 기본 클라이언트는 런타임에 동적으로 생성

@@ -7,10 +7,11 @@ import { calculatePowerRequirements, suggestPowerSupplies, checkRS485Resistors }
 import SchematicSVG from '@/components/iot-designer/SchematicSVG';
 import CodePreview from '@/components/iot-designer/CodePreview';
 import NaturalLanguageBar from '@/components/iot-designer/NaturalLanguageBar';
+import LoRaWanForm from '@/components/iot-designer/LoRaWanForm';
 
 interface SystemSpec {
   device: string;
-  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp';
+  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
   wifi: {
@@ -35,6 +36,24 @@ interface SystemSpec {
     controlOffValues: Record<string, number>;
     maxRunTimes: Record<string, number>;
     safeLimits: Record<string, { min: number; max: number }>;
+  };
+  lorawanConfig?: {
+    mode: 'mqtt' | 'webhook';
+    lns: 'the-things-stack' | 'chirpstack' | 'carrier';
+    region: string;
+    deviceMap?: Record<string, string>;
+    codec?: { type: 'js'; script?: string; scriptRef?: string };
+    mqtt?: {
+      host: string;
+      port: number;
+      username: string;
+      password: string;
+      uplinkTopic: string;
+      downlinkTopicTpl: string;
+      tls?: boolean;
+    };
+    webhook?: { secret: string; path: string };
+    api?: { baseUrl: string; token: string };
   };
 }
 
@@ -613,6 +632,32 @@ export default function IoTDesignerPage() {
             </div>
           </div>
         ) : null}
+
+        {/* 2.7. LoRaWAN 설정 */}
+        {spec.protocol === 'lorawan' && (
+          <div className="bg-white border rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4 text-gray-900">📡 LoRaWAN 설정</h3>
+            
+            <LoRaWanForm 
+              value={spec.lorawanConfig} 
+              onChange={(config) => setSpec(prev => ({ 
+                ...prev, 
+                lorawanConfig: config 
+              }))} 
+            />
+            
+            {spec.lorawanConfig && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center">
+                  <span className="text-blue-600 mr-2">📡</span>
+                  <span className="text-sm text-blue-800">
+                    LoRaWAN 설정 완료: <strong>{spec.lorawanConfig.lns}</strong> ({spec.lorawanConfig.mode})
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* 3. 센서/제어 선택 */}
         <div className="bg-white border rounded-lg p-6">
