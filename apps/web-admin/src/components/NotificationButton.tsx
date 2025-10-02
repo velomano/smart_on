@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { sendNotification } from '@/lib/notificationTemplates';
+import { dashboardAlertManager } from '@/lib/dashboardAlerts';
 
 interface NotificationButtonProps {
   className?: string;
@@ -114,6 +115,20 @@ export default function NotificationButton({ className = '' }: NotificationButto
         setSendResult('✅ 알림이 성공적으로 전송되었습니다!');
         setCustomMessage('');
         setSelectedTemplate('');
+      
+        // 텔레그램 전송 성공 시 대시보드 알림에도 추가
+        const alertTitle = template?.title || '📝 사용자 지정 알림';
+        const alertMessage = template?.message || customMessage;
+        
+        dashboardAlertManager.addAlert({
+          type: 'system',
+          level: 'medium',
+          title: alertTitle,
+          message: alertMessage,
+          location: '시스템',
+          sensorValue: 0,
+          threshold: 0
+        });
       
         // 성공 후 2초 뒤 모달 닫기
         setTimeout(() => {
