@@ -42,6 +42,11 @@ jobs:
         cd apps/worker
         npm install
 
+    - name: TypeScript 컴파일
+      run: |
+        cd apps/worker
+        npm run build
+
     - name: 영양액 레시피 수집 및 crop_profiles 저장
       run: |
         set -euo pipefail
@@ -61,7 +66,7 @@ jobs:
         
         # 실제 수집 및 crop_profiles 직접 저장
         node -e "
-        const { collectAllRecipes } = require('./src/sources/all.ts');
+        const { collectAllRecipes } = require('./dist/sources/all.js');
         
         async function main() {
           try {

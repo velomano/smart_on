@@ -114,14 +114,20 @@ export default function NutrientPlanPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        console.log('🔐 인증 확인 시작');
         const currentUser = await getCurrentUser();
         if (!currentUser) {
+          console.log('❌ 사용자 인증 실패, 로그인 페이지로 이동');
           window.location.href = '/login';
           return;
         }
+        console.log('✅ 사용자 인증 성공:', currentUser.email);
         setUser(currentUser);
       } catch (err) {
-        console.error('인증 확인 실패:', err);
+        console.error('❌ 인증 확인 실패:', err);
+        if (err instanceof Error) {
+          console.error('❌ 인증 에러 메시지:', err.message);
+        }
         window.location.href = '/login';
       } finally {
         setAuthLoading(false);
@@ -207,6 +213,10 @@ export default function NutrientPlanPage() {
       const r = await fetch(url);
       console.log('📡 응답 상태:', r.status, r.statusText);
       
+      if (!r.ok) {
+        throw new Error(`API 호출 실패: ${r.status} ${r.statusText}`);
+      }
+      
       const j = await r.json();
       console.log('📋 응답 데이터:', j);
       
@@ -239,8 +249,14 @@ export default function NutrientPlanPage() {
         setRecipes([]);
       }
     } catch (error) {
-      console.error('❌ 레시피 로드 네트워크 에러:', error);
+      console.error('❌ 레시피 로드 에러:', error);
+      if (error instanceof Error) {
+        console.error('❌ 에러 메시지:', error.message);
+        console.error('❌ 에러 스택:', error.stack);
+      }
       setRecipes([]);
+      // 사용자에게 에러 메시지 표시
+      alert('레시피를 불러오는 중 오류가 발생했습니다. 페이지를 새로고침해 주세요.');
     } finally {
       setLoadingRecipes(false);
     }
