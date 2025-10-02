@@ -1,16 +1,20 @@
 name: Deploy to Vercel
 
+# 자동 배포 일시 중지 - 수동 배포로 전환
+# on:
+#   push:
+#     branches: [ main ]
+#     paths:
+#       - 'apps/web-admin/**'
+#       - 'apps/universal-bridge/**'
+#   pull_request:
+#     branches: [ main ]
+#     paths:
+#       - 'apps/web-admin/**'
+#       - 'apps/universal-bridge/**'
+
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'apps/web-admin/**'
-      - 'apps/universal-bridge/**'
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'apps/web-admin/**'
-      - 'apps/universal-bridge/**'
+  workflow_dispatch:  # 수동 실행만 가능
 
 jobs:
   deploy-web-admin:
