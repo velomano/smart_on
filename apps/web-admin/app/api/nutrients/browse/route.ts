@@ -92,10 +92,15 @@ export async function GET(req: NextRequest) {
       query = query.or(`crop_name.ilike.%${search}%,stage.ilike.%${search}%`);
     }
 
+    // 페이지네이션 적용 (데이터베이스 레벨)
+    const offset = (page - 1) * limit;
+    console.log(`📊 페이지네이션: 페이지 ${page}, 제한 ${limit}, 오프셋 ${offset}`);
+    
     console.log('🔍 쿼리 실행 중...');
     const { data: profiles, error } = await query
       .order('crop_name', { ascending: true })
-      .order('stage', { ascending: true });
+      .order('stage', { ascending: true })
+      .range(offset, offset + limit - 1);  // 데이터베이스 레벨 페이지네이션
 
     if (error) {
       console.error('❌ 작물 프로필 조회 에러:', error);
@@ -128,15 +133,10 @@ export async function GET(req: NextRequest) {
     const { count } = await countQuery;
     const totalCount = count || 0;
 
-    // 페이지네이션 적용
-    const offset = (page - 1) * limit;
-    const paginatedProfiles = profiles?.slice(offset, offset + limit) || [];
-
-    console.log(`📊 페이지네이션: 페이지 ${page}, 제한 ${limit}, 오프셋 ${offset}`);
-    console.log(`📊 전체: ${totalCount}개, 현재 페이지: ${paginatedProfiles.length}개`);
+    console.log(`📊 전체: ${totalCount}개, 현재 페이지: ${profiles?.length || 0}개`);
 
     // 프론트엔드에서 사용할 수 있도록 데이터 변환
-    const recipes = paginatedProfiles.map(profile => {
+    const recipes = profiles?.map(profile => {
       // target_ppm JSON에서 영양소 정보 추출
       const ppm = profile.target_ppm || {};
       const npk_ratio = `${ppm.N || 0}:${ppm.P || 0}:${ppm.K || 0}`;

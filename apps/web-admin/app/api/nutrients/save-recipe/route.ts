@@ -3,10 +3,18 @@ import { createSbServer } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   console.log('=== 레시피 저장 API 시작 ===');
+  console.log('📡 요청 URL:', req.url);
+  console.log('📡 요청 메서드:', req.method);
   
   try {
     const body = await req.json();
-    console.log('받은 데이터:', JSON.stringify(body, null, 2));
+    console.log('📋 받은 데이터:', JSON.stringify(body, null, 2));
+    console.log('📋 필수 필드 확인:', {
+      cropKey: !!body.cropKey,
+      stage: !!body.stage,
+      targetVolumeL: !!body.targetVolumeL,
+      recipeName: !!body.recipeName
+    });
 
     const sb = createSbServer();
     if (!sb) {
