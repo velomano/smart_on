@@ -30,3 +30,8 @@ export const supabase = {
     return supabaseInstance;
   }
 };
+
+// getSupabaseClient 함수 추가 (로그인 페이지에서 사용)
+export function getSupabaseClient() {
+  return createClient();
+}
