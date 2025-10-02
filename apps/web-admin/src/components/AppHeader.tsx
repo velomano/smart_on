@@ -619,28 +619,28 @@ export default function AppHeader({
                     <span className="text-2xl mr-2">📢</span>
                     공지사항
                   </h2>
-                  <button
-                    onClick={() => setIsNoticeOpen(false)}
-                    className="text-white hover:text-gray-200 transition-colors"
-                  >
-                    <span className="text-2xl">×</span>
-                  </button>
+                  <div className="flex items-center space-x-3">
+                    {/* 모두 읽음 버튼을 타이틀 오른쪽으로 이동 */}
+                    {hasNewNotice && (
+                      <button
+                        onClick={markAllNoticesAsRead}
+                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm font-medium flex items-center"
+                      >
+                        <span className="mr-1">✓</span>
+                        모두 읽음
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsNoticeOpen(false)}
+                      className="text-white hover:text-gray-200 transition-colors"
+                    >
+                      <span className="text-2xl">×</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               
               <div className="p-4 sm:p-6 overflow-y-auto max-h-[60vh]">
-                {/* 시스템 관리자용 공지사항 작성 버튼 */}
-                {safeUser.role === 'system_admin' && (
-                  <div className="mb-6">
-                    <button
-                      onClick={() => setIsWritingNotice(!isWritingNotice)}
-                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center"
-                    >
-                      <span className="text-lg mr-2">✏️</span>
-                      {isWritingNotice ? '작성 취소' : '새 공지사항 작성'}
-                    </button>
-                  </div>
-                )}
 
                 {/* 공지사항 작성 폼 */}
                 {isWritingNotice && safeUser.role === 'system_admin' && (
@@ -858,14 +858,14 @@ export default function AppHeader({
                     💡 더 자세한 정보는 관리자에게 문의하세요
                   </p>
                   <div className="flex items-center space-x-3">
-                    {/* 모두 읽음 버튼 */}
-                    {hasNewNotice && (
+                    {/* 시스템 관리자용 새공지사항 작성 버튼을 아래로 이동 */}
+                    {safeUser.role === 'system_admin' && (
                       <button
-                        onClick={markAllNoticesAsRead}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
+                        onClick={() => setIsWritingNotice(!isWritingNotice)}
+                        className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 text-sm font-medium flex items-center"
                       >
-                        <span className="mr-1">✓</span>
-                        모두 읽음
+                        <span className="mr-1">✏️</span>
+                        {isWritingNotice ? '작성 취소' : '새 공지사항 작성'}
                       </button>
                     )}
                     <button
