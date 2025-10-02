@@ -1,7 +1,7 @@
 // IoT Designer 메인 페이지
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { allocatePins } from '@/components/iot-designer/PinAllocator';
 import { calculatePowerRequirements, suggestPowerSupplies } from '@/components/iot-designer/PowerEstimator';
@@ -68,7 +68,8 @@ const steps = [
   { id: 'monitor', title: '모니터링', description: '실시간 모니터링' }
 ];
 
-export default function IoTDesignerPage() {
+// IoT Designer 메인 컴포넌트 (useSearchParams 사용)
+function IoTDesignerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const farmId = searchParams.get('farmId');
@@ -1577,5 +1578,21 @@ export default function IoTDesignerPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Suspense로 감싼 메인 컴포넌트
+export default function IoTDesignerPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <IoTDesignerContent />
+    </Suspense>
   );
 }
