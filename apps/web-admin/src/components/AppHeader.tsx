@@ -482,7 +482,7 @@ export default function AppHeader({
                 </button>
               )}
 
-              {/* 사용자 관리 */}
+              {/* 멤버 관리 */}
               {canAccessUserManagement && (
                 <button
                   onClick={() => {
@@ -491,7 +491,7 @@ export default function AppHeader({
                   }}
                   className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50"
                 >
-                  사용자 관리
+                  멤버 관리
                 </button>
               )}
 
