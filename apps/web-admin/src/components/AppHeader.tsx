@@ -4,6 +4,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUser } from '../lib/auth';
 
+interface DropdownItem {
+  label: string;
+  path: string;
+  icon: string;
+}
+
+interface MenuItem {
+  label: string;
+  path: string;
+  color: string;
+  dropdown?: DropdownItem[];
+}
+
 interface AppHeaderProps {
   user?: AuthUser;
   title?: string;
@@ -29,6 +42,7 @@ export default function AppHeader({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [hasNewNotice, setHasNewNotice] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isWritingNotice, setIsWritingNotice] = useState(false);
   const [newNoticeTitle, setNewNoticeTitle] = useState('');
   const [newNoticeContent, setNewNoticeContent] = useState('');
@@ -61,6 +75,7 @@ export default function AppHeader({
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsMenuOpen(false);
+        setOpenDropdown(null);
       }
     };
 
@@ -334,11 +349,28 @@ export default function AppHeader({
   };
 
   // 햄버거 메뉴용 메뉴 아이템들 (사용설명서를 가장 상단에 배치)
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
-      label: '🚀 IoT Designer',
+      label: '🌉 Universal Bridge',
       path: '/iot-designer',
-      color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700'
+      color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700',
+      dropdown: [
+        {
+          label: '🎨 IoT Designer',
+          path: '/iot-designer',
+          icon: '🎨'
+        },
+        {
+          label: '🔗 Device Connect',
+          path: '/connect',
+          icon: '🔗'
+        },
+        {
+          label: '📱 Mobile Provision',
+          path: '/provision',
+          icon: '📱'
+        }
+      ]
     },
     {
       label: '사용설명서',
@@ -468,12 +500,12 @@ export default function AppHeader({
               </div>
 
 
-              {/* 주요 메뉴 버튼들 - IoT Designer를 가장 상단에 배치 */}
+              {/* 주요 메뉴 버튼들 - Universal Bridge를 가장 상단에 배치 */}
               <button
                 onClick={() => router.push('/iot-designer')}
                 className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
               >
-                🚀 IoT Designer
+                🌉 Universal Bridge
               </button>
               {canManageUsers && (
                 <button
@@ -559,16 +591,49 @@ export default function AppHeader({
               {/* 메뉴 아이템들 */}
               <div className="space-y-1 mb-4">
                 {menuItems.map((item, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      router.push(item.path);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-3 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
-                  >
-                    {item.label}
-                  </button>
+                  <div key={index} className="relative">
+                    {item.dropdown ? (
+                      <>
+                        <button
+                          onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
+                          className={`w-full text-left px-4 py-3 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 flex items-center justify-between`}
+                        >
+                          {item.label}
+                          <span className={`transform transition-transform duration-200 ${openDropdown === item.label ? 'rotate-180' : ''}`}>
+                            ▼
+                          </span>
+                        </button>
+                        {openDropdown === item.label && (
+                          <div className="mt-1 ml-4 space-y-1">
+                            {item.dropdown.map((dropdownItem, dropdownIndex) => (
+                              <button
+                                key={dropdownIndex}
+                                onClick={() => {
+                                  router.push(dropdownItem.path);
+                                  setIsMenuOpen(false);
+                                  setOpenDropdown(null);
+                                }}
+                                className="w-full text-left px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm transition-all duration-200 flex items-center space-x-2"
+                              >
+                                <span>{dropdownItem.icon}</span>
+                                <span>{dropdownItem.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          router.push(item.path);
+                          setIsMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
+                      >
+                        {item.label}
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
 

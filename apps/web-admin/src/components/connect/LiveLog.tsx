@@ -45,7 +45,7 @@ export function LiveLog({ setupToken, deviceId }: LiveLogProps) {
 
   const connectWebSocket = () => {
     try {
-      const bridgeUrl = 'http://localhost:3001';  // 하드코딩으로 임시 수정
+      const bridgeUrl = 'http://localhost:8080';  // Universal Bridge 서버 주소
       const wsUrl = bridgeUrl.replace('http', 'ws') + `/monitor/${setupToken}`;
       const ws = new WebSocket(wsUrl);
       
