@@ -13,7 +13,7 @@ import LoRaWanForm from '@/components/iot-designer/LoRaWanForm';
 
 interface SystemSpec {
   device: string;
-  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan';
+  protocol: 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
   wifi: {
@@ -734,18 +734,15 @@ export default function IoTDesignerPage() {
               <label className="block text-sm font-medium mb-2 text-gray-900">통신 프로토콜</label>
               <select
                 value={spec.protocol}
-                    onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' }))}
+                    onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' }))}
                 className="w-full p-2 border rounded-lg text-gray-900"
               >
-                <option value="http">HTTP</option>
-                <option value="mqtt">MQTT</option>
-                <option value="websocket">WebSocket</option>
-                <option value="webhook">Webhook</option>
+                <option value="mqtt">MQTT (권장)</option>
                 <option value="serial">Serial (USB)</option>
                 <option value="ble">Bluetooth LE</option>
                 <option value="rs485">RS-485 (Modbus RTU)</option>
                 <option value="modbus-tcp">Modbus TCP</option>
-                    <option value="lorawan">LoRaWAN</option>
+                <option value="lorawan">LoRaWAN</option>
               </select>
             </div>
           </div>

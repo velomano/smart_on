@@ -178,9 +178,8 @@ ${safetyWarnings.split('\n * ').map(warning => `- ${warning}`).join('\n')}
 2. ${spec.device.toUpperCase()} 보드를 선택합니다
 3. 필요한 라이브러리를 설치합니다:
    - WiFi (ESP32/ESP8266용)
-   - HTTPClient (ESP32용)
+   - PubSubClient (MQTT용)
    - ArduinoJson
-   ${spec.protocol === 'mqtt' ? '- PubSubClient (MQTT용)' : ''}
 
 ### 2. 설정 파일 수정
 1. \`config.json\` 파일에서 WiFi 설정을 수정합니다:
@@ -570,9 +569,6 @@ function getFilename(device: string, protocol: string): string {
   
   const protocolMap: Record<string, string> = {
     'mqtt': 'mqtt',
-    'http': 'http',
-    'websocket': 'ws',
-    'webhook': 'webhook',
     'serial': 'serial',
     'ble': 'ble',
     'rs485': 'rs485',
@@ -958,61 +954,7 @@ function generateSafetyWarnings(spec: SystemSpec): string {
   return warnings.length > 0 ? warnings.join('\n * ') : '';
 }
 
-async function generateUniversalBridgeCode(spec: SystemSpec): Promise<string> {
-  const { device, protocol, sensors, controls } = spec;
-  const sensorTypes = sensors.map(s => s.type).join(', ');
-  const actuatorTypes = controls.map(c => c.type).join(', ');
-
-  // 안전문구 생성
-  const safetyWarnings = generateSafetyWarnings(spec);
-  
-  // 토픽 규칙 적용
-  const topicBase = `terahub/demo/${device}-${Math.random().toString(36).substr(2, 8)}`;
-
-  return `/**
- * Universal Bridge 호환 IoT 시스템 코드
- * 디바이스: ${device.toUpperCase()}
- * 프로토콜: ${protocol.toUpperCase()}
- * 센서: ${sensorTypes}
- * 액추에이터: ${actuatorTypes}
- * 생성 시간: ${new Date().toISOString()}
- * 
- * ${safetyWarnings}
- */
-
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-
-// WiFi 설정 (보안을 위해 직접 입력하세요)
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-
-// Universal Bridge 설정
-const char* serverUrl = "http://localhost:3001";
-String deviceId = "";
-String deviceKey = "";
-
-void setup() {
-  Serial.begin(115200);
-  
-  // WiFi 연결
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("WiFi 연결 중...");
-  }
-  Serial.println("WiFi 연결 완료!");
-  
-  Serial.println("시스템 초기화 완료!");
-}
-
-void loop() {
-  // 메인 루프
-  delay(5000);
-}
-`;
-}
+// HTTP 코드 생성 함수 제거됨 (MQTT 전용 아키텍처)
 
 function generateESP32Code(spec: SystemSpec): string {
   return generateUniversalBridgeArduinoCode(spec);
@@ -1058,65 +1000,8 @@ if __name__ == "__main__":
 }
 
 function generateUniversalBridgeArduinoCode(spec: SystemSpec): string {
-  const { device, protocol, sensors, controls, pinAssignments } = spec;
-  const sensorTypes = sensors.map(s => s.type).join(', ');
-  const actuatorTypes = controls.map(c => c.type).join(', ');
-  
-  // 핀 할당 정보를 코드에 반영
-  const generatePinDefinitions = () => {
-    if (!pinAssignments) return '';
-    
-    let pinDefs = '\n// 핀 정의 (사용자 할당)\n';
-    Object.entries(pinAssignments).forEach(([component, pin]) => {
-      const parts = component.split('_');
-      const type = parts[parts.length - 1];
-      const instance = parts[parts.length - 2];
-      pinDefs += `#define ${type.toUpperCase()}_${instance}_PIN ${pin}\n`;
-    });
-    return pinDefs;
-  };
-
-  return `/**
- * Universal Bridge 호환 IoT 시스템 코드
- * 디바이스: ${device.toUpperCase()}
- * 프로토콜: ${protocol.toUpperCase()}
- * 센서: ${sensorTypes}
- * 액추에이터: ${actuatorTypes}
- * 생성 시간: ${new Date().toISOString()}
- */
-
-#include <WiFi.h>
-#include <HTTPClient.h>
-#include <ArduinoJson.h>
-
-// WiFi 설정 (보안을 위해 직접 입력하세요)
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
-
-// Universal Bridge 설정
-const char* serverUrl = "http://localhost:3001";
-String deviceId = "";
-String deviceKey = "";
-
-void setup() {
-  Serial.begin(115200);
-  
-  // WiFi 연결
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("WiFi 연결 중...");
-  }
-  Serial.println("WiFi 연결 완료!");
-  
-  Serial.println("시스템 초기화 완료!");
-}
-
-void loop() {
-  // 메인 루프
-  delay(5000);
-}
-`;
+  // MQTT 전용 아키텍처로 generateSimpleCode 사용
+  return generateSimpleCode(spec);
 }
 
 // 설정 파일 생성 함수들
@@ -1207,7 +1092,7 @@ function generateReadmeFile(spec: SystemSpec): string {
 2. ${device.toUpperCase()} 보드를 선택합니다
 3. 필요한 라이브러리를 설치합니다:
    - WiFi (ESP32/ESP8266용)
-   - HTTPClient (ESP32용)
+   - PubSubClient (MQTT용)
    - ArduinoJson
 
 ### 2. 설정 파일 수정
@@ -1253,10 +1138,6 @@ ${protocol === 'mqtt' ? `
 - **토픽 규칙**: terahub/{tenant}/{deviceId}/{kind}/{name}
 - **센서 토픽**: terahub/demo/esp32-xxx/sensors/bme280/temperature
 - **액추에이터 토픽**: terahub/demo/esp32-xxx/actuators/relay1/set
-` : `
-- **서버 주소**: http://localhost:3001
-- **API 엔드포인트**: /api/telemetry, /api/commands
-`}
 
 ## 🐛 문제 해결
 
