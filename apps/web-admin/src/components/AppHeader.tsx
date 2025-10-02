@@ -385,18 +385,6 @@ export default function AppHeader({
             </div>
             
             <div className="flex items-center space-x-6">
-              {/* 공지사항 버튼 - 가장 상단, PC와 모바일 모두 표시 */}
-              <button
-                onClick={() => setIsNoticeOpen(true)}
-                className="relative flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
-                title="공지사항"
-              >
-                <span className="text-lg">📢</span>
-                {hasNewNotice && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                )}
-              </button>
-
               {/* 데스크톱 사용자 정보 */}
               <div className="hidden md:flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-2">
@@ -420,6 +408,18 @@ export default function AppHeader({
                   }`}>
                     {safeUser.is_active ? '활성' : '비활성'}
                   </span>
+                  
+                  {/* 공지사항 아이콘 */}
+                  <button
+                    onClick={() => setIsNoticeOpen(true)}
+                    className="relative flex items-center justify-center w-8 h-8 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
+                    title="공지사항"
+                  >
+                    <span className="text-lg">📢</span>
+                    {hasNewNotice && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    )}
+                  </button>
                 </div>
               </div>
 
