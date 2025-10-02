@@ -45,60 +45,12 @@ export async function GET(req: NextRequest) {
     if (!sb) {
       console.error('❌ Supabase 연결 실패 - 환경 변수 확인 필요');
       console.error('❌ NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '미설정');
-      console.error('❌ SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '설정됨' : '미설정');
-      console.error('❌ SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? '설정됨' : '미설정');
+      console.error('❌ NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '설정됨' : '미설정');
       
-      // Mock 데이터 반환 (개발/테스트용)
-      const mockRecipes = [
-        {
-          id: 'mock-1',
-          crop: '상추',
-          stage: '생장기',
-          volume_l: 100,
-          ec_target: 1.2,
-          ph_target: 6.0,
-          npk_ratio: '100:30:150',
-          created_at: new Date().toISOString(),
-          source_title: '스마트팜 시스템',
-          source_year: new Date().getFullYear(),
-          source_url: null,
-          license: 'CC BY 4.0',
-          description: '상추 생장기에 최적화된 배양액 레시피입니다.',
-          growing_conditions: {
-            temperature: '15-20°C',
-            humidity: '70-80%',
-            light_hours: '12-14시간',
-            co2_level: '400-600ppm'
-          },
-          nutrients_detail: {
-            nitrogen: 100,
-            phosphorus: 30,
-            potassium: 150,
-            calcium: 80,
-            magnesium: 25,
-            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
-          },
-          usage_notes: ['주 1회 EC 측정 권장', 'pH는 6.0-6.5 범위 유지'],
-          warnings: ['높은 EC는 잎 가장자리 타짐 유발'],
-          author: '스마트팜 시스템',
-          last_updated: new Date().toISOString()
-        }
-      ];
-      
-      return NextResponse.json({
-        ok: true,
-        recipes: mockRecipes,
-        pagination: {
-          page: page,
-          limit: limit,
-          total: 1,
-          totalPages: 1,
-          hasNext: false,
-          hasPrev: false
-        },
-        mock: true,
-        warning: 'Supabase 연결 실패로 Mock 데이터를 반환합니다.'
-      });
+      return NextResponse.json({ 
+        ok: false, 
+        error: '데이터베이스 연결이 필요합니다. 환경 변수를 확인해주세요.' 
+      }, { status: 500 });
     }
     
     console.log('✅ Supabase 연결 성공');
@@ -288,21 +240,10 @@ export async function GET(req: NextRequest) {
       }
     ];
     
-    return NextResponse.json({
-      ok: true,
-      recipes: mockRecipes,
-      pagination: {
-        page: parseInt(searchParams.get('page') || '1'),
-        limit: parseInt(searchParams.get('limit') || '21'),
-        total: 1,
-        totalPages: 1,
-        hasNext: false,
-        hasPrev: false
-      },
-      mock: true,
-      error: error instanceof Error ? error.message : '알 수 없는 오류',
-      warning: '서버 오류로 인해 대체 데이터를 반환합니다.'
-    });
+    return NextResponse.json({ 
+      ok: false, 
+      error: '서버 오류가 발생했습니다.' 
+    }, { status: 500 });
   }
 }
 
