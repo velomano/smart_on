@@ -274,40 +274,40 @@ function generateComponents(spec: any, allocation: any) {
         'PWM': '#ff0066'
       };
       
-      // 동적으로 박스 높이 계산
-      const baseHeight = 120;
-      const pinHeight = Math.max(0, assignedPins.length - 1) * 15;
+      // 동적으로 박스 높이 계산 (더 크게)
+      const baseHeight = 150;
+      const pinHeight = Math.max(0, assignedPins.length - 1) * 20;
       const boxHeight = baseHeight + pinHeight;
       
       components.push(
         <g key={`sensor_${sensor.type}_${instance}`}>
           {/* 컴포넌트 박스 - 더 크고 깔끔하게 */}
-          <rect x={300} y={yOffset} width={200} height={boxHeight} rx={8} fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
+          <rect x={300} y={yOffset} width={220} height={boxHeight} rx={8} fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
           
           {/* 컴포넌트 이름 */}
           <text x={315} y={yOffset + 25} fontSize="14" fontWeight="bold" fill="#1976d2">{sensorName}</text>
           <text x={315} y={yOffset + 42} fontSize="11" fill="#666">#{instance + 1}</text>
           
           {/* 연결 정보 섹션 */}
-          <text x={315} y={yOffset + 60} fontSize="11" fill="#666" fontWeight="bold">연결 정보:</text>
+          <text x={320} y={yOffset + 70} fontSize="12" fill="#666" fontWeight="bold">연결 정보:</text>
           {assignedPins.map((p: any, pinIdx: number) => {
             const color = colorMap[p.role] || '#666';
             return (
-              <text key={pinIdx} x={320} y={yOffset + 80 + pinIdx * 18} fontSize="11" fill={color} fontWeight="bold">
+              <text key={pinIdx} x={325} y={yOffset + 95 + pinIdx * 20} fontSize="12" fill={color} fontWeight="bold">
                 {p.role}: {p.pin}
               </text>
             );
           })}
           
           {/* 전원 정보 */}
-          <text x={315} y={yOffset + 80 + assignedPins.length * 18 + 15} fontSize="10" fill="#666">
+          <text x={320} y={yOffset + 95 + assignedPins.length * 20 + 20} fontSize="11" fill="#666">
             전원: 3.3V/5V
           </text>
           
           {/* 연결 상태 표시 (하단) */}
-          <text x={315} y={yOffset + boxHeight - 20} fontSize="10" fill="#ff4444" fontWeight="bold">VCC</text>
-          <text x={355} y={yOffset + boxHeight - 20} fontSize="10" fill="#444444" fontWeight="bold">GND</text>
-          <text x={395} y={yOffset + boxHeight - 20} fontSize="10" fill="#00aa00" fontWeight="bold">Data</text>
+          <text x={320} y={yOffset + boxHeight - 25} fontSize="11" fill="#ff4444" fontWeight="bold">VCC</text>
+          <text x={370} y={yOffset + boxHeight - 25} fontSize="11" fill="#444444" fontWeight="bold">GND</text>
+          <text x={420} y={yOffset + boxHeight - 25} fontSize="11" fill="#00aa00" fontWeight="bold">Data</text>
         </g>
       );
       yOffset += boxHeight + 25; // 동적으로 계산된 높이만큼 증가
@@ -348,40 +348,40 @@ function generateComponents(spec: any, allocation: any) {
         'Control': '#ff6600'
       };
       
-      // 동적으로 박스 높이 계산
-      const baseHeight = 120;
-      const pinHeight = Math.max(0, assignedPins.length - 1) * 15;
+      // 동적으로 박스 높이 계산 (더 크게)
+      const baseHeight = 150;
+      const pinHeight = Math.max(0, assignedPins.length - 1) * 20;
       const boxHeight = baseHeight + pinHeight;
       
       components.push(
         <g key={`control_${control.type}_${instance}`}>
           {/* 컴포넌트 박스 - 더 크고 깔끔하게 */}
-          <rect x={300} y={yOffset} width={200} height={boxHeight} rx={8} fill="#fff3e0" stroke="#f57c00" strokeWidth="2"/>
+          <rect x={300} y={yOffset} width={220} height={boxHeight} rx={8} fill="#fff3e0" stroke="#f57c00" strokeWidth="2"/>
           
           {/* 컴포넌트 이름 */}
           <text x={315} y={yOffset + 25} fontSize="14" fontWeight="bold" fill="#f57c00">{controlName}</text>
           <text x={315} y={yOffset + 42} fontSize="11" fill="#666">#{instance + 1}</text>
           
           {/* 연결 정보 섹션 */}
-          <text x={315} y={yOffset + 60} fontSize="11" fill="#666" fontWeight="bold">연결 정보:</text>
+          <text x={320} y={yOffset + 70} fontSize="12" fill="#666" fontWeight="bold">연결 정보:</text>
           {assignedPins.map((p: any, pinIdx: number) => {
             const color = colorMap[p.role] || '#666';
             return (
-              <text key={pinIdx} x={320} y={yOffset + 80 + pinIdx * 18} fontSize="11" fill={color} fontWeight="bold">
+              <text key={pinIdx} x={325} y={yOffset + 95 + pinIdx * 20} fontSize="12" fill={color} fontWeight="bold">
                 {p.role}: {p.pin}
               </text>
             );
           })}
           
           {/* 전원 정보 */}
-          <text x={315} y={yOffset + 80 + assignedPins.length * 18 + 15} fontSize="10" fill="#666">
+          <text x={320} y={yOffset + 95 + assignedPins.length * 20 + 20} fontSize="11" fill="#666">
             전원: 5V/12V
           </text>
           
           {/* 연결 상태 표시 (하단) */}
-          <text x={315} y={yOffset + boxHeight - 20} fontSize="10" fill="#ff4444" fontWeight="bold">VCC</text>
-          <text x={355} y={yOffset + boxHeight - 20} fontSize="10" fill="#444444" fontWeight="bold">GND</text>
-          <text x={395} y={yOffset + boxHeight - 20} fontSize="10" fill="#ff6600" fontWeight="bold">Control</text>
+          <text x={320} y={yOffset + boxHeight - 25} fontSize="11" fill="#ff4444" fontWeight="bold">VCC</text>
+          <text x={370} y={yOffset + boxHeight - 25} fontSize="11" fill="#444444" fontWeight="bold">GND</text>
+          <text x={420} y={yOffset + boxHeight - 25} fontSize="11" fill="#ff6600" fontWeight="bold">Control</text>
         </g>
       );
       yOffset += boxHeight + 25; // 동적으로 계산된 높이만큼 증가
@@ -452,16 +452,17 @@ function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[])
     'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
   };
   
-  // 연결 타입별로 그룹화
+  // 센서/컴포넌트별로 그룹화
   const groupedConnections = pinConnections.reduce((groups: Record<string, any[]>, conn) => {
-    const type = conn.connectionType || '기타';
-    if (!groups[type]) groups[type] = [];
-    groups[type].push(conn);
+    // 컴포넌트 이름에서 센서/제어 장치 이름 추출
+    const componentName = conn.component.split(' #')[0]; // "수위 센서 #1 (VCC)" -> "수위 센서"
+    if (!groups[componentName]) groups[componentName] = [];
+    groups[componentName].push(conn);
     return groups;
   }, {});
 
-  // 그룹별로 표시할 연결 정보 계산
-  const groupOrder = ['VCC', 'GND', 'Data', 'Control', 'I2C', 'PWM', 'Analog', 'Digital', '기타'];
+  // 센서/컴포넌트별로 표시할 연결 정보 계산
+  const componentOrder = Object.keys(groupedConnections);
   let displayCount = 0;
   const maxDisplay = 15;
   
@@ -470,35 +471,34 @@ function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[])
       <rect x={520} y={yOffset} width={220} height={connectionBoxHeight} rx={6} fill="#f8f9fa" stroke="#6c757d" strokeWidth="2"/>
       <text x={530} y={yOffset + 25} fontSize="15" fontWeight="bold">📋 핀 연결 정보</text>
       
-      {groupOrder.map((groupType, groupIdx) => {
-        if (!groupedConnections[groupType] || displayCount >= maxDisplay) return null;
+      {componentOrder.map((componentName, componentIdx) => {
+        if (!groupedConnections[componentName] || displayCount >= maxDisplay) return null;
         
-        const groupConnections = groupedConnections[groupType];
-        const groupColor = connectionColors[groupType] || '#666';
+        const componentConnections = groupedConnections[componentName];
         
         return (
-          <g key={groupType}>
-            {/* 그룹 헤더 */}
-            <text x={530} y={yOffset + 50 + displayCount * 18} fontSize="12" fontWeight="bold" fill={groupColor}>
-              {groupType} ({groupConnections.length}개)
+          <g key={componentName}>
+            {/* 컴포넌트 헤더 */}
+            <text x={530} y={yOffset + 50 + displayCount * 18} fontSize="12" fontWeight="bold" fill="#333">
+              {componentName} ({componentConnections.length}개 연결)
             </text>
             displayCount++;
             
-            {/* 그룹 내 연결 정보 */}
-            {groupConnections.slice(0, Math.min(3, maxDisplay - displayCount)).map((conn, connIdx) => {
+            {/* 컴포넌트 내 연결 정보 */}
+            {componentConnections.slice(0, Math.min(5, maxDisplay - displayCount)).map((conn, connIdx) => {
               if (displayCount >= maxDisplay) return null;
               const color = connectionColors[conn.connectionType] || '#666';
               const result = (
-                <text key={`${groupType}-${connIdx}`} x={540} y={yOffset + 50 + displayCount * 18} fontSize="10" fill={color}>
-                  {conn.pin} → {conn.component.length > 18 ? conn.component.substring(0, 18) + '...' : conn.component}
+                <text key={`${componentName}-${connIdx}`} x={540} y={yOffset + 50 + displayCount * 18} fontSize="10" fill={color}>
+                  {conn.pin} → {conn.component.length > 20 ? conn.component.substring(0, 20) + '...' : conn.component}
                 </text>
               );
               displayCount++;
               return result;
             })}
             
-            {/* 그룹 간 간격 */}
-            {groupIdx < groupOrder.length - 1 && displayCount < maxDisplay && (displayCount++, null)}
+            {/* 컴포넌트 간 간격 */}
+            {componentIdx < componentOrder.length - 1 && displayCount < maxDisplay && (displayCount++, null)}
           </g>
         );
       })}
@@ -537,7 +537,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
           <g key={idx}>
             <line 
               x1={43} y1={50} 
-              x2={300} y2={80 + conn.deviceIndex * 150} 
+              x2={300} y2={80 + conn.deviceIndex * 180} 
               stroke="#ff4444" 
               strokeWidth="3"
               strokeDasharray="8,4"
@@ -545,7 +545,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
             />
             <circle cx={43} cy={50} r="3" fill="#ff4444" stroke="#fff" strokeWidth="1"/>
             <text x={47} y={53} fontSize="9" fontWeight="bold" fill="#ff4444">VCC</text>
-            <circle cx={300} cy={80 + conn.deviceIndex * 150} r="2" fill="#ff4444" />
+            <circle cx={300} cy={80 + conn.deviceIndex * 180} r="2" fill="#ff4444" />
           </g>
         );
       } else if (conn.pin === 'GND') {
@@ -553,7 +553,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
           <g key={idx}>
             <line 
               x1={43} y1={520} 
-              x2={300} y2={80 + conn.deviceIndex * 150} 
+              x2={300} y2={80 + conn.deviceIndex * 180} 
               stroke="#444444" 
               strokeWidth="3"
               strokeDasharray="8,4"
@@ -561,7 +561,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
             />
             <circle cx={43} cy={520} r="3" fill="#444444" stroke="#fff" strokeWidth="1"/>
             <text x={47} y={523} fontSize="9" fontWeight="bold" fill="#444444">GND</text>
-            <circle cx={300} cy={80 + conn.deviceIndex * 150} r="2" fill="#444444" />
+            <circle cx={300} cy={80 + conn.deviceIndex * 180} r="2" fill="#444444" />
           </g>
         );
       }
@@ -571,7 +571,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
     const startX = pinInfo.x;
     const startY = pinInfo.y;
     const endX = 300; // 컴포넌트 위치
-    const endY = 80 + conn.deviceIndex * 150; // 컴포넌트 Y 위치 (새로운 레이아웃에 맞춤)
+    const endY = 80 + conn.deviceIndex * 180; // 컴포넌트 Y 위치 (더 큰 카드에 맞춤)
     
     // 연결선 색상 (센서는 파란색, 제어는 주황색)
     const lineColor = conn.type === 'sensor' ? '#1976d2' : '#f57c00';
