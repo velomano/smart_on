@@ -1,16 +1,40 @@
-# IoT Designer - 자연어 기반 IoT 설계 시스템
+# IoT Designer - 다중 장치 지원 IoT 설계 시스템
 
 ## 🎯 **설계 개요**
 
-IoT Designer는 자연어로 IoT 시스템을 설명하면 자동으로 완벽한 Arduino 코드와 하드웨어 연결 가이드를 생성하는 혁신적인 시스템입니다.
+IoT Designer는 자연어로 IoT 시스템을 설명하면 자동으로 완벽한 펌웨어 코드와 하드웨어 연결 가이드를 생성하는 혁신적인 시스템입니다. **7가지 주요 IoT 장치**를 지원하며, 각 장치에 최적화된 코드를 생성합니다.
 
 ### **핵심 기능**
-- **자연어 입력**: "온도 센서 2개, 스프링클러 4개로 스마트팜을 만들어줘"
-- **자동 핀 할당**: ESP32 핀맵 기반 충돌 없는 핀 배치
+- **다중 장치 지원**: ESP32, ESP8266, Arduino Uno/R4, 라즈베리파이3/4/5
+- **자동 핀 할당**: 장치별 핀맵 기반 충돌 없는 핀 배치
 - **전원 계산**: 센서/제어별 전원 요구사항 자동 계산
 - **회로도 생성**: 깔끔한 카드 기반 정보 표시
-- **코드 생성**: 완벽한 Arduino 코드 자동 생성
-- **LLM 통합**: AI 기반 자연어 분석 및 제안
+- **코드 생성**: 완벽한 펌웨어 코드 자동 생성 (ZIP 파일)
+- **MQTT 전용**: Universal Bridge 내장 MQTT 브로커 사용
+- **장치별 최적화**: PlatformIO 설정, 라이브러리 의존성, 핀 매핑
+
+---
+
+## 🔧 **지원 장치 (7개)**
+
+### **ESP 계열**
+- **ESP32**: `espressif32` 플랫폼, `esp32dev` 보드
+- **ESP8266**: `espressif8266` 플랫폼, `nodemcuv2` 보드
+
+### **Arduino 계열**
+- **Arduino Uno**: `atmelavr` 플랫폼, `uno` 보드
+- **Arduino R4**: `renesas_uno` 플랫폼, `uno_r4_wifi` 보드
+
+### **라즈베리파이 계열**
+- **라즈베리파이5**: `linux_arm` 플랫폼, `raspberry-pi-5` 보드
+- **라즈베리파이4**: `linux_arm` 플랫폼, `raspberry-pi-4` 보드
+- **라즈베리파이3**: `linux_arm` 플랫폼, `raspberry-pi-3` 보드
+
+### **장치별 특화 설정**
+- **라이브러리**: ESP/Arduino는 `WiFi.h`, 라즈베리파이는 `Arduino.h`
+- **I2C 핀**: ESP/Arduino는 SDA=21/SCL=22, 라즈베리파이는 SDA=2/SCL=3
+- **WiFi 연결**: ESP/Arduino는 `WiFi.begin()`, 라즈베리파이는 시스템 WiFi
+- **MQTT 호스트**: `bridge.local` (localhost 금지!)
 
 ---
 
@@ -58,7 +82,32 @@ interface Control {
 
 ---
 
-## 🔌 **핀 할당 규칙 (ESP32 우선)**
+## 🌉 **MQTT 전용 아키텍처**
+
+### **핵심 아키텍처**
+```
+다양한 디바이스 → Universal Bridge (어댑터) → MQTT 일원화 → FMS
+     ↓                    ↓                    ↓
+  시리얼/RS-485/        프로토콜 변환         표준 토픽
+  LoRaWAN/ESP32/        + 인증/ACL          terahub/{tenant}/{deviceId}
+  아두이노/라즈베리파이
+```
+
+### **MQTT 설정**
+- **브로커**: Universal Bridge 내장 MQTT 브로커
+- **호스트**: `bridge.local` 또는 브릿지 IP (localhost 금지!)
+- **포트**: 1883 (내부망), 8883 (TLS 권장)
+- **토픽 규칙**: `terahub/{tenant}/{deviceId}/{kind}/{name}`
+
+### **보안 가이드**
+- **내부망 PoC**: 1883 포트 사용 가능
+- **운영 환경**: TLS(8883) 권장
+- **인증**: 장치별 계정/토큰 사용
+- **ACL**: `terahub/{tenant}/{deviceId}/#` 만 접근 허용
+
+---
+
+## 🔌 **핀 할당 규칙 (장치별 최적화)**
 
 ### **ESP32 핀맵**
 ```typescript
@@ -251,23 +300,21 @@ function calculatePowerRequirements(items: Array<{
 
 ### **Phase 1: 기본 MVP (완료)**
 - [x] 센서/제어 카탈로그 구축
-- [x] 핀 자동 할당 시스템
+- [x] 핀 자동 할당 시스템 (7개 장치 지원)
 - [x] 전원 요구사항 계산
 - [x] 카드 기반 정보 표시 생성
-- [x] Arduino 코드 생성
+- [x] 펌웨어 코드 생성 (ZIP 파일)
 - [x] 자연어 파싱 (규칙 기반)
+- [x] MQTT 전용 아키텍처 적용
+- [x] 장치별 PlatformIO 설정
+- [x] 하드웨어 검증 완료
 
-### **Phase 2: LLM 통합**
-- [ ] OpenAI/Claude API 통합
-- [ ] 로컬 LLM 통합 (Ollama)
-- [ ] 자연어 분석 고도화
-- [ ] 제안 시스템 구현
-
-### **Phase 3: 고급 기능**
-- [ ] 음성 입력 지원
-- [ ] 이미지 인식 (하드웨어 분석)
-- [ ] 실시간 추천 시스템
-- [ ] 예산 고려 설계
+### **Phase 2: 확장 기능 (진행 중)**
+- [ ] RS-485/Modbus RTU 어댑터 (산업용 PLC)
+- [ ] LoRaWAN 어댑터 (배터리 센서)
+- [ ] 시리얼/UART 어댑터 (로컬 장비)
+- [ ] CAN 버스 어댑터 (자동차/산업용)
+- [ ] LLM 통합 (자연어 분석 고도화)
 
 ---
 
