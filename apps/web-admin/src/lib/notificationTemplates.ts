@@ -108,6 +108,22 @@ export const notificationTemplates: Record<string, NotificationTemplate> = {
     category: 'system'
   },
 
+  system_alert: {
+    id: 'system_alert',
+    title: '⚠️ 시스템 경고',
+    message: '<b>시스템 경고</b>\n\n⚠️ 시스템 이상 상황이 발생했습니다.\n📍 위치: {location}\n⏰ 시간: {timestamp}',
+    priority: 'high',
+    category: 'system'
+  },
+
+  maintenance_reminder: {
+    id: 'maintenance_reminder',
+    title: '🔧 관리 작업 알림',
+    message: '<b>관리 작업 알림</b>\n\n🔧 정기 관리 시기가 되었습니다.\n📅 스케줄을 확인해주세요.\n⏰ 시간: {timestamp}',
+    priority: 'medium',
+    category: 'user'
+  },
+
   // 사용자 관련 알림
   nutrient_recipe_saved: {
     id: 'nutrient_recipe_saved',
