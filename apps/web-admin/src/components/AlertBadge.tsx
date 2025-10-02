@@ -104,7 +104,7 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
 
       {/* 툴팁 */}
       <div className="absolute bottom-16 right-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-        <div className="bg-gray-900 text-white text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-lg">
+        <div className="bg-gray-100 text-gray-800 text-sm rounded-lg px-3 py-2 whitespace-nowrap shadow-lg border">
           {hasUnreadAlerts 
             ? `${unreadCount}개의 새로운 경고가 있습니다` 
             : hasAlerts

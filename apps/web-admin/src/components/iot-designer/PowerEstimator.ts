@@ -69,20 +69,113 @@ export function suggestPowerSupplies(requirements: PowerRequirement[]): string[]
   
   requirements.forEach(req => {
     if (req.voltage === 3.3) {
-      suggestions.push(`3.3V: ESP32 내장 레귤레이터 사용 (최대 1A)`);
+      if (req.minCurrentA <= 0.5) {
+        suggestions.push(`🔋 AMS1117-3.3 (1A): ${req.minCurrentA}A 필요, 여유 50%`);
+      } else if (req.minCurrentA <= 1.0) {
+        suggestions.push(`🔋 LM1117-3.3 (1.5A): ${req.minCurrentA}A 필요, 여유 50%`);
+      } else {
+        suggestions.push(`🔋 DC-DC 컨버터 (3A): ${req.minCurrentA}A 필요, 여유 50%`);
+      }
     } else if (req.voltage === 5) {
-      suggestions.push(`5V: USB 전원 또는 외부 5V 어댑터 (${req.minCurrentA}A 이상)`);
+      if (req.minCurrentA <= 1.0) {
+        suggestions.push(`🔌 USB 어댑터 (2A): ${req.minCurrentA}A 필요, 여유 100%`);
+      } else if (req.minCurrentA <= 3.0) {
+        suggestions.push(`🔌 5V 어댑터 (5A): ${req.minCurrentA}A 필요, 여유 67%`);
+      } else {
+        suggestions.push(`🔌 5V 어댑터 (10A): ${req.minCurrentA}A 필요, 여유 67%`);
+      }
     } else if (req.voltage === 12) {
-      suggestions.push(`12V: 외부 어댑터 필요 (${req.minCurrentA}A 이상)`);
+      if (req.minCurrentA <= 2.0) {
+        suggestions.push(`🔌 12V 어댑터 (3A): ${req.minCurrentA}A 필요, 여유 50%`);
+      } else if (req.minCurrentA <= 5.0) {
+        suggestions.push(`🔌 12V 어댑터 (8A): ${req.minCurrentA}A 필요, 여유 60%`);
+      } else {
+        suggestions.push(`🔌 12V 어댑터 (15A): ${req.minCurrentA}A 필요, 여유 67%`);
+      }
     } else if (req.voltage === 24) {
-      suggestions.push(`24V: 산업용 전원 공급 장치 필요 (${req.minCurrentA}A 이상)`);
+      if (req.minCurrentA <= 1.0) {
+        suggestions.push(`🔌 24V 어댑터 (2A): ${req.minCurrentA}A 필요, 여유 100%`);
+      } else if (req.minCurrentA <= 3.0) {
+        suggestions.push(`🔌 24V 어댑터 (5A): ${req.minCurrentA}A 필요, 여유 67%`);
+      } else {
+        suggestions.push(`🔌 24V 어댑터 (10A): ${req.minCurrentA}A 필요, 여유 67%`);
+      }
     }
   });
   
-  // 안전 주의사항
-  suggestions.push(`⚠️ 고전압 부하는 ESP32와 전원 분리 필수`);
-  suggestions.push(`⚠️ 공통 접지(GND) 연결 필수`);
-  suggestions.push(`⚠️ 릴레이/모터는 역기전력 보호 다이오드 권장`);
+  // 추가 권장사항
+  suggestions.push(`⚠️ 전원 공급 시 주의사항:`);
+  suggestions.push(`• 각 전압별로 별도 레귤레이터 사용 권장`);
+  suggestions.push(`• 고전류 부하(모터, 히터)는 별도 전원 공급`);
+  suggestions.push(`• 접지(GND)는 모든 전원에서 공통으로 연결`);
+  suggestions.push(`• 전원 케이블은 충분한 굵기 사용 (AWG 18 이상)`);
   
   return suggestions;
+}
+
+// 전원 효율성 분석
+export function analyzePowerEfficiency(requirements: PowerRequirement[]): {
+  totalPower: number;
+  efficiency: string;
+  recommendations: string[];
+} {
+  const totalPower = requirements.reduce((sum, req) => sum + (req.voltage * req.minCurrentA), 0);
+  
+  let efficiency = '양호';
+  const recommendations: string[] = [];
+  
+  if (totalPower > 50) {
+    efficiency = '높음';
+    recommendations.push('고전력 시스템: 전원 분산 공급 권장');
+    recommendations.push('열 관리: 방열판 또는 쿨링 팬 고려');
+  } else if (totalPower > 20) {
+    efficiency = '보통';
+    recommendations.push('중전력 시스템: 전원 모니터링 권장');
+  } else {
+    efficiency = '낮음';
+    recommendations.push('저전력 시스템: 배터리 백업 고려');
+  }
+  
+  // 전압별 효율성 분석
+  const voltageCount = requirements.length;
+  if (voltageCount > 3) {
+    recommendations.push('다중 전압: 전원 통합 고려 (DC-DC 컨버터)');
+  }
+  
+  return {
+    totalPower: Math.round(totalPower * 100) / 100,
+    efficiency,
+    recommendations
+  };
+}
+
+// 전원 공급 비용 추정
+export function estimatePowerCost(requirements: PowerRequirement[]): {
+  totalCost: number;
+  costBreakdown: Array<{ voltage: number; cost: number; reason: string }>;
+} {
+  const costBreakdown = requirements.map(req => {
+    let cost = 0;
+    let reason = '';
+    
+    if (req.voltage === 3.3) {
+      cost = req.minCurrentA <= 1.0 ? 3000 : 8000;
+      reason = req.minCurrentA <= 1.0 ? '레귤레이터' : 'DC-DC 컨버터';
+    } else if (req.voltage === 5) {
+      cost = req.minCurrentA <= 2.0 ? 5000 : req.minCurrentA <= 5.0 ? 15000 : 25000;
+      reason = '어댑터';
+    } else if (req.voltage === 12) {
+      cost = req.minCurrentA <= 3.0 ? 10000 : req.minCurrentA <= 8.0 ? 20000 : 35000;
+      reason = '어댑터';
+    } else if (req.voltage === 24) {
+      cost = req.minCurrentA <= 2.0 ? 15000 : req.minCurrentA <= 5.0 ? 25000 : 40000;
+      reason = '어댑터';
+    }
+    
+    return { voltage: req.voltage, cost, reason };
+  });
+  
+  const totalCost = costBreakdown.reduce((sum, item) => sum + item.cost, 0);
+  
+  return { totalCost, costBreakdown };
 }

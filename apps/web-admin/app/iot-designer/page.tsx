@@ -1,12 +1,15 @@
 // IoT Designer 메인 페이지
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { allocatePins } from '@/components/iot-designer/PinAllocator';
 import { calculatePowerRequirements, suggestPowerSupplies } from '@/components/iot-designer/PowerEstimator';
 import SchematicSVG from '@/components/iot-designer/SchematicSVG';
 import CodePreview from '@/components/iot-designer/CodePreview';
 import NaturalLanguageBar from '@/components/iot-designer/NaturalLanguageBar';
+import { QRCodeCard } from '@/components/connect/QRCodeCard';
+import { LiveLog } from '@/components/connect/LiveLog';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface SystemSpec {
   device: string;
@@ -19,7 +22,10 @@ interface SystemSpec {
   };
 }
 
+type DesignStep = 'design' | 'connect' | 'monitor';
+
 export default function IoTDesignerPage() {
+  const [currentStep, setCurrentStep] = useState<DesignStep>('design');
   const [spec, setSpec] = useState<SystemSpec>({
     device: 'esp32',
     protocol: 'http',
@@ -32,11 +38,24 @@ export default function IoTDesignerPage() {
   });
   
   const [generatedCode, setGeneratedCode] = useState('');
+  const [setupToken, setSetupToken] = useState('');
+  const [deviceKey, setDeviceKey] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
   
-  // 핀 할당 및 전원 계산
-  const allocation = allocatePins(spec);
-  const powerRequirements = calculatePowerRequirements(spec);
-  const powerSuggestions = suggestPowerSupplies(powerRequirements);
+  // 핀 할당 및 전원 계산 (동적으로 업데이트)
+  const allocation = useMemo(() => {
+    console.log('🔄 핀 할당 재계산:', spec);
+    return allocatePins(spec);
+  }, [spec.sensors, spec.controls]);
+  
+  const powerRequirements = useMemo(() => {
+    console.log('⚡ 전원 요구사항 재계산:', spec);
+    return calculatePowerRequirements(spec);
+  }, [spec.sensors, spec.controls]);
+  
+  const powerSuggestions = useMemo(() => {
+    return suggestPowerSupplies(powerRequirements);
+  }, [powerRequirements]);
   
   // 자연어 파싱 결과 적용
   const handleNaturalLanguageParse = (result: { sensors: Array<{ type: string; count: number }>; controls: Array<{ type: string; count: number }> }) => {
@@ -47,21 +66,57 @@ export default function IoTDesignerPage() {
     }));
   };
   
-  // 코드 생성
-  const generateCode = async () => {
+  // 통합된 코드 생성 및 연결 시작
+  const generateCodeAndConnect = async () => {
     try {
+      // 1. Universal Bridge에서 Setup Token 발급
+      const tokenResponse = await fetch('http://localhost:8080/api/provisioning/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device_type: `${spec.device}-${spec.protocol}`,
+          capabilities: [...spec.sensors.map(s => s.type), ...spec.controls.map(c => c.type)]
+        })
+      });
+      
+      if (!tokenResponse.ok) {
+        throw new Error('Setup Token 발급 실패');
+      }
+      
+      const tokenData = await tokenResponse.json();
+      const token = tokenData.setup_token;
+      setSetupToken(token);
+      
+      // 2. 통합된 코드 생성 API 사용
       const response = await fetch('/api/iot/generate-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(spec)
+        body: JSON.stringify({
+          device: spec.device,
+          protocol: spec.protocol,
+          sensors: spec.sensors,
+          controls: spec.controls,
+          wifi: spec.wifi,
+          allocation: allocation,
+          bridgeIntegration: true,
+          setupToken: token // Setup Token 포함
+        })
       });
       
       if (response.ok) {
         const code = await response.text();
         setGeneratedCode(code);
+        
+        // 3. 연결 단계로 이동
+        setCurrentStep('connect');
+        toast.success('코드 생성 완료! 이제 디바이스를 연결하세요.');
+      } else {
+        throw new Error('코드 생성 API 호출 실패');
       }
+      
     } catch (error) {
       console.error('코드 생성 오류:', error);
+      toast.error('코드 생성 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : String(error)));
     }
   };
   
@@ -79,15 +134,47 @@ export default function IoTDesignerPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
+        {/* Toast Container */}
+        <Toaster position="top-center" />
+        
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">🚀 IoT Designer</h1>
-          <p className="text-gray-600">자연어로 IoT 시스템을 설계하고 완벽한 코드를 생성하세요</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">🚀 Universal IoT Designer</h1>
+          <p className="text-gray-600">자연어로 IoT 시스템을 설계하고 자동으로 연결하세요</p>
+          
+          {/* 단계 표시기 */}
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className={`flex items-center ${currentStep === 'design' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'design' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
+                  1
+                </div>
+                <span className="ml-2 font-medium">디자인</span>
+              </div>
+              <div className="flex-1 h-1 bg-gray-200 mx-4" />
+              <div className={`flex items-center ${currentStep === 'connect' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'connect' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
+                  2
+                </div>
+                <span className="ml-2 font-medium">연결</span>
+              </div>
+              <div className="flex-1 h-1 bg-gray-200 mx-4" />
+              <div className={`flex items-center ${currentStep === 'monitor' ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'monitor' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>
+                  3
+                </div>
+                <span className="ml-2 font-medium">모니터링</span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        {/* 1. 자연어 입력 */}
-        <NaturalLanguageBar onParse={handleNaturalLanguageParse} />
-        
-        {/* 2. 시스템 설정 */}
+        {/* 단계별 컨텐츠 */}
+        {currentStep === 'design' && (
+          <>
+            {/* 1. 자연어 입력 */}
+            <NaturalLanguageBar onParse={handleNaturalLanguageParse} />
+            
+            {/* 2. 시스템 설정 */}
         <div className="bg-white border rounded-lg p-6">
           <h3 className="text-lg font-bold mb-4">⚙️ 시스템 설정</h3>
           
@@ -185,13 +272,23 @@ export default function IoTDesignerPage() {
               {/* 센서 추가 버튼 */}
               <div className="mb-4">
                 <select
+                  value="" // 항상 빈 값으로 초기화
                   onChange={(e) => {
-                    if (e.target.value) {
-                      setSpec(prev => ({
-                        ...prev,
-                        sensors: [...prev.sensors, { type: e.target.value, count: 1 }]
-                      }));
-                      e.target.value = ''; // 선택 초기화
+                    const selectedValue = e.target.value;
+                    if (selectedValue && selectedValue.trim() !== '') {
+                      console.log(`➕ 센서 추가: "${selectedValue}"`);
+                      setSpec(prev => {
+                        const newSpec = {
+                          ...prev,
+                          sensors: [...prev.sensors, { type: selectedValue, count: 1 }]
+                        };
+                        console.log('🔄 새로운 센서 목록:', newSpec.sensors);
+                        return newSpec;
+                      });
+                      // select 값을 강제로 빈 값으로 리셋
+                      setTimeout(() => {
+                        e.target.value = '';
+                      }, 0);
                     }
                   }}
                   className="w-full p-2 border rounded-lg mb-2"
@@ -212,36 +309,52 @@ export default function IoTDesignerPage() {
               
               {/* 센서 목록 */}
               <div className="space-y-2">
-                {spec.sensors.map((sensor, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{sensor.type}</span>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={sensor.count}
-                        onChange={(e) => setSpec(prev => ({
+                {spec.sensors.map((sensor, idx) => {
+                  console.log(`🔍 센서 목록 렌더링: ${sensor.type} (${sensor.count}개)`, sensor);
+                  const sensorNames: Record<string, string> = {
+                    'dht22': 'DHT22 (온도/습도)',
+                    'ds18b20': 'DS18B20 (온도)',
+                    'bh1750': 'BH1750 (조도)',
+                    'soil_moisture': '토양 수분 센서',
+                    'ph_sensor': 'pH 센서',
+                    'co2_sensor': 'CO2 센서',
+                    'pressure_sensor': '압력 센서',
+                    'motion_sensor': 'PIR 모션 센서',
+                    'water_level': '수위 센서',
+                    'camera': '카메라 모듈'
+                  };
+                  
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">{sensorNames[sensor.type] || sensor.type}</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={sensor.count}
+                          onChange={(e) => setSpec(prev => ({
+                            ...prev,
+                            sensors: prev.sensors.map((s, i) => 
+                              i === idx ? { ...s, count: parseInt(e.target.value) || 1 } : s
+                            )
+                          }))}
+                          className="w-16 p-1 border rounded text-center"
+                        />
+                        <span className="text-sm text-gray-500">개</span>
+                      </div>
+                      <button
+                        onClick={() => setSpec(prev => ({
                           ...prev,
-                          sensors: prev.sensors.map((s, i) => 
-                            i === idx ? { ...s, count: parseInt(e.target.value) || 1 } : s
-                          )
+                          sensors: prev.sensors.filter((_, i) => i !== idx)
                         }))}
-                        className="w-16 p-1 border rounded text-center"
-                      />
-                      <span className="text-sm text-gray-500">개</span>
+                        className="text-red-500 hover:text-red-700 px-2"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setSpec(prev => ({
-                        ...prev,
-                        sensors: prev.sensors.filter((_, i) => i !== idx)
-                      }))}
-                      className="text-red-500 hover:text-red-700 px-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
                 {spec.sensors.length === 0 && (
                   <div className="text-gray-500 text-sm text-center py-4">
                     센서를 선택해주세요
@@ -256,13 +369,23 @@ export default function IoTDesignerPage() {
               {/* 제어장치 추가 버튼 */}
               <div className="mb-4">
                 <select
+                  value="" // 항상 빈 값으로 초기화
                   onChange={(e) => {
-                    if (e.target.value) {
-                      setSpec(prev => ({
-                        ...prev,
-                        controls: [...prev.controls, { type: e.target.value, count: 1 }]
-                      }));
-                      e.target.value = ''; // 선택 초기화
+                    const selectedValue = e.target.value;
+                    if (selectedValue && selectedValue.trim() !== '') {
+                      console.log(`➕ 제어장치 추가: "${selectedValue}"`);
+                      setSpec(prev => {
+                        const newSpec = {
+                          ...prev,
+                          controls: [...prev.controls, { type: selectedValue, count: 1 }]
+                        };
+                        console.log('🔄 새로운 제어장치 목록:', newSpec.controls);
+                        return newSpec;
+                      });
+                      // select 값을 강제로 빈 값으로 리셋
+                      setTimeout(() => {
+                        e.target.value = '';
+                      }, 0);
                     }
                   }}
                   className="w-full p-2 border rounded-lg mb-2"
@@ -283,36 +406,51 @@ export default function IoTDesignerPage() {
               
               {/* 제어장치 목록 */}
               <div className="space-y-2">
-                {spec.controls.map((control, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-2 bg-orange-50 rounded">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{control.type}</span>
-                      <input
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={control.count}
-                        onChange={(e) => setSpec(prev => ({
+                {spec.controls.map((control, idx) => {
+                  const controlNames: Record<string, string> = {
+                    'relay': '릴레이',
+                    'dc_fan_pwm': 'DC 팬 (PWM)',
+                    'servo': '서보 모터',
+                    'led_strip': 'LED 스트립',
+                    'solenoid_valve': '솔레노이드 밸브',
+                    'stepper_motor': '스테퍼 모터',
+                    'water_pump': '워터 펌프',
+                    'heater': '히터',
+                    'buzzer': '부저',
+                    'lcd_display': 'LCD 디스플레이'
+                  };
+                  
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-orange-50 rounded">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium">{controlNames[control.type] || control.type}</span>
+                        <input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={control.count}
+                          onChange={(e) => setSpec(prev => ({
+                            ...prev,
+                            controls: prev.controls.map((c, i) => 
+                              i === idx ? { ...c, count: parseInt(e.target.value) || 1 } : c
+                            )
+                          }))}
+                          className="w-16 p-1 border rounded text-center"
+                        />
+                        <span className="text-sm text-gray-500">개</span>
+                      </div>
+                      <button
+                        onClick={() => setSpec(prev => ({
                           ...prev,
-                          controls: prev.controls.map((c, i) => 
-                            i === idx ? { ...c, count: parseInt(e.target.value) || 1 } : c
-                          )
+                          controls: prev.controls.filter((_, i) => i !== idx)
                         }))}
-                        className="w-16 p-1 border rounded text-center"
-                      />
-                      <span className="text-sm text-gray-500">개</span>
+                        className="text-red-500 hover:text-red-700 px-2"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setSpec(prev => ({
-                        ...prev,
-                        controls: prev.controls.filter((_, i) => i !== idx)
-                      }))}
-                      className="text-red-500 hover:text-red-700 px-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
                 {spec.controls.length === 0 && (
                   <div className="text-gray-500 text-sm text-center py-4">
                     제어장치를 선택해주세요
@@ -409,7 +547,7 @@ export default function IoTDesignerPage() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold">💻 코드 생성</h3>
             <button
-              onClick={generateCode}
+              onClick={generateCodeAndConnect}
               className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
             >
               🔧 코드 생성
@@ -420,6 +558,86 @@ export default function IoTDesignerPage() {
             <CodePreview code={generatedCode} onDownload={downloadCode} />
           )}
         </div>
+          </>
+        )}
+
+        {/* 연결 단계 */}
+        {currentStep === 'connect' && (
+          <div className="space-y-6">
+            <div className="bg-white border rounded-lg p-6">
+              <h3 className="text-lg font-bold mb-4">🔗 디바이스 연결</h3>
+              <p className="text-gray-600 mb-4">
+                생성된 코드를 디바이스에 업로드하고 연결하세요.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2">📋 생성된 코드</h4>
+                  <div className="bg-gray-100 p-4 rounded-lg">
+                    <CodePreview code={generatedCode} onDownload={downloadCode} />
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">📱 QR 코드 연결</h4>
+                  <QRCodeCard 
+                    qrData={`${window.location.origin}/connect?token=${setupToken}`}
+                    setupToken={setupToken}
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-6 flex justify-between">
+                <button
+                  onClick={() => setCurrentStep('design')}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  ← 이전 단계
+                </button>
+                <button
+                  onClick={() => setCurrentStep('monitor')}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  모니터링 시작 →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 모니터링 단계 */}
+        {currentStep === 'monitor' && (
+          <div className="space-y-6">
+            <div className="bg-white border rounded-lg p-6">
+              <h3 className="text-lg font-bold mb-4">📊 실시간 모니터링</h3>
+              <p className="text-gray-600 mb-4">
+                디바이스가 연결되면 실시간 데이터를 확인할 수 있습니다.
+              </p>
+              
+              <LiveLog setupToken={setupToken} />
+              
+              <div className="mt-6 flex justify-between">
+                <button
+                  onClick={() => setCurrentStep('connect')}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  ← 연결 단계
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentStep('design');
+                    setGeneratedCode('');
+                    setSetupToken('');
+                    setIsConnected(false);
+                  }}
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                >
+                  새 프로젝트 시작
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

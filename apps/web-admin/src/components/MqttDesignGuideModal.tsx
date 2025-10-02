@@ -256,32 +256,32 @@ export default function MqttDesignGuideModal({
 
                     {/* 완성된 MQTT 토픽 표시 */}
                     {currentFarmId && selectedBed && (generatedDeviceId || generatedCustomId) && (
-                      <div className="mt-4 p-4 bg-gray-900 rounded-lg">
-                        <h5 className="text-white font-semibold mb-3">완성된 MQTT 토픽:</h5>
+                      <div className="mt-4 p-4 bg-gray-100 rounded-lg border">
+                        <h5 className="text-gray-800 font-semibold mb-3">완성된 MQTT 토픽:</h5>
                         <div className="space-y-3">
-                          <div className="text-green-400 text-sm">
-                            <span className="text-gray-400 font-medium">센서 데이터:</span>
+                          <div className="text-green-600 text-sm">
+                            <span className="text-gray-600 font-medium">센서 데이터:</span>
                             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
-                              <code className="text-xs bg-gray-800 px-3 py-2 rounded flex-1 break-all">
+                              <code className="text-xs bg-white border px-3 py-2 rounded flex-1 break-all text-gray-800">
                                 farms/{currentFarmId}/beds/{selectedBed}/devices/{generatedDeviceId || generatedCustomId}/sensors
                               </code>
                               <button
                                 onClick={() => copyToClipboard(`farms/${currentFarmId}/beds/${selectedBed}/devices/${generatedDeviceId || generatedCustomId}/sensors`)}
-                                className="px-3 py-2 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 font-medium whitespace-nowrap"
+                                className="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 font-medium whitespace-nowrap"
                               >
                                 복사
                               </button>
                             </div>
                           </div>
-                          <div className="text-blue-400 text-sm">
-                            <span className="text-gray-400 font-medium">디바이스 제어:</span>
+                          <div className="text-blue-600 text-sm">
+                            <span className="text-gray-600 font-medium">디바이스 제어:</span>
                             <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2">
-                              <code className="text-xs bg-gray-800 px-3 py-2 rounded flex-1 break-all">
+                              <code className="text-xs bg-white border px-3 py-2 rounded flex-1 break-all text-gray-800">
                                 farms/{currentFarmId}/beds/{selectedBed}/devices/{generatedDeviceId || generatedCustomId}/commands
                               </code>
                               <button
                                 onClick={() => copyToClipboard(`farms/${currentFarmId}/beds/${selectedBed}/devices/${generatedDeviceId || generatedCustomId}/commands`)}
-                                className="px-3 py-2 bg-gray-700 text-white text-xs rounded hover:bg-gray-600 font-medium whitespace-nowrap"
+                                className="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 font-medium whitespace-nowrap"
                               >
                                 복사
                               </button>
@@ -328,8 +328,8 @@ export default function MqttDesignGuideModal({
             {/* 센서 데이터 메시지 */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">📊 센서 데이터 메시지 구조</h3>
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-green-400 text-sm">
+              <div className="bg-gray-100 rounded-lg p-4 overflow-x-auto border">
+                <pre className="text-green-300 text-sm">
 {`{
   "device_id": "pi-001",
   "bed_id": "550e8400-e29b-41d4-a716-446655440003",
@@ -381,8 +381,8 @@ export default function MqttDesignGuideModal({
             {/* 디바이스 제어 */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">🎛️ 디바이스 제어</h3>
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-blue-400 text-sm">
+              <div className="bg-gray-100 rounded-lg p-4 overflow-x-auto border">
+                <pre className="text-blue-300 text-sm">
 {`{
   "command_id": "cmd-12345",
   "device_id": "tuya-light-001",
@@ -402,8 +402,8 @@ export default function MqttDesignGuideModal({
             {/* Python 예시 */}
             <div className="mb-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">🐍 Python 클라이언트 예시</h3>
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                <pre className="text-green-400 text-sm">
+              <div className="bg-gray-100 rounded-lg p-4 overflow-x-auto border">
+                <pre className="text-green-300 text-sm">
 {`import paho.mqtt.client as mqtt
 import json
 from datetime import datetime

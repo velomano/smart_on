@@ -118,26 +118,26 @@ export function LiveLog({ setupToken, deviceId }: LiveLogProps) {
 
   const getLevelColor = (level: LogEntry['level']) => {
     switch (level) {
-      case 'success': return 'text-green-400';
-      case 'error': return 'text-red-400';
-      case 'warn': return 'text-yellow-400';
-      default: return 'text-gray-300';
+      case 'success': return 'text-green-600';
+      case 'error': return 'text-red-600';
+      case 'warn': return 'text-yellow-600';
+      default: return 'text-gray-700';
     }
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg p-4">
+    <div className="bg-gray-100 rounded-lg p-4">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="text-white font-bold">📡 실시간 로그</h4>
+        <h4 className="text-gray-800 font-bold">📡 실시간 로그</h4>
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
-          <span className="text-xs text-gray-400">
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`} />
+          <span className="text-xs text-gray-600">
             {isConnected ? 'WebSocket 연결됨' : '폴링 모드'}
           </span>
         </div>
       </div>
 
-      <div className="bg-gray-950 rounded p-3 h-64 overflow-y-auto font-mono text-xs">
+      <div className="bg-white rounded p-3 h-64 overflow-y-auto font-mono text-xs border">
         {logs.map((log, index) => (
           <div key={index} className={`mb-1 ${getLevelColor(log.level)}`}>
             <span className="text-gray-500">[{new Date(log.timestamp).toLocaleTimeString()}]</span> {log.message}

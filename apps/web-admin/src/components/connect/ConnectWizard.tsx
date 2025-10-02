@@ -121,6 +121,7 @@ function DeviceSelectStep({ onNext }: { onNext: (device: string) => void }) {
     { id: 'arduino', name: 'Arduino', icon: '📟' },
     { id: 'esp32', name: 'ESP32', icon: '📡' },
     { id: 'raspberry-pi', name: 'Raspberry Pi', icon: '🍓' },
+    { id: 'realwear', name: 'RealWear', icon: '🥽' },
     { id: 'smart-plug', name: '스마트플러그', icon: '🔌' },
     { id: 'http-device', name: 'HTTP 기기', icon: '🌐' },
     { id: 'mqtt-device', name: 'MQTT 기기', icon: '📨' },
@@ -128,7 +129,7 @@ function DeviceSelectStep({ onNext }: { onNext: (device: string) => void }) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">어떤 디바이스를 연결하시겠어요?</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">어떤 디바이스를 연결하시겠어요?</h2>
       <div className="grid grid-cols-3 gap-4 my-8">
         {devices.map(device => (
           <button
@@ -150,12 +151,17 @@ function ProtocolSelectStep({ device, onBack, onNext }: { device: string; onBack
     'arduino': 'Arduino',
     'esp32': 'ESP32',
     'raspberry-pi': 'Raspberry Pi',
+    'realwear': 'RealWear',
     'smart-plug': '스마트플러그',
     'http-device': 'HTTP 기기',
     'mqtt-device': 'MQTT 기기',
   };
 
-  const protocols = [
+  const protocols = device === 'realwear' ? [
+    { id: 'http', label: 'WiFi (HTTP)', desc: 'RealWear 웹 브라우저를 통한 연결 - 가장 안정적', recommended: true },
+    { id: 'websocket', label: 'WiFi (WebSocket)', desc: 'RealWear 앱을 통한 실시간 연결 - 양방향 통신' },
+    { id: 'bluetooth', label: 'Bluetooth', desc: 'RealWear 내장 블루투스를 통한 근거리 연결' },
+  ] : [
     { id: 'http', label: 'WiFi (HTTP)', desc: '가장 쉽고 안정적 - REST API 사용', recommended: true },
     { id: 'mqtt', label: 'WiFi (MQTT)', desc: '실시간 양방향 통신 - Pub/Sub 패턴' },
     { id: 'websocket', label: 'WiFi (WebSocket)', desc: '지속적인 연결 유지 - 실시간 모니터링' },
@@ -163,7 +169,7 @@ function ProtocolSelectStep({ device, onBack, onNext }: { device: string; onBack
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">
         {deviceNames[device] || '디바이스'}를 어떻게 연결하시겠어요?
       </h2>
       <div className="space-y-4 my-8">
@@ -329,6 +335,191 @@ void sendTelemetry() {
       }
     }
 
+    if (cfg.device === 'realwear') {
+      if (cfg.protocol === 'http') {
+        return `<!-- RealWear HTML/JavaScript 코드 -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Farm - RealWear</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 400px; margin: 0 auto; }
+        .button { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            font-size: 18px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+        }
+        .primary { background-color: #007bff; color: white; }
+        .success { background-color: #28a745; color: white; }
+        .warning { background-color: #ffc107; color: black; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .online { background-color: #d4edda; color: #155724; }
+        .offline { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥽 Smart Farm - RealWear</h1>
+        
+        <div id="status" class="status offline">
+            연결 상태: 오프라인
+        </div>
+        
+        <button class="button primary" onclick="connect()">
+            📡 연결하기
+        </button>
+        
+        <button class="button success" onclick="sendData()">
+            📊 데이터 전송
+        </button>
+        
+        <button class="button warning" onclick="checkCommands()">
+            📥 명령 확인
+        </button>
+        
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const SERVER_URL = "${serverUrl}";
+        const SETUP_TOKEN = "${token}";
+        let deviceId = "";
+        let deviceKey = "";
+        let isConnected = false;
+
+        async function connect() {
+            try {
+                const response = await fetch(SERVER_URL + "/api/provisioning/bind", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-setup-token": SETUP_TOKEN
+                    },
+                    body: JSON.stringify({
+                        device_id: "RealWear-" + Date.now(),
+                        device_type: "realwear-device",
+                        capabilities: ["voice_command", "display", "camera"]
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    deviceId = data.device_id;
+                    deviceKey = data.device_key;
+                    isConnected = true;
+                    updateStatus("온라인", "online");
+                    log("✅ RealWear 연결 성공!");
+                } else {
+                    throw new Error("연결 실패");
+                }
+            } catch (error) {
+                log("❌ 연결 실패: " + error.message);
+            }
+        }
+
+        async function sendData() {
+            if (!isConnected) {
+                log("❌ 먼저 연결하세요!");
+                return;
+            }
+
+            try {
+                const telemetryData = {
+                    readings: [
+                        {
+                            key: "voice_command",
+                            value: "온도 확인",
+                            unit: "text",
+                            ts: new Date().toISOString()
+                        },
+                        {
+                            key: "location",
+                            value: "농장 A구역",
+                            unit: "text", 
+                            ts: new Date().toISOString()
+                        }
+                    ]
+                };
+
+                const response = await fetch(SERVER_URL + "/api/bridge/telemetry", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-device-id": deviceId,
+                        "x-tenant-id": "00000000-0000-0000-0000-000000000001"
+                    },
+                    body: JSON.stringify(telemetryData)
+                });
+
+                if (response.ok) {
+                    log("✅ 데이터 전송 성공!");
+                } else {
+                    throw new Error("전송 실패");
+                }
+            } catch (error) {
+                log("❌ 데이터 전송 실패: " + error.message);
+            }
+        }
+
+        async function checkCommands() {
+            if (!isConnected) {
+                log("❌ 먼저 연결하세요!");
+                return;
+            }
+
+            try {
+                const response = await fetch(SERVER_URL + "/api/bridge/commands/" + deviceId, {
+                    headers: {
+                        "x-tenant-id": "00000000-0000-0000-0000-000000000001"
+                    }
+                });
+
+                if (response.ok) {
+                    const commands = await response.json();
+                    if (commands.length > 0) {
+                        log("📥 받은 명령: " + commands.length + "개");
+                        commands.forEach(cmd => {
+                            log("  - " + cmd.command + ": " + cmd.payload);
+                        });
+                    } else {
+                        log("📥 대기 중인 명령 없음");
+                    }
+                }
+            } catch (error) {
+                log("❌ 명령 확인 실패: " + error.message);
+            }
+        }
+
+        function updateStatus(text, className) {
+            const statusEl = document.getElementById("status");
+            statusEl.textContent = "연결 상태: " + text;
+            statusEl.className = "status " + className;
+        }
+
+        function log(message) {
+            const logEl = document.getElementById("log");
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += "<div>[" + time + "] " + message + "</div>";
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // 페이지 로드 시 자동 연결 시도
+        window.onload = function() {
+            log("🥽 RealWear Smart Farm 클라이언트 시작");
+            setTimeout(connect, 1000);
+        };
+    </script>
+</body>
+</html>`;
+      }
+    }
+
     if (cfg.device === 'raspberry-pi') {
       return `# Raspberry Pi - Smart Farm Client
 import requests
@@ -434,7 +625,7 @@ if __name__ == "__main__":
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">🎉 연결 코드가 준비되었습니다!</h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-900">🎉 연결 코드가 준비되었습니다!</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         {/* 코드 영역 - 2/3 */}
@@ -444,7 +635,7 @@ if __name__ == "__main__":
             <code className="text-sm text-blue-700 break-all">{setupToken}</code>
           </div>
 
-          <div className="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto">
+          <div className="bg-gray-100 text-gray-800 p-4 rounded-lg mb-4 max-h-96 overflow-y-auto border">
             <pre className="text-xs">{generatedCode}</pre>
           </div>
 
@@ -491,7 +682,7 @@ function MonitorStep({ config, onBack }: { config: DeviceConfig; onBack: () => v
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">🔍 디바이스 연결 대기 중...</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900">🔍 디바이스 연결 대기 중...</h2>
       
       <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-4">
         <p className="font-bold text-blue-900">선택한 구성:</p>

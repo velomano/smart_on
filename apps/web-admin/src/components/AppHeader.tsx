@@ -351,7 +351,7 @@ export default function AppHeader({
   // 햄버거 메뉴용 메뉴 아이템들 (사용설명서를 가장 상단에 배치)
   const menuItems: MenuItem[] = [
     {
-      label: '🌉 Universal Bridge',
+      label: '🚀 IoT Designer',
       path: '/iot-designer',
       color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700',
       dropdown: [
@@ -503,30 +503,30 @@ export default function AppHeader({
               {/* 주요 메뉴 버튼들 - Universal Bridge를 가장 상단에 배치 */}
               <button
                 onClick={() => router.push('/iot-designer')}
-                className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
               >
-                🌉 Universal Bridge
+                🚀 IoT Designer
               </button>
               {canManageUsers && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
                 >
                   승인 관리
                 </button>
               )}
-                  {canAccessUserManagement && (
-                    <button
-                      onClick={() => router.push('/team')}
-                      className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5"
-                    >
-                      멤버 관리
-                    </button>
-                  )}
+              {canAccessUserManagement && (
+                <button
+                  onClick={() => router.push('/team')}
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
+                >
+                  멤버 관리
+                </button>
+              )}
               {canManageFarms && (
                 <button
                   onClick={() => router.push('/beds')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap"
+                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
                 >
                   {safeUser.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>

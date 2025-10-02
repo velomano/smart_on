@@ -227,7 +227,7 @@ export default function SensorCard({ type, value, unit, icon, color, chartData, 
                     }
                     
                     return (
-                      <div className="absolute bg-gray-900 text-white px-3 py-2 rounded-lg text-sm z-20 pointer-events-none"
+                      <div className="absolute bg-gray-100 text-gray-800 px-3 py-2 rounded-lg text-sm z-20 pointer-events-none border shadow-lg"
                            style={{
                              left: `${adjustedX}px`,
                              top: `${adjustedY}px`

@@ -19,7 +19,7 @@ export default function CodePreview({ code, onDownload }: CodePreviewProps) {
         </button>
       </div>
       
-      <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
+      <div className="bg-gray-100 text-gray-800 p-4 rounded-lg overflow-x-auto border">
         <pre className="text-sm font-mono whitespace-pre-wrap">{code}</pre>
       </div>
       

@@ -6,28 +6,41 @@ export const runtime = 'edge';
 
 interface GenerateCodeRequest {
   device: string;
-  protocol: 'http' | 'mqtt';
+  protocol: 'http' | 'mqtt' | 'websocket';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
   wifi: {
     ssid: string;
     password: string;
   };
+  allocation?: any; // IoT Designer에서 전달되는 핀 할당 정보
+  bridgeIntegration?: boolean; // Universal Bridge 연동 여부
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateCodeRequest = await request.json();
     
-    // 코드 생성 로직 (간단한 템플릿 기반)
-    const code = generateArduinoCode(body);
-    
-    return new NextResponse(code, {
-      headers: {
-        'Content-Type': 'text/plain',
-        'Content-Disposition': 'attachment; filename="iot_system.ino"'
-      }
-    });
+    // Universal Bridge 연동 여부 확인
+    if (body.bridgeIntegration) {
+      // Universal Bridge 연동 코드 생성
+      const code = await generateUniversalBridgeCode(body);
+      return new NextResponse(code, {
+        headers: {
+          'Content-Type': 'text/plain',
+          'Content-Disposition': 'attachment; filename="universal_bridge_system.ino"'
+        }
+      });
+    } else {
+      // 기존 방식 코드 생성
+      const code = generateArduinoCode(body);
+      return new NextResponse(code, {
+        headers: {
+          'Content-Type': 'text/plain',
+          'Content-Disposition': 'attachment; filename="iot_system.ino"'
+        }
+      });
+    }
   } catch (error) {
     console.error('코드 생성 오류:', error);
     return NextResponse.json(
@@ -268,4 +281,381 @@ function generateArduinoCode(req: GenerateCodeRequest): string {
   ].join('\n');
   
   return fullCode;
+}
+
+// Universal Bridge 연동 코드 생성
+async function generateUniversalBridgeCode(req: GenerateCodeRequest): Promise<string> {
+  const { device, protocol, sensors, controls, wifi, allocation } = req;
+  
+  // Universal Bridge Setup Token 발급
+  const bridgeUrl = process.env.NEXT_PUBLIC_BRIDGE_URL || 'http://localhost:8080';
+  
+  try {
+    const claimResponse = await fetch(`${bridgeUrl}/api/provisioning/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tenant_id: '00000000-0000-0000-0000-000000000001',
+        farm_id: '1737f01f-da95-4438-bc90-4705cdfc09e8',
+        ttl_seconds: 600,
+      }),
+    });
+
+    if (!claimResponse.ok) {
+      throw new Error('Setup Token 발급 실패');
+    }
+
+    const claimData = await claimResponse.json();
+    const setupToken = claimData.setup_token;
+    
+    // Universal Bridge 호환 코드 생성
+    return generateUniversalBridgeArduinoCode({
+      device,
+      protocol,
+      sensors,
+      controls,
+      wifi,
+      allocation,
+      setupToken,
+      bridgeUrl
+    });
+    
+  } catch (error) {
+    console.error('Universal Bridge 코드 생성 오류:', error);
+    // 폴백: 기존 방식으로 코드 생성
+    return generateArduinoCode(req);
+  }
+}
+
+// Universal Bridge 호환 Arduino 코드 생성
+function generateUniversalBridgeArduinoCode(params: {
+  device: string;
+  protocol: string;
+  sensors: Array<{ type: string; count: number }>;
+  controls: Array<{ type: string; count: number }>;
+  wifi: { ssid: string; password: string };
+  allocation?: any;
+  setupToken: string;
+  bridgeUrl: string;
+}): string {
+  const { device, protocol, sensors, controls, wifi, allocation, setupToken, bridgeUrl } = params;
+  
+  // 센서 및 액추에이터 정보 수집
+  const sensorTypes = sensors.map(s => s.type).join(', ');
+  const actuatorTypes = controls.map(c => c.type).join(', ');
+  
+  return `/**
+ * Universal Bridge 호환 IoT 시스템 코드
+ * 
+ * 설계 사양:
+ * - 디바이스: ${device.toUpperCase()}
+ * - 프로토콜: ${protocol.toUpperCase()}
+ * - 센서: ${sensorTypes}
+ * - 액추에이터: ${actuatorTypes}
+ * - WiFi: ${wifi.ssid}
+ * 
+ * 생성 시간: ${new Date().toISOString()}
+ */
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+// WiFi 설정
+const char* ssid = "${wifi.ssid}";
+const char* password = "${wifi.password}";
+
+// Universal Bridge 설정
+const char* serverUrl = "${bridgeUrl}";
+const char* setupToken = "${setupToken}";
+String deviceId = "";
+String deviceKey = "";
+
+// 센서 핀 설정
+${generateSensorPinConfig(sensors, allocation)}
+
+// 액추에이터 핀 설정
+${generateActuatorPinConfig(controls, allocation)}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("🌱 Universal Bridge IoT 시스템 시작");
+  
+  // 센서 초기화
+  ${generateSensorInit(sensors)}
+  
+  // 액추에이터 초기화
+  ${generateActuatorInit(controls)}
+  
+  // WiFi 연결
+  connectToWiFi();
+  
+  // Universal Bridge 디바이스 등록
+  if (WiFi.status() == WL_CONNECTED) {
+    registerDevice();
+  }
+}
+
+void loop() {
+  // 센서 데이터 읽기 및 전송
+  sendTelemetry();
+  
+  // 명령 확인 및 처리
+  checkCommands();
+  
+  delay(10000); // 10초마다 실행
+}
+
+void connectToWiFi() {
+  Serial.print("WiFi 연결 중");
+  WiFi.begin(ssid, password);
+  
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+    delay(500);
+    Serial.print(".");
+    attempts++;
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println();
+    Serial.println("✅ WiFi 연결 성공!");
+    Serial.print("IP 주소: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println();
+    Serial.println("❌ WiFi 연결 실패");
+  }
+}
+
+void registerDevice() {
+  Serial.println("📝 Universal Bridge 디바이스 등록 중...");
+  
+  HTTPClient http;
+  http.begin(String(serverUrl) + "/api/provisioning/bind");
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-setup-token", setupToken);
+  
+  DynamicJsonDocument doc(1024);
+  doc["device_id"] = "ESP32-" + WiFi.macAddress();
+  doc["device_type"] = "${device}-${protocol}";
+  doc["capabilities"] = {
+    "sensors": ${JSON.stringify(sensors.map(s => s.type))},
+    "actuators": ${JSON.stringify(controls.map(c => c.type))}
+  };
+  
+  String payload;
+  serializeJson(doc, payload);
+  
+  int httpCode = http.POST(payload);
+  if (httpCode == 200) {
+    String response = http.getString();
+    Serial.println("✅ 디바이스 등록 성공!");
+    
+    // 응답에서 device_key 추출
+    DynamicJsonDocument responseDoc(1024);
+    deserializeJson(responseDoc, response);
+    deviceKey = responseDoc["device_key"].as<String>();
+    deviceId = doc["device_id"].as<String>();
+    
+    Serial.println("Device ID: " + deviceId);
+    Serial.println("Device Key: " + deviceKey);
+  } else {
+    Serial.println("❌ 등록 실패: " + String(httpCode));
+  }
+  http.end();
+}
+
+void sendTelemetry() {
+  if (deviceId == "" || deviceKey == "") return;
+  
+  HTTPClient http;
+  http.begin(String(serverUrl) + "/api/bridge/telemetry");
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("x-device-id", deviceId);
+  http.addHeader("x-tenant-id", "00000000-0000-0000-0000-000000000001");
+  
+  DynamicJsonDocument doc(1024);
+  doc["device_id"] = deviceId;
+  doc["timestamp"] = millis();
+  
+  JsonArray readings = doc.createNestedArray("readings");
+  
+  // 센서 데이터 수집
+  ${generateSensorReadings(sensors)}
+  
+  String payload;
+  serializeJson(doc, payload);
+  
+  int httpCode = http.POST(payload);
+  if (httpCode == 200) {
+    Serial.println("📡 텔레메트리 전송 성공");
+  } else {
+    Serial.println("❌ 텔레메트리 전송 실패: " + String(httpCode));
+  }
+  http.end();
+}
+
+void checkCommands() {
+  if (deviceId == "" || deviceKey == "") return;
+  
+  HTTPClient http;
+  http.begin(String(serverUrl) + "/api/bridge/commands/" + deviceId);
+  http.addHeader("x-device-id", deviceId);
+  http.addHeader("x-tenant-id", "00000000-0000-0000-0000-000000000001");
+  
+  int httpCode = http.GET();
+  if (httpCode == 200) {
+    String response = http.getString();
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, response);
+    
+    JsonArray commands = doc["commands"];
+    for (JsonObject cmd : commands) {
+      processCommand(cmd);
+    }
+  }
+  http.end();
+}
+
+void processCommand(JsonObject command) {
+  String type = command["type"];
+  String action = command["action"];
+  
+  Serial.println("🎯 명령 수신: " + type + " -> " + action);
+  
+  // 액추에이터 제어
+  ${generateActuatorControl(controls)}
+  
+  // ACK 전송
+  sendCommandAck(command["id"].as<String>(), true);
+}
+
+void sendCommandAck(String commandId, bool success) {
+  HTTPClient http;
+  http.begin(String(serverUrl) + "/api/bridge/commands/" + commandId + "/ack");
+  http.addHeader("Content-Type", "application/json");
+  
+  DynamicJsonDocument doc(512);
+  doc["status"] = success ? "success" : "error";
+  doc["detail"] = success ? "Command executed" : "Command failed";
+  
+  String payload;
+  serializeJson(doc, payload);
+  
+  http.POST(payload);
+  http.end();
+}
+
+// 센서별 핀 설정 생성
+${generateSensorFunctions(sensors)}
+
+// 액추에이터별 제어 함수 생성
+${generateActuatorFunctions(controls)}
+`;
+}
+
+// 헬퍼 함수들
+function generateSensorPinConfig(sensors: Array<{ type: string; count: number }>, allocation?: any): string {
+  let config = "";
+  sensors.forEach((sensor, index) => {
+    const pin = allocation?.assigned?.[`sensor_${sensor.type}`]?.[0]?.pin || `GPIO${4 + index}`;
+    config += `#define ${sensor.type.toUpperCase()}_PIN ${pin}\n`;
+  });
+  return config;
+}
+
+function generateActuatorPinConfig(controls: Array<{ type: string; count: number }>, allocation?: any): string {
+  let config = "";
+  controls.forEach((control, index) => {
+    const pin = allocation?.assigned?.[`control_${control.type}`]?.[0]?.pin || `GPIO${10 + index}`;
+    config += `#define ${control.type.toUpperCase()}_PIN ${pin}\n`;
+  });
+  return config;
+}
+
+function generateSensorInit(sensors: Array<{ type: string; count: number }>): string {
+  let init = "";
+  sensors.forEach(sensor => {
+    if (sensor.type === 'dht22') {
+      init += `  // DHT22 초기화\n`;
+    } else if (sensor.type === 'ds18b20') {
+      init += `  // DS18B20 초기화\n`;
+    }
+  });
+  return init;
+}
+
+function generateActuatorInit(controls: Array<{ type: string; count: number }>): string {
+  let init = "";
+  controls.forEach(control => {
+    init += `  pinMode(${control.type.toUpperCase()}_PIN, OUTPUT);\n`;
+    init += `  digitalWrite(${control.type.toUpperCase()}_PIN, LOW); // 초기 상태 OFF\n`;
+  });
+  return init;
+}
+
+function generateSensorReadings(sensors: Array<{ type: string; count: number }>): string {
+  let readings = "";
+  sensors.forEach(sensor => {
+    if (sensor.type === 'dht22') {
+      readings += `  // DHT22 온습도 센서\n`;
+      readings += `  float temperature = readDHT22Temperature();\n`;
+      readings += `  float humidity = readDHT22Humidity();\n`;
+      readings += `  readings.add(JsonObject{{"key", "temperature"}, {"value", temperature}, {"unit", "°C"}, {"ts", millis()}});\n`;
+      readings += `  readings.add(JsonObject{{"key", "humidity"}, {"value", humidity}, {"unit", "%"}, {"ts", millis()}});\n`;
+    } else if (sensor.type === 'ds18b20') {
+      readings += `  // DS18B20 온도 센서\n`;
+      readings += `  float temperature = readDS18B20();\n`;
+      readings += `  readings.add(JsonObject{{"key", "temperature"}, {"value", temperature}, {"unit", "°C"}, {"ts", millis()}});\n`;
+    }
+  });
+  return readings;
+}
+
+function generateActuatorControl(controls: Array<{ type: string; count: number }>): string {
+  let control = "";
+  controls.forEach(control => {
+    control += `  if (type == "${control.type}") {\n`;
+    control += `    if (action == "on") {\n`;
+    control += `      digitalWrite(${control.type.toUpperCase()}_PIN, HIGH);\n`;
+    control += `    } else if (action == "off") {\n`;
+    control += `      digitalWrite(${control.type.toUpperCase()}_PIN, LOW);\n`;
+    control += `    }\n`;
+    control += `  }\n`;
+  });
+  return control;
+}
+
+function generateSensorFunctions(sensors: Array<{ type: string; count: number }>): string {
+  let functions = "";
+  sensors.forEach(sensor => {
+    if (sensor.type === 'dht22') {
+      functions += `float readDHT22Temperature() {\n`;
+      functions += `  // TODO: DHT22 온도 읽기 구현\n`;
+      functions += `  return 25.0; // 임시 값\n`;
+      functions += `}\n\n`;
+      functions += `float readDHT22Humidity() {\n`;
+      functions += `  // TODO: DHT22 습도 읽기 구현\n`;
+      functions += `  return 60.0; // 임시 값\n`;
+      functions += `}\n\n`;
+    } else if (sensor.type === 'ds18b20') {
+      functions += `float readDS18B20() {\n`;
+      functions += `  // TODO: DS18B20 온도 읽기 구현\n`;
+      functions += `  return 24.5; // 임시 값\n`;
+      functions += `}\n\n`;
+    }
+  });
+  return functions;
+}
+
+function generateActuatorFunctions(controls: Array<{ type: string; count: number }>): string {
+  let functions = "";
+  controls.forEach(control => {
+    functions += `void control${control.type.charAt(0).toUpperCase() + control.type.slice(1)}(bool state) {\n`;
+    functions += `  digitalWrite(${control.type.toUpperCase()}_PIN, state ? HIGH : LOW);\n`;
+    functions += `  Serial.println("${control.type} " + (state ? "ON" : "OFF"));\n`;
+    functions += `}\n\n`;
+  });
+  return functions;
 }

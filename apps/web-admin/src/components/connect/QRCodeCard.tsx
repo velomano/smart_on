@@ -42,9 +42,9 @@ export function QRCodeCard({ qrData, setupToken }: QRCodeCardProps) {
         />
       </div>
       
-      <div className="bg-gray-50 p-3 rounded mb-4">
-        <p className="text-xs text-gray-500 mb-1">Setup Token:</p>
-        <code className="text-xs text-blue-700 break-all">{setupToken}</code>
+      <div className="bg-gray-100 p-3 rounded mb-4">
+        <p className="text-xs text-gray-600 mb-1">Setup Token:</p>
+        <code className="text-xs text-blue-800 break-all font-mono">{setupToken}</code>
       </div>
       
       <button 
@@ -54,7 +54,7 @@ export function QRCodeCard({ qrData, setupToken }: QRCodeCardProps) {
         {copied ? '✅ 복사 완료!' : '📋 토큰 복사하기'}
       </button>
       
-      <p className="text-xs text-gray-500 text-center mt-3">
+      <p className="text-xs text-gray-600 text-center mt-3">
         💡 모바일 앱이 없다면 수동으로 토큰을 입력하세요
       </p>
     </div>

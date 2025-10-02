@@ -97,9 +97,8 @@ export async function getUnifiedSensors(farmId: string): Promise<UnifiedSensor[]
   }
 
   // 2. MQTT Bridge 데이터 (기존)
-  // TODO: 기존 MQTT 데이터 통합
-  // const mqttSensors = await getMqttSensors(farmId);
-  // sensors.push(...mqttSensors);
+  const mqttSensors = await getMqttSensors(farmId);
+  sensors.push(...mqttSensors);
 
   // 3. Tuya 데이터 (기존)
   // TODO: 기존 Tuya 데이터 통합
@@ -152,8 +151,13 @@ export async function getUnifiedActuators(farmId: string): Promise<UnifiedActuat
     }
   }
 
-  // 2. MQTT/Tuya Actuator 통합
-  // TODO: 기존 actuator 통합
+  // 2. MQTT Bridge Actuator 통합
+  const mqttActuators = await getMqttActuators(farmId);
+  actuators.push(...mqttActuators);
+
+  // 3. Tuya Actuator 통합 (TODO: 구현 필요)
+  // const tuyaActuators = await getTuyaActuators(farmId);
+  // actuators.push(...tuyaActuators);
 
   return actuators;
 }
@@ -189,8 +193,13 @@ export async function getUnifiedDevices(farmId: string): Promise<UnifiedDevice[]
     }
   }
 
-  // 2. MQTT/Tuya 장치 통합
-  // TODO: 기존 장치 통합
+  // 2. MQTT Bridge 장치 통합
+  const mqttDevices = await getMqttDevices(farmId);
+  devices.push(...mqttDevices);
+
+  // 3. Tuya 장치 통합 (TODO: 구현 필요)
+  // const tuyaDevices = await getTuyaDevices(farmId);
+  // devices.push(...tuyaDevices);
 
   return devices;
 }
@@ -280,9 +289,9 @@ export async function getLatestSensorValue(
     };
   }
 
-  // 2. MQTT Bridge Fallback (TODO: 기존 MQTT 데이터)
-  // const mqttValue = await getMqttLatest(farmId, deviceId, key);
-  // if (mqttValue) return mqttValue;
+  // 2. MQTT Bridge Fallback
+  const mqttValue = await getMqttLatest(farmId, deviceId, key);
+  if (mqttValue) return mqttValue;
 
   // 3. Tuya Fallback (TODO: 기존 Tuya 데이터)
   // const tuyaValue = await getTuyaLatest(farmId, deviceId, key);
@@ -356,30 +365,77 @@ export function normalizeKey(key: string): string {
 // MQTT Bridge Integration (TODO)
 // =====================================================
 
+async function getMqttSensors(farmId: string): Promise<UnifiedSensor[]> {
+  const supabase = await createClient();
+  const sensors: UnifiedSensor[] = [];
+
+  // 기존 MQTT Bridge 센서 데이터 조회
+  const { data: mqttReadings } = await supabase
+    .from('sensor_readings')
+    .select(`
+      id,
+      sensor_id,
+      value,
+      unit,
+      timestamp,
+      sensors!inner(type, unit, devices!inner(device_id, farm_id))
+    `)
+    .eq('sensors.devices.farm_id', farmId)
+    .order('timestamp', { ascending: false })
+    .limit(100);
+
+  if (mqttReadings) {
+    for (const reading of mqttReadings) {
+      const sensor = (reading as any).sensors;
+      const device = (sensor as any).devices;
+      
+      sensors.push({
+        id: reading.id,
+        device_id: device.device_id,
+        key: sensor.type,
+        canonical_key: normalizeKey(sensor.type),
+        label: sensor.type,
+        value: reading.value,
+        unit: reading.unit || sensor.unit || '',
+        display_unit: reading.unit || sensor.unit || '',
+        timestamp: reading.timestamp,
+        source: 'mqtt',
+      });
+    }
+  }
+
+  return sensors;
+}
+
 async function getMqttLatest(
   farmId: string,
   deviceId: string,
   key: string
 ): Promise<{ value: number; unit: string; ts: string } | null> {
-  // TODO: 기존 MQTT Bridge 데이터 조회
-  // const supabase = await createClient();
-  // const { data } = await supabase
-  //   .from('sensor_readings')  // 기존 MQTT 테이블
-  //   .select('value, unit, timestamp')
-  //   .eq('farm_id', farmId)
-  //   .eq('device_id', deviceId)
-  //   .eq('sensor_type', key)
-  //   .order('timestamp', { ascending: false })
-  //   .limit(1)
-  //   .maybeSingle();
-  // 
-  // if (data) {
-  //   return {
-  //     value: data.value,
-  //     unit: data.unit,
-  //     ts: data.timestamp,
-  //   };
-  // }
+  const supabase = await createClient();
+  
+  const { data } = await supabase
+    .from('sensor_readings')
+    .select(`
+      value,
+      unit,
+      timestamp,
+      sensors!inner(type, devices!inner(device_id, farm_id))
+    `)
+    .eq('sensors.devices.farm_id', farmId)
+    .eq('sensors.devices.device_id', deviceId)
+    .eq('sensors.type', key)
+    .order('timestamp', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (data) {
+    return {
+      value: data.value,
+      unit: data.unit || '',
+      ts: data.timestamp,
+    };
+  }
 
   return null;
 }
@@ -391,5 +447,75 @@ async function getTuyaLatest(
 ): Promise<{ value: number; unit: string; ts: string } | null> {
   // TODO: Tuya API 데이터 조회
   return null;
+}
+
+// =====================================================
+// MQTT Bridge Helper Functions
+// =====================================================
+
+async function getMqttActuators(farmId: string): Promise<UnifiedActuator[]> {
+  const supabase = await createClient();
+  const actuators: UnifiedActuator[] = [];
+
+  // MQTT Bridge 액추에이터 데이터 조회
+  const { data: mqttDevices } = await supabase
+    .from('devices')
+    .select(`
+      id,
+      device_id,
+      farm_id,
+      actuators!inner(type, label, commands)
+    `)
+    .eq('farm_id', farmId);
+
+  if (mqttDevices) {
+    for (const device of mqttDevices) {
+      const deviceActuators = (device as any).actuators;
+      
+      for (const actuator of deviceActuators) {
+        actuators.push({
+          id: `${device.id}_${actuator.type}`,
+          device_id: device.device_id,
+          type: actuator.type,
+          label: actuator.label || actuator.type,
+          state: null, // TODO: 실제 상태 조회
+          available_commands: actuator.commands || [],
+          source: 'mqtt',
+        });
+      }
+    }
+  }
+
+  return actuators;
+}
+
+async function getMqttDevices(farmId: string): Promise<UnifiedDevice[]> {
+  const supabase = await createClient();
+  const devices: UnifiedDevice[] = [];
+
+  // MQTT Bridge 장치 데이터 조회
+  const { data: mqttDevices } = await supabase
+    .from('devices')
+    .select('id, device_id, farm_id, last_seen_at')
+    .eq('farm_id', farmId);
+
+  if (mqttDevices) {
+    for (const device of mqttDevices) {
+      const lastSeen = device.last_seen_at ? new Date(device.last_seen_at) : null;
+      const online = lastSeen ? (Date.now() - lastSeen.getTime()) < 5 * 60 * 1000 : false;
+
+      devices.push({
+        id: device.id,
+        device_id: device.device_id,
+        name: device.device_id, // TODO: 실제 이름 가져오기
+        profile_id: null, // MQTT Bridge는 profile_id 없음
+        online,
+        last_seen_at: device.last_seen_at,
+        source: 'mqtt',
+      });
+    }
+  }
+
+  return devices;
 }
 
