@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "apps/web-admin/package.json",
+      "use": "@vercel/next",
+      "config": {
+        "distDir": "apps/web-admin/.next"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "apps/web-admin/$1"
+    }
+  ]
+}
