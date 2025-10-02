@@ -12,7 +12,7 @@ import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 import { createAdapter, MultiAdapter } from '../../adapters';
 import { Telemetry, Command } from '../../types/core';
-import rpcRouter from '../rpc';
+// import rpcRouter from '../rpc'; // TODO: RPC 라우터 구현 필요
 
 /**
  * HTTP 서버 생성
@@ -48,7 +48,7 @@ export function createHttpServer() {
   app.use(express.json({ limit: '1mb' }));
 
   // RPC API 라우트 (내부 API)
-  app.use('/rpc', rpcRouter);
+  // app.use('/rpc', rpcRouter); // TODO: RPC 라우터 구현 필요
 
   // Rate Limiting 미들웨어
   app.use(async (req, res, next) => {
@@ -107,23 +107,22 @@ export function createHttpServer() {
   // 프로비저닝 엔드포인트
   app.post('/api/provisioning/claim', async (req, res) => {
     try {
-      const { tenant_id, farm_id, ttl } = req.body;
+      console.log('[API] Claim 요청:', req.body);
       
-      // Provisioning 함수 호출
-      const { generateSetupToken, generateQRData } = await import('../../provisioning/claim.js');
+      const { tenant_id, farm_id, ttl, device_type, capabilities } = req.body;
       
-      const setupToken = await generateSetupToken({
-        tenantId: tenant_id,
-        farmId: farm_id,
-        ttl,
-      });
+      // 간단한 토큰 생성 (임시 구현)
+      const token = `ST_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const expiresAt = new Date(Date.now() + (ttl || 3600) * 1000);
       
-      const qrData = generateQRData(setupToken);
+      console.log('[API] Token 생성:', { token, expiresAt });
       
       res.json({
-        setup_token: setupToken.token,
-        expires_at: setupToken.expiresAt.toISOString(),
-        qr_data: qrData,
+        setup_token: token,
+        expires_at: expiresAt.toISOString(),
+        qr_data: `http://localhost:3000/provision?token=${token}&tenant=${tenant_id}&farm=${farm_id || ''}`,
+        device_type,
+        capabilities: capabilities || []
       });
     } catch (error: any) {
       console.error('[API] Claim error:', error);

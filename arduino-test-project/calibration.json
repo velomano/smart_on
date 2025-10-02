@@ -1,0 +1,47 @@
+{
+  "sensors": {
+    "BME280": {
+      "offset": 0,
+      "scale": 1,
+      "min_value": 0,
+      "max_value": 100,
+      "unit": "unit"
+    },
+    "ENS160": {
+      "offset": 0,
+      "scale": 1,
+      "min_value": 0,
+      "max_value": 100,
+      "unit": "unit"
+    },
+    "HC-SR04": {
+      "offset": 0,
+      "scale": 1,
+      "min_value": 0,
+      "max_value": 100,
+      "unit": "unit"
+    }
+  },
+  "actuators": {
+    "A4988_Stepper": {
+      "min_power": 0,
+      "max_power": 100,
+      "default_state": false
+    },
+    "WS2812B_NeoPixel": {
+      "min_power": 0,
+      "max_power": 100,
+      "default_state": false
+    },
+    "AC_Relay_Lamp": {
+      "min_power": 0,
+      "max_power": 100,
+      "default_state": false
+    }
+  },
+  "system": {
+    "update_interval": 5000,
+    "retry_count": 3,
+    "timeout": 10000
+  }
+}

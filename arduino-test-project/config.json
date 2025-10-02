@@ -1,0 +1,63 @@
+{
+  "device": {
+    "type": "esp32",
+    "protocol": "mqtt",
+    "version": "1.0.0"
+  },
+  "wifi": {
+    "ssid": "YOUR_WIFI_SSID",
+    "password": "YOUR_WIFI_PASSWORD"
+  },
+  "server": {
+    "url": "mqtt://localhost:1883",
+    "port": 1883
+  },
+  "sensors": [
+    {
+      "type": "BME280",
+      "count": 1,
+      "pins": [
+        2
+      ]
+    },
+    {
+      "type": "ENS160",
+      "count": 1,
+      "pins": [
+        2
+      ]
+    },
+    {
+      "type": "HC-SR04",
+      "count": 1,
+      "pins": [
+        2
+      ]
+    }
+  ],
+  "actuators": [
+    {
+      "type": "A4988_Stepper",
+      "count": 1,
+      "pins": [
+        10
+      ]
+    },
+    {
+      "type": "WS2812B_NeoPixel",
+      "count": 1,
+      "pins": [
+        10
+      ]
+    },
+    {
+      "type": "AC_Relay_Lamp",
+      "count": 1,
+      "pins": [
+        10
+      ]
+    }
+  ],
+  "lorawan": null,
+  "modbus": null
+}

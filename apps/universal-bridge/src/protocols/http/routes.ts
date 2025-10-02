@@ -12,12 +12,31 @@ import type { Request, Response } from 'express';
  * 
  * POST /api/provisioning/claim
  * 
- * TODO: 구현
+ * Setup Token 발급
  */
 export async function handleClaim(req: Request, res: Response) {
-  // TODO: Setup Token 발급
-  console.log('[HTTP] TODO: handleClaim');
-  res.json({ status: 'TODO' });
+  try {
+    console.log('[HTTP] Claim 요청:', req.body);
+    
+    const { tenant_id, farm_id, ttl, device_type, capabilities } = req.body;
+    
+    // 간단한 토큰 생성 (실제로는 더 안전한 방법 사용해야 함)
+    const token = `setup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const device_key = `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    console.log('[HTTP] Token 발급:', { token, device_key });
+    
+    res.json({
+      token,
+      device_key,
+      expires_at: new Date(Date.now() + (ttl || 3600) * 1000).toISOString(),
+      device_type,
+      capabilities: capabilities || []
+    });
+  } catch (error) {
+    console.error('[HTTP] Claim 오류:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 }
 
 /**

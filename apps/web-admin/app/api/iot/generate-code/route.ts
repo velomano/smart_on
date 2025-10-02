@@ -497,6 +497,16 @@ export async function POST(request: NextRequest) {
     if (!spec || !spec.device || !spec.protocol) {
       return NextResponse.json({ error: '필수 설정이 누락되었습니다' }, { status: 400 });
     }
+    
+    // 향후 지원 프로토콜 체크
+    const futureProtocols = ['serial', 'ble', 'rs485', 'modbus-tcp', 'lorawan'];
+    if (futureProtocols.includes(spec.protocol)) {
+      return NextResponse.json({ 
+        error: `${spec.protocol.toUpperCase()} 프로토콜은 향후 지원 예정입니다. 현재는 MQTT만 지원됩니다.`,
+        supportedProtocols: ['mqtt'],
+        futureProtocols: futureProtocols
+      }, { status: 400 });
+    }
 
         // 메인 코드 파일 생성 (기존 방식으로 임시 테스트)
         const code = generateSimpleCode(spec);
@@ -575,6 +585,12 @@ function getFilename(device: string, protocol: string): string {
     'modbus-tcp': 'modbus',
     'lorawan': 'lorawan'
   };
+  
+  // 향후 지원 프로토콜 체크
+  const futureProtocols = ['serial', 'ble', 'rs485', 'modbus-tcp', 'lorawan'];
+  if (futureProtocols.includes(protocol)) {
+    throw new Error(`${protocol.toUpperCase()} 프로토콜은 향후 지원 예정입니다. 현재는 MQTT만 지원됩니다.`);
+  }
   
   const deviceName = deviceMap[device] || device;
   const protocolName = protocolMap[protocol] || protocol;
@@ -1134,10 +1150,13 @@ ${controls.map(control => `- **${control.type}**: 핀 ${Array.from({ length: con
 
 ### ${protocol.toUpperCase()} 설정
 ${protocol === 'mqtt' ? `
-- **브로커 주소**: localhost:1883
+- **브로커 주소**: bridge.local:1883
 - **토픽 규칙**: terahub/{tenant}/{deviceId}/{kind}/{name}
 - **센서 토픽**: terahub/demo/esp32-xxx/sensors/bme280/temperature
 - **액추에이터 토픽**: terahub/demo/esp32-xxx/actuators/relay1/set
+` : `
+- **프로토콜**: ${protocol.toUpperCase()} (향후 지원 예정)
+`}
 
 ## 🐛 문제 해결
 

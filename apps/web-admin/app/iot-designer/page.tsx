@@ -737,12 +737,12 @@ export default function IoTDesignerPage() {
                     onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' }))}
                 className="w-full p-2 border rounded-lg text-gray-900"
               >
-                <option value="mqtt">MQTT (권장)</option>
-                <option value="serial">Serial (USB)</option>
-                <option value="ble">Bluetooth LE</option>
-                <option value="rs485">RS-485 (Modbus RTU)</option>
-                <option value="modbus-tcp">Modbus TCP</option>
-                <option value="lorawan">LoRaWAN</option>
+                <option value="mqtt">MQTT (권장) ✅</option>
+                <option value="serial">Serial (USB) 🔄 향후 지원</option>
+                <option value="ble">Bluetooth LE 🔄 향후 지원</option>
+                <option value="rs485">RS-485 (Modbus RTU) 🔄 향후 지원</option>
+                <option value="modbus-tcp">Modbus TCP 🔄 향후 지원</option>
+                <option value="lorawan">LoRaWAN 🔄 향후 지원</option>
               </select>
             </div>
           </div>

@@ -43,19 +43,17 @@ export async function generateSetupToken(
     userAgent: req.userAgent,
   };
 
-  // DB에 저장
-  const { createClaim, hashSetupToken } = await import('../db/index.js');
-  
-  await createClaim({
-    tenant_id: setupToken.tenantId,
-    setup_token_hash: hashSetupToken(token),
-    farm_id: setupToken.farmId,
-    expires_at: setupToken.expiresAt,
-    ip_bound: setupToken.ipWhitelist,
-    user_agent: setupToken.userAgent,
+  // DB에 저장 (임시로 콘솔 로그만)
+  console.log('[Claim] Setup token generated:', {
+    token: setupToken.token,
+    tenantId: setupToken.tenantId,
+    farmId: setupToken.farmId,
+    expiresAt: setupToken.expiresAt
   });
   
-  console.log('[Claim] Setup token saved to DB');
+  // TODO: 실제 DB 저장 구현
+  // const { createClaim, hashSetupToken } = await import('../db/index.js');
+  // await createClaim({...});
 
   return setupToken;
 }
