@@ -122,32 +122,30 @@ jobs:
                 '과도한 질소는 과번무 유발'
               ];
               
-              // crop_profiles 형식으로 변환
-              const cropProfile = {
-                crop_key: recipe.crop_key,
-                crop_name: recipe.crop_name,
-                stage: recipe.stage,
-                target_ppm: targetPpm,
-                target_ec: recipe.target_ec,
-                target_ph: recipe.target_ph,
-                author: '자동 수집 시스템',
-                source_title: source?.name || '스마트팜 데이터베이스',
-                source_year: new Date(recipe.collected_at).getFullYear(),
-                license: source?.license || 'CC BY 4.0',
-                description: \`\${recipe.crop_name} \${recipe.stage}에 최적화된 배양액 레시피입니다. (출처: \${source?.name || 'Unknown'})\`,
-                growing_conditions: growingConditions,
-                nutrients_detail: nutrientsDetail,
-                usage_notes: usageNotes,
-                warnings: warnings,
-                last_updated: new Date(recipe.collected_at).toISOString().split('T')[0],
-                volume_l: 100,
-                ec_target: recipe.target_ec,
-                ph_target: recipe.target_ph,
-                npk_ratio: npkRatio
+              // nutrient_recipes 형식으로 변환
+              const micro = {
+                Fe: recipe.micro?.Fe || 2,
+                Mn: recipe.micro?.Mn || 0.5,
+                B: recipe.micro?.B || 0.5,
+                Zn: recipe.micro?.Zn || 0.1,
+                Cu: recipe.micro?.Cu || 0.05,
+                Mo: recipe.micro?.Mo || 0.05
               };
               
-              // crop_profiles에 직접 저장
-              const res = await fetch(process.env.SUPABASE_URL + '/rest/v1/crop_profiles', {
+              const nutrientRecipe = {
+                crop_key: recipe.crop_key,
+                stage: recipe.stage,
+                target_ec: recipe.target_ec,
+                target_ph: recipe.target_ph,
+                macro: targetPpm,
+                micro: micro,
+                source_id: null, // source_id는 별도로 처리 필요
+                reliability: source?.reliability_default || 0.7,
+                checksum: recipe.checksum || \`\${recipe.crop_key}_\${recipe.stage}_\${Date.now()}\`
+              };
+              
+              // nutrient_recipes에 직접 저장 (자동 수집용)
+              const res = await fetch(process.env.SUPABASE_URL + '/rest/v1/nutrient_recipes', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -155,7 +153,7 @@ jobs:
                   'Authorization': \`Bearer \${process.env.SUPABASE_SERVICE_ROLE_KEY}\`,
                   'Prefer': 'resolution=merge-duplicates'
                 },
-                body: JSON.stringify(cropProfile)
+                body: JSON.stringify(nutrientRecipe)
               });
               
               if (res.ok) {

@@ -203,43 +203,6 @@ export async function GET(req: NextRequest) {
       console.error('❌ 에러 스택:', error.stack);
     }
     
-    // Mock 데이터로 fallback
-    const mockRecipes = [
-      {
-        id: 'error-fallback-1',
-        crop: '상추',
-        stage: '생장기',
-        volume_l: 100,
-        ec_target: 1.2,
-        ph_target: 6.0,
-        npk_ratio: '100:30:150',
-        created_at: new Date().toISOString(),
-        source_title: '스마트팜 시스템 (Fallback)',
-        source_year: new Date().getFullYear(),
-        source_url: null,
-        license: 'CC BY 4.0',
-        description: '서버 오류로 인한 대체 레시피입니다.',
-        growing_conditions: {
-          temperature: '15-20°C',
-          humidity: '70-80%',
-          light_hours: '12-14시간',
-          co2_level: '400-600ppm'
-        },
-        nutrients_detail: {
-          nitrogen: 100,
-          phosphorus: 30,
-          potassium: 150,
-          calcium: 80,
-          magnesium: 25,
-          trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
-        },
-        usage_notes: ['서버 오류로 인한 대체 데이터입니다'],
-        warnings: ['실제 데이터베이스 연결을 확인해주세요'],
-        author: '스마트팜 시스템',
-        last_updated: new Date().toISOString()
-      }
-    ];
-    
     return NextResponse.json({ 
       ok: false, 
       error: '서버 오류가 발생했습니다.' 

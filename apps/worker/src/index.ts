@@ -69,25 +69,76 @@ async function main() {
       return;
     }
     
-    // Supabase Edge Function으로 데이터 저장
+    // Supabase REST API로 직접 저장
     console.log('💾 Supabase에 데이터 저장 중...');
-    const res = await fetch(process.env.SUPABASE_FN_URL + "/ingest-nutrient", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.SERVICE_ROLE}`
-      },
-      body: JSON.stringify(allRecipes)
-    });
     
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error("❌ Supabase 저장 실패:", errorText);
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("❌ Supabase 환경변수가 설정되지 않았습니다.");
+      console.log("환경변수 확인:", {
+        SUPABASE_URL: !!process.env.SUPABASE_URL,
+        SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      });
       process.exit(1);
     }
     
-    const result = await res.json();
-    console.log("✅ Supabase 저장 완료:", result);
+    let savedCount = 0;
+    for (const recipe of allRecipes) {
+      try {
+        // nutrient_recipes 형식으로 변환
+        const targetPpm = {
+          N: recipe.macro?.N || 0,
+          P: recipe.macro?.P || 0,
+          K: recipe.macro?.K || 0,
+          Ca: recipe.macro?.Ca || 0,
+          Mg: recipe.macro?.Mg || 0,
+          S: recipe.macro?.S || 0
+        };
+        
+        const micro = {
+          Fe: recipe.micro?.Fe || 2,
+          Mn: recipe.micro?.Mn || 0.5,
+          B: recipe.micro?.B || 0.5,
+          Zn: recipe.micro?.Zn || 0.1,
+          Cu: recipe.micro?.Cu || 0.05,
+          Mo: recipe.micro?.Mo || 0.05
+        };
+        
+        const nutrientRecipe = {
+          crop_key: recipe.crop_key,
+          stage: recipe.stage,
+          target_ec: recipe.target_ec,
+          target_ph: recipe.target_ph,
+          macro: targetPpm,
+          micro: micro,
+          source_id: null, // source_id는 별도로 처리 필요
+          reliability: recipe.source?.reliability_default || 0.7,
+          checksum: recipe.checksum || `${recipe.crop_key}_${recipe.stage}_${Date.now()}`
+        };
+        
+        const res = await fetch(process.env.SUPABASE_URL + "/rest/v1/nutrient_recipes", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": process.env.SUPABASE_SERVICE_ROLE_KEY,
+            "Authorization": `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            "Prefer": "resolution=merge-duplicates"
+          },
+          body: JSON.stringify(nutrientRecipe)
+        });
+        
+        if (res.ok) {
+          savedCount++;
+          console.log(`✅ 저장 완료: ${recipe.crop_name || recipe.crop_key} (${recipe.stage})`);
+        } else {
+          const errorText = await res.text();
+          console.error(`❌ 저장 실패: ${recipe.crop_name || recipe.crop_key}`, errorText);
+        }
+      } catch (error) {
+        console.error(`❌ 저장 중 오류: ${recipe.crop_name || recipe.crop_key}`, error.message);
+      }
+    }
+    
+    console.log(`✅ Supabase 저장 완료: ${savedCount}/${allRecipes.length}건`);
     
     // 수집 통계 출력
     console.log('=' .repeat(50));
