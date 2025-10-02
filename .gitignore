@@ -124,3 +124,8 @@ mobile-app/node_modules/
 tmp/
 temp/
 .vercel
+
+# Database backups
+backup_*.sql
+schema_dump.sql
+table_analysis_report.txt
