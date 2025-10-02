@@ -23,8 +23,21 @@ export interface SystemStatus {
   location: string;
 }
 
+// 알림 설정 인터페이스
+export interface NotificationSettings {
+  telegramEnabled: boolean;
+  telegramChatId: string;
+  notifications: {
+    temperature_notification: boolean;
+    humidity_notification: boolean;
+    ec_notification: boolean;
+    ph_notification: boolean;
+    water_notification: boolean;
+  };
+}
+
 // 알림 설정 로드 (서버사이드에서는 기본값 사용)
-function loadNotificationSettings() {
+export function loadNotificationSettings(): NotificationSettings {
   // 서버사이드에서는 localStorage를 사용할 수 없으므로 기본값 반환
   if (typeof window === 'undefined') {
     return { 
@@ -97,6 +110,21 @@ function loadNotificationSettings() {
     telegramChatId,
     notifications
   };
+}
+
+// 알림 설정 저장
+export function saveNotificationSettings(settings: NotificationSettings) {
+  if (typeof window === 'undefined') {
+    return; // 서버사이드에서는 저장하지 않음
+  }
+  
+  try {
+    localStorage.setItem('notificationSettings', JSON.stringify(settings));
+    console.log('알림 설정이 저장되었습니다:', settings);
+  } catch (error) {
+    console.error('알림 설정 저장 실패:', error);
+    throw error;
+  }
 }
 
 // 현재 사용자의 텔레그램 채팅 ID 가져오기 (test1은 하드코딩, 다른 사용자는 저장된 값)

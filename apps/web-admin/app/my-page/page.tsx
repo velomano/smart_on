@@ -5,6 +5,7 @@ import { getCurrentUser, updateUserWeatherRegion } from '@/lib/auth';
 import { AuthUser } from '@/lib/auth';
 import { UserService, UserProfile, UserSettings } from '@/lib/userService';
 import { User } from '@supabase/supabase-js';
+import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '@/lib/notificationService';
 
 export default function MyPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -567,15 +568,23 @@ export default function MyPage() {
                                 setSaveStatus('❌ 텔레그램 설정 저장에 실패했습니다.');
                               }
                             } else {
-                              // 로컬 저장
+                              // 로컬 저장 - 알림 설정과 동기화
                               localStorage.setItem('userSettings', JSON.stringify(settings));
-                              const currentNotificationSettings = localStorage.getItem('notificationSettings');
-                              const notificationSettingsObj = currentNotificationSettings ? JSON.parse(currentNotificationSettings) : {};
-                              notificationSettingsObj.telegramChatId = settings.telegramChatId;
-                              notificationSettingsObj.telegramEnabled = settings.notificationEnabled;
-                              localStorage.setItem('notificationSettings', JSON.stringify(notificationSettingsObj));
+                              
+                              // 현재 알림 설정을 로드하고 텔레그램 설정만 업데이트
+                              const currentNotificationSettings = loadNotificationSettings();
+                              const updatedNotificationSettings: NotificationSettings = {
+                                ...currentNotificationSettings,
+                                telegramChatId: settings.telegramChatId,
+                                telegramEnabled: settings.notificationEnabled
+                              };
+                              
+                              // 알림 설정 저장
+                              saveNotificationSettings(updatedNotificationSettings);
+                              
+                              // 저장 이벤트 발생시켜 다른 페이지에서 감지할 수 있도록
                               window.dispatchEvent(new Event('storage'));
-                              setSaveStatus('✅ 텔레그램 설정이 로컬에 저장되었습니다!');
+                              setSaveStatus('✅ 텔레그램 설정이 저장되었습니다!');
                             }
                           } catch (error) {
                             setSaveStatus(`❌ 저장 중 오류가 발생했습니다: ${error}`);

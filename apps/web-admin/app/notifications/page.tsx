@@ -5,22 +5,13 @@ import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import NotificationButton from '@/components/NotificationButton';
 import { getCurrentUser, AuthUser } from '@/lib/auth';
+import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '@/lib/notificationService';
 
 export default function NotificationsPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [notificationSettings, setNotificationSettings] = useState({
-    telegramEnabled: false,
-    telegramChatId: '',
-    notifications: {
-      temperature_notification: true,
-      humidity_notification: true,
-      ec_notification: true,
-      ph_notification: true,
-      water_notification: true
-    }
-  });
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
 
   // 사용자 인증 확인
   useEffect(() => {
@@ -32,7 +23,8 @@ export default function NotificationsPage() {
           return;
         }
         setUser(currentUser);
-        loadNotificationSettings();
+        // 알림 설정을 다시 로드하여 최신 상태 반영
+        setNotificationSettings(loadNotificationSettings());
       } catch (err) {
         console.error('인증 확인 실패:', err);
         window.location.href = '/login';
@@ -41,29 +33,30 @@ export default function NotificationsPage() {
       }
     };
     checkAuth();
+
+    // storage 이벤트 리스너 추가 (마이페이지에서 설정 변경 시 동기화)
+    const handleStorageChange = () => {
+      setNotificationSettings(loadNotificationSettings());
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
-  // 알림 설정 로드
-  const loadNotificationSettings = () => {
-    try {
-      const settings = localStorage.getItem('notificationSettings');
-      if (settings) {
-        const parsed = JSON.parse(settings);
-        setNotificationSettings(parsed);
-      }
-    } catch (error) {
-      console.error('알림 설정 로드 실패:', error);
-    }
-  };
 
   // 알림 설정 저장
-  const saveNotificationSettings = () => {
+  const handleSaveSettings = () => {
     try {
-      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
-      alert('알림 설정이 저장되었습니다!');
+      saveNotificationSettings(notificationSettings);
+      setSaveStatus('✅ 설정이 저장되었습니다!');
+      setTimeout(() => setSaveStatus(''), 3000);
     } catch (error) {
       console.error('알림 설정 저장 실패:', error);
-      alert('알림 설정 저장에 실패했습니다.');
+      setSaveStatus('❌ 설정 저장에 실패했습니다.');
+      setTimeout(() => setSaveStatus(''), 3000);
     }
   };
 
@@ -258,7 +251,7 @@ export default function NotificationsPage() {
           {/* 저장 버튼 */}
           <div className="flex justify-center">
             <button
-              onClick={saveNotificationSettings}
+              onClick={handleSaveSettings}
               className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl"
             >
               💾 설정 저장
