@@ -143,28 +143,10 @@ export default function NotificationsPage() {
                 </label>
               </div>
 
-                     {/* 채팅 ID 설정 */}
+                     {/* 채팅 ID 설정 - 마이페이지에서 관리하므로 제거 */}
                      {notificationSettings.telegramEnabled && (
                        <div className="space-y-4">
-                         <div>
-                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                             텔레그램 채팅 ID
-                           </label>
-                           <input
-                             type="text"
-                             value={notificationSettings.telegramChatId}
-                             onChange={(e) => handleSettingChange('telegramChatId', e.target.value)}
-                             placeholder="텔레그램 채팅 ID를 입력하세요 (예: 123456789)"
-                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                           />
-                           {notificationSettings.telegramChatId && (
-                             <div className="mt-2 text-sm text-gray-600">
-                               💡 현재 설정된 ID: <code className="bg-gray-100 px-1 py-0.5 rounded font-mono">{notificationSettings.telegramChatId}</code>
-                             </div>
-                           )}
-                         </div>
-                         
-                         {/* 테스트 버튼 */}
+                         {/* 테스트 버튼만 표시 */}
                          <div className="flex justify-center">
                            <NotificationButton className="text-lg px-8 py-3" />
                          </div>
