@@ -40,8 +40,8 @@ const char* ssid = "YOUR_WIFI_SSID";
 const char* password = "YOUR_WIFI_PASSWORD";
 
 // Universal Bridge MQTT 설정 (브로커 내장)
-const char* mqtt_host = "localhost";  // Universal Bridge가 실행되는 서버
-const int mqtt_port = 1883;
+const char* mqtt_host = "bridge.local";  // 브릿지 호스트/IP (절대 localhost 금지!)
+const int mqtt_port = 1883;  // TLS면 8883 권장
 WiFiClient esp;
 PubSubClient mqtt(esp);
 
@@ -212,7 +212,7 @@ ${spec.controls.map(control => `- **${control.type}**: 핀 ${Array.from({ length
 ## 📡 Universal Bridge 연결
 
 ### MQTT 설정 (브로커 내장)
-- **Universal Bridge 주소**: localhost:1883
+- **Universal Bridge 주소**: bridge.local:1883 (또는 브릿지 IP)
 - **토픽 규칙**: terahub/{tenant}/{deviceId}/{kind}/{name}
 - **센서 토픽**: terahub/demo/esp32-xxx/sensors/bme280/temperature
 - **액추에이터 토픽**: terahub/demo/esp32-xxx/actuators/relay1/set
@@ -226,7 +226,7 @@ ${spec.controls.map(control => `- **${control.type}**: 핀 ${Array.from({ length
 
 ### 일반적인 문제
 1. **WiFi 연결 실패**: SSID와 비밀번호를 확인하세요
-2. **Universal Bridge 연결 실패**: Bridge가 실행 중인지 확인하세요
+2. **Universal Bridge 연결 실패**: Bridge가 실행 중인지, mqtt_host가 올바른지 확인하세요 (localhost 금지!)
 3. **센서 데이터 없음**: 핀 연결과 센서 전원을 확인하세요
 4. **액추에이터 작동 안함**: 핀 연결과 전원 공급을 확인하세요
 
@@ -1131,9 +1131,10 @@ function generateConfigFile(spec: SystemSpec): string {
       ssid: "YOUR_WIFI_SSID",
       password: "YOUR_WIFI_PASSWORD"
     },
-    server: {
-      url: spec.protocol === 'mqtt' ? "mqtt://localhost:1883" : "http://localhost:3001",
-      port: spec.protocol === 'mqtt' ? 1883 : 3001
+    mqtt: {
+      host: "bridge.local",
+      port: 1883,
+      tls: false
     },
     sensors: spec.sensors.map(sensor => ({
       type: sensor.type,
