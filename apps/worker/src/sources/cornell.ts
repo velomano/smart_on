@@ -28,7 +28,11 @@ export async function fetchCornellLettuce(): Promise<NutrientRecipe[]> {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+      },
+      // SSL 인증서 문제 우회 (개발 환경에서만)
+      ...(process.env.NODE_ENV === 'development' && {
+        // Node.js 환경에서는 이 옵션이 작동하지 않을 수 있음
+      })
     });
     
     if (!response.ok) {

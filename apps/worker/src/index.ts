@@ -112,7 +112,7 @@ async function main() {
           micro: micro,
           source_id: null, // source_id는 별도로 처리 필요
           reliability: recipe.source?.reliability_default || 0.7,
-          checksum: recipe.checksum || `${recipe.crop_key}_${recipe.stage}_${Date.now()}`
+          checksum: `${recipe.crop_key}_${recipe.stage}_${recipe.source?.name || 'unknown'}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         };
         
         const res = await fetch(process.env.SUPABASE_URL + "/rest/v1/nutrient_recipes", {
