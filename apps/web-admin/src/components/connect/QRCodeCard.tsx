@@ -54,9 +54,33 @@ export function QRCodeCard({ qrData, setupToken }: QRCodeCardProps) {
         {copied ? '✅ 복사 완료!' : '📋 토큰 복사하기'}
       </button>
       
-      <p className="text-xs text-gray-600 text-center mt-3">
-        💡 모바일 앱이 없다면 수동으로 토큰을 입력하세요
-      </p>
+      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <h4 className="font-semibold text-blue-800 mb-2">📱 QR 코드 사용 방법</h4>
+        <div className="text-sm text-blue-700 space-y-2">
+          <div className="flex items-start">
+            <span className="text-blue-600 mr-2">1️⃣</span>
+            <span><strong>모바일 앱 사용:</strong> QR 코드를 스캔하여 자동 연결</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-blue-600 mr-2">2️⃣</span>
+            <span><strong>웹 브라우저:</strong> QR 코드의 URL을 직접 접속</span>
+          </div>
+          <div className="flex items-start">
+            <span className="text-blue-600 mr-2">3️⃣</span>
+            <span><strong>디바이스 코드:</strong> 생성된 코드에 URL 하드코딩</span>
+          </div>
+        </div>
+        
+        <div className="mt-3 p-2 bg-white border border-blue-300 rounded">
+          <p className="text-xs text-blue-800 font-mono break-all">
+            URL: {qrData}
+          </p>
+        </div>
+        
+        <p className="text-xs text-blue-600 mt-2">
+          💡 <strong>팁:</strong> 디바이스에 카메라가 있다면 QR 코드를 스캔하여 자동 연결 가능합니다!
+        </p>
+      </div>
     </div>
   );
 }

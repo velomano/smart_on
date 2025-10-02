@@ -4,13 +4,14 @@
 interface CodePreviewProps {
   code: string;
   onDownload: () => void;
+  deviceType?: string;
 }
 
-export default function CodePreview({ code, onDownload }: CodePreviewProps) {
+export default function CodePreview({ code, onDownload, deviceType = 'Arduino' }: CodePreviewProps) {
   return (
     <div className="bg-white border rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold">생성된 Arduino 코드</h3>
+        <h3 className="text-lg font-bold">생성된 {deviceType} 코드</h3>
         <button
           onClick={onDownload}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
