@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUser } from '../lib/auth';
 
@@ -38,6 +38,10 @@ export default function AppHeader({
   const [editNoticeTitle, setEditNoticeTitle] = useState('');
   const [editNoticeContent, setEditNoticeContent] = useState('');
   const [editNoticeType, setEditNoticeType] = useState<'new' | 'update' | 'general'>('general');
+  
+  // 햄버거 메뉴 상태
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   // user가 없을 때 기본값 사용 (로딩 중일 때는 null로 처리)
   const safeUser = user || {
@@ -287,6 +291,23 @@ export default function AppHeader({
     };
   }, [isNoticeOpen]);
 
+  // 햄버거 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   const handleHomeClick = () => {
     // 홈 아이콘 클릭 시 대시보드로 이동
     router.push('/');
@@ -416,12 +437,89 @@ export default function AppHeader({
                   {safeUser.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>
               )}
-              
 
+              {/* 햄버거 메뉴 버튼 */}
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                title="메뉴"
+              >
+                <span className="sr-only">메뉴 열기</span>
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
+        {/* 햄버거 메뉴 드롭다운 */}
+        {isMenuOpen && (
+          <div ref={menuRef} className="absolute top-full right-0 bg-white shadow-lg border border-gray-200 z-50 min-w-[250px] rounded-lg">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* 승인 관리 (관리자만) */}
+              {canManageUsers && (
+                <button
+                  onClick={() => {
+                    router.push('/admin');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:text-red-800 hover:bg-red-50"
+                >
+                  승인 관리
+                </button>
+              )}
+
+              {/* 사용자 관리 */}
+              {canAccessUserManagement && (
+                <button
+                  onClick={() => {
+                    router.push('/team');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+                >
+                  사용자 관리
+                </button>
+              )}
+
+              {/* 농장 관리 */}
+              {canManageFarms && (
+                <button
+                  onClick={() => {
+                    router.push('/beds');
+                    setIsMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-green-600 hover:text-green-800 hover:bg-green-50"
+                >
+                  농장 관리
+                </button>
+              )}
+
+              {/* 공지사항 */}
+              <button
+                onClick={() => {
+                  setIsNoticeOpen(true);
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+              >
+                공지사항
+              </button>
+
+              {/* 로그아웃 */}
+              <button
+                onClick={() => {
+                  router.push('/login');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+              >
+                로그아웃
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 공지사항 모달 */}
         {isNoticeOpen && (

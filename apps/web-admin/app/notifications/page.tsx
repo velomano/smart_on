@@ -1,30 +1,28 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
-import { notificationTemplates } from '@/lib/notificationTemplates';
-import { getCurrentUser } from '@/lib/auth';
-import { AuthUser } from '@/lib/auth';
-import { UserService } from '@/lib/userService';
-import { getFarms } from '@/lib/supabase';
+import NotificationButton from '@/components/NotificationButton';
+import { getCurrentUser, AuthUser } from '@/lib/auth';
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [settings, setSettings] = useState({
+  const [notificationSettings, setNotificationSettings] = useState({
     telegramEnabled: false,
     telegramChatId: '',
-    botToken: '',
-    notifications: {} as Record<string, boolean>
+    notifications: {
+      temperature_notification: true,
+      humidity_notification: true,
+      ec_notification: true,
+      ph_notification: true,
+      water_notification: true
+    }
   });
-  const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<string>('');
-  const [showBotInfoModal, setShowBotInfoModal] = useState(false);
-  const [botInfo, setBotInfo] = useState<any>(null);
-  const [botInfoLoading, setBotInfoLoading] = useState(false);
-  const [farms, setFarms] = useState<any[]>([]);
-  const [selectedFarmId, setSelectedFarmId] = useState<string>('');
 
-  // 인증 확인
+  // 사용자 인증 확인
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -34,6 +32,7 @@ export default function NotificationsPage() {
           return;
         }
         setUser(currentUser);
+        loadNotificationSettings();
       } catch (err) {
         console.error('인증 확인 실패:', err);
         window.location.href = '/login';
@@ -44,601 +43,262 @@ export default function NotificationsPage() {
     checkAuth();
   }, []);
 
-  // 농장 목록 로드
-  useEffect(() => {
-    const loadFarms = async () => {
-      try {
-        const farmsData = await getFarms();
-        setFarms(farmsData);
-        if (farmsData.length > 0) {
-          setSelectedFarmId(farmsData[0].id);
-        }
-      } catch (error) {
-        console.error('농장 목록 로드 오류:', error);
-      }
-    };
-    loadFarms();
-  }, []);
-
-  // 알림 설정 로드 (Supabase 연동)
-  useEffect(() => {
-    const loadNotificationSettings = async () => {
-      let loadedSettings: any = {};
-
-      // Supabase에서 사용자 설정 가져오기 (우선 사용)
-      try {
-        const supabaseAuth = await UserService.getCurrentSupabaseUser();
-        if (supabaseAuth?.id) {
-          const userSettingsData = await UserService.getUserSettings(supabaseAuth.id);
-          if (userSettingsData) {
-            if (userSettingsData.telegram_chat_id) {
-              loadedSettings.telegramChatId = userSettingsData.telegram_chat_id;
-            }
-            if (userSettingsData.notification_preferences?.telegram_notification !== undefined) {
-              loadedSettings.telegramEnabled = userSettingsData.notification_preferences.telegram_notification;
-            }
-            console.log('Supabase에서 알림 설정 로드 완료:', loadedSettings);
-          }
-        }
-      } catch (error) {
-        console.warn('Supabase 설정 로드 실패, localStorage 백업 사용:', error);
-        // Supabase 실패 시 localStorage 백업
-        const userSettings = localStorage.getItem('userSettings');
-        if (userSettings) {
-          const userSettingsParsed = JSON.parse(userSettings);
-          if (userSettingsParsed.telegramChatId) {
-            loadedSettings.telegramChatId = userSettingsParsed.telegramChatId;
-          }
-          if (userSettingsParsed.notificationEnabled !== undefined) {
-            loadedSettings.telegramEnabled = userSettingsParsed.notificationEnabled;
-          }
-        }
-      }
-
-      setSettings(prev => ({ ...prev, ...loadedSettings }));
-
-      const defaultNotifications = Object.keys(notificationTemplates).reduce((acc, key) => {
-        acc[key] = true;
-        return acc;
-      }, {} as Record<string, boolean>);
-
-      setSettings(prev => ({
-        ...prev,
-        notifications: { ...defaultNotifications, ...prev.notifications }
-      }));
-    };
-
-    loadNotificationSettings();
-  }, [user]);
-
-  // 마이페이지에서 텔레그램 ID가 변경될 때 실시간 반영
-  useEffect(() => {
-    const handleStorageUpdate = () => {
-      const userSettings = localStorage.getItem('userSettings');
-      if (userSettings) {
-        const userSettingsParsed = JSON.parse(userSettings);
-        if (userSettingsParsed.telegramChatId && userSettingsParsed.telegramChatId !== settings.telegramChatId) {
-          setSettings(prev => ({
-            ...prev,
-            telegramChatId: userSettingsParsed.telegramChatId,
-            telegramEnabled: userSettingsParsed.notificationEnabled !== undefined ? userSettingsParsed.notificationEnabled : prev.telegramEnabled
-          }));
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageUpdate);
-    return () => window.removeEventListener('storage', handleStorageUpdate);
-  }, [settings.telegramChatId]);
-
-  const saveSettings = async () => {
+  // 알림 설정 로드
+  const loadNotificationSettings = () => {
     try {
-      // Supabase에 설정 저장
-      const supabaseAuth = await UserService.getCurrentSupabaseUser();
-      if (supabaseAuth?.id) {
-        await UserService.updateUserSetting(supabaseAuth.id, 'telegram_chat_id', settings.telegramChatId);
-        await UserService.updateUserSetting(supabaseAuth.id, 'notification_preferences', {
-          telegram_notification: settings.telegramEnabled
-        });
-        console.log('Supabase에 알림 설정 저장 완료');
+      const settings = localStorage.getItem('notificationSettings');
+      if (settings) {
+        const parsed = JSON.parse(settings);
+        setNotificationSettings(parsed);
       }
     } catch (error) {
-      console.warn('Supabase 저장 실패, localStorage 백업 사용:', error);
-      // Supabase 실패 시 localStorage 백업
-      localStorage.setItem('notificationSettings', JSON.stringify(settings));
-      
-      const userSettings = localStorage.getItem('userSettings');
-      const userSettingsObj = userSettings ? JSON.parse(userSettings) : {};
-      userSettingsObj.telegramChatId = settings.telegramChatId;
-      userSettingsObj.notificationEnabled = settings.telegramEnabled;
-      localStorage.setItem('userSettings', JSON.stringify(userSettingsObj));
-    }
-    
-    alert('알림 설정이 저장되었습니다!');
-  };
-
-  const sendTestNotification = async () => {
-    if (!settings.telegramChatId) {
-      alert('텔레그램 채팅 ID를 입력해주세요.');
-      return;
-    }
-    setTesting(true);
-    setTestResult('');
-    try {
-      const response = await fetch('/api/notifications/telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message:
-            '🧪 <b>테스트 알림</b>\n\n✅ 텔레그램 알림 시스템이 정상적으로 작동합니다!\n⏰ 시간: ' +
-            new Date().toLocaleString('ko-KR'),
-          chatId: settings.telegramChatId
-        })
-      });
-      const result = await response.json();
-      setTestResult(result.ok ? '✅ 테스트 알림이 성공적으로 전송되었습니다!' : `❌ 테스트 실패: ${result.error}`);
-    } catch (error: any) {
-      setTestResult(`❌ 테스트 실패: ${String(error)}`);
-    } finally {
-      setTesting(false);
+      console.error('알림 설정 로드 실패:', error);
     }
   };
 
-  const testSensorAlert = async (sensorType: string, value: number, location: string) => {
-    setTesting(true);
-    setTestResult('');
+  // 알림 설정 저장
+  const saveNotificationSettings = () => {
     try {
-      console.log('🔔 센서 알림 테스트 시작 (알림 설정 페이지 테스트 기능)');
-      if (!settings.telegramChatId) {
-        alert('텔레그램 채팅 ID를 입력해주세요.');
-        return;
-      }
-      
-      if (!selectedFarmId) {
-        alert('테스트할 농장을 선택해주세요.');
-        return;
-      }
-      
-      const selectedFarm = farms.find(f => f.id === selectedFarmId);
-      const farmName = selectedFarm?.name || '선택된 농장';
-      
-      console.log('🔍 선택된 농장 정보:', {
-        selectedFarmId,
-        farmName,
-        allFarms: farms.map(f => ({ id: f.id, name: f.name }))
-      });
-
-      const thresholds = {
-        temperature: { min: 15, max: 30 },
-        ec: { min: 1.0, max: 3.0 },
-        ph: { min: 5.5, max: 6.5 },
-        humidity: { min: 40, max: 80 },
-        water: { min: 20, max: 90 }
-      } as const;
-
-      // 대시보드 알림(try-catch로 방어)
-      try {
-        const { dashboardAlertManager } = await import('@/lib/dashboardAlerts');
-        
-        console.log('🔍 알림 생성 파라미터:', {
-          sensorType,
-          value,
-          location: `${farmName} - ${location || '조1-베드1'}`,
-          deviceId: selectedFarmId,
-          sensorId: `test_${sensorType}_${Date.now()}`,
-          thresholds: { [sensorType]: thresholds[sensorType as keyof typeof thresholds] }
-        });
-        
-        const alert = dashboardAlertManager.checkSensorDataAndAlert(
-          sensorType,
-          value,
-          `${farmName} - ${location || '조1-베드1'}`,
-          selectedFarmId, // deviceId (농장 ID)
-          `test_${sensorType}_${Date.now()}`, // sensorId
-          { [sensorType]: thresholds[sensorType as keyof typeof thresholds] }
-        );
-        
-        console.log('🔍 생성된 알림:', alert);
-        console.log('🔍 현재 모든 알림:', dashboardAlertManager.getAlerts());
-        console.log(`✅ ${sensorType} 센서 대시보드 알림 추가 완료 (농장: ${farmName})`);
-      } catch (dashboardError) {
-        console.error('대시보드 알림 추가 실패:', dashboardError);
-      }
-
-      // 텔레그램 알림
-      const response = await fetch('/api/notifications/telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: `🧪 <b>${sensorType} 센서 알림 테스트</b>\n\n🏢 농장: ${farmName}\n🎯 ${sensorType} 센서 테스트 값: ${value}\n📍 위치: ${
-            location || '조1-베드1'
-          }\n⏰ 시간: ${new Date().toLocaleString('ko-KR')}`,
-          chatId: settings.telegramChatId
-        })
-      });
-      const result = await response.json();
-      setTestResult(
-        result.ok
-          ? `✅ ${sensorType} 센서 테스트 알림이 성공적으로 전송되었습니다!\n📱 텔레그램 알림 + 🚨 대시보드 알림\n🏢 농장: ${farmName}\n값: ${value}, 위치: ${
-              location || '조1-베드1'
-            }`
-          : `❌ 센서 테스트 실패: ${result.error}\n(대시보드 알림은 추가됨)`
-      );
-    } catch (error: any) {
-      setTestResult(`❌ 오류 발생: ${String(error)}`);
-    } finally {
-      setTesting(false);
+      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+      alert('알림 설정이 저장되었습니다!');
+    } catch (error) {
+      console.error('알림 설정 저장 실패:', error);
+      alert('알림 설정 저장에 실패했습니다.');
     }
   };
 
-  const debugEnvironmentVariables = async () => {
-    setBotInfoLoading(true);
-    setTestResult('');
-    try {
-      const response = await fetch('/api/notifications/telegram', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ debug: 'env' })
-      });
-      const debugInfo = await response.json();
-      const deploymentEnv = window.location.hostname.includes('vercel') ? 'Vercel 배포' : '로컬';
-      if (debugInfo.hasBotToken) {
-        setTestResult(
-          `✅ 환경변수 상태 (${deploymentEnv}): 토큰 설정됨 (길이: ${debugInfo.tokenLength}), 채팅 ID${
-            debugInfo.hasDefaultChatId ? ' 설정됨' : ' 없음'
-          }`
-        );
-      } else {
-        setTestResult(
-          `❌ 환경변수 문제 (${deploymentEnv}): TELEGRAM_BOT_TOKEN이 설정되지 않았습니다. ${
-            deploymentEnv.includes('Vercel')
-              ? 'Vercel 대시보드 → Settings → Environment Variables에서 설정하세요.'
-              : '로컬용 .env.local 파일을 확인하세요.'
-          }`
-        );
-      }
-    } catch (error: any) {
-      setTestResult(`❌ 디버그 확인 실패: ${String(error)}`);
-    } finally {
-      setBotInfoLoading(false);
-    }
-  };
-
-  const checkBotInfo = async () => {
-    setBotInfoLoading(true);
-    try {
-      setBotInfo({
-        botName: 'User Info Bot',
-        username: '@userinfobot',
-        description: '텔레그램에서 @userinfobot과 대화를 시작하면 채팅 ID를 확인할 수 있습니다.'
-      });
-      setShowBotInfoModal(true);
-    } finally {
-      setBotInfoLoading(false);
+  // 설정 변경 핸들러
+  const handleSettingChange = (key: string, value: any) => {
+    if (key.includes('.')) {
+      const [parent, child] = key.split('.');
+      setNotificationSettings(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent as keyof typeof prev],
+          [child]: value
+        }
+      }));
+    } else {
+      setNotificationSettings(prev => ({
+        ...prev,
+        [key]: value
+      }));
     }
   };
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+      <div className="min-h-screen bg-gray-50">
+        <AppHeader user={user} title="알림설정" subtitle="텔레그램 알림 설정" />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">로딩 중...</p>
+          </div>
+        </div>
       </div>
     );
   }
-  if (!user) return null;
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <AppHeader
-          user={user}
-          title="알림 설정"
-          subtitle="텔레그램 알림 시스템 관리"
-          showBackButton
-          backButtonText="대시보드"
-        />
-
-        <main className="max-w-7xl mx-auto pt-2 pb-4 sm:px-4 lg:px-8 relative z-10">
-          {/* Overview Section */}
-          <div className="bg-white/80 backdrop-blur-sm shadow-xl rounded-xl border border-gray-300 overflow-hidden mb-4">
-            <div className="bg-gradient-to-r from-yellow-500 to-orange-600 px-4 py-3 sm:px-6 sm:py-4">
-              <div className="flex items-center">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg flex items-center justify-center mr-3">
-                  <span className="text-xl sm:text-2xl">🔔</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">알림 설정</h1>
-                  <p className="text-white/90 text-sm sm:text-base">텔레그램 알림 시스템을 설정하고 관리하세요</p>
-                </div>
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader user={user} title="알림설정" subtitle="텔레그램 알림 설정" />
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto space-y-8">
+          
+          {/* 중요 안내 배너 */}
+          <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-6 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <span className="text-3xl">🚨</span>
+              <div>
+                <h3 className="text-xl font-bold mb-2">⚠️ 텔레그램 알림 설정 안내</h3>
+                <p className="text-red-100 mb-3">
+                  텔레그램 알림을 받으려면 <strong>반드시 마이페이지에서 텔레그램 채팅 ID를 등록</strong>해야 합니다!
+                </p>
+                <button
+                  onClick={() => router.push('/my-page')}
+                  className="bg-white text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-red-50 transition-colors"
+                >
+                  👤 마이페이지에서 ID 등록하기
+                </button>
               </div>
             </div>
+          </div>
+          
+          {/* 텔레그램 봇 설정 */}
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+              <span className="text-3xl mr-3">🤖</span>
+              텔레그램 봇 설정
+            </h2>
+            
+            <div className="space-y-6">
+              {/* 텔레그램 활성화 */}
+              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-900">텔레그램 알림 활성화</h3>
+                  <p className="text-blue-700 text-sm">텔레그램을 통한 실시간 알림을 받으려면 활성화하세요</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notificationSettings.telegramEnabled}
+                    onChange={(e) => handleSettingChange('telegramEnabled', e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
 
-            <div className="px-4 py-4 sm:px-6 sm:py-6">
-              <div className="max-w-4xl mx-auto">
-                {/* 통합된 텔레그램 설정 */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">📱 텔레그램 알림 설정</h2>
-
-                  {/* 설정 안내 */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <div className="flex items-start space-x-3">
-                      <span className="text-blue-600 text-xl">💡</span>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-800 mb-2">📋 텔레그램 알림 설정 방법</p>
-                        <div className="space-y-2 text-sm text-blue-700">
-                          <div className="flex items-start space-x-2">
-                            <span className="text-blue-600 mt-0.5">1️⃣</span>
-                            <p><strong>텔레그램 채팅 ID 설정:</strong> 마이페이지에서 @userinfobot과 대화하여 채팅 ID를 확인하고 설정하세요.</p>
-                          </div>
-                          <div className="flex items-start space-x-2">
-                            <span className="text-blue-600 mt-0.5">2️⃣</span>
-                            <p><strong>알림 활성화:</strong> 아래에서 텔레그램 알림을 활성화하고 테스트해보세요.</p>
-                          </div>
-                          <div className="flex items-start space-x-2">
-                            <span className="text-blue-600 mt-0.5">3️⃣</span>
-                            <p><strong>알림 유형 설정:</strong> 원하는 알림 유형을 선택하여 맞춤형 알림을 받으세요.</p>
-                          </div>
+              {/* 채팅 ID 설정 */}
+              {notificationSettings.telegramEnabled && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      텔레그램 채팅 ID
+                    </label>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-semibold text-yellow-800 mb-3">📋 채팅 ID 찾는 방법:</h4>
+                      <div className="space-y-3">
+                        <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                          <h5 className="font-semibold text-yellow-900 mb-2">1️⃣ 텔레그램 봇과 대화하기</h5>
+                          <ol className="list-decimal list-inside text-yellow-700 space-y-1 text-sm ml-2">
+                            <li>텔레그램에서 <code className="bg-yellow-100 px-1 py-0.5 rounded font-mono">@SmartFarm_Bot</code> 검색</li>
+                            <li>봇을 시작하고 <code className="bg-yellow-100 px-1 py-0.5 rounded font-mono">/start</code> 명령어 전송</li>
+                            <li>봇이 자동으로 채팅 ID를 알려줍니다</li>
+                          </ol>
                         </div>
-                        <div className="mt-3">
-                          <a 
-                            href="/my-page" 
-                            className="inline-block px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                        
+                        <div className="bg-blue-50 rounded-lg p-3 border border-blue-300">
+                          <h5 className="font-semibold text-blue-900 mb-2">2️⃣ ⚠️ 중요: 마이페이지에서 ID 등록 필수!</h5>
+                          <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-2">
+                            <p className="text-red-800 text-sm font-semibold">🚨 반드시 마이페이지에서 텔레그램 ID를 등록해야 알림을 받을 수 있습니다!</p>
+                          </div>
+                          <p className="text-blue-700 text-sm mb-2">봇에서 받은 채팅 ID를 마이페이지의 "텔레그램 채팅 ID" 필드에 입력하고 저장하세요.</p>
+                          <button
+                            onClick={() => router.push('/my-page')}
+                            className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                           >
-                            📱 마이페이지에서 ID 설정하기 →
-                          </a>
+                            👤 마이페이지에서 ID 등록하기
+                          </button>
+                        </div>
+                        
+                        <div className="bg-green-50 rounded-lg p-3 border border-green-300">
+                          <h5 className="font-semibold text-green-900 mb-2">3️⃣ 여기서도 설정 가능</h5>
+                          <p className="text-green-700 text-sm">마이페이지에서 등록한 ID를 여기서도 확인하고 수정할 수 있습니다.</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        id="telegramEnabled"
-                        checked={settings.telegramEnabled}
-                        onChange={e => setSettings(prev => ({ ...prev, telegramEnabled: e.target.checked }))}
-                        className="w-5 h-5 text-green-600 rounded focus:ring-green-500"
-                      />
-                      <label htmlFor="telegramEnabled" className="text-gray-900 font-medium text-base">
-                        텔레그램 알림 활성화
-                      </label>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">텔레그램 채팅 ID</label>
-                      <input
-                        type="text"
-                        value={settings.telegramChatId}
-                        onChange={e => setSettings(prev => ({ ...prev, telegramChatId: e.target.value }))}
-                        placeholder="마이페이지에서 설정된 ID가 자동으로 표시됩니다"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-gray-50 text-base"
-                        disabled
-                      />
-                      <p className="text-sm text-gray-500 mt-2">
-                        이 필드는 마이페이지에서 설정된 값을 자동으로 불러옵니다.
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button
-                          onClick={debugEnvironmentVariables}
-                          disabled={testing}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
-                          title="환경변수 상태 확인"
-                        >
-                          🔧 환경변수 상태
-                        </button>
-                        <button
-                          onClick={sendTestNotification}
-                          disabled={testing || !settings.telegramChatId}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors disabled:opacity-50"
-                          title="텔레그램 알림 테스트"
-                        >
-                          {testing ? '🧪 테스트 중...' : '🧪 테스트 알림 전송'}
-                        </button>
-                      </div>
-                      <div className="text-sm text-gray-500">📋 채팅방에서 봇과 먼저 대화를 시작하셨나요?</div>
-                    </div>
-
-                    <div className="flex justify-end mt-4">
-                      <button
-                        onClick={saveSettings}
-                        className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-base"
-                      >
-                        💾 설정 저장
-                      </button>
-                    </div>
-
-                    <div className="border-t pt-4 mt-4">
-                      <h3 className="text-lg font-medium text-gray-900 mb-3">🌡️ 센서 알림 테스트</h3>
-                      
-                      {/* 농장 선택 */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          🏢 테스트할 농장 선택
-                        </label>
-                        <select
-                          value={selectedFarmId}
-                          onChange={(e) => setSelectedFarmId(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 bg-white text-sm"
-                        >
-                          {farms.map((farm) => (
-                            <option key={farm.id} value={farm.id}>
-                              {farm.name}
-                            </option>
-                          ))}
-                        </select>
-                        {farms.length === 0 && (
-                          <p className="text-sm text-gray-500 mt-1">농장이 없습니다. 먼저 농장을 생성해주세요.</p>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <button
-                          onClick={() => testSensorAlert('temperature', 12, '조1-베드1')}
-                          disabled={testing || !selectedFarmId}
-                          className="bg-red-500 text-white py-2 px-3 rounded-lg hover:bg-red-600 disabled:opacity-50 transition-colors text-sm"
-                        >
-                          ❄️ 저온 (12°C)
-                        </button>
-                        <button
-                          onClick={() => testSensorAlert('temperature', 35, '조1-베드1')}
-                          disabled={testing || !selectedFarmId}
-                          className="bg-orange-500 text-white py-2 px-3 rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors text-sm"
-                        >
-                          🌡️ 고온 (35°C)
-                        </button>
-                        <button
-                          onClick={() => testSensorAlert('ec', 0.5, '조1-베드1')}
-                          disabled={testing || !selectedFarmId}
-                          className="bg-yellow-500 text-white py-2 px-3 rounded-lg hover:bg-yellow-600 disabled:opacity-50 transition-colors text-sm"
-                        >
-                          💧 EC 부족 (0.5)
-                        </button>
-                        <button
-                          onClick={() => testSensorAlert('ph', 4.5, '조1-베드1')}
-                          disabled={testing || !selectedFarmId}
-                          className="bg-purple-500 text-white py-2 px-3 rounded-lg hover:bg-purple-600 disabled:opacity-50 transition-colors text-sm"
-                        >
-                          ⚗️ pH 이상 (4.5)
-                        </button>
-                        <button
-                          onClick={() => testSensorAlert('water', 15, '조1-베드1')}
-                          disabled={testing || !selectedFarmId}
-                          className="bg-blue-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors text-sm"
-                        >
-                          💧 저수위 (15%)
-                        </button>
-                        <button
-                          onClick={() => testSensorAlert('water', 95, '조1-베드1')}
-                          disabled={testing || !selectedFarmId}
-                          className="bg-cyan-500 text-white py-2 px-3 rounded-lg hover:bg-cyan-600 disabled:opacity-50 transition-colors text-sm"
-                        >
-                          🌊 고수위 (95%)
-                        </button>
-                      </div>
-                    </div>
-
-                    {testResult && (
-                      <div className="p-3 bg-gray-100 rounded-lg">
-                        <p className="text-sm text-gray-900 font-medium whitespace-pre-wrap">{testResult}</p>
+                    <input
+                      type="text"
+                      value={notificationSettings.telegramChatId}
+                      onChange={(e) => handleSettingChange('telegramChatId', e.target.value)}
+                      placeholder="텔레그램 채팅 ID를 입력하세요 (예: 123456789)"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                    />
+                    {notificationSettings.telegramChatId && (
+                      <div className="mt-2 text-sm text-gray-600">
+                        💡 현재 설정된 ID: <code className="bg-gray-100 px-1 py-0.5 rounded font-mono">{notificationSettings.telegramChatId}</code>
                       </div>
                     )}
                   </div>
+                  
+                  {/* 테스트 버튼 */}
+                  <div className="flex justify-center">
+                    <NotificationButton className="text-lg px-8 py-3" />
+                  </div>
                 </div>
+              )}
+            </div>
+          </div>
 
-                {/* 알림 유형 설정 */}
-                <div className="bg-white rounded-lg shadow-md p-4 mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4">🔔 알림 유형 설정</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {Object.entries(notificationTemplates).map(([key, template]) => (
-                      <div key={key} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-gray-900 text-base">{template.title}</h3>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${
-                              template.priority === 'critical'
-                                ? 'bg-red-100 text-red-800'
-                                : template.priority === 'high'
-                                ? 'bg-orange-100 text-orange-800'
-                                : template.priority === 'medium'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-green-100 text-green-800'
-                            }`}
-                          >
-                            {template.priority}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-3">
-                          {template.message.split('\n')[0].replace(/<[^>]*>/g, '')}
-                        </p>
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id={key}
-                            checked={settings.notifications[key] || false}
-                            onChange={e =>
-                              setSettings(prev => ({
-                                ...prev,
-                                notifications: { ...prev.notifications, [key]: e.target.checked }
-                              }))
-                            }
-                            className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                          />
-                          <label htmlFor={key} className="text-sm text-gray-700">
-                            이 알림 받기
-                          </label>
-                        </div>
+          {/* 알림 유형 설정 */}
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+              <span className="text-3xl mr-3">🔔</span>
+              알림 유형 설정
+            </h2>
+            
+            <div className="space-y-4">
+              {Object.entries(notificationSettings.notifications).map(([key, enabled]) => {
+                const labels: Record<string, { title: string; description: string; icon: string }> = {
+                  temperature_notification: { title: '🌡️ 온도 알림', description: '높은/낮은 온도 경고', icon: '🌡️' },
+                  humidity_notification: { title: '💧 습도 알림', description: '높은/낮은 습도 경고', icon: '💧' },
+                  ec_notification: { title: '🔋 EC 알림', description: '배양액 농도 이상', icon: '🔋' },
+                  ph_notification: { title: '⚗️ pH 알림', description: 'pH 값 이상', icon: '⚗️' },
+                  water_notification: { title: '💧 수위 알림', description: '저수위/고수위 경고', icon: '💧' }
+                };
+                
+                const label = labels[key];
+                
+                return (
+                  <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{label.icon}</span>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{label.title}</h3>
+                        <p className="text-gray-600 text-sm">{label.description}</p>
                       </div>
-                    ))}
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={(e) => handleSettingChange(`notifications.${key}`, e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
                   </div>
-                </div>
-              </div>
+                );
+              })}
             </div>
           </div>
-        </main>
 
-        {/* 모달은 같은 최상위 컨테이너(div) 안에 둔다 */}
-        {showBotInfoModal && (
-          <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl">🆔</span>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">채팅 ID 확인</h2>
-                <p className="text-gray-600 mb-6">텔레그램에서 @userinfobot과 대화하여 본인의 채팅 ID를 확인해주세요.</p>
-                
-                <div className="space-y-4 text-left mb-6">
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center mb-2">
-                      <span className="text-blue-600 mr-2">💬</span>
-                      <span className="text-sm font-medium text-blue-800">Step 1: @userinfobot 찾기</span>
-                    </div>
-                    <p className="text-sm text-blue-700">텔레그램에서 "@userinfobot"을 검색하여 대화를 시작하세요.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center mb-2">
-                      <span className="text-blue-600 mr-2">📤</span>
-                      <span className="text-sm font-medium text-blue-800">Step 2: 메시지 전송</span>
-                    </div>
-                    <p className="text-sm text-blue-700">아무 메시지나 보내면 봇이 당신의 채팅 ID를 알려줍니다.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center mb-2">
-                      <span className="text-blue-600 mr-2">📋</span>
-                      <span className="text-sm font-medium text-blue-800">Step 3: ID 복사</span>
-                    </div>
-                    <p className="text-sm text-blue-700">받은 채팅 ID를 복사하여 위의 입력창에 붙여넣으세요.</p>
-                  </div>
-                </div>
-                
-                <div className="mt-6 flex space-x-3">
-                  <button
-                    onClick={() => setShowBotInfoModal(false)}
-                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    닫기
-                  </button>
-                  <button
-                    onClick={() => {
-                      window.open(`https://t.me/userinfobot`, '_blank');
-                      setShowBotInfoModal(false);
-                    }}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    @userinfobot 열기
-                  </button>
-                </div>
+          {/* 저장 버튼 */}
+          <div className="flex justify-center">
+            <button
+              onClick={saveNotificationSettings}
+              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl"
+            >
+              💾 설정 저장
+            </button>
+          </div>
+
+          {/* 현재 설정 상태 */}
+          <div className="bg-gray-100 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">📊 현재 설정 상태</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium">텔레그램 활성화:</span>
+                <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                  notificationSettings.telegramEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {notificationSettings.telegramEnabled ? '활성화됨' : '비활성화됨'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">채팅 ID:</span>
+                <span className="ml-2 text-gray-600">
+                  {notificationSettings.telegramChatId || '설정되지 않음'}
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">활성 알림:</span>
+                <span className="ml-2 text-gray-600">
+                  {Object.values(notificationSettings.notifications).filter(Boolean).length}개
+                </span>
+              </div>
+              <div>
+                <span className="font-medium">마지막 업데이트:</span>
+                <span className="ml-2 text-gray-600">
+                  {new Date().toLocaleString('ko-KR')}
+                </span>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
-    </>
+    </div>
   );
 }

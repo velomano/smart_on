@@ -151,16 +151,16 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
             <p className="text-gray-600 mb-4">IoT 디바이스를 연결하여 농장을 모니터링하세요.</p>
             <div className="flex justify-center space-x-4">
               <button
+                onClick={() => router.push('/connect')}
+                className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                🔧 IoT 간편설정
+              </button>
+              <button
                 onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
                 className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                ⚡ 빠른 IoT 빌더
-              </button>
-              <button
-                onClick={() => router.push('/connect')}
-                className="px-6 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-              >
-                기존 디바이스 연결
+                ⚡ IoT 연결
               </button>
             </div>
           </div>
