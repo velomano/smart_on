@@ -1,4 +1,3 @@
-// 회로도 SVG 생성 컴포넌트
 'use client';
 
 interface SchematicProps {
@@ -18,232 +17,76 @@ interface SchematicProps {
 
 export default function SchematicSVG({ model }: SchematicProps) {
   const { spec, allocation, power } = model;
-  
-  // 실제 핀 연결 정보 생성
-  const pinConnections = generatePinConnections(spec, allocation);
-  
-  // 디바이스별 핀맵과 정보 가져오기
   const deviceInfo = getDeviceInfo(spec.device);
-  
+
   return (
     <div className="bg-white border rounded-lg p-6">
-      <h3 className="text-lg font-bold mb-4">🔌 회로도</h3>
+      <h3 className="text-xl font-bold mb-6 text-gray-800">🔌 IoT 디바이스 연결 정보</h3>
       
-      <svg width="1400" height="1000" className="border">
-        {/* 디바이스 본체 */}
-        <rect x={40} y={40} width={200} height={500} rx={12} fill="#f0f0f0" stroke="#333" strokeWidth="2"/>
-        <text x={50} y={60} fontSize="16" fontWeight="bold">{deviceInfo.name}</text>
-        
-        {/* 디바이스 핀들 */}
-        {generateDevicePins(spec.device)}
-        
-        {/* 센서/제어 장치들 */}
-        {generateComponents(spec, allocation)}
-        
-        {/* 실제 핀 연결선들 */}
-        {generateConnectionLines(pinConnections, spec.device)}
-        
-        {/* 정보 박스들을 동적으로 배치 */}
-        {generateInfoBoxes(power, allocation, pinConnections)}
-      </svg>
-      
-      <div className="mt-4 text-sm text-gray-600">
-        <p>📋 회로도 설명:</p>
-        <ul className="list-disc list-inside ml-4">
-          <li>{deviceInfo.name}와 센서/제어 장치 간 실제 핀 연결</li>
-          <li>전원 공급 요구사항 및 부품 목록</li>
-          <li>핀 충돌 시 경고 및 해결 방안</li>
-          <li>연결 정보 테이블로 정확한 배선 가이드</li>
-        </ul>
+      {/* 디바이스 정보 */}
+      <div className="mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="text-lg font-semibold text-blue-800 mb-2">📱 선택된 디바이스</h4>
+          <p className="text-blue-700 font-medium">{deviceInfo.name}</p>
+        </div>
       </div>
+
+      {/* 컴포넌트 카드들 */}
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4">🔧 연결된 컴포넌트</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {generateComponentCards(spec, allocation)}
+        </div>
+      </div>
+
+      {/* 핀 할당 테이블 */}
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4">📋 핀 할당 현황</h4>
+        {generatePinTable(spec, allocation)}
+      </div>
+
+      {/* 배선 가이드 */}
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4">🔌 배선 가이드</h4>
+        {generateWiringGuide(spec, allocation)}
+      </div>
+
+      {/* 전원 공급 정보 */}
+      <div className="mb-6">
+        <h4 className="text-lg font-semibold text-gray-800 mb-4">⚡ 전원 공급</h4>
+        {generatePowerInfo(power)}
+      </div>
+
+      {/* 충돌 경고 */}
+      {allocation.conflicts.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-lg font-semibold text-red-800 mb-4">⚠️ 충돌 경고</h4>
+          {generateConflictWarnings(allocation.conflicts)}
+        </div>
+      )}
     </div>
   );
 }
 
 // 디바이스 정보 가져오기
 function getDeviceInfo(device: string) {
-  const deviceMap: Record<string, { name: string; pins: Array<{ num: number | string; x: number; y: number }> }> = {
-    'esp32': {
-      name: 'ESP32',
-      pins: [
-        { num: 2, x: 43, y: 80 },
-        { num: 4, x: 43, y: 100 },
-        { num: 5, x: 43, y: 120 },
-        { num: 12, x: 43, y: 140 },
-        { num: 13, x: 43, y: 160 },
-        { num: 14, x: 43, y: 180 },
-        { num: 15, x: 43, y: 200 },
-        { num: 16, x: 43, y: 220 },
-        { num: 17, x: 43, y: 240 },
-        { num: 18, x: 43, y: 260 },
-        { num: 19, x: 43, y: 280 },
-        { num: 21, x: 43, y: 300 },
-        { num: 22, x: 43, y: 320 },
-        { num: 23, x: 43, y: 340 },
-        { num: 25, x: 43, y: 360 },
-        { num: 26, x: 43, y: 380 },
-        { num: 27, x: 43, y: 400 },
-        { num: 32, x: 43, y: 420 },
-        { num: 33, x: 43, y: 440 },
-        { num: 36, x: 43, y: 460 },
-        { num: 39, x: 43, y: 480 }
-      ]
-    },
-    'esp8266': {
-      name: 'ESP8266',
-      pins: [
-        { num: 'D0', x: 43, y: 80 },
-        { num: 'D1', x: 43, y: 100 },
-        { num: 'D2', x: 43, y: 120 },
-        { num: 'D3', x: 43, y: 140 },
-        { num: 'D4', x: 43, y: 160 },
-        { num: 'D5', x: 43, y: 180 },
-        { num: 'D6', x: 43, y: 200 },
-        { num: 'D7', x: 43, y: 220 },
-        { num: 'D8', x: 43, y: 240 },
-        { num: 'A0', x: 43, y: 260 },
-        { num: '3V3', x: 43, y: 280 },
-        { num: 'GND', x: 43, y: 300 },
-        { num: 'VIN', x: 43, y: 320 }
-      ]
-    },
-    'arduino_uno': {
-      name: 'Arduino Uno',
-      pins: [
-        { num: 'D2', x: 43, y: 80 },
-        { num: 'D3', x: 43, y: 100 },
-        { num: 'D4', x: 43, y: 120 },
-        { num: 'D5', x: 43, y: 140 },
-        { num: 'D6', x: 43, y: 160 },
-        { num: 'D7', x: 43, y: 180 },
-        { num: 'D8', x: 43, y: 200 },
-        { num: 'D9', x: 43, y: 220 },
-        { num: 'D10', x: 43, y: 240 },
-        { num: 'D11', x: 43, y: 260 },
-        { num: 'D12', x: 43, y: 280 },
-        { num: 'D13', x: 43, y: 300 },
-        { num: 'A0', x: 43, y: 320 },
-        { num: 'A1', x: 43, y: 340 },
-        { num: 'A2', x: 43, y: 360 },
-        { num: 'A3', x: 43, y: 380 },
-        { num: 'A4', x: 43, y: 400 },
-        { num: 'A5', x: 43, y: 420 },
-        { num: '5V', x: 43, y: 440 },
-        { num: '3V3', x: 43, y: 460 },
-        { num: 'GND', x: 43, y: 480 }
-      ]
-    },
-    'arduino_r4': {
-      name: 'Arduino R4',
-      pins: [
-        { num: 'D2', x: 43, y: 80 },
-        { num: 'D3', x: 43, y: 100 },
-        { num: 'D4', x: 43, y: 120 },
-        { num: 'D5', x: 43, y: 140 },
-        { num: 'D6', x: 43, y: 160 },
-        { num: 'D7', x: 43, y: 180 },
-        { num: 'D8', x: 43, y: 200 },
-        { num: 'D9', x: 43, y: 220 },
-        { num: 'D10', x: 43, y: 240 },
-        { num: 'D11', x: 43, y: 260 },
-        { num: 'D12', x: 43, y: 280 },
-        { num: 'D13', x: 43, y: 300 },
-        { num: 'A0', x: 43, y: 320 },
-        { num: 'A1', x: 43, y: 340 },
-        { num: 'A2', x: 43, y: 360 },
-        { num: 'A3', x: 43, y: 380 },
-        { num: 'A4', x: 43, y: 400 },
-        { num: 'A5', x: 43, y: 420 },
-        { num: 'A6', x: 43, y: 440 },
-        { num: '5V', x: 43, y: 460 },
-        { num: '3V3', x: 43, y: 480 }
-      ]
-    },
-    'raspberry_pi5': {
-      name: 'Raspberry Pi 5',
-      pins: [
-        { num: 'GPIO2', x: 43, y: 80 },
-        { num: 'GPIO3', x: 43, y: 100 },
-        { num: 'GPIO4', x: 43, y: 120 },
-        { num: 'GPIO5', x: 43, y: 140 },
-        { num: 'GPIO6', x: 43, y: 160 },
-        { num: 'GPIO7', x: 43, y: 180 },
-        { num: 'GPIO8', x: 43, y: 200 },
-        { num: 'GPIO9', x: 43, y: 220 },
-        { num: 'GPIO10', x: 43, y: 240 },
-        { num: 'GPIO11', x: 43, y: 260 },
-        { num: 'GPIO12', x: 43, y: 280 },
-        { num: 'GPIO13', x: 43, y: 300 },
-        { num: 'GPIO14', x: 43, y: 320 },
-        { num: 'GPIO15', x: 43, y: 340 },
-        { num: 'GPIO16', x: 43, y: 360 },
-        { num: 'GPIO17', x: 43, y: 380 },
-        { num: 'GPIO18', x: 43, y: 400 },
-        { num: 'GPIO19', x: 43, y: 420 },
-        { num: 'GPIO20', x: 43, y: 440 },
-        { num: 'GPIO21', x: 43, y: 460 },
-        { num: 'GPIO22', x: 43, y: 480 }
-      ]
-    }
+  const deviceMap: Record<string, { name: string }> = {
+    'esp32': { name: 'ESP32' },
+    'esp8266': { name: 'ESP8266' },
+    'arduino_uno': { name: 'Arduino Uno' },
+    'arduino_r4': { name: 'Arduino R4' },
+    'raspberry_pi5': { name: 'Raspberry Pi 5' }
   };
-  
-  return deviceMap[device] || deviceMap['esp32']; // 기본값은 ESP32
+  return deviceMap[device] || deviceMap['esp32'];
 }
 
-// 디바이스별 핀 생성
-function generateDevicePins(device: string) {
-  const deviceInfo = getDeviceInfo(device);
-  
-  return deviceInfo.pins.map(pin => (
-    <g key={pin.num}>
-      <circle cx={pin.x} cy={pin.y} r="4" fill="#333" stroke="#fff" strokeWidth="1"/>
-      <text x={pin.x + 8} y={pin.y + 3} fontSize="10" fontWeight="bold">{pin.num}</text>
-    </g>
-  ));
-}
-
-// ESP32 핀 생성 (레거시 함수, 호환성을 위해 유지)
-function generateESP32Pins() {
-  const pins = [
-    { num: 2, x: 43, y: 80 },
-    { num: 4, x: 43, y: 100 },
-    { num: 5, x: 43, y: 120 },
-    { num: 12, x: 43, y: 140 },
-    { num: 13, x: 43, y: 160 },
-    { num: 14, x: 43, y: 180 },
-    { num: 15, x: 43, y: 200 },
-    { num: 16, x: 43, y: 220 },
-    { num: 17, x: 43, y: 240 },
-    { num: 18, x: 43, y: 260 },
-    { num: 19, x: 43, y: 280 },
-    { num: 21, x: 43, y: 300 },
-    { num: 22, x: 43, y: 320 },
-    { num: 23, x: 43, y: 340 },
-    { num: 25, x: 43, y: 360 },
-    { num: 26, x: 43, y: 380 },
-    { num: 27, x: 43, y: 400 },
-    { num: 32, x: 43, y: 420 },
-    { num: 33, x: 43, y: 440 },
-    { num: 36, x: 43, y: 460 },
-    { num: 39, x: 43, y: 480 }
-  ];
-  
-  return pins.map(pin => (
-    <g key={pin.num}>
-      <circle cx={pin.x} cy={pin.y} r="4" fill="#333" stroke="#fff" strokeWidth="1"/>
-      <text x={pin.x + 8} y={pin.y + 3} fontSize="10" fontWeight="bold">{pin.num}</text>
-    </g>
-  ));
-}
-
-// 센서/제어 장치 생성 (각 인스턴스마다 별도 컴포넌트)
-function generateComponents(spec: any, allocation: any) {
-  const components = [];
-  let yOffset = 100;
+// 컴포넌트 카드 생성
+function generateComponentCards(spec: any, allocation: any) {
+  const cards = [];
   
   // 센서 이름 매핑
   const sensorNames: Record<string, string> = {
-    'dht22': 'DHT22 (온도/습도)',
+    'dht22': 'DHT22 (온습도)',
     'ds18b20': 'DS18B20 (온도)',
     'bh1750': 'BH1750 (조도)',
     'soil_moisture': '토양 수분 센서',
@@ -254,66 +97,7 @@ function generateComponents(spec: any, allocation: any) {
     'water_level': '수위 센서',
     'camera': '카메라 모듈'
   };
-  
-  // 센서들 (각 인스턴스마다 별도 컴포넌트)
-  spec.sensors.forEach((sensor: any, sensorIdx: number) => {
-    const sensorName = sensorNames[sensor.type] || sensor.type.toUpperCase();
-    
-    for (let instance = 0; instance < sensor.count; instance++) {
-      const instanceKey = `sensor_${sensor.type}_${instance}`;
-      const assignedPins = allocation.assigned[instanceKey] || [];
-      
-      // 연결 정보를 색상별로 개별 텍스트로 표시
-      const colorMap: Record<string, string> = {
-        'VCC': '#ff4444',
-        'GND': '#444444', 
-        'I2C': '#0066cc',
-        'DATA': '#00aa00',
-        'SIG': '#aa6600',
-        'OUT': '#aa00aa',
-        'PWM': '#ff0066'
-      };
-      
-      // 동적으로 박스 높이 계산 (더 크게)
-      const baseHeight = 150;
-      const pinHeight = Math.max(0, assignedPins.length - 1) * 20;
-      const boxHeight = baseHeight + pinHeight;
-      
-      components.push(
-        <g key={`sensor_${sensor.type}_${instance}`}>
-          {/* 컴포넌트 박스 - 더 크고 깔끔하게 */}
-          <rect x={300} y={yOffset} width={220} height={boxHeight} rx={8} fill="#e3f2fd" stroke="#1976d2" strokeWidth="2"/>
-          
-          {/* 컴포넌트 이름 */}
-          <text x={315} y={yOffset + 25} fontSize="14" fontWeight="bold" fill="#1976d2">{sensorName}</text>
-          <text x={315} y={yOffset + 42} fontSize="11" fill="#666">#{instance + 1}</text>
-          
-          {/* 연결 정보 섹션 */}
-          <text x={320} y={yOffset + 70} fontSize="12" fill="#666" fontWeight="bold">연결 정보:</text>
-          {assignedPins.map((p: any, pinIdx: number) => {
-            const color = colorMap[p.role] || '#666';
-            return (
-              <text key={pinIdx} x={325} y={yOffset + 95 + pinIdx * 20} fontSize="12" fill={color} fontWeight="bold">
-                {p.role}: {p.pin}
-              </text>
-            );
-          })}
-          
-          {/* 전원 정보 */}
-          <text x={320} y={yOffset + 95 + assignedPins.length * 20 + 20} fontSize="11" fill="#666">
-            전원: 3.3V/5V
-          </text>
-          
-          {/* 연결 상태 표시 (하단) */}
-          <text x={320} y={yOffset + boxHeight - 25} fontSize="11" fill="#ff4444" fontWeight="bold">VCC</text>
-          <text x={370} y={yOffset + boxHeight - 25} fontSize="11" fill="#444444" fontWeight="bold">GND</text>
-          <text x={420} y={yOffset + boxHeight - 25} fontSize="11" fill="#00aa00" fontWeight="bold">Data</text>
-        </g>
-      );
-      yOffset += boxHeight + 25; // 동적으로 계산된 높이만큼 증가
-    }
-  });
-  
+
   // 제어장치 이름 매핑
   const controlNames: Record<string, string> = {
     'relay': '릴레이',
@@ -327,412 +111,344 @@ function generateComponents(spec: any, allocation: any) {
     'buzzer': '부저',
     'lcd_display': 'LCD 디스플레이'
   };
-  
-  // 제어 장치들 (각 인스턴스마다 별도 컴포넌트)
-  spec.controls.forEach((control: any, controlIdx: number) => {
+
+  // 센서 카드들
+  spec.sensors.forEach((sensor: any) => {
+    const sensorName = sensorNames[sensor.type] || sensor.type.toUpperCase();
+    
+    for (let instance = 0; instance < sensor.count; instance++) {
+      const instanceKey = `sensor_${sensor.type}_${instance}`;
+      const assignedPins = allocation.assigned[instanceKey] || [];
+      
+      cards.push(
+        <div key={instanceKey} className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center mb-3">
+            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+            <h5 className="font-semibold text-blue-800">{sensorName}</h5>
+            <span className="ml-2 text-sm text-blue-600">#{instance + 1}</span>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">📍 연결 정보:</span>
+            </div>
+            {assignedPins.map((pin: any, idx: number) => (
+              <div key={idx} className="ml-4 flex items-center">
+                <span className="w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
+                <span className="text-sm text-gray-600">
+                  {pin.role}: <span className="font-mono font-medium">{pin.pin}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">⚡ 전원: 3.3V/5V</span>
+              <span className="text-green-600 font-medium">✅ 연결됨</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  // 제어 장치 카드들
+  spec.controls.forEach((control: any) => {
     const controlName = controlNames[control.type] || control.type.toUpperCase();
     
     for (let instance = 0; instance < control.count; instance++) {
       const instanceKey = `control_${control.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
       
-      // 연결 정보를 색상별로 개별 텍스트로 표시
-      const colorMap: Record<string, string> = {
-        'VCC': '#ff4444',
-        'GND': '#444444', 
-        'I2C': '#0066cc',
-        'DATA': '#00aa00',
-        'SIG': '#aa6600',
-        'OUT': '#aa00aa',
-        'PWM': '#ff0066',
-        'Control': '#ff6600'
-      };
-      
-      // 동적으로 박스 높이 계산 (더 크게)
-      const baseHeight = 150;
-      const pinHeight = Math.max(0, assignedPins.length - 1) * 20;
-      const boxHeight = baseHeight + pinHeight;
-      
-      components.push(
-        <g key={`control_${control.type}_${instance}`}>
-          {/* 컴포넌트 박스 - 더 크고 깔끔하게 */}
-          <rect x={300} y={yOffset} width={220} height={boxHeight} rx={8} fill="#fff3e0" stroke="#f57c00" strokeWidth="2"/>
+      cards.push(
+        <div key={instanceKey} className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="flex items-center mb-3">
+            <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+            <h5 className="font-semibold text-orange-800">{controlName}</h5>
+            <span className="ml-2 text-sm text-orange-600">#{instance + 1}</span>
+          </div>
           
-          {/* 컴포넌트 이름 */}
-          <text x={315} y={yOffset + 25} fontSize="14" fontWeight="bold" fill="#f57c00">{controlName}</text>
-          <text x={315} y={yOffset + 42} fontSize="11" fill="#666">#{instance + 1}</text>
+          <div className="space-y-2">
+            <div className="text-sm">
+              <span className="font-medium text-gray-700">📍 연결 정보:</span>
+            </div>
+            {assignedPins.map((pin: any, idx: number) => (
+              <div key={idx} className="ml-4 flex items-center">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                <span className="text-sm text-gray-600">
+                  {pin.role}: <span className="font-mono font-medium">{pin.pin}</span>
+                </span>
+              </div>
+            ))}
+          </div>
           
-          {/* 연결 정보 섹션 */}
-          <text x={320} y={yOffset + 70} fontSize="12" fill="#666" fontWeight="bold">연결 정보:</text>
-          {assignedPins.map((p: any, pinIdx: number) => {
-            const color = colorMap[p.role] || '#666';
-            return (
-              <text key={pinIdx} x={325} y={yOffset + 95 + pinIdx * 20} fontSize="12" fill={color} fontWeight="bold">
-                {p.role}: {p.pin}
-              </text>
-            );
-          })}
-          
-          {/* 전원 정보 */}
-          <text x={320} y={yOffset + 95 + assignedPins.length * 20 + 20} fontSize="11" fill="#666">
-            전원: 5V/12V
-          </text>
-          
-          {/* 연결 상태 표시 (하단) */}
-          <text x={320} y={yOffset + boxHeight - 25} fontSize="11" fill="#ff4444" fontWeight="bold">VCC</text>
-          <text x={370} y={yOffset + boxHeight - 25} fontSize="11" fill="#444444" fontWeight="bold">GND</text>
-          <text x={420} y={yOffset + boxHeight - 25} fontSize="11" fill="#ff6600" fontWeight="bold">Control</text>
-        </g>
+          <div className="mt-3 pt-3 border-t border-orange-200">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">⚡ 전원: 5V/12V</span>
+              <span className="text-green-600 font-medium">✅ 연결됨</span>
+            </div>
+          </div>
+        </div>
       );
-      yOffset += boxHeight + 25; // 동적으로 계산된 높이만큼 증가
     }
   });
-  
-  return components;
+
+  return cards;
 }
 
-// 정보 박스들 생성 (동적 배치)
-function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[]) {
-  const boxes = [];
-  let yOffset = 40;
+// 핀 할당 테이블 생성
+function generatePinTable(spec: any, allocation: any) {
+  const pinData: Array<{ pin: string | number; role: string; component: string; color: string }> = [];
   
-  // 전원 공급 박스
-  const powerBoxHeight = Math.max(120, 60 + power.length * 25);
-  boxes.push(
-    <g key="power-box">
-      <rect x={520} y={yOffset} width={220} height={powerBoxHeight} rx={6} fill="#f1f8e9" stroke="#388e3c" strokeWidth="2"/>
-      <text x={530} y={yOffset + 25} fontSize="15" fontWeight="bold">⚡ 전원 공급</text>
-      {power.map((pwr, idx) => (
-        <g key={idx}>
-          <text x={530} y={yOffset + 50 + idx * 30} fontSize="13" fontWeight="bold">
-            {pwr.voltage}V: {pwr.minCurrentA}A
-          </text>
-          <text x={530} y={yOffset + 65 + idx * 30} fontSize="11" fill="#666">
-            {pwr.devices.join(', ')}
-          </text>
-        </g>
-      ))}
-    </g>
+  // 센서 이름 매핑
+  const sensorNames: Record<string, string> = {
+    'dht22': 'DHT22 (온습도)',
+    'ds18b20': 'DS18B20 (온도)',
+    'bh1750': 'BH1750 (조도)',
+    'soil_moisture': '토양 수분 센서',
+    'ph_sensor': 'pH 센서',
+    'co2_sensor': 'CO2 센서',
+    'pressure_sensor': '압력 센서',
+    'motion_sensor': 'PIR 모션 센서',
+    'water_level': '수위 센서',
+    'camera': '카메라 모듈'
+  };
+
+  const controlNames: Record<string, string> = {
+    'relay': '릴레이',
+    'dc_fan_pwm': 'DC 팬 (PWM)',
+    'servo': '서보 모터',
+    'led_strip': 'LED 스트립',
+    'solenoid_valve': '솔레노이드 밸브',
+    'stepper_motor': '스테퍼 모터',
+    'water_pump': '워터 펌프',
+    'heater': '히터',
+    'buzzer': '부저',
+    'lcd_display': 'LCD 디스플레이'
+  };
+
+  // 센서 핀 정보 수집
+  spec.sensors.forEach((sensor: any) => {
+    const sensorName = sensorNames[sensor.type] || sensor.type.toUpperCase();
+    
+    for (let instance = 0; instance < sensor.count; instance++) {
+      const instanceKey = `sensor_${sensor.type}_${instance}`;
+      const assignedPins = allocation.assigned[instanceKey] || [];
+      
+      assignedPins.forEach((pin: any) => {
+        pinData.push({
+          pin: pin.pin,
+          role: pin.role,
+          component: `${sensorName} #${instance + 1}`,
+          color: 'blue'
+        });
+      });
+    }
+  });
+
+  // 제어 장치 핀 정보 수집
+  spec.controls.forEach((control: any) => {
+    const controlName = controlNames[control.type] || control.type.toUpperCase();
+    
+    for (let instance = 0; instance < control.count; instance++) {
+      const instanceKey = `control_${control.type}_${instance}`;
+      const assignedPins = allocation.assigned[instanceKey] || [];
+      
+      assignedPins.forEach((pin: any) => {
+        pinData.push({
+          pin: pin.pin,
+          role: pin.role,
+          component: `${controlName} #${instance + 1}`,
+          color: 'orange'
+        });
+      });
+    }
+  });
+
+  return (
+    <div className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">핀번호</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">역할</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">컴포넌트</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">상태</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {pinData.map((row, idx) => (
+              <tr key={idx} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm font-mono font-medium text-gray-900">
+                  {row.pin}
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    row.role === 'VCC' ? 'bg-red-100 text-red-800' :
+                    row.role === 'GND' ? 'bg-gray-100 text-gray-800' :
+                    row.role === 'DATA' || row.role === 'SIG' ? 'bg-green-100 text-green-800' :
+                    row.role === 'OUT' || row.role === 'Control' ? 'bg-orange-100 text-orange-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>
+                    {row.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm text-gray-700">{row.component}</td>
+                <td className="px-4 py-3 text-sm">
+                  <span className="text-green-600 font-medium">✅ 할당됨</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
-  yOffset += powerBoxHeight + 20;
+}
+
+// 배선 가이드 생성
+function generateWiringGuide(spec: any, allocation: any) {
+  const guides = [];
   
-  // 충돌 경고 박스
-  if (allocation.conflicts.length > 0) {
-    const conflictBoxHeight = Math.max(80, 40 + allocation.conflicts.length * 15);
-    boxes.push(
-      <g key="conflict-box">
-        <rect x={520} y={yOffset} width={220} height={conflictBoxHeight} rx={6} fill="#ffebee" stroke="#d32f2f" strokeWidth="2"/>
-        <text x={530} y={yOffset + 25} fontSize="15" fontWeight="bold">⚠️ 충돌 경고</text>
-        {allocation.conflicts.map((conflict, idx) => (
-          <text key={idx} x={530} y={yOffset + 50 + idx * 18} fontSize="11" fill="#d32f2f">
-            {conflict}
-          </text>
+  const sensorNames: Record<string, string> = {
+    'dht22': 'DHT22 (온습도)',
+    'ds18b20': 'DS18B20 (온도)',
+    'bh1750': 'BH1750 (조도)',
+    'soil_moisture': '토양 수분 센서',
+    'ph_sensor': 'pH 센서',
+    'co2_sensor': 'CO2 센서',
+    'pressure_sensor': '압력 센서',
+    'motion_sensor': 'PIR 모션 센서',
+    'water_level': '수위 센서',
+    'camera': '카메라 모듈'
+  };
+
+  const controlNames: Record<string, string> = {
+    'relay': '릴레이',
+    'dc_fan_pwm': 'DC 팬 (PWM)',
+    'servo': '서보 모터',
+    'led_strip': 'LED 스트립',
+    'solenoid_valve': '솔레노이드 밸브',
+    'stepper_motor': '스테퍼 모터',
+    'water_pump': '워터 펌프',
+    'heater': '히터',
+    'buzzer': '부저',
+    'lcd_display': 'LCD 디스플레이'
+  };
+
+  // 센서 배선 가이드
+  spec.sensors.forEach((sensor: any) => {
+    const sensorName = sensorNames[sensor.type] || sensor.type.toUpperCase();
+    
+    for (let instance = 0; instance < sensor.count; instance++) {
+      const instanceKey = `sensor_${sensor.type}_${instance}`;
+      const assignedPins = allocation.assigned[instanceKey] || [];
+      
+      guides.push(
+        <div key={instanceKey} className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <h5 className="font-semibold text-blue-800 mb-3 flex items-center">
+            <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+            {sensorName} #{instance + 1}
+          </h5>
+          <div className="space-y-2">
+            <div className="flex items-center text-sm">
+              <span className="w-16 text-gray-600">VCC:</span>
+              <span className="font-mono bg-red-100 text-red-800 px-2 py-1 rounded text-xs">ESP32 VCC</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <span className="w-16 text-gray-600">GND:</span>
+              <span className="font-mono bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">ESP32 GND</span>
+            </div>
+            {assignedPins.map((pin: any, idx: number) => (
+              <div key={idx} className="flex items-center text-sm">
+                <span className="w-16 text-gray-600">{pin.role}:</span>
+                <span className="font-mono bg-green-100 text-green-800 px-2 py-1 rounded text-xs">
+                  ESP32 핀 {pin.pin}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+  });
+
+  // 제어 장치 배선 가이드
+  spec.controls.forEach((control: any) => {
+    const controlName = controlNames[control.type] || control.type.toUpperCase();
+    
+    for (let instance = 0; instance < control.count; instance++) {
+      const instanceKey = `control_${control.type}_${instance}`;
+      const assignedPins = allocation.assigned[instanceKey] || [];
+      
+      guides.push(
+        <div key={instanceKey} className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+          <h5 className="font-semibold text-orange-800 mb-3 flex items-center">
+            <div className="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
+            {controlName} #{instance + 1}
+          </h5>
+          <div className="space-y-2">
+            <div className="flex items-center text-sm">
+              <span className="w-16 text-gray-600">VCC:</span>
+              <span className="font-mono bg-red-100 text-red-800 px-2 py-1 rounded text-xs">ESP32 VCC</span>
+            </div>
+            <div className="flex items-center text-sm">
+              <span className="w-16 text-gray-600">GND:</span>
+              <span className="font-mono bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">ESP32 GND</span>
+            </div>
+            {assignedPins.map((pin: any, idx: number) => (
+              <div key={idx} className="flex items-center text-sm">
+                <span className="w-16 text-gray-600">{pin.role}:</span>
+                <span className="font-mono bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+                  ESP32 핀 {pin.pin}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+  });
+
+  return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{guides}</div>;
+}
+
+// 전원 공급 정보 생성
+function generatePowerInfo(power: any[]) {
+  return (
+    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div className="space-y-3">
+        {power.map((pwr, idx) => (
+          <div key={idx} className="flex items-center justify-between">
+            <div className="flex items-center">
+              <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+              <span className="font-medium text-green-800">{pwr.voltage}V</span>
+              <span className="ml-2 text-sm text-green-700">{pwr.minCurrentA}A</span>
+            </div>
+            <div className="text-sm text-green-600">
+              {pwr.devices.join(', ')}
+            </div>
+          </div>
         ))}
-      </g>
-    );
-    yOffset += conflictBoxHeight + 20;
-  }
-  
-  // 핀 연결 정보 박스 (스크롤 가능하도록 높이 제한)
-  const maxConnections = Math.min(pinConnections.length, 15); // 최대 15개만 표시
-  const connectionBoxHeight = Math.max(120, 40 + maxConnections * 15);
-  
-  // 연결 타입별 색상 매핑
-  const connectionColors: Record<string, string> = {
-    'VCC': '#ff4444',    // 빨간색 (전원)
-    'GND': '#444444',    // 검은색 (그라운드)
-    'Data': '#00aa00',   // 초록색 (데이터)
-    'SDA': '#0066cc',    // 파란색 (I2C 데이터)
-    'SCL': '#0066cc',    // 파란색 (I2C 클럭)
-    'Analog': '#aa6600', // 갈색 (아날로그)
-    'Digital': '#aa00aa', // 보라색 (디지털)
-    'Control': '#ff6600', // 주황색 (제어)
-    'PWM': '#ff0066',    // 분홍색 (PWM)
-    'Step': '#00ff66',   // 연두색 (스테퍼 스텝)
-    'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
-  };
-  
-  // 센서/컴포넌트별로 그룹화
-  const groupedConnections = pinConnections.reduce((groups: Record<string, any[]>, conn) => {
-    // 컴포넌트 이름에서 센서/제어 장치 이름 추출
-    const componentName = conn.component.split(' #')[0]; // "수위 센서 #1 (VCC)" -> "수위 센서"
-    if (!groups[componentName]) groups[componentName] = [];
-    groups[componentName].push(conn);
-    return groups;
-  }, {});
-
-  // 센서/컴포넌트별로 표시할 연결 정보 계산
-  const componentOrder = Object.keys(groupedConnections);
-  let displayCount = 0;
-  const maxDisplay = 15;
-  
-  boxes.push(
-    <g key="connection-box">
-      <rect x={520} y={yOffset} width={220} height={connectionBoxHeight} rx={6} fill="#f8f9fa" stroke="#6c757d" strokeWidth="2"/>
-      <text x={530} y={yOffset + 25} fontSize="15" fontWeight="bold">📋 핀 연결 정보</text>
-      
-      {componentOrder.map((componentName, componentIdx) => {
-        if (!groupedConnections[componentName] || displayCount >= maxDisplay) return null;
-        
-        const componentConnections = groupedConnections[componentName];
-        
-        return (
-          <g key={componentName}>
-            {/* 컴포넌트 헤더 */}
-            <text x={530} y={yOffset + 50 + displayCount * 18} fontSize="12" fontWeight="bold" fill="#333">
-              {componentName} ({componentConnections.length}개 연결)
-            </text>
-            displayCount++;
-            
-            {/* 컴포넌트 내 연결 정보 */}
-            {componentConnections.slice(0, Math.min(5, maxDisplay - displayCount)).map((conn, connIdx) => {
-              if (displayCount >= maxDisplay) return null;
-              const color = connectionColors[conn.connectionType] || '#666';
-              const result = (
-                <text key={`${componentName}-${connIdx}`} x={540} y={yOffset + 50 + displayCount * 18} fontSize="10" fill={color}>
-                  {conn.pin} → {conn.component.length > 20 ? conn.component.substring(0, 20) + '...' : conn.component}
-                </text>
-              );
-              displayCount++;
-              return result;
-            })}
-            
-            {/* 컴포넌트 간 간격 */}
-            {componentIdx < componentOrder.length - 1 && displayCount < maxDisplay && (displayCount++, null)}
-          </g>
-        );
-      })}
-      
-      {pinConnections.length > maxDisplay && (
-        <text x={530} y={yOffset + 50 + displayCount * 18} fontSize="11" fill="#666">
-          ... 외 {pinConnections.length - maxDisplay}개 더
-        </text>
-      )}
-    </g>
+      </div>
+    </div>
   );
-  
-  return boxes;
 }
 
-// 핀 연결선 생성
-function generateConnectionLines(pinConnections: any[], device: string) {
-  const allLines: any[] = [];
-
-  pinConnections.forEach((conn, idx) => {
-    const deviceInfo = getDeviceInfo(device);
-    const devicePins = deviceInfo.pins;
-    
-    // 핀 번호가 숫자인 경우와 문자열인 경우 모두 처리
-    const pinInfo = devicePins.find(p => 
-      p.num === conn.pin || 
-      p.num === String(conn.pin) ||
-      (typeof conn.pin === 'number' && p.num === conn.pin) ||
-      (typeof conn.pin === 'string' && p.num === conn.pin)
-    );
-    
-    // VCC, GND 같은 문자열 핀은 특별한 위치에 표시
-    if (!pinInfo) {
-      if (conn.pin === 'VCC') {
-        allLines.push(
-          <g key={idx}>
-            <line 
-              x1={43} y1={50} 
-              x2={300} y2={80 + conn.deviceIndex * 180} 
-              stroke="#ff4444" 
-              strokeWidth="3"
-              strokeDasharray="8,4"
-              opacity="0.8"
-            />
-            <circle cx={43} cy={50} r="3" fill="#ff4444" stroke="#fff" strokeWidth="1"/>
-            <text x={47} y={53} fontSize="9" fontWeight="bold" fill="#ff4444">VCC</text>
-            <circle cx={300} cy={80 + conn.deviceIndex * 180} r="2" fill="#ff4444" />
-          </g>
-        );
-      } else if (conn.pin === 'GND') {
-        allLines.push(
-          <g key={idx}>
-            <line 
-              x1={43} y1={520} 
-              x2={300} y2={80 + conn.deviceIndex * 180} 
-              stroke="#444444" 
-              strokeWidth="3"
-              strokeDasharray="8,4"
-              opacity="0.8"
-            />
-            <circle cx={43} cy={520} r="3" fill="#444444" stroke="#fff" strokeWidth="1"/>
-            <text x={47} y={523} fontSize="9" fontWeight="bold" fill="#444444">GND</text>
-            <circle cx={300} cy={80 + conn.deviceIndex * 180} r="2" fill="#444444" />
-          </g>
-        );
-      }
-      return;
-    }
-    
-    const startX = pinInfo.x;
-    const startY = pinInfo.y;
-    const endX = 300; // 컴포넌트 위치
-    const endY = 80 + conn.deviceIndex * 180; // 컴포넌트 Y 위치 (더 큰 카드에 맞춤)
-    
-    // 연결선 색상 (센서는 파란색, 제어는 주황색)
-    const lineColor = conn.type === 'sensor' ? '#1976d2' : '#f57c00';
-    
-    // 연결 타입별 색상 변화
-    const connectionColors: Record<string, string> = {
-      'VCC': '#ff4444',    // 빨간색 (전원)
-      'GND': '#444444',    // 검은색 (그라운드)
-      'Data': '#00aa00',   // 초록색 (데이터)
-      'SDA': '#0066cc',    // 파란색 (I2C 데이터)
-      'SCL': '#0066cc',    // 파란색 (I2C 클럭)
-      'Analog': '#aa6600', // 갈색 (아날로그)
-      'Digital': '#aa00aa', // 보라색 (디지털)
-      'Control': '#ff6600', // 주황색 (제어)
-      'PWM': '#ff0066',    // 분홍색 (PWM)
-      'Step': '#00ff66',   // 연두색 (스테퍼 스텝)
-      'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
-    };
-    
-    const finalColor = connectionColors[conn.connectionType] || lineColor;
-    
-    allLines.push(
-      <g key={idx}>
-        {/* 연결선 */}
-        <line 
-          x1={startX} y1={startY} 
-          x2={endX} y2={endY} 
-          stroke={finalColor} 
-          strokeWidth="3"
-          strokeDasharray="8,4"
-          opacity="0.8"
-        />
-        {/* 핀 번호 라벨 */}
-        <circle cx={startX} cy={startY} r="3" fill={finalColor} stroke="#fff" strokeWidth="1"/>
-        <text x={startX + 6} y={startY + 2} fontSize="9" fontWeight="bold" fill={finalColor}>
-          {conn.pin}
-        </text>
-        {/* 컴포넌트 연결점 */}
-        <circle cx={endX} cy={endY} r="2" fill={finalColor} />
-      </g>
-    );
-  });
-
-  return allLines;
-}
-
-// 핀 연결 정보 생성 (단순화된 버전)
-function generatePinConnections(spec: any, allocation: any) {
-  const connections = [];
-  let deviceIndex = 0; // 간단한 순차 인덱스 사용
-  
-  console.log('🔍 generatePinConnections 호출됨:', { spec, allocation });
-  
-  // 센서 이름 매핑
-  const sensorNames: Record<string, string> = {
-    'dht22': 'DHT22 (온도/습도)',
-    'ds18b20': 'DS18B20 (온도)',
-    'bh1750': 'BH1750 (조도)',
-    'soil_moisture': '토양 수분 센서',
-    'ph_sensor': 'pH 센서',
-    'co2_sensor': 'CO2 센서',
-    'pressure_sensor': '압력 센서',
-    'motion_sensor': 'PIR 모션 센서',
-    'water_level': '수위 센서',
-    'camera': '카메라 모듈'
-  };
-  
-  // 제어장치 이름 매핑
-  const controlNames: Record<string, string> = {
-    'relay': '릴레이',
-    'dc_fan_pwm': 'DC 팬 (PWM)',
-    'servo': '서보 모터',
-    'led_strip': 'LED 스트립',
-    'solenoid_valve': '솔레노이드 밸브',
-    'stepper_motor': '스테퍼 모터',
-    'water_pump': '워터 펌프',
-    'heater': '히터',
-    'buzzer': '부저',
-    'lcd_display': 'LCD 디스플레이'
-  };
-  
-  // 센서 연결
-  spec.sensors.forEach((sensor: any, sensorIdx: number) => {
-    const sensorName = sensorNames[sensor.type] || sensor.type.toUpperCase();
-    
-    for (let instance = 0; instance < sensor.count; instance++) {
-      const instanceKey = `sensor_${sensor.type}_${instance}`;
-      const assignedPins = allocation.assigned[instanceKey] || [];
-      const assignedPin = assignedPins[0] || { pin: 2 };
-      
-      console.log(`📡 센서 ${sensor.type} 인스턴스 ${instance + 1}:`, { instanceKey, assignedPins, assignedPin, deviceIndex });
-      
-      // VCC, GND, Data 연결선 생성
-      connections.push({
-        pin: 'VCC',
-        component: `${sensorName} #${instance + 1} (VCC)`,
-        type: 'sensor',
-        connectionType: 'VCC',
-        deviceIndex: deviceIndex
-      });
-      
-      connections.push({
-        pin: 'GND',
-        component: `${sensorName} #${instance + 1} (GND)`,
-        type: 'sensor',
-        connectionType: 'GND',
-        deviceIndex: deviceIndex
-      });
-      
-      connections.push({
-        pin: assignedPin.pin,
-        component: `${sensorName} #${instance + 1} (Data)`,
-        type: 'sensor',
-        connectionType: 'Data',
-        deviceIndex: deviceIndex
-      });
-      
-      deviceIndex++; // 다음 컴포넌트로 이동
-    }
-  });
-  
-  // 제어 연결
-  spec.controls.forEach((control: any, controlIdx: number) => {
-    const controlName = controlNames[control.type] || control.type.toUpperCase();
-    
-    for (let instance = 0; instance < control.count; instance++) {
-      const instanceKey = `control_${control.type}_${instance}`;
-      const assignedPins = allocation.assigned[instanceKey] || [];
-      const assignedPin = assignedPins[0] || { pin: 4 };
-      
-      console.log(`🎛️ 제어장치 ${control.type} 인스턴스 ${instance + 1}:`, { instanceKey, assignedPins, assignedPin, deviceIndex });
-      
-      // VCC, GND, Control 연결선 생성
-      connections.push({
-        pin: 'VCC',
-        component: `${controlName} #${instance + 1} (VCC)`,
-        type: 'control',
-        connectionType: 'VCC',
-        deviceIndex: deviceIndex
-      });
-      
-      connections.push({
-        pin: 'GND',
-        component: `${controlName} #${instance + 1} (GND)`,
-        type: 'control',
-        connectionType: 'GND',
-        deviceIndex: deviceIndex
-      });
-      
-      connections.push({
-        pin: assignedPin.pin,
-        component: `${controlName} #${instance + 1} (Control)`,
-        type: 'control',
-        connectionType: 'Control',
-        deviceIndex: deviceIndex
-      });
-      
-      deviceIndex++; // 다음 컴포넌트로 이동
-    }
-  });
-  
-  console.log('🔗 생성된 연결선:', connections);
-  return connections;
+// 충돌 경고 생성
+function generateConflictWarnings(conflicts: string[]) {
+  return (
+    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="space-y-2">
+        {conflicts.map((conflict, idx) => (
+          <div key={idx} className="flex items-center text-sm text-red-700">
+            <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+            {conflict}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
