@@ -263,8 +263,20 @@ function generateComponents(spec: any, allocation: any) {
       const instanceKey = `sensor_${sensor.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
       
-      // 연결 정보를 더 명확하게 표시
-      const connectionInfo = assignedPins.map((p: any) => `${p.role}: ${p.pin}`).join(', ');
+      // 연결 정보를 더 명확하게 표시 (색상별로 구분)
+      const connectionInfo = assignedPins.map((p: any) => {
+        const colorMap: Record<string, string> = {
+          'VCC': '#ff4444',
+          'GND': '#444444', 
+          'I2C': '#0066cc',
+          'DATA': '#00aa00',
+          'SIG': '#aa6600',
+          'OUT': '#aa00aa',
+          'PWM': '#ff0066'
+        };
+        const color = colorMap[p.role] || '#666';
+        return `${p.role}: ${p.pin}`;
+      }).join(', ');
       
       components.push(
         <g key={`sensor_${sensor.type}_${instance}`}>
@@ -277,9 +289,10 @@ function generateComponents(spec: any, allocation: any) {
           <text x={310} y={yOffset + 65} fontSize="9" fill="#666">
             전원: 3.3V/5V
           </text>
-          <text x={310} y={yOffset + 80} fontSize="8" fill="#999">
-            VCC, GND, Data 연결됨
-          </text>
+          {/* 색상별 연결 상태 표시 */}
+          <text x={310} y={yOffset + 80} fontSize="8" fill="#ff4444" fontWeight="bold">VCC</text>
+          <text x={340} y={yOffset + 80} fontSize="8" fill="#444444" fontWeight="bold">GND</text>
+          <text x={370} y={yOffset + 80} fontSize="8" fill="#00aa00" fontWeight="bold">Data</text>
         </g>
       );
       yOffset += 100;
@@ -308,8 +321,21 @@ function generateComponents(spec: any, allocation: any) {
       const instanceKey = `control_${control.type}_${instance}`;
       const assignedPins = allocation.assigned[instanceKey] || [];
       
-      // 연결 정보를 더 명확하게 표시
-      const connectionInfo = assignedPins.map((p: any) => `${p.role}: ${p.pin}`).join(', ');
+      // 연결 정보를 더 명확하게 표시 (색상별로 구분)
+      const connectionInfo = assignedPins.map((p: any) => {
+        const colorMap: Record<string, string> = {
+          'VCC': '#ff4444',
+          'GND': '#444444', 
+          'I2C': '#0066cc',
+          'DATA': '#00aa00',
+          'SIG': '#aa6600',
+          'OUT': '#aa00aa',
+          'PWM': '#ff0066',
+          'Control': '#ff6600'
+        };
+        const color = colorMap[p.role] || '#666';
+        return `${p.role}: ${p.pin}`;
+      }).join(', ');
       
       components.push(
         <g key={`control_${control.type}_${instance}`}>
@@ -322,9 +348,10 @@ function generateComponents(spec: any, allocation: any) {
           <text x={310} y={yOffset + 65} fontSize="9" fill="#666">
             전원: 5V/12V
           </text>
-          <text x={310} y={yOffset + 80} fontSize="8" fill="#999">
-            VCC, GND, Control 연결됨
-          </text>
+          {/* 색상별 연결 상태 표시 */}
+          <text x={310} y={yOffset + 80} fontSize="8" fill="#ff4444" fontWeight="bold">VCC</text>
+          <text x={340} y={yOffset + 80} fontSize="8" fill="#444444" fontWeight="bold">GND</text>
+          <text x={370} y={yOffset + 80} fontSize="8" fill="#ff6600" fontWeight="bold">Control</text>
         </g>
       );
       yOffset += 100;
