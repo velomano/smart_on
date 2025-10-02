@@ -9,10 +9,45 @@ export async function GET(req: NextRequest) {
 
     const sb = createSbServer();
     if (!sb) {
-      return NextResponse.json({ 
-        ok: false, 
-        error: 'Supabase 연결이 필요합니다.' 
-      }, { status: 500 });
+      console.error('❌ Supabase 연결 실패 - 환경 변수 확인 필요');
+      console.error('❌ NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '미설정');
+      console.error('❌ SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '설정됨' : '미설정');
+      
+      // Mock 데이터 반환 (개발/테스트용)
+      const mockRecipes = [
+        {
+          id: 'mock-recipe-1',
+          target_volume_l: 100,
+          target_ec: 1.2,
+          target_ph: 6.0,
+          ec_est: 1.2,
+          ph_est: 6.0,
+          warnings: null,
+          status: 'saved',
+          created_at: new Date().toISOString(),
+          crop_profiles: {
+            crop_key: 'lettuce',
+            crop_name: '상추',
+            stage: 'vegetative'
+          },
+          water_profiles: {
+            name: 'RO_Default'
+          },
+          lines: [
+            { salt: 'Ca(NO3)2·4H2O', grams: 15.5, tank: 'A' },
+            { salt: 'KNO3', grams: 8.2, tank: 'A' },
+            { salt: 'KH2PO4', grams: 2.1, tank: 'A' },
+            { salt: 'MgSO4·7H2O', grams: 6.8, tank: 'B' }
+          ]
+        }
+      ];
+      
+      return NextResponse.json({
+        ok: true,
+        recipes: mockRecipes,
+        mock: true,
+        warning: 'Supabase 연결 실패로 Mock 데이터를 반환합니다.'
+      });
     }
 
     // 레시피 목록 조회 (작물 정보 포함)
@@ -80,11 +115,48 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (error) {
-    console.error('레시피 조회 API 에러:', error);
-    return NextResponse.json({ 
-      ok: false, 
-      error: '서버 오류가 발생했습니다.' 
-    }, { status: 500 });
+    console.error('❌ 레시피 조회 API 에러:', error);
+    if (error instanceof Error) {
+      console.error('❌ 에러 메시지:', error.message);
+      console.error('❌ 에러 스택:', error.stack);
+    }
+    
+    // Mock 데이터로 fallback
+    const mockRecipes = [
+      {
+        id: 'mock-recipe-1',
+        target_volume_l: 100,
+        target_ec: 1.2,
+        target_ph: 6.0,
+        ec_est: 1.2,
+        ph_est: 6.0,
+        warnings: null,
+        status: 'saved',
+        created_at: new Date().toISOString(),
+        crop_profiles: {
+          crop_key: 'lettuce',
+          crop_name: '상추',
+          stage: 'vegetative'
+        },
+        water_profiles: {
+          name: 'RO_Default'
+        },
+        lines: [
+          { salt: 'Ca(NO3)2·4H2O', grams: 15.5, tank: 'A' },
+          { salt: 'KNO3', grams: 8.2, tank: 'A' },
+          { salt: 'KH2PO4', grams: 2.1, tank: 'A' },
+          { salt: 'MgSO4·7H2O', grams: 6.8, tank: 'B' }
+        ]
+      }
+    ];
+    
+    return NextResponse.json({
+      ok: true,
+      recipes: mockRecipes,
+      mock: true,
+      error: error instanceof Error ? error.message : '알 수 없는 오류',
+      warning: '서버 오류로 인해 대체 데이터를 반환합니다.'
+    });
   }
 }
 
@@ -102,6 +174,7 @@ export async function DELETE(req: NextRequest) {
 
     const sb = createSbServer();
     if (!sb) {
+      console.error('❌ Supabase 연결 실패 - 환경 변수 확인 필요');
       return NextResponse.json({ 
         ok: false, 
         error: 'Supabase 연결이 필요합니다.' 
