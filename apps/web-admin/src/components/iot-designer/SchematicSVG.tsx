@@ -422,7 +422,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
           <g key={idx}>
             <line 
               x1={43} y1={50} 
-              x2={300} y2={100 + conn.deviceIndex * 80} 
+              x2={300} y2={100 + conn.deviceIndex * 100} 
               stroke="#ff4444" 
               strokeWidth="3"
               strokeDasharray="8,4"
@@ -438,7 +438,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
           <g key={idx}>
             <line 
               x1={43} y1={520} 
-              x2={300} y2={100 + conn.deviceIndex * 80} 
+              x2={300} y2={100 + conn.deviceIndex * 100} 
               stroke="#444444" 
               strokeWidth="3"
               strokeDasharray="8,4"
@@ -456,7 +456,7 @@ function generateConnectionLines(pinConnections: any[], device: string) {
     const startX = pinInfo.x;
     const startY = pinInfo.y;
     const endX = 300; // 컴포넌트 위치
-    const endY = 100 + conn.deviceIndex * 80; // 컴포넌트 Y 위치 (각 인스턴스별로 배치)
+    const endY = 100 + conn.deviceIndex * 100; // 컴포넌트 Y 위치 (각 인스턴스별로 배치)
     
     // 연결선 색상 (센서는 파란색, 제어는 주황색)
     const lineColor = conn.type === 'sensor' ? '#1976d2' : '#f57c00';
