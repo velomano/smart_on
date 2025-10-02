@@ -9,6 +9,8 @@ interface AlertBadgeProps {
 }
 
 export default function AlertBadge({ className = '' }: AlertBadgeProps) {
+  console.log('🔔 AlertBadge 컴포넌트 렌더링 시작');
+  
   const [alerts, setAlerts] = useState<DashboardAlert[]>([]);
   const [showPopup, setShowPopup] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);

@@ -169,9 +169,28 @@ export default function NotificationButton({ className = '' }: NotificationButto
         setCustomMessage('');
         setSelectedTemplate('');
       
-        // 텔레그램 전송 성공 - 우측하단 알림은 실제 센서 이상치값 감지 시에만 표시
-        // 테스트용 알림은 추가하지 않음
-        console.log('✅ 텔레그램 알림 전송 완료 - 우측하단 알림은 센서 이상치 감지 시에만 표시');
+        // 텔레그램 전송 성공 시 대시보드 알림에도 추가 (테스트용)
+        const alertTitle = template?.title || '📝 사용자 지정 알림';
+        const alertMessage = template?.message || customMessage;
+        
+        console.log('🔔 대시보드 알림 추가 시도:', {
+          title: alertTitle,
+          message: alertMessage,
+          type: 'system',
+          level: 'medium'
+        });
+        
+        const addedAlert = dashboardAlertManager.addAlert({
+          type: 'system',
+          level: 'medium',
+          title: alertTitle,
+          message: alertMessage,
+          location: '시스템',
+          sensorValue: 0,
+          threshold: 0
+        });
+        
+        console.log('🔔 대시보드 알림 추가 완료:', addedAlert);
       
         // 성공 후 2초 뒤 모달 닫기
         setTimeout(() => {
