@@ -119,7 +119,7 @@ export default function NotificationsPage() {
           [child]: value
         }
       }));
-    } else {
+      } else {
       setNotificationSettings(prev => ({
         ...prev,
         [key]: value
@@ -151,7 +151,7 @@ export default function NotificationsPage() {
           <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center space-x-3">
               <span className="text-3xl">🚨</span>
-              <div>
+                <div>
                 <h3 className="text-xl font-bold mb-2">⚠️ 텔레그램 알림 설정 안내</h3>
                 <p className="text-red-100 mb-3">
                   텔레그램 알림을 받으려면 <strong>반드시 마이페이지에서 텔레그램 채팅 ID를 등록</strong>해야 합니다!
@@ -162,10 +162,10 @@ export default function NotificationsPage() {
                 >
                   👤 마이페이지에서 ID 등록하기
                 </button>
-              </div>
-            </div>
-          </div>
-          
+                      </div>
+                    </div>
+                  </div>
+
           {/* 텔레그램 봇 설정 */}
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
@@ -181,15 +181,30 @@ export default function NotificationsPage() {
                   <p className="text-blue-700 text-sm">텔레그램을 통한 실시간 알림을 받으려면 활성화하세요</p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
+                      <input
+                        type="checkbox"
                     checked={notificationSettings.telegramEnabled}
-                    onChange={(e) => handleSettingChange('telegramEnabled', e.target.checked)}
+                    onChange={async (e) => {
+                      const newValue = e.target.checked;
+                      handleSettingChange('telegramEnabled', newValue);
+                      
+                      // 즉시 Supabase에 저장
+                      try {
+                        if (user) {
+                          await UserService.updateUserSetting(user.id, 'notification_preferences', {
+                            telegram_notification: newValue
+                          });
+                          console.log('📱 알림설정 페이지 토글 즉시 동기화:', { telegramEnabled: newValue });
+                        }
+                      } catch (error) {
+                        console.error('토글 동기화 실패:', error);
+                      }
+                    }}
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
+                      </label>
+                    </div>
 
                      {/* 채팅 ID 설정 - 마이페이지에서 관리하므로 제거 */}
                      {notificationSettings.telegramEnabled && (
@@ -198,7 +213,7 @@ export default function NotificationsPage() {
                          <div className="flex justify-center">
                            <NotificationButton className="text-lg px-8 py-3" />
                          </div>
-                       </div>
+                    </div>
                      )}
 
                      {/* 텔레그램 비활성화 시 안내 */}
@@ -213,33 +228,33 @@ export default function NotificationsPage() {
                                <li>봇을 시작하고 <code className="bg-yellow-100 px-1 py-0.5 rounded font-mono">/start</code> 명령어 전송</li>
                                <li>봇이 자동으로 채팅 ID를 알려줍니다</li>
                              </ol>
-                           </div>
-                           
+                    </div>
+
                            <div className="bg-blue-50 rounded-lg p-3 border border-blue-300">
                              <h5 className="font-semibold text-blue-900 mb-2">2️⃣ ⚠️ 중요: 마이페이지에서 ID 등록 필수!</h5>
                              <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-2">
                                <p className="text-red-800 text-sm font-semibold">🚨 반드시 마이페이지에서 텔레그램 ID를 등록해야 알림을 받을 수 있습니다!</p>
                              </div>
                              <p className="text-blue-700 text-sm mb-2">봇에서 받은 채팅 ID를 마이페이지의 "텔레그램 채팅 ID" 필드에 입력하고 저장하세요.</p>
-                             <button
+                      <button
                                onClick={() => router.push('/my-page')}
                                className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                             >
+                      >
                                👤 마이페이지에서 ID 등록하기
-                             </button>
-                           </div>
-                           
+                      </button>
+                    </div>
+
                            <div className="bg-green-50 rounded-lg p-3 border border-green-300">
                              <h5 className="font-semibold text-green-900 mb-2">3️⃣ 설정 완료 후 알림 활성화</h5>
                              <p className="text-green-700 text-sm">마이페이지에서 ID를 등록한 후, 위의 "텔레그램 알림 활성화" 토글을 켜주세요.</p>
-                           </div>
-                         </div>
-                       </div>
-                     )}
-            </div>
-          </div>
+                      </div>
+                    </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-          {/* 알림 유형 설정 */}
+                {/* 알림 유형 설정 */}
           <div className="bg-white rounded-lg shadow-lg p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
               <span className="text-3xl mr-3">🔔</span>
@@ -266,16 +281,16 @@ export default function NotificationsPage() {
                         <h3 className="text-lg font-semibold text-gray-900">{label.title}</h3>
                         <p className="text-gray-600 text-sm">{label.description}</p>
                       </div>
-                    </div>
+                        </div>
                     <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
+                          <input
+                            type="checkbox"
                         checked={enabled}
                         onChange={(e) => handleSettingChange(`notifications.${key}`, e.target.checked)}
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
+                          </label>
                   </div>
                 );
               })}
@@ -290,8 +305,8 @@ export default function NotificationsPage() {
             >
               💾 설정 저장
             </button>
-          </div>
-
+                  </div>
+                  
           {/* 현재 설정 상태 */}
           <div className="bg-gray-100 rounded-lg p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">📊 현재 설정 상태</h3>
@@ -303,19 +318,19 @@ export default function NotificationsPage() {
                 }`}>
                   {notificationSettings.telegramEnabled ? '활성화됨' : '비활성화됨'}
                 </span>
-              </div>
+                    </div>
               <div>
                 <span className="font-medium">채팅 ID:</span>
                 <span className="ml-2 text-gray-600">
                   {notificationSettings.telegramChatId || '설정되지 않음'}
                 </span>
-              </div>
+                  </div>
               <div>
                 <span className="font-medium">활성 알림:</span>
                 <span className="ml-2 text-gray-600">
                   {Object.values(notificationSettings.notifications).filter(Boolean).length}개
                 </span>
-              </div>
+                    </div>
               <div>
                 <span className="font-medium">마지막 업데이트:</span>
                 <span className="ml-2 text-gray-600">

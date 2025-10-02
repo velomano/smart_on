@@ -535,18 +535,48 @@ export default function MyPage() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 sm:space-x-3">
+                    <div>
+                      <h3 className="text-sm sm:text-base font-semibold text-gray-600">텔레그램 알림 활성화</h3>
+                      <p className="text-xs sm:text-sm text-gray-500">텔레그램을 통한 실시간 알림을 받으려면 활성화하세요</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        id="telegramEnabled"
                         checked={settings.notificationEnabled}
-                        onChange={e => setSettings(prev => ({ ...prev, notificationEnabled: e.target.checked }))}
-                        className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 rounded focus:ring-green-500"
+                        onChange={async (e) => {
+                          const newValue = e.target.checked;
+                          setSettings(prev => ({ ...prev, notificationEnabled: newValue }));
+                          
+                          // 즉시 동기화
+                          try {
+                            if (supabaseUser?.id) {
+                              await UserService.updateUserSetting(supabaseUser.id, 'notification_preferences', {
+                                ...userSettings?.notification_preferences,
+                                telegram_notification: newValue
+                              });
+                            }
+                            
+                            // localStorage도 즉시 업데이트
+                            const currentNotificationSettings = loadNotificationSettings();
+                            const updatedNotificationSettings: NotificationSettings = {
+                              ...currentNotificationSettings,
+                              telegramEnabled: newValue
+                            };
+                            saveNotificationSettings(updatedNotificationSettings);
+                            
+                            // storage 이벤트 발생시켜 다른 페이지에서 감지할 수 있도록
+                            window.dispatchEvent(new Event('storage'));
+                            
+                            console.log('📱 마이페이지 토글 즉시 동기화:', { telegramEnabled: newValue });
+                          } catch (error) {
+                            console.error('토글 동기화 실패:', error);
+                          }
+                        }}
+                        className="sr-only peer"
                       />
-                      <label htmlFor="telegramEnabled" className="text-gray-600 font-medium text-sm sm:text-base">
-                        텔레그램 알림 활성화
-                      </label>
-                    </div>
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
                     
                     <div className="flex space-x-1 sm:space-x-2">
                       <button
