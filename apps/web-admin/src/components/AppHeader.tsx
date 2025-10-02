@@ -392,7 +392,6 @@ export default function AppHeader({
                 title="공지사항"
               >
                 <span className="text-lg">📢</span>
-                <span className="hidden sm:inline">공지사항</span>
                 {hasNewNotice && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
                 )}
@@ -509,6 +508,63 @@ export default function AppHeader({
                 </button>
               )}
 
+              {/* 구분선 */}
+              <div className="border-t border-gray-200 my-2"></div>
+
+              {/* 알림설정 */}
+              <button
+                onClick={() => {
+                  router.push('/notifications');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+              >
+                ⚙️ 알림설정
+              </button>
+
+              {/* 추가 메뉴들 - 모바일에서만 보이지 않는 메뉴들 */}
+              <button
+                onClick={() => {
+                  router.push('/nutrients/plan');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+              >
+                🧪 양액계산
+              </button>
+
+              <button
+                onClick={() => {
+                  router.push('/market');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50"
+              >
+                📊 시세정보
+              </button>
+
+              <button
+                onClick={() => {
+                  router.push('/my-page');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-pink-600 hover:text-pink-800 hover:bg-pink-50"
+              >
+                👤 마이페이지
+              </button>
+
+              <button
+                onClick={() => {
+                  router.push('/help');
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-cyan-600 hover:text-cyan-800 hover:bg-cyan-50"
+              >
+                📚 사용설명서
+              </button>
+
+              {/* 구분선 */}
+              <div className="border-t border-gray-200 my-2"></div>
 
               {/* 로그아웃 */}
               <button
