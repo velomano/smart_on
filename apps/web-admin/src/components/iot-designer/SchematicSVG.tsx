@@ -389,109 +389,153 @@ function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[])
 
 // 핀 연결선 생성
 function generateConnectionLines(pinConnections: any[], device: string) {
-  return pinConnections.map((conn, idx) => {
-    // 디바이스별 핀 위치 계산
-    const deviceInfo = getDeviceInfo(device);
-    const devicePins = deviceInfo.pins;
-    
-    // 핀 번호가 숫자인 경우와 문자열인 경우 모두 처리
-    const pinInfo = devicePins.find(p => 
-      p.num === conn.pin || 
-      p.num === String(conn.pin) ||
-      (typeof conn.pin === 'number' && p.num === conn.pin) ||
-      (typeof conn.pin === 'string' && p.num === conn.pin)
-    );
-    
-    // VCC, GND 같은 문자열 핀은 특별한 위치에 표시
-    if (!pinInfo) {
-      if (conn.pin === 'VCC') {
-        return (
-          <g key={idx}>
-            <line 
-              x1={43} y1={50} 
-              x2={300} y2={100 + conn.deviceIndex * 80} 
-              stroke="#ff4444" 
-              strokeWidth="3"
-              strokeDasharray="8,4"
-              opacity="0.8"
-            />
-            <circle cx={43} cy={50} r="3" fill="#ff4444" stroke="#fff" strokeWidth="1"/>
-            <text x={47} y={53} fontSize="9" fontWeight="bold" fill="#ff4444">VCC</text>
-            <circle cx={300} cy={100 + conn.deviceIndex * 80} r="2" fill="#ff4444" />
-            <text x={305} y={95 + conn.deviceIndex * 80} fontSize="8" fill="#ff4444">VCC</text>
-          </g>
-        );
-      } else if (conn.pin === 'GND') {
-        return (
-          <g key={idx}>
-            <line 
-              x1={43} y1={520} 
-              x2={300} y2={100 + conn.deviceIndex * 80} 
-              stroke="#444444" 
-              strokeWidth="3"
-              strokeDasharray="8,4"
-              opacity="0.8"
-            />
-            <circle cx={43} cy={520} r="3" fill="#444444" stroke="#fff" strokeWidth="1"/>
-            <text x={47} y={523} fontSize="9" fontWeight="bold" fill="#444444">GND</text>
-            <circle cx={300} cy={100 + conn.deviceIndex * 80} r="2" fill="#444444" />
-            <text x={305} y={95 + conn.deviceIndex * 80} fontSize="8" fill="#444444">GND</text>
-          </g>
-        );
-      }
-      return null;
+  // 컴포넌트별 연결선 그룹화하여 라벨 겹침 방지
+  const componentGroups = new Map<number, any[]>();
+  
+  pinConnections.forEach((conn, idx) => {
+    const deviceIndex = conn.deviceIndex;
+    if (!componentGroups.has(deviceIndex)) {
+      componentGroups.set(deviceIndex, []);
     }
-    
-    const startX = pinInfo.x;
-    const startY = pinInfo.y;
-    const endX = 300; // 컴포넌트 위치
-    const endY = 100 + conn.deviceIndex * 80; // 컴포넌트 Y 위치 (각 인스턴스별로 배치)
-    
-    // 연결선 색상 (센서는 파란색, 제어는 주황색)
-    const lineColor = conn.type === 'sensor' ? '#1976d2' : '#f57c00';
-    
-    // 연결 타입별 색상 변화
-    const connectionColors: Record<string, string> = {
-      'VCC': '#ff4444',    // 빨간색 (전원)
-      'GND': '#444444',    // 검은색 (그라운드)
-      'Data': '#00aa00',   // 초록색 (데이터)
-      'SDA': '#0066cc',    // 파란색 (I2C 데이터)
-      'SCL': '#0066cc',    // 파란색 (I2C 클럭)
-      'Analog': '#aa6600', // 갈색 (아날로그)
-      'Digital': '#aa00aa', // 보라색 (디지털)
-      'Control': '#ff6600', // 주황색 (제어)
-      'PWM': '#ff0066',    // 분홍색 (PWM)
-      'Step': '#00ff66',   // 연두색 (스테퍼 스텝)
-      'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
-    };
-    
-    const finalColor = connectionColors[conn.connectionType] || lineColor;
-    
-    return (
-      <g key={idx}>
-        {/* 연결선 */}
-        <line 
-          x1={startX} y1={startY} 
-          x2={endX} y2={endY} 
-          stroke={finalColor} 
-          strokeWidth="3"
-          strokeDasharray="8,4"
-          opacity="0.8"
-        />
-        {/* 핀 번호 라벨 */}
-        <circle cx={startX} cy={startY} r="3" fill={finalColor} stroke="#fff" strokeWidth="1"/>
-        <text x={startX + 6} y={startY + 2} fontSize="9" fontWeight="bold" fill={finalColor}>
-          {conn.pin}
-        </text>
-        {/* 컴포넌트 연결점 */}
-        <circle cx={endX} cy={endY} r="2" fill={finalColor} />
-        {/* 연결 타입 라벨 */}
-        <text x={endX + 5} y={endY - 5} fontSize="8" fill={finalColor}>
-          {conn.connectionType}
-        </text>
-      </g>
-    );
-  }).filter(Boolean);
+    componentGroups.get(deviceIndex)!.push({ ...conn, originalIndex: idx });
+  });
+
+  const allLines: any[] = [];
+
+  componentGroups.forEach((connections, deviceIndex) => {
+    connections.forEach((conn, groupIdx) => {
+      const deviceInfo = getDeviceInfo(device);
+      const devicePins = deviceInfo.pins;
+      
+      // 핀 번호가 숫자인 경우와 문자열인 경우 모두 처리
+      const pinInfo = devicePins.find(p => 
+        p.num === conn.pin || 
+        p.num === String(conn.pin) ||
+        (typeof conn.pin === 'number' && p.num === conn.pin) ||
+        (typeof conn.pin === 'string' && p.num === conn.pin)
+      );
+      
+      // VCC, GND 같은 문자열 핀은 특별한 위치에 표시
+      if (!pinInfo) {
+        if (conn.pin === 'VCC') {
+          allLines.push(
+            <g key={conn.originalIndex}>
+              <line 
+                x1={43} y1={50} 
+                x2={300} y2={100 + conn.deviceIndex * 80} 
+                stroke="#ff4444" 
+                strokeWidth="3"
+                strokeDasharray="8,4"
+                opacity="0.8"
+              />
+              <circle cx={43} cy={50} r="3" fill="#ff4444" stroke="#fff" strokeWidth="1"/>
+              <text x={47} y={53} fontSize="9" fontWeight="bold" fill="#ff4444">VCC</text>
+              <circle cx={300} cy={100 + conn.deviceIndex * 80} r="2" fill="#ff4444" />
+              {/* VCC 라벨을 컴포넌트 내부에 배치 */}
+              <text x={310} y={100 + conn.deviceIndex * 80 + 15} fontSize="8" fill="#ff4444" fontWeight="bold">VCC</text>
+            </g>
+          );
+        } else if (conn.pin === 'GND') {
+          allLines.push(
+            <g key={conn.originalIndex}>
+              <line 
+                x1={43} y1={520} 
+                x2={300} y2={100 + conn.deviceIndex * 80} 
+                stroke="#444444" 
+                strokeWidth="3"
+                strokeDasharray="8,4"
+                opacity="0.8"
+              />
+              <circle cx={43} cy={520} r="3" fill="#444444" stroke="#fff" strokeWidth="1"/>
+              <text x={47} y={523} fontSize="9" fontWeight="bold" fill="#444444">GND</text>
+              <circle cx={300} cy={100 + conn.deviceIndex * 80} r="2" fill="#444444" />
+              {/* GND 라벨을 컴포넌트 내부에 배치 */}
+              <text x={310} y={100 + conn.deviceIndex * 80 + 25} fontSize="8" fill="#444444" fontWeight="bold">GND</text>
+            </g>
+          );
+        }
+        return;
+      }
+      
+      const startX = pinInfo.x;
+      const startY = pinInfo.y;
+      const endX = 300; // 컴포넌트 위치
+      const endY = 100 + conn.deviceIndex * 80; // 컴포넌트 Y 위치 (각 인스턴스별로 배치)
+      
+      // 연결선 색상 (센서는 파란색, 제어는 주황색)
+      const lineColor = conn.type === 'sensor' ? '#1976d2' : '#f57c00';
+      
+      // 연결 타입별 색상 변화
+      const connectionColors: Record<string, string> = {
+        'VCC': '#ff4444',    // 빨간색 (전원)
+        'GND': '#444444',    // 검은색 (그라운드)
+        'Data': '#00aa00',   // 초록색 (데이터)
+        'SDA': '#0066cc',    // 파란색 (I2C 데이터)
+        'SCL': '#0066cc',    // 파란색 (I2C 클럭)
+        'Analog': '#aa6600', // 갈색 (아날로그)
+        'Digital': '#aa00aa', // 보라색 (디지털)
+        'Control': '#ff6600', // 주황색 (제어)
+        'PWM': '#ff0066',    // 분홍색 (PWM)
+        'Step': '#00ff66',   // 연두색 (스테퍼 스텝)
+        'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
+      };
+      
+      const finalColor = connectionColors[conn.connectionType] || lineColor;
+      
+      // 연결선 중간점에 라벨 배치 (겹치지 않도록)
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2;
+      
+      // 같은 컴포넌트로 가는 연결선들의 라벨을 세로로 배치
+      const labelOffsetY = groupIdx * 12; // 각 라벨마다 12px 간격
+      
+      allLines.push(
+        <g key={conn.originalIndex}>
+          {/* 연결선 */}
+          <line 
+            x1={startX} y1={startY} 
+            x2={endX} y2={endY} 
+            stroke={finalColor} 
+            strokeWidth="3"
+            strokeDasharray="8,4"
+            opacity="0.8"
+          />
+          {/* 핀 번호 라벨 */}
+          <circle cx={startX} cy={startY} r="3" fill={finalColor} stroke="#fff" strokeWidth="1"/>
+          <text x={startX + 6} y={startY + 2} fontSize="9" fontWeight="bold" fill={finalColor}>
+            {conn.pin}
+          </text>
+          {/* 컴포넌트 연결점 */}
+          <circle cx={endX} cy={endY} r="2" fill={finalColor} />
+          
+          {/* 연결 타입 라벨 - 연결선 중간점에 배치 */}
+          <rect 
+            x={midX - 15} 
+            y={midY - 8 + labelOffsetY} 
+            width="30" 
+            height="12" 
+            fill="white" 
+            stroke={finalColor} 
+            strokeWidth="1" 
+            rx="2"
+            opacity="0.9"
+          />
+          <text 
+            x={midX} 
+            y={midY + 2 + labelOffsetY} 
+            fontSize="8" 
+            fill={finalColor} 
+            textAnchor="middle"
+            fontWeight="bold"
+          >
+            {conn.connectionType}
+          </text>
+        </g>
+      );
+    });
+  });
+
+  return allLines;
 }
 
 // 핀 연결 정보 생성 (단순화된 버전)
