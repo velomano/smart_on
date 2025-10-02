@@ -8,7 +8,7 @@ IoT Designer는 자연어로 IoT 시스템을 설명하면 자동으로 완벽�
 - **자연어 입력**: "온도 센서 2개, 스프링클러 4개로 스마트팜을 만들어줘"
 - **자동 핀 할당**: ESP32 핀맵 기반 충돌 없는 핀 배치
 - **전원 계산**: 센서/제어별 전원 요구사항 자동 계산
-- **회로도 생성**: SVG 기반 시각적 회로도
+- **회로도 생성**: 깔끔한 카드 기반 정보 표시
 - **코드 생성**: 완벽한 Arduino 코드 자동 생성
 - **LLM 통합**: AI 기반 자연어 분석 및 제안
 
@@ -125,35 +125,58 @@ function calculatePowerRequirements(items: Array<{
 
 ---
 
-## 🎨 **SVG 회로도 스펙**
+## 🎨 **카드 기반 정보 표시 스펙**
 
-### **회로도 구성 요소**
-1. **ESP32 본체**: 중앙에 위치한 메인 컨트롤러
-2. **센서 박스**: 좌측에 센서별 박스 배치
-3. **제어 박스**: 우측에 제어 장치별 박스 배치
-4. **연결선**: 핀 간 연결을 나타내는 선
-5. **전원 공급**: 우측 상단에 전원 요구사항 표시
-6. **충돌 경고**: 우측 하단에 핀 충돌 경고 표시
+### **정보 표시 구성 요소**
+1. **디바이스 정보**: 선택된 디바이스 (ESP32, Arduino 등) 표시
+2. **컴포넌트 카드**: 센서/제어 장치별 정보 카드
+3. **핀 할당 테이블**: 핀번호, 역할, 컴포넌트, 상태 정보
+4. **배선 가이드**: 각 컴포넌트별 상세한 배선 정보
+5. **전원 공급**: 전압별 전원 요구사항 표시
+6. **충돌 경고**: 핀 충돌 시 명확한 경고 표시
 
-### **SVG 구조**
+### **카드 기반 레이아웃**
 ```typescript
-<svg width="920" height="520">
-  {/* ESP32 본체 */}
-  <rect x={40} y={40} width={220} height={440} rx={12}/>
-  
-  {/* 센서 박스들 */}
-  {sensors.map((sensor, idx) => (
-    <rect x={320} y={100 + idx * 80} width={120} height={60}/>
-  ))}
-  
-  {/* 제어 박스들 */}
-  {controls.map((control, idx) => (
-    <rect x={320} y={100 + (sensors.length + idx) * 80} width={120} height={60}/>
-  ))}
-  
-  {/* 연결선들 */}
-  <line x1={260} y1={90} x2={320} y2={130}/>
-</svg>
+<div className="bg-white border rounded-lg p-6">
+  {/* 디바이스 정보 */}
+  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <h4>📱 선택된 디바이스</h4>
+    <p>{deviceInfo.name}</p>
+  </div>
+
+  {/* 컴포넌트 카드들 */}
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {componentCards.map(card => (
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h5>{card.name}</h5>
+        <div>📍 연결 정보: {card.pins}</div>
+        <div>⚡ 전원: {card.power}</div>
+      </div>
+    ))}
+  </div>
+
+  {/* 핀 할당 테이블 */}
+  <table className="w-full">
+    <thead>
+      <tr>
+        <th>핀번호</th>
+        <th>역할</th>
+        <th>컴포넌트</th>
+        <th>상태</th>
+      </tr>
+    </thead>
+    <tbody>
+      {pinData.map(row => (
+        <tr>
+          <td>{row.pin}</td>
+          <td>{row.role}</td>
+          <td>{row.component}</td>
+          <td>✅ 할당됨</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
 ```
 
 ---
@@ -199,7 +222,8 @@ function calculatePowerRequirements(items: Array<{
 1. **iot-designer 마법사**에서 DHT22×1, DS18B20×1, 릴레이×2, 팬(PWM)×1 구성 시
    - 충돌 없는 핀 자동 배치가 표시된다
    - 전원 요구량 카드에 3.3V, 5V, 12V 권장 전류가 계산되어 나온다
-   - SVG 회로도에 ESP32—센서—릴레이—팬 드라이버 간 결선이 시각화된다
+   - 카드 기반 정보 표시에 컴포넌트별 연결 정보가 깔끔하게 표시된다
+   - 핀 할당 테이블과 배선 가이드가 명확하게 제공된다
    - Arduino 코드 미리보기가 생성되고 다운로드 가능하다
 
 2. **자연어 입력** "온도 2개, 습도 1개, 스프링클러 4개, 팬 2개로 스마트팜"을 넣으면
@@ -213,7 +237,7 @@ function calculatePowerRequirements(items: Array<{
 - 자연어 파싱: 1초 이내
 - 핀 할당: 0.5초 이내
 - 코드 생성: 2초 이내
-- 회로도 렌더링: 1초 이내
+- 정보 표시 렌더링: 0.5초 이내
 
 ### **안전 기준**
 - 핀 충돌 검사 100% 정확도
@@ -229,7 +253,7 @@ function calculatePowerRequirements(items: Array<{
 - [x] 센서/제어 카탈로그 구축
 - [x] 핀 자동 할당 시스템
 - [x] 전원 요구사항 계산
-- [x] SVG 회로도 생성
+- [x] 카드 기반 정보 표시 생성
 - [x] Arduino 코드 생성
 - [x] 자연어 파싱 (규칙 기반)
 
