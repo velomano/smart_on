@@ -120,7 +120,14 @@ export default function NotificationButton({ className = '' }: NotificationButto
         const alertTitle = template?.title || '📝 사용자 지정 알림';
         const alertMessage = template?.message || customMessage;
         
-        dashboardAlertManager.addAlert({
+        console.log('🔔 대시보드 알림 추가 시도:', {
+          title: alertTitle,
+          message: alertMessage,
+          type: 'system',
+          level: 'medium'
+        });
+        
+        const addedAlert = dashboardAlertManager.addAlert({
           type: 'system',
           level: 'medium',
           title: alertTitle,
@@ -129,6 +136,8 @@ export default function NotificationButton({ className = '' }: NotificationButto
           sensorValue: 0,
           threshold: 0
         });
+        
+        console.log('🔔 대시보드 알림 추가 완료:', addedAlert);
       
         // 성공 후 2초 뒤 모달 닫기
         setTimeout(() => {

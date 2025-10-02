@@ -52,18 +52,31 @@ class DashboardAlertManager {
 
   // 알림 변경사항 전파
   private notify() {
-    this.listeners.forEach(callback => callback(this.alerts));
+    console.log('🔔 notify() 호출 - 구독자들에게 알림 전파:', {
+      totalAlerts: this.alerts.length,
+      listeners: this.listeners.size
+    });
+    
+    this.listeners.forEach((callback, index) => {
+      console.log(`🔔 구독자 ${index + 1}에게 알림 전파`);
+      callback(this.alerts);
+    });
+    
     this.saveAlertsToStorage();
   }
 
   // 알림 추가
   addAlert(alert: Omit<DashboardAlert, 'id' | 'timestamp' | 'isRead'>): DashboardAlert {
+    console.log('🔔 dashboardAlertManager.addAlert 호출:', alert);
+    
     const newAlert: DashboardAlert = {
       ...alert,
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
       isRead: false
     };
+
+    console.log('🔔 새 알림 생성:', newAlert);
 
     // 중복 경고 체크 (같은 센서 타입/위치/메시지는 2분간 중복 방지 - 테스트 목적으로 단축)
     const isDuplicate = this.alerts.some(existingAlert => 
@@ -74,12 +87,16 @@ class DashboardAlertManager {
     );
 
     if (isDuplicate) {
-      console.log('중복 경고 방지 (2분):', newAlert.title);
+      console.log('🔔 중복 경고 방지 (2분):', newAlert.title);
       return newAlert;
     }
 
     this.alerts.unshift(newAlert); // 가장 최근 알림이 맨 위로
     this.alerts = this.alerts.slice(0, 100); // 최대 100개 알림만 유지
+    
+    console.log('🔔 알림 추가 완료, 총 알림 수:', this.alerts.length);
+    console.log('🔔 구독자 수:', this.listeners.size);
+    
     this.notify();
 
     return newAlert;

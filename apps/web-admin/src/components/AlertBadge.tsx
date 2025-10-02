@@ -18,8 +18,24 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
   useEffect(() => {
     const checkUser = async () => {
       const currentUser = await getCurrentUser();
+      console.log('🔔 AlertBadge - 사용자 확인:', {
+        user: currentUser ? {
+          id: currentUser.id,
+          email: currentUser.email,
+          is_approved: currentUser.is_approved,
+          is_active: currentUser.is_active
+        } : null
+      });
+      
       if (currentUser && currentUser.is_approved && currentUser.is_active) {
         setUser(currentUser);
+        console.log('🔔 AlertBadge - 사용자 설정 완료');
+      } else {
+        console.log('🔔 AlertBadge - 사용자 조건 미충족:', {
+          hasUser: !!currentUser,
+          isApproved: currentUser?.is_approved,
+          isActive: currentUser?.is_active
+        });
       }
     };
     checkUser();
@@ -27,10 +43,24 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
 
   useEffect(() => {
     // 사용자가 로그인했을 때만 알림 구독 시작
-    if (!user) return;
+    if (!user) {
+      console.log('🔔 AlertBadge - 사용자 없음, 구독 시작 안함');
+      return;
+    }
+    
+    console.log('🔔 AlertBadge - 알림 구독 시작');
     
     // 알림 구독
     const unsubscribe = dashboardAlertManager.subscribe((newAlerts) => {
+      console.log('🔔 AlertBadge - 알림 업데이트:', {
+        totalAlerts: newAlerts.length,
+        unreadCount: newAlerts.filter(alert => !alert.isRead).length,
+        latestAlert: newAlerts[0] ? {
+          title: newAlerts[0].title,
+          isRead: newAlerts[0].isRead
+        } : null
+      });
+      
       setAlerts(newAlerts);
       const unread = newAlerts.filter(alert => !alert.isRead).length;
       setUnreadCount(unread);
@@ -38,11 +68,17 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
 
     // 초기 알림 로드
     const initialAlerts = dashboardAlertManager.getAlerts();
+    console.log('🔔 AlertBadge - 초기 알림 로드:', {
+      totalAlerts: initialAlerts.length,
+      unreadCount: initialAlerts.filter(alert => !alert.isRead).length
+    });
+    
     setAlerts(initialAlerts);
     const unread = initialAlerts.filter(alert => !alert.isRead).length;
     setUnreadCount(unread);
 
     return () => {
+      console.log('🔔 AlertBadge - 구독 해제');
       unsubscribe();
     };
   }, [user]); // user가 로그인되었을 때만 구독 시작
