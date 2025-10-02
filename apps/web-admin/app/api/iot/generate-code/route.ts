@@ -9,45 +9,6 @@ import { SystemSpec } from './types';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-interface SystemSpec {
-  device: string;
-  protocol: 'http' | 'mqtt' | 'websocket' | 'webhook' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan';
-  sensors: Array<{ type: string; count: number }>;
-  controls: Array<{ type: string; count: number }>;
-  wifi: {
-    ssid: string;
-    password: string;
-  };
-  allocation?: any;
-  bridgeIntegration?: boolean;
-  pinAssignments?: Record<string, string>; // 핀 할당 정보
-  modbusConfig?: {
-    host: string;
-    port: number;
-    unitId: number;
-    registerMappings: Record<string, number>;
-    dataTypes: Record<string, 'U16' | 'S16' | 'U32' | 'S32' | 'float'>;
-    safeLimits: Record<string, { min: number; max: number }>;
-  };
-  lorawanConfig?: {
-    mode: 'mqtt' | 'webhook';
-    lns: 'the-things-stack' | 'chirpstack' | 'carrier';
-    region: string;
-    deviceMap?: Record<string, string>;
-    codec?: { type: 'js'; script?: string; scriptRef?: string };
-    mqtt?: {
-      host: string;
-      port: number;
-      username: string;
-      password: string;
-      uplinkTopic: string;
-      downlinkTopicTpl: string;
-      tls?: boolean;
-    };
-    webhook?: { secret: string; path: string; };
-    api?: { baseUrl: string; token: string; };
-  };
-}
 
 export async function POST(request: NextRequest) {
   try {
