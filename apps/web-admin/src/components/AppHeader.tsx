@@ -1,21 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthUser } from '../lib/auth';
-
-interface DropdownItem {
-  label: string;
-  path: string;
-  icon: string;
-}
-
-interface MenuItem {
-  label: string;
-  path: string;
-  color: string;
-  dropdown?: DropdownItem[];
-}
 
 interface AppHeaderProps {
   user?: AuthUser;
@@ -39,10 +26,8 @@ export default function AppHeader({
   onDashboardRefresh
 }: AppHeaderProps) {
   const router = useRouter();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [hasNewNotice, setHasNewNotice] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isWritingNotice, setIsWritingNotice] = useState(false);
   const [newNoticeTitle, setNewNoticeTitle] = useState('');
   const [newNoticeContent, setNewNoticeContent] = useState('');
@@ -53,7 +38,6 @@ export default function AppHeader({
   const [editNoticeTitle, setEditNoticeTitle] = useState('');
   const [editNoticeContent, setEditNoticeContent] = useState('');
   const [editNoticeType, setEditNoticeType] = useState<'new' | 'update' | 'general'>('general');
-  const menuRef = useRef<HTMLDivElement>(null);
   
   // user가 없을 때 기본값 사용 (로딩 중일 때는 null로 처리)
   const safeUser = user || {
@@ -69,24 +53,6 @@ export default function AppHeader({
   // 사용자 정보 로그 (디버깅용)
   console.log('🔍 AppHeader - 받은 사용자 정보:', user);
   console.log('🔍 AppHeader - 사용할 사용자 정보:', safeUser);
-
-  // 외부 클릭 감지
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-        setOpenDropdown(null);
-      }
-    };
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
 
   // 공지사항 가져오기
   const fetchNotices = async () => {
@@ -348,84 +314,9 @@ export default function AppHeader({
     }
   };
 
-  // 햄버거 메뉴용 메뉴 아이템들 (사용설명서를 가장 상단에 배치)
-  const menuItems: MenuItem[] = [
-    {
-      label: '🚀 IoT Designer',
-      path: '/iot-designer',
-      color: 'from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700',
-      dropdown: [
-        {
-          label: '🎨 IoT Designer',
-          path: '/iot-designer',
-          icon: '🎨'
-        },
-        {
-          label: '🔗 Device Connect',
-          path: '/connect',
-          icon: '🔗'
-        },
-        {
-          label: '📱 Mobile Provision',
-          path: '/provision',
-          icon: '📱'
-        }
-      ]
-    },
-    {
-      label: '사용설명서',
-      path: '/help',
-      color: 'from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700'
-    },
-    {
-      label: '알림설정',
-      path: '/notifications',
-      color: 'from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700'
-    },
-    // 관리자만 관리자 페이지 표시 (상단과 동일한 순서)
-    ...(canManageUsers ? [{
-      label: '승인 관리',
-      path: '/admin',
-      color: 'from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-    }] : []),
-    // 모든 계정이 멤버 관리 포함
-    ...(canAccessUserManagement ? [{
-      label: '멤버 관리',
-      path: '/team',
-      color: 'from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
-    }] : []),
-    ...(canManageFarms ? [{
-      label: safeUser.role === 'team_member' ? '농장 보기' : '농장 관리',
-      path: '/beds',
-      color: 'from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-    }] : []),
-    {
-      label: '배양액 찾기',
-      path: '/nutrients/plan',
-      color: 'from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-    },
-    {
-      label: '시세정보',
-      path: '/market',
-      color: 'from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700'
-    },
-    {
-      label: '마이페이지',
-      path: '/my-page',
-      color: 'from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700'
-    },
-    // 시스템 관리자만 시스템 모니터링 표시 (메뉴 가장 하단)
-    ...(safeUser.role === 'system_admin' ? [{
-      label: '시스템 모니터링',
-      path: '/system',
-      color: 'from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700'
-    }] : [])
-  ];
-
-
   return (
     <>
-      <header ref={menuRef} className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-[50] relative">
+      <header className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-[50] relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
@@ -500,13 +391,7 @@ export default function AppHeader({
               </div>
 
 
-              {/* 주요 메뉴 버튼들 - Universal Bridge를 가장 상단에 배치 */}
-              <button
-                onClick={() => router.push('/iot-designer')}
-                className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
-              >
-                🚀 IoT Designer
-              </button>
+              {/* 주요 메뉴 버튼들 */}
               {canManageUsers && (
                 <button
                   onClick={() => router.push('/admin')}
@@ -533,128 +418,10 @@ export default function AppHeader({
               )}
               
 
-              {/* 햄버거 메뉴 버튼 */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="relative w-12 h-12 flex flex-col justify-center items-center space-y-1 group p-2 -m-2"
-                aria-label="메뉴 열기"
-              >
-                <span className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-                <span className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-                <span className={`w-6 h-0.5 bg-gray-700 transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-              </button>
             </div>
           </div>
         </div>
 
-        {/* 햄버거 드롭다운 메뉴 */}
-        {isMenuOpen && (
-          <div className="absolute top-full right-0 sm:right-4 w-full sm:w-80 bg-white shadow-2xl border border-gray-200 rounded-b-2xl z-[60] overflow-hidden">
-            <div className="p-4">
-              {/* 메뉴 헤더 */}
-              <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">🌱</span>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-600">메뉴</h3>
-                    <p className="text-xs text-gray-500">
-                      {safeUser.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
-                       safeUser.role === 'system_admin' ? '시스템 관리자' : 
-                       safeUser.role === 'team_leader' ? '농장장' : '팀원'}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* 작은 공지사항 아이콘 */}
-                <div className="relative">
-                  <button
-                    onClick={handleNoticeClick}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-105 ${
-                      hasNewNotice 
-                        ? 'bg-gradient-to-br from-orange-500 to-orange-600 animate-pulse' 
-                        : 'bg-gray-100 hover:bg-gray-200'
-                    }`}
-                    title={hasNewNotice ? '새 공지사항이 있습니다!' : '공지사항'}
-                  >
-                    <span className={`text-sm ${hasNewNotice ? '' : 'grayscale'}`}>
-                      📢
-                    </span>
-                  </button>
-                  {hasNewNotice && (
-                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-bounce"></div>
-                  )}
-                </div>
-              </div>
-
-              {/* 메뉴 아이템들 */}
-              <div className="space-y-1 mb-4">
-                {menuItems.map((item, index) => (
-                  <div key={index} className="relative">
-                    {item.dropdown ? (
-                      <>
-                        <button
-                          onClick={() => setOpenDropdown(openDropdown === item.label ? null : item.label)}
-                          className={`w-full text-left px-4 py-3 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 flex items-center justify-between`}
-                        >
-                          {item.label}
-                          <span className={`transform transition-transform duration-200 ${openDropdown === item.label ? 'rotate-180' : ''}`}>
-                            ▼
-                          </span>
-                        </button>
-                        {openDropdown === item.label && (
-                          <div className="mt-1 ml-4 space-y-1">
-                            {item.dropdown.map((dropdownItem, dropdownIndex) => (
-                              <button
-                                key={dropdownIndex}
-                                onClick={() => {
-                                  router.push(dropdownItem.path);
-                                  setIsMenuOpen(false);
-                                  setOpenDropdown(null);
-                                }}
-                                className="w-full text-left px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm transition-all duration-200 flex items-center space-x-2"
-                              >
-                                <span>{dropdownItem.icon}</span>
-                                <span>{dropdownItem.label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <button
-                        onClick={() => {
-                          router.push(item.path);
-                          setIsMenuOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 rounded-lg bg-gradient-to-r ${item.color} text-white text-sm font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5`}
-                      >
-                        {item.label}
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* 로그아웃 버튼 */}
-              <button
-                onClick={handleLogout}
-                className="w-full px-3 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 text-sm font-bold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-              >
-                로그아웃
-              </button>
-
-              {/* 시스템 상태 */}
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <div className="flex items-center space-x-2 text-xs text-gray-600">
-                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                  <span>시스템 정상 운영 중</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 공지사항 모달 */}
         {isNoticeOpen && (

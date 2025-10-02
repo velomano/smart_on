@@ -933,17 +933,16 @@ function BedsManagementContent() {
             <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
               <h4 className="text-lg font-semibold text-gray-600">농장별 보기</h4>
               <div className="flex items-center space-x-3">
-                {/* MQTT 설정 - 관리자와 농장장 모두 접근 가능 */}
+                {/* IoT 디바이스 추가 - 관리자와 농장장 모두 접근 가능 */}
                 {user && (user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com') && selectedFarmTab && selectedFarmTab !== 'all' && (
                   <button
-                    onClick={() => router.push(`/farms/${selectedFarmTab}/settings/mqtt`)}
+                    onClick={() => router.push(`/iot-designer?farmId=${selectedFarmTab}`)}
                     className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
                   >
                     <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span>MQTT 설정</span>
+                    <span>IoT 디바이스 추가</span>
                   </button>
                 )}
                 
