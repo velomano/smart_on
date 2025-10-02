@@ -90,6 +90,35 @@ export default function AppHeader({
     }
   };
 
+  // 모든 공지사항을 읽음 처리
+  const markAllNoticesAsRead = async () => {
+    try {
+      const response = await fetch('/api/notices/mark-all-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        // 로컬 상태 업데이트
+        setNotices(prevNotices => 
+          prevNotices.map(notice => ({ ...notice, isNew: false }))
+        );
+        setHasNewNotice(false);
+        
+        // 성공 메시지 표시
+        alert('모든 공지사항을 읽음 처리했습니다.');
+      } else {
+        console.error('공지사항 읽음 처리 실패:', response.status);
+        alert('공지사항 읽음 처리에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('공지사항 읽음 처리 오류:', error);
+      alert('공지사항 읽음 처리 중 오류가 발생했습니다.');
+    }
+  };
+
   // 공지사항 데이터 가져오기
   useEffect(() => {
     fetchNotices();
@@ -828,12 +857,24 @@ export default function AppHeader({
                   <p className="text-sm text-gray-600">
                     💡 더 자세한 정보는 관리자에게 문의하세요
                   </p>
-                  <button
-                    onClick={() => setIsNoticeOpen(false)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                  >
-                    닫기
-                  </button>
+                  <div className="flex items-center space-x-3">
+                    {/* 모두 읽음 버튼 */}
+                    {hasNewNotice && (
+                      <button
+                        onClick={markAllNoticesAsRead}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center"
+                      >
+                        <span className="mr-1">✓</span>
+                        모두 읽음
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setIsNoticeOpen(false)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                    >
+                      닫기
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
