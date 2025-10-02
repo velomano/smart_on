@@ -1,5 +1,5 @@
 // 전원 요구사항 계산
-import { sensors, controls, estimatePower } from 'iot-templates';
+import { sensors, controls, estimatePower } from '../../../../packages/iot-templates/index';
 
 export interface PowerRequirement {
   voltage: number;

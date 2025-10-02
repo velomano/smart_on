@@ -1,6 +1,6 @@
 // IoT 디바이스 코드 자동 생성 API
 import { NextRequest, NextResponse } from 'next/server';
-import { sensors, controls, devicePinmaps } from 'iot-templates';
+import { sensors, controls, devicePinmaps } from '../../../../../packages/iot-templates/index';
 
 interface SystemSpec {
   device: string;

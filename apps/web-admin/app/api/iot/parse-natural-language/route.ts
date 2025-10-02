@@ -1,6 +1,6 @@
 // 자연어 IoT 시스템 설계 파싱 API
 import { NextRequest, NextResponse } from 'next/server';
-import { keywordMapping, sensors, controls } from 'iot-templates';
+import { keywordMapping, sensors, controls } from '../../../../../packages/iot-templates/index';
 
 export async function POST(request: NextRequest) {
   try {
