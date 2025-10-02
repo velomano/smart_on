@@ -280,19 +280,18 @@ function generateComponents(spec: any, allocation: any) {
           <text x={310} y={yOffset + 20} fontSize="12" fontWeight="bold">{sensorName}</text>
           <text x={310} y={yOffset + 35} fontSize="10">#{instance + 1}</text>
           
-          {/* 연결 정보를 색상별로 표시 */}
+          {/* 연결 정보를 세로로 배치하여 겹침 방지 */}
           <text x={310} y={yOffset + 50} fontSize="9" fill="#666">연결:</text>
           {assignedPins.map((p: any, pinIdx: number) => {
             const color = colorMap[p.role] || '#666';
-            const textX = 310 + (pinIdx * 45); // 각 연결 정보를 가로로 배치
             return (
-              <text key={pinIdx} x={textX} y={yOffset + 50} fontSize="9" fill={color} fontWeight="bold">
+              <text key={pinIdx} x={310} y={yOffset + 65 + pinIdx * 12} fontSize="9" fill={color} fontWeight="bold">
                 {p.role}: {p.pin}
               </text>
             );
           })}
           
-          <text x={310} y={yOffset + 65} fontSize="9" fill="#666">
+          <text x={310} y={yOffset + 80} fontSize="9" fill="#666">
             전원: 3.3V/5V
           </text>
           {/* 색상별 연결 상태 표시 */}
@@ -345,19 +344,18 @@ function generateComponents(spec: any, allocation: any) {
           <text x={310} y={yOffset + 20} fontSize="12" fontWeight="bold">{controlName}</text>
           <text x={310} y={yOffset + 35} fontSize="10">#{instance + 1}</text>
           
-          {/* 연결 정보를 색상별로 표시 */}
+          {/* 연결 정보를 세로로 배치하여 겹침 방지 */}
           <text x={310} y={yOffset + 50} fontSize="9" fill="#666">연결:</text>
           {assignedPins.map((p: any, pinIdx: number) => {
             const color = colorMap[p.role] || '#666';
-            const textX = 310 + (pinIdx * 45); // 각 연결 정보를 가로로 배치
             return (
-              <text key={pinIdx} x={textX} y={yOffset + 50} fontSize="9" fill={color} fontWeight="bold">
+              <text key={pinIdx} x={310} y={yOffset + 65 + pinIdx * 12} fontSize="9" fill={color} fontWeight="bold">
                 {p.role}: {p.pin}
               </text>
             );
           })}
           
-          <text x={310} y={yOffset + 65} fontSize="9" fill="#666">
+          <text x={310} y={yOffset + 80} fontSize="9" fill="#666">
             전원: 5V/12V
           </text>
           {/* 색상별 연결 상태 표시 */}
@@ -434,21 +432,60 @@ function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[])
     'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
   };
   
+  // 연결 타입별로 그룹화
+  const groupedConnections = pinConnections.reduce((groups: Record<string, any[]>, conn) => {
+    const type = conn.connectionType || '기타';
+    if (!groups[type]) groups[type] = [];
+    groups[type].push(conn);
+    return groups;
+  }, {});
+
+  // 그룹별로 표시할 연결 정보 계산
+  const groupOrder = ['VCC', 'GND', 'Data', 'Control', 'I2C', 'PWM', 'Analog', 'Digital', '기타'];
+  let displayCount = 0;
+  const maxDisplay = 15;
+  
   boxes.push(
     <g key="connection-box">
       <rect x={500} y={yOffset} width={200} height={connectionBoxHeight} rx={4} fill="#f8f9fa" stroke="#6c757d" strokeWidth="1"/>
       <text x={510} y={yOffset + 20} fontSize="14" fontWeight="bold">📋 핀 연결 정보</text>
-      {pinConnections.slice(0, maxConnections).map((conn, idx) => {
-        const color = connectionColors[conn.connectionType] || '#666';
+      
+      {groupOrder.map((groupType, groupIdx) => {
+        if (!groupedConnections[groupType] || displayCount >= maxDisplay) return null;
+        
+        const groupConnections = groupedConnections[groupType];
+        const groupColor = connectionColors[groupType] || '#666';
+        
         return (
-          <text key={idx} x={510} y={yOffset + 40 + idx * 15} fontSize="10" fill={color} fontWeight="bold">
-            {conn.pin} → {conn.component.length > 20 ? conn.component.substring(0, 20) + '...' : conn.component}
-          </text>
+          <g key={groupType}>
+            {/* 그룹 헤더 */}
+            <text x={510} y={yOffset + 40 + displayCount * 15} fontSize="11" fontWeight="bold" fill={groupColor}>
+              {groupType} ({groupConnections.length}개)
+            </text>
+            displayCount++;
+            
+            {/* 그룹 내 연결 정보 */}
+            {groupConnections.slice(0, Math.min(3, maxDisplay - displayCount)).map((conn, connIdx) => {
+              if (displayCount >= maxDisplay) return null;
+              const color = connectionColors[conn.connectionType] || '#666';
+              const result = (
+                <text key={`${groupType}-${connIdx}`} x={520} y={yOffset + 40 + displayCount * 15} fontSize="9" fill={color}>
+                  {conn.pin} → {conn.component.length > 15 ? conn.component.substring(0, 15) + '...' : conn.component}
+                </text>
+              );
+              displayCount++;
+              return result;
+            })}
+            
+            {/* 그룹 간 간격 */}
+            {groupIdx < groupOrder.length - 1 && displayCount < maxDisplay && (displayCount++, null)}
+          </g>
         );
       })}
-      {pinConnections.length > maxConnections && (
-        <text x={510} y={yOffset + 40 + maxConnections * 15} fontSize="10" fill="#666">
-          ... 외 {pinConnections.length - maxConnections}개 더
+      
+      {pinConnections.length > maxDisplay && (
+        <text x={510} y={yOffset + 40 + displayCount * 15} fontSize="10" fill="#666">
+          ... 외 {pinConnections.length - maxDisplay}개 더
         </text>
       )}
     </g>
