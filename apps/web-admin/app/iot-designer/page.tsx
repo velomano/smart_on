@@ -255,11 +255,20 @@ export default function IoTDesignerPage() {
       ...getDevicePins(spec.device, 'analog')
     ];
     
+    // 중복 제거
+    const uniquePins = [...new Set(allPins)];
+    
     const assignments: Record<string, string> = {};
     allComponents.forEach((component, index) => {
-      if (index < allPins.length) {
-        assignments[component] = allPins[index];
+      if (index < uniquePins.length) {
+        assignments[component] = uniquePins[index];
       }
+    });
+    
+    console.log('🔧 초기 핀 할당:', {
+      allComponents,
+      uniquePins,
+      assignments
     });
     
     setPinAssignments(assignments);
@@ -520,8 +529,8 @@ export default function IoTDesignerPage() {
         // 로컬 API로 코드 생성
         console.log('🔧 코드 생성 중...');
         const codeResponse = await fetch('/api/iot/generate-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...spec,
             bridgeIntegration: false, // 토큰 없이 코드만 생성
@@ -529,21 +538,29 @@ export default function IoTDesignerPage() {
           })
         });
 
-      console.log('🔧 코드 생성 응답 상태:', codeResponse.status);
-      
-      if (!codeResponse.ok) {
-        const errorText = await codeResponse.text();
-        console.error('코드 생성 실패:', errorText);
-        throw new Error(`코드 생성 실패: ${codeResponse.status} - ${errorText}`);
-      }
+        console.log('🔧 코드 생성 응답 상태:', codeResponse.status);
+        
+        if (!codeResponse.ok) {
+          const errorText = await codeResponse.text();
+          console.error('코드 생성 실패:', errorText);
+          throw new Error(`코드 생성 실패: ${codeResponse.status} - ${errorText}`);
+        }
 
-      const code = await codeResponse.text();
-      console.log('✅ 코드 생성 성공, 길이:', code.length);
-        setGeneratedCode(code);
+        // ZIP 파일 다운로드 처리
+        const blob = await codeResponse.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `iot_system_${spec.device}_${spec.protocol}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
 
-      // 연결 단계로 이동
-      setCurrentStep('connect');
-      toast.success('✅ 코드 생성 완료! Universal Bridge로 코드가 전송되었습니다.');
+        console.log('✅ ZIP 파일 다운로드 완료');
+        setGeneratedCode('ZIP 파일로 다운로드됨');
+
+        // 연결 단계로 이동
+        setCurrentStep('connect');
+        toast.success('✅ ZIP 파일 다운로드 완료! Universal Bridge로 코드가 전송되었습니다.');
       
     } catch (error: any) {
       console.error('❌ 코드 생성 오류:', error);
@@ -1078,7 +1095,7 @@ export default function IoTDesignerPage() {
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-sm font-medium">{getComponentKoreanName(sensor.type)} {i + 1}번</span>
                           <span className="text-xs text-gray-500">{pinInfo.power}mA</span>
-                    </div>
+                        </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div>
                                     <span className="text-gray-600">데이터 핀:</span>

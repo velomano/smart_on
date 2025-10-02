@@ -103,17 +103,19 @@ export async function POST(request: NextRequest) {
     
     console.log('📦 ZIP 파일 생성 중...');
     
-    // ZIP 파일 생성
-    const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+    // NodeBuffer 대신 범용적인 uint8array로 생성
+    const content = await zip.generateAsync({ type: 'uint8array' });
     
-    console.log('📦 ZIP 파일 생성 완료, 크기:', zipBuffer.length, 'bytes');
+    console.log('📦 ZIP 파일 생성 완료, 크기:', content.byteLength, 'bytes');
     
     // ZIP 파일로 다운로드
-    return new NextResponse(zipBuffer as any, {
+    return new Response(content as any, {
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="iot_system_${spec.device}_${spec.protocol}.zip"`
-      }
+        'Content-Disposition': `attachment; filename="iot_system_${spec.device}_${spec.protocol}.zip"`,
+        'Content-Length': String(content.byteLength),
+        'Cache-Control': 'no-store',
+      },
     });
   } catch (error) {
     console.error('코드 생성 오류:', error);
