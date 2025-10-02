@@ -1,0 +1,276 @@
+{
+  "metadata": {
+    "version": "0.1.0",
+    "description": "Universal IoT Model Registry v0 - 출고 전 최종 체크리스트 준수",
+    "safetyLevel": "production-ready",
+    "lastUpdated": "2025-10-02T13:51:00Z"
+  },
+  "sensors": [
+    {
+      "category": "environment",
+      "model": "BME280",
+      "label": "BME280 온습압 (I2C)",
+      "iface": "i2c",
+      "addresses": ["0x76", "0x77"],
+      "libDeps": [
+        "adafruit/Adafruit BME280 Library @ ^2.6.8",
+        "adafruit/Adafruit Unified Sensor @ ^1.1.9"
+      ],
+      "pins": { "sda": [21], "scl": [22] },
+      "init": "Adafruit_BME280 bme; bool ok=bme.begin({i2cAddr});",
+      "read": "float t=bme.readTemperature(); float h=bme.readHumidity(); float p=bme.readPressure()/100.0;",
+      "publish": [
+        { "key": "temperature", "unit": "C", "expr": "t" },
+        { "key": "humidity", "unit": "%", "expr": "h" },
+        { "key": "pressure", "unit": "hPa", "expr": "p" }
+      ],
+      "safety": "I2C 통신 안정성을 위해 풀업 저항 권장",
+      "powerConsumption": 3.6,
+      "voltage": "3.3V"
+    },
+    {
+      "category": "environment",
+      "model": "BMP280",
+      "label": "BMP280 기압 (I2C)",
+      "iface": "i2c",
+      "addresses": ["0x76", "0x77"],
+      "libDeps": [
+        "adafruit/Adafruit BMP280 Library @ ^2.6.8",
+        "adafruit/Adafruit Unified Sensor @ ^1.1.9"
+      ],
+      "pins": { "sda": [21], "scl": [22] },
+      "init": "Adafruit_BMP280 bmp; bool ok=bmp.begin({i2cAddr});",
+      "read": "float p=bmp.readPressure()/100.0; float t=bmp.readTemperature();",
+      "publish": [
+        { "key": "pressure", "unit": "hPa", "expr": "p" },
+        { "key": "temperature", "unit": "C", "expr": "t" }
+      ],
+      "safety": "I2C 통신 안정성을 위해 풀업 저항 권장",
+      "powerConsumption": 2.7,
+      "voltage": "3.3V"
+    },
+    {
+      "category": "temp",
+      "model": "DHT22",
+      "label": "DHT22 온습 (1-Wire)",
+      "iface": "onewire",
+      "libDeps": [
+        "adafruit/DHT sensor library @ ^1.4.4",
+        "adafruit/Adafruit Unified Sensor @ ^1.1.9"
+      ],
+      "pins": { "data": [27, 26] },
+      "init": "DHT dht({dataPin}, DHT22); dht.begin();",
+      "read": "float t=dht.readTemperature(); float h=dht.readHumidity();",
+      "publish": [
+        { "key": "temperature", "unit": "C", "expr": "t" },
+        { "key": "humidity", "unit": "%", "expr": "h" }
+      ],
+      "notes": "4.7kΩ 풀업 권장",
+      "safety": "습도 측정 정확도를 위해 방습 처리 권장",
+      "powerConsumption": 2.5,
+      "voltage": "3.3V"
+    },
+    {
+      "category": "temp",
+      "model": "DS18B20",
+      "label": "DS18B20 방수 온도 (1-Wire)",
+      "iface": "onewire",
+      "libDeps": [
+        "paulstoffregen/OneWire @ ^2.3.7",
+        "milesburton/DallasTemperature @ ^3.9.0"
+      ],
+      "pins": { "data": [27, 26] },
+      "init": "OneWire ow({dataPin}); DallasTemperature ds(&ow); ds.begin();",
+      "read": "ds.requestTemperatures(); float t=ds.getTempCByIndex(0);",
+      "publish": [
+        { "key": "temperature", "unit": "C", "expr": "t" }
+      ],
+      "notes": "4.7kΩ 풀업 필수",
+      "safety": "방수형 사용 시 케이블 연결부 방수 처리 필수",
+      "powerConsumption": 1.5,
+      "voltage": "3.3V"
+    },
+    {
+      "category": "light",
+      "model": "BH1750",
+      "label": "BH1750 조도 (I2C)",
+      "iface": "i2c",
+      "addresses": ["0x23", "0x5C"],
+      "libDeps": [
+        "claws/BH1750 @ ^1.3.0"
+      ],
+      "pins": { "sda": [21], "scl": [22] },
+      "init": "BH1750 lightMeter; bool ok=lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE);",
+      "read": "float lx=lightMeter.readLightLevel();",
+      "publish": [
+        { "key": "illuminance", "unit": "lx", "expr": "lx" }
+      ],
+      "safety": "광센서 표면 청결 유지 필요",
+      "powerConsumption": 0.12,
+      "voltage": "3.3V"
+    },
+    {
+      "category": "air",
+      "model": "SCD30",
+      "label": "SCD30 CO2 (I2C)",
+      "iface": "i2c",
+      "addresses": ["0x61"],
+      "libDeps": [
+        "sparkfun/SparkFun SCD30 Arduino Library @ ^1.0.7"
+      ],
+      "pins": { "sda": [21], "scl": [22] },
+      "init": "SCD30 scd30; bool ok=scd30.begin();",
+      "read": "if(!scd30.dataAvailable()) return false; float co2=scd30.getCO2(); float t=scd30.getTemperature(); float h=scd30.getHumidity();",
+      "publish": [
+        { "key": "co2", "unit": "ppm", "expr": "co2" },
+        { "key": "temperature", "unit": "C", "expr": "t" },
+        { "key": "humidity", "unit": "%", "expr": "h" }
+      ],
+      "safety": "CO2 센서는 정기적인 캘리브레이션 필요",
+      "powerConsumption": 19,
+      "voltage": "3.3V"
+    },
+    {
+      "category": "level",
+      "model": "HC-SR04",
+      "label": "HC-SR04 수위/거리 (Trig/Echo)",
+      "iface": "gpio",
+      "libDeps": [],
+      "pins": { "trig": [18], "echo": [19] },
+      "init": "pinMode({trig}, OUTPUT); pinMode({echo}, INPUT);",
+      "read": "digitalWrite({trig}, LOW); delayMicroseconds(2); digitalWrite({trig}, HIGH); delayMicroseconds(10); digitalWrite({trig}, LOW); long d=pulseIn({echo}, HIGH, 30000); float cm=d/58.0;",
+      "publish": [
+        { "key": "distance", "unit": "cm", "expr": "cm" }
+      ],
+      "notes": "방수형 JSN-SR04T 대체 가능",
+      "safety": "초음파 센서는 진동에 민감하므로 고정 강화 필요",
+      "powerConsumption": 2,
+      "voltage": "5V"
+    },
+    {
+      "category": "power",
+      "model": "INA219",
+      "label": "INA219 전류/전압 (I2C)",
+      "iface": "i2c",
+      "addresses": ["0x40"],
+      "libDeps": [
+        "adafruit/Adafruit INA219 @ ^1.2.0"
+      ],
+      "pins": { "sda": [21], "scl": [22] },
+      "init": "Adafruit_INA219 ina; bool ok=ina.begin();",
+      "read": "float v=ina.getBusVoltage_V(); float mA=ina.getCurrent_mA();",
+      "publish": [
+        { "key": "voltage", "unit": "V", "expr": "v" },
+        { "key": "current", "unit": "mA", "expr": "mA" }
+      ],
+      "safety": "고전압 측정 시 절연 주의, 션트 저항 정격 확인",
+      "powerConsumption": 0.7,
+      "voltage": "3.3V"
+    }
+  ],
+  "actuators": [
+    {
+      "category": "lamp",
+      "model": "relay_ac_lamp",
+      "label": "AC 램프 (릴레이 On/Off)",
+      "iface": "gpio",
+      "pins": { "control": [26, 25, 33] },
+      "libDeps": [],
+      "init": "pinMode({control}, OUTPUT); digitalWrite({control}, LOW);",
+      "set": "digitalWrite({control}, state?HIGH:LOW);",
+      "safety": "⚠️ AC 고전압 위험! 절연 릴레이 모듈 사용 필수, 공통 GND 연결 금지, 차단기 설치 권장",
+      "powerConsumption": 50,
+      "voltage": "5V",
+      "safetyLevel": "HIGH"
+    },
+    {
+      "category": "lamp",
+      "model": "pwm_12v_led",
+      "label": "12V LED (MOSFET PWM)",
+      "iface": "pwm",
+      "pins": { "pwm": [16, 17] },
+      "libDeps": [],
+      "init": "ledcSetup(0, 1000, 8); ledcAttachPin({pwm}, 0); ledcWrite(0,0);",
+      "set": "ledcWrite(0, brightness /*0-255*/);",
+      "safety": "⚠️ 외부 12V 전원 필요, MOSFET 드라이버 사용, 공통 GND 연결",
+      "powerConsumption": 100,
+      "voltage": "12V",
+      "safetyLevel": "MEDIUM"
+    },
+    {
+      "category": "lamp",
+      "model": "ws2812b",
+      "label": "WS2812B/NeoPixel",
+      "iface": "neopixel",
+      "pins": { "data": [27, 26] },
+      "libDeps": [
+        "adafruit/Adafruit NeoPixel @ ^1.10.6"
+      ],
+      "init": "#include <Adafruit_NeoPixel.h> Adafruit_NeoPixel strip(60,{data},NEO_GRB+NEO_KHZ800); void initLamp(){strip.begin(); strip.show();}",
+      "set": "strip.fill(strip.Color(r,g,b)); strip.show();",
+      "safety": "⚠️ 5V 고전류 주의, 레벨시프터 권장, 전원 공급 능력 확인",
+      "powerConsumption": 60,
+      "voltage": "5V",
+      "safetyLevel": "MEDIUM"
+    },
+    {
+      "category": "motor",
+      "model": "tb6612",
+      "label": "TB6612 DC 모터",
+      "iface": "pwm+dir",
+      "pins": { "pwm": [16], "in1": [18], "in2": [19] },
+      "libDeps": [],
+      "init": "pinMode({in1},OUTPUT); pinMode({in2},OUTPUT); ledcSetup(1,1000,8); ledcAttachPin({pwm},1);",
+      "set": "digitalWrite({in1}, dir); digitalWrite({in2}, !dir); ledcWrite(1, speed /*0-255*/);",
+      "safety": "⚠️ 외부 전원/드라이버 필수, 모터 정격 전압 확인, 역기전력 보호 회로 권장",
+      "powerConsumption": 200,
+      "voltage": "12V",
+      "safetyLevel": "HIGH"
+    },
+    {
+      "category": "relay",
+      "model": "ssr",
+      "label": "SSR (무접점 릴레이)",
+      "iface": "gpio",
+      "pins": { "control": [26, 25, 33] },
+      "libDeps": [],
+      "init": "pinMode({control}, OUTPUT); digitalWrite({control}, LOW);",
+      "set": "digitalWrite({control}, state?HIGH:LOW);",
+      "safety": "⚠️ SSR 발열 주의, 방열판 설치 필수, 정격 전류 확인, 과부하 보호 필요",
+      "powerConsumption": 30,
+      "voltage": "5V",
+      "safetyLevel": "HIGH"
+    },
+    {
+      "category": "dimmer",
+      "model": "ac_dimmer_triac",
+      "label": "AC 디머 (TRIAC + ZCD)",
+      "iface": "pwm+zcd",
+      "pins": { "pwm": [16], "zcd": [18] },
+      "libDeps": [],
+      "init": "pinMode({zcd}, INPUT); ledcSetup(2, 100, 8); ledcAttachPin({pwm}, 2);",
+      "set": "ledcWrite(2, brightness /*0-255*/);",
+      "safety": "🚨 AC 고전압 위험! TRIAC 정격 확인, 제로크로싱 회로 필수, 차단기 설치 필수, 절연 주의",
+      "powerConsumption": 5,
+      "voltage": "5V",
+      "safetyLevel": "CRITICAL"
+    }
+  ],
+  "pinSafety": {
+    "esp32": {
+      "bootstraps": [0, 2, 12, 15],
+      "safeDigital": [4, 5, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33],
+      "safePWM": [16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 32, 33],
+      "safeAnalog": [36, 39, 34, 35, 32, 33],
+      "i2c": { "sda": 21, "scl": 22 },
+      "uart": { "tx": 1, "rx": 3 }
+    }
+  },
+  "topicRules": {
+    "pattern": "terahub/{tenant}/{deviceId}/{kind}/{name}",
+    "examples": {
+      "sensor": "terahub/demo/esp32-abc123/sensors/temp1",
+      "actuator": "terahub/demo/esp32-abc123/actuators/lamp1"
+    }
+  }
+}
