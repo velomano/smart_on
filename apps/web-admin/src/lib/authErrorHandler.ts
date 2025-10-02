@@ -1,5 +1,5 @@
 // 인증 에러 전역 핸들러
-import { supabase } from './supabase/client';
+import { createClient } from './supabase/client';
 
 export class AuthErrorHandler {
   private static instance: AuthErrorHandler;
@@ -97,6 +97,7 @@ export class AuthErrorHandler {
       console.log('🔄 Refresh Token 에러 처리: 세션 정리 중...');
       
       // Supabase 세션 정리
+      const supabase = createClient();
       await supabase.auth.signOut();
       
       // 로컬 스토리지 정리
