@@ -418,15 +418,34 @@ function generateInfoBoxes(power: any[], allocation: any, pinConnections: any[])
   // 핀 연결 정보 박스 (스크롤 가능하도록 높이 제한)
   const maxConnections = Math.min(pinConnections.length, 15); // 최대 15개만 표시
   const connectionBoxHeight = Math.max(120, 40 + maxConnections * 15);
+  
+  // 연결 타입별 색상 매핑
+  const connectionColors: Record<string, string> = {
+    'VCC': '#ff4444',    // 빨간색 (전원)
+    'GND': '#444444',    // 검은색 (그라운드)
+    'Data': '#00aa00',   // 초록색 (데이터)
+    'SDA': '#0066cc',    // 파란색 (I2C 데이터)
+    'SCL': '#0066cc',    // 파란색 (I2C 클럭)
+    'Analog': '#aa6600', // 갈색 (아날로그)
+    'Digital': '#aa00aa', // 보라색 (디지털)
+    'Control': '#ff6600', // 주황색 (제어)
+    'PWM': '#ff0066',    // 분홍색 (PWM)
+    'Step': '#00ff66',   // 연두색 (스테퍼 스텝)
+    'Dir': '#66ff00'     // 연두색 (스테퍼 방향)
+  };
+  
   boxes.push(
     <g key="connection-box">
       <rect x={500} y={yOffset} width={200} height={connectionBoxHeight} rx={4} fill="#f8f9fa" stroke="#6c757d" strokeWidth="1"/>
       <text x={510} y={yOffset + 20} fontSize="14" fontWeight="bold">📋 핀 연결 정보</text>
-      {pinConnections.slice(0, maxConnections).map((conn, idx) => (
-        <text key={idx} x={510} y={yOffset + 40 + idx * 15} fontSize="10">
-          {conn.pin} → {conn.component.length > 20 ? conn.component.substring(0, 20) + '...' : conn.component}
-        </text>
-      ))}
+      {pinConnections.slice(0, maxConnections).map((conn, idx) => {
+        const color = connectionColors[conn.connectionType] || '#666';
+        return (
+          <text key={idx} x={510} y={yOffset + 40 + idx * 15} fontSize="10" fill={color} fontWeight="bold">
+            {conn.pin} → {conn.component.length > 20 ? conn.component.substring(0, 20) + '...' : conn.component}
+          </text>
+        );
+      })}
       {pinConnections.length > maxConnections && (
         <text x={510} y={yOffset + 40 + maxConnections * 15} fontSize="10" fill="#666">
           ... 외 {pinConnections.length - maxConnections}개 더
