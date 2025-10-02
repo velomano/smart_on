@@ -771,14 +771,37 @@ export default function IoTDesignerPage() {
                         }))}
                         className="flex-1 p-2 border rounded-lg text-gray-900"
                       >
-                        <option value="temperature">온도 센서</option>
-                        <option value="humidity">습도 센서</option>
-                        <option value="pressure">압력 센서</option>
-                        <option value="light">조도 센서</option>
-                        <option value="motion">모션 센서</option>
-                        <option value="soil-moisture">토양 수분 센서</option>
-                        <option value="ph">pH 센서</option>
-                        <option value="co2">CO2 센서</option>
+                        <optgroup label="🌡️ 환경 센서">
+                          <option value="BME280">BME280 온습압 센서 (I2C)</option>
+                          <option value="BMP280">BMP280 기압센서 (I2C)</option>
+                          <option value="DHT22">DHT22 온습도센서 (디지털)</option>
+                        </optgroup>
+                        <optgroup label="🌡️ 온도 센서">
+                          <option value="DS18B20">DS18B20 온도센서 (방수 프로브)</option>
+                        </optgroup>
+                        <optgroup label="💡 조도 센서">
+                          <option value="BH1750">BH1750 조도센서 (I2C)</option>
+                        </optgroup>
+                        <optgroup label="🌬️ 공기질 센서">
+                          <option value="SCD30">SCD30 CO₂ 센서 (I2C)</option>
+                          <option value="SCD41">SCD41 CO₂ 센서 (저전력)</option>
+                          <option value="ENS160">ENS160 VOC/가스센서 (I2C)</option>
+                        </optgroup>
+                        <optgroup label="🌱 토양 센서">
+                          <option value="Generic_Analog">토양수분센서 (아날로그)</option>
+                        </optgroup>
+                        <optgroup label="💧 수위 센서">
+                          <option value="HC-SR04">HC-SR04 초음파 거리센서</option>
+                        </optgroup>
+                        <optgroup label="⚡ 전력 센서">
+                          <option value="INA219">INA219 전류/전압 센서 (I2C)</option>
+                        </optgroup>
+                        <optgroup label="📊 확장 센서">
+                          <option value="ADS1115">ADS1115 외부 ADC (I2C)</option>
+                          <option value="MPU6050">MPU6050 IMU 센서 (자세/진동)</option>
+                          <option value="Generic_Analog_pH">pH 센서 (아날로그 보드)</option>
+                          <option value="Generic_Analog_EC">EC 센서 (전기전도도)</option>
+                        </optgroup>
                       </select>
               <input
                         type="number"
@@ -807,7 +830,7 @@ export default function IoTDesignerPage() {
                   <button
                     onClick={() => setSpec(prev => ({
                       ...prev,
-                      sensors: [...prev.sensors, { type: 'temperature', count: 1 }]
+                      sensors: [...prev.sensors, { type: 'BME280', count: 1 }]
                     }))}
                     className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                   >
@@ -832,14 +855,33 @@ export default function IoTDesignerPage() {
                         }))}
                         className="flex-1 p-2 border rounded-lg text-gray-900"
                       >
-                        <option value="relay">릴레이</option>
-                        <option value="servo">서보 모터</option>
-                        <option value="dc-motor">DC 모터</option>
-                        <option value="stepper">스테퍼 모터</option>
-                        <option value="led">LED</option>
-                        <option value="pump">펌프</option>
-                        <option value="valve">밸브</option>
-                        <option value="heater">히터</option>
+                        <optgroup label="💡 조명">
+                          <option value="AC_Relay_Lamp">AC 램프 (릴레이 On/Off)</option>
+                          <option value="PWM_12V_LED">12V LED (MOSFET PWM)</option>
+                          <option value="WS2812B_NeoPixel">WS2812B / NeoPixel Strip</option>
+                          <option value="AC_Dimmer_TRIAC">AC 디머 (TRIAC + ZCD)</option>
+                        </optgroup>
+                        <optgroup label="🔧 모터">
+                          <option value="TB6612_DC_Motor">DC 모터 (TB6612FNG 드라이버)</option>
+                          <option value="L298N_DC_Motor">DC 모터 (L298N 드라이버)</option>
+                          <option value="SG90_Servo">SG90 서보모터 (PWM)</option>
+                          <option value="A4988_Stepper">스테퍼모터 (A4988 드라이버)</option>
+                        </optgroup>
+                        <optgroup label="🚰 밸브/펌프">
+                          <option value="Solenoid_Valve">솔레노이드 밸브 (릴레이 제어)</option>
+                          <option value="Peristaltic_Pump">퍼리스탈틱 펌프 (DC 드라이버)</option>
+                        </optgroup>
+                        <optgroup label="🌪️ 팬/환기">
+                          <option value="PWM_DC_Fan">DC 팬 (PWM 제어)</option>
+                        </optgroup>
+                        <optgroup label="🔌 릴레이">
+                          <option value="AC_Relay_Lamp">AC 릴레이 (On/Off)</option>
+                          <option value="Solid_State_Relay">솔리드스테이트릴레이 (SSR)</option>
+                        </optgroup>
+                        <optgroup label="💡 표시/알람">
+                          <option value="Generic_LED">일반 LED (PWM/GPIO)</option>
+                          <option value="PWM_Buzzer">부저 (PWM 제어)</option>
+                        </optgroup>
                 </select>
                 <input
                         type="number"
@@ -867,8 +909,8 @@ export default function IoTDesignerPage() {
                   ))}
                   <button
                     onClick={() => setSpec(prev => ({
-                    ...prev, 
-                      controls: [...prev.controls, { type: 'relay', count: 1 }]
+                      ...prev,
+                      controls: [...prev.controls, { type: 'AC_Relay_Lamp', count: 1 }]
                     }))}
                     className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                   >
