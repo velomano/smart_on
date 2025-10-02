@@ -1,5 +1,5 @@
 // 핀 자동 할당 시스템
-import { esp32Pinmap, sensors, controls } from 'iot-templates';
+import { esp32Pinmap, sensors, controls } from '../../../lib/iot-templates/index';
 
 export type AssignedPin = { role: string; pin: number | string };
 export type Allocation = {
