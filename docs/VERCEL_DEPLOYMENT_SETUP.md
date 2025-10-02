@@ -1,84 +1,173 @@
-# Vercel 배포 설정 가이드
+# 🚀 Vercel 배포 설정 가이드
 
-## 1. Vercel 프로젝트 생성
+## 📋 개요
+이 문서는 Smart Farm 시스템의 Vercel 배포 설정을 안내합니다.
 
-1. [Vercel](https://vercel.com)에 로그인
-2. "New Project" 클릭
-3. GitHub 저장소 연결
-4. 프로젝트 이름: `smart-farm-web-admin`
-5. Framework Preset: `Next.js`
-6. Root Directory: `apps/web-admin`
+## 🔧 필요한 설정
 
-## 2. GitHub Secrets 설정
+### 1. Vercel 프로젝트 설정
 
-GitHub 저장소의 Settings > Secrets and variables > Actions에서 다음 secrets를 추가:
+#### Web Admin 프로젝트
+- **프로젝트 이름**: `smart-farm-web-admin`
+- **Framework**: Next.js
+- **Root Directory**: `apps/web-admin`
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
 
-### 필수 Secrets:
-- `VERCEL_TOKEN`: Vercel 계정의 API 토큰
+#### Universal Bridge 프로젝트
+- **프로젝트 이름**: `smart-farm-universal-bridge`
+- **Framework**: Node.js
+- **Root Directory**: `apps/universal-bridge`
+- **Build Command**: `npm run build`
+- **Output Directory**: `dist`
+
+### 2. 환경변수 설정
+
+#### Web Admin 환경변수
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://kkrcwdybrsppbsufrrdg.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NDIxOTgsImV4cCI6MjA3NDExODE5OH0.oo-iIviVJ2oaWZldtmkYo1sWgHbxxIIkFUrBrU8rQqY
+
+# Supabase Service Keys (Server-side only)
+SUPABASE_URL=https://kkrcwdybrsppbsufrrdg.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NDIxOTgsImV4cCI6MjA3NDExODE5OH0.oo-iIviVJ2oaWZldtmkYo1sWgHbxxIIkFUrBrU8rQqY
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODU0MjE5OCwiZXhwIjoyMDc0MTE4MTk4fQ.Bfa664-cabD60NddtvrKvfo5od1j8EHhniHDQP78zw4
+
+# Telegram Notification Settings
+TELEGRAM_BOT_TOKEN=8405537801:AAGm3ycoklEtpNcAyBShI1_nKvOEFGBf_uQ
+TELEGRAM_CHAT_ID=6827239951
+
+# Universal Bridge Configuration
+NEXT_PUBLIC_BRIDGE_URL=https://smart-farm-universal-bridge.vercel.app
+
+# Application Settings
+NODE_ENV=production
+NEXTAUTH_SECRET=your-production-secret-key-here
+NEXTAUTH_URL=https://smart-farm-web-admin.vercel.app
+```
+
+#### Universal Bridge 환경변수
+```bash
+# Supabase Configuration
+SUPABASE_URL=https://kkrcwdybrsppbsufrrdg.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtrcmN3ZHlicnNwcGJzdWZycmRnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODU0MjE5OCwiZXhwIjoyMDc0MTE4MTk4fQ.Bfa664-cabD60NddtvrKvfo5od1j8EHhniHDQP78zw4
+
+# Security
+BRIDGE_ENCRYPTION_KEY=smartfarm-universal-bridge-key-32-production
+
+# Ports
+BRIDGE_HTTP_PORT=8080
+BRIDGE_WS_PORT=8081
+
+# Server URLs
+BRIDGE_SERVER_URL=https://smart-farm-universal-bridge.vercel.app
+WEB_ADMIN_URL=https://smart-farm-web-admin.vercel.app
+
+# Environment
+NODE_ENV=production
+LOG_LEVEL=info
+SIGNATURE_VERIFY_OFF=false
+```
+
+### 3. GitHub Secrets 설정
+
+다음 시크릿을 GitHub 저장소에 추가해야 합니다:
+
+#### Vercel 관련
+- `VERCEL_TOKEN`: Vercel API 토큰
 - `VERCEL_ORG_ID`: Vercel 조직 ID
-- `VERCEL_PROJECT_ID`: Vercel 프로젝트 ID
-- `VERCEL_SCOPE`: Vercel 스코프 (보통 사용자명)
+- `VERCEL_PROJECT_ID`: Web Admin 프로젝트 ID
+- `VERCEL_PROJECT_ID_BRIDGE`: Universal Bridge 프로젝트 ID
 
-### Vercel 정보 찾는 방법:
+#### 환경변수
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+- `NEXT_PUBLIC_BRIDGE_URL`
+- `BRIDGE_ENCRYPTION_KEY`
+- `BRIDGE_HTTP_PORT`
+- `BRIDGE_WS_PORT`
+- `BRIDGE_SERVER_URL`
+- `WEB_ADMIN_URL`
 
-#### VERCEL_TOKEN:
-1. Vercel Dashboard > Settings > Tokens
-2. "Create Token" 클릭
-3. 토큰 이름: `github-actions`
-4. 생성된 토큰을 복사
+## 🚀 배포 과정
 
-#### VERCEL_ORG_ID & VERCEL_PROJECT_ID:
-1. Vercel 프로젝트 페이지에서
-2. Settings > General 탭
-3. "Project ID" 섹션에서 확인
+### 1. Vercel 대시보드에서 설정
+1. [Vercel 대시보드](https://vercel.com/dashboard) 접속
+2. "New Project" 클릭
+3. GitHub 저장소 연결: `velomano/smart_on`
+4. 프로젝트 설정:
+   - **Project Name**: `smart-farm-web-admin`
+   - **Framework Preset**: Next.js
+   - **Root Directory**: `apps/web-admin`
+5. 환경변수 추가 (위의 환경변수 목록 참조)
+6. "Deploy" 클릭
 
-#### VERCEL_SCOPE:
-1. Vercel Dashboard > Settings > General
-2. "Username" 또는 조직명 사용
+### 2. Universal Bridge 프로젝트 설정
+1. 동일한 과정으로 새 프로젝트 생성
+2. 프로젝트 설정:
+   - **Project Name**: `smart-farm-universal-bridge`
+   - **Framework Preset**: Node.js
+   - **Root Directory**: `apps/universal-bridge`
+3. 환경변수 추가
+4. "Deploy" 클릭
 
-## 3. 환경 변수 설정
+### 3. 도메인 설정
+1. 각 프로젝트의 "Settings" → "Domains"에서 커스텀 도메인 설정
+2. DNS 설정 업데이트
 
-Vercel 프로젝트에서 Environment Variables 설정:
+## 🔍 문제 해결
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase 프로젝트 URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase 익명 키
+### 일반적인 문제들
 
-## 4. 배포 확인
+#### 1. 빌드 실패
+```bash
+# 로컬에서 테스트
+cd apps/web-admin
+npm run build
+```
 
-1. GitHub에 코드 푸시
-2. Actions 탭에서 워크플로우 실행 확인
-3. Vercel에서 배포 상태 확인
-4. 배포된 URL로 접속 테스트
+#### 2. 환경변수 누락
+- Vercel 대시보드에서 환경변수 확인
+- GitHub Secrets 확인
 
-## 5. 현재 배포 상태
+#### 3. CORS 문제
+- API 엔드포인트에서 CORS 설정 확인
+- 도메인 허용 목록 업데이트
 
-### ✅ 배포 완료
-- **URL**: https://web-admin-fsi2tolta-smart-ons-projects.vercel.app
-- **상태**: 정상 작동 중
-- **Mock 인증**: 활성화 (개발/테스트용)
-- **최근 업데이트**: 2025.01.15
+#### 4. 데이터베이스 연결 문제
+- Supabase 연결 정보 확인
+- RLS 정책 확인
 
-### 🧪 테스트 계정
-- **시스템 관리자**: test1@test.com / password
-- **1농장장**: test2@test.com / password
-- **2농장장**: test4@test.com / password
-- **3농장장**: test6@test.com / password
-- **팀원들**: test3@test.com, test5@test.com, test7@test.com / password
+## 📊 모니터링
 
-## 6. 도메인 설정 (선택사항)
+### 1. Vercel Analytics
+- 각 프로젝트의 "Analytics" 탭에서 성능 모니터링
 
-1. Vercel 프로젝트 > Settings > Domains
-2. 커스텀 도메인 추가
-3. DNS 설정 업데이트
+### 2. 로그 확인
+- "Functions" 탭에서 서버리스 함수 로그 확인
+- 에러 및 성능 메트릭 모니터링
 
-## 트러블슈팅
+### 3. 알림 설정
+- Vercel에서 배포 실패 알림 설정
+- GitHub Actions에서 워크플로우 실패 알림 설정
 
-### 빌드 실패 시:
-- `pnpm-lock.yaml` 파일이 최신인지 확인
-- 의존성 버전 충돌 확인
-- Node.js 버전 호환성 확인
+## 🔄 자동 배포
 
-### 배포 실패 시:
-- GitHub Secrets가 올바르게 설정되었는지 확인
-- Vercel 프로젝트 설정 확인
-- 워크플로우 로그 확인
+GitHub Actions 워크플로우가 설정되어 있어서:
+- `main` 브랜치에 푸시할 때마다 자동 배포
+- Pull Request 생성 시 프리뷰 배포
+- 배포 상태는 GitHub Actions 탭에서 확인 가능
+
+## 📞 지원
+
+문제가 발생하면:
+1. Vercel 대시보드의 로그 확인
+2. GitHub Actions 로그 확인
+3. 로컬에서 동일한 환경으로 테스트
+4. 필요한 경우 롤백 실행

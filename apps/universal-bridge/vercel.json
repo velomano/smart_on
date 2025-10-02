@@ -1,0 +1,43 @@
+{
+  "version": 2,
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "regions": ["icn1"],
+  "functions": {
+    "src/index.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "SUPABASE_URL": "@supabase_url",
+      "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+      "BRIDGE_ENCRYPTION_KEY": "@bridge_encryption_key",
+      "BRIDGE_HTTP_PORT": "@bridge_http_port",
+      "BRIDGE_WS_PORT": "@bridge_ws_port",
+      "BRIDGE_SERVER_URL": "@bridge_server_url",
+      "WEB_ADMIN_URL": "@web_admin_url",
+      "LOG_LEVEL": "@log_level",
+      "SIGNATURE_VERIFY_OFF": "@signature_verify_off"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/ws/(.*)",
+      "dest": "/src/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/index.ts"
+    }
+  ]
+}
