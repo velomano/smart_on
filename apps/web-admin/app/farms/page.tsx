@@ -27,9 +27,14 @@ export default function FarmsPage() {
     try {
       setLoading(true);
       
-      // 환경변수 체크
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || 
-          process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co') {
+      // 환경변수 체크 - 더 안전한 방법
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey || 
+          supabaseUrl === 'https://placeholder.supabase.co' ||
+          supabaseUrl.includes('placeholder') ||
+          supabaseKey === 'placeholder-key') {
         console.log('Supabase 환경변수가 설정되지 않았습니다. Mock 데이터를 사용합니다.');
         setFarms([
           { id: '1', name: '테스트 농장 1', description: 'Mock 데이터', created_at: new Date().toISOString() },
@@ -47,7 +52,12 @@ export default function FarmsPage() {
       setFarms(data || []);
 
     } catch (err: any) {
-      setError(err.message);
+      console.error('Supabase 연결 오류:', err);
+      // Supabase 연결 실패 시 Mock 데이터 사용
+      setFarms([
+        { id: '1', name: '테스트 농장 1', description: 'Mock 데이터 (연결 실패)', created_at: new Date().toISOString() },
+        { id: '2', name: '테스트 농장 2', description: 'Mock 데이터 (연결 실패)', created_at: new Date().toISOString() }
+      ]);
     } finally {
       setLoading(false);
     }

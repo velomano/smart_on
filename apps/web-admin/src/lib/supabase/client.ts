@@ -4,10 +4,16 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase environment variables are not set!');
-    // 실제 환경변수가 없으면 에러를 던지도록 수정
-    throw new Error('Supabase environment variables are not set');
+  // 환경변수가 없거나 placeholder인 경우 기본값 사용
+  if (!supabaseUrl || !supabaseAnonKey || 
+      supabaseUrl === 'https://placeholder.supabase.co' ||
+      supabaseUrl.includes('placeholder') ||
+      supabaseAnonKey === 'placeholder-key') {
+    console.warn('Supabase environment variables are not properly set, using placeholder values');
+    return createSupabaseClient(
+      'https://placeholder.supabase.co',
+      'placeholder-key'
+    );
   }
 
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
