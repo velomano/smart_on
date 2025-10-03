@@ -395,7 +395,7 @@ function IoTDesignerContent() {
     setHasUnsavedChanges(false); // 초기화 시 변경사항 없음
   };
 
-  // 컴포넌트가 변경될 때마다 초기화 (세션 상태 우선)
+  // 페이지 로드 시에만 핀 할당 상태 초기화
   React.useEffect(() => {
     // 1. 세션 스토리지에서 현재 설정 불러오기 (페이지 이동 시 유지)
     const sessionData = sessionStorage.getItem('iotDesignerState');
@@ -449,6 +449,42 @@ function IoTDesignerContent() {
     // 초기 상태 저장 (변경사항 비교용)
     setInitialPinAssignments(initialPins);
     setHasUnsavedChanges(false); // 초기화 시에는 변경사항 없음
+  }, []); // 빈 의존성 배열로 페이지 로드 시에만 실행
+
+  // 센서/액추에이터 변경 시 새로운 컴포넌트에 대한 핀 할당 추가
+  React.useEffect(() => {
+    const allComponents = getAllComponents();
+    const currentPinAssignments = { ...pinAssignments };
+    let hasNewComponents = false;
+
+    // 새로운 컴포넌트가 추가된 경우에만 핀 할당
+    allComponents.forEach(component => {
+      if (!currentPinAssignments[component]) {
+        hasNewComponents = true;
+      }
+    });
+
+    if (hasNewComponents) {
+      const allPins = [
+        ...getDevicePins(spec.device, 'digital'),
+        ...getDevicePins(spec.device, 'pwm'),
+        ...getDevicePins(spec.device, 'analog')
+      ];
+      
+      const uniquePins = [...new Set(allPins)];
+      const availablePins = uniquePins.filter(pin => 
+        !Object.values(currentPinAssignments).includes(pin)
+      );
+
+      allComponents.forEach((component, index) => {
+        if (!currentPinAssignments[component] && index < availablePins.length) {
+          currentPinAssignments[component] = availablePins[index];
+        }
+      });
+
+      setPinAssignments(currentPinAssignments);
+      checkForChanges(currentPinAssignments);
+    }
   }, [spec.sensors, spec.controls, spec.device]);
 
   // 핀 할당 변경사항 체크 함수
