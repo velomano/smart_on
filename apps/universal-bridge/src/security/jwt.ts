@@ -132,6 +132,33 @@ export class TokenServer {
       audience: 'setup-tokens'
     } as any);
   }
+
+  /**
+   * 디바이스 토큰 갱신
+   */
+  refreshDeviceToken(
+    deviceId: string,
+    tenantId: string,
+    farmId?: string,
+    deviceType?: string,
+    capabilities?: string[]
+  ): string {
+    return this.generateDeviceToken(deviceId, tenantId, farmId, deviceType, capabilities);
+  }
+
+  /**
+   * Setup Token 검증
+   */
+  verifySetupToken(token: string): SetupTokenPayload {
+    return this.verifyToken(token) as unknown as SetupTokenPayload;
+  }
+
+  /**
+   * 토큰 디코딩 (검증 없이)
+   */
+  decodeToken(token: string): any {
+    return jwt.decode(token);
+  }
 }
 
 export const tokenServer = new TokenServer();

@@ -15,6 +15,7 @@ import { Telemetry, Command } from '../../types/core';
 import { authenticateDevice } from '../../security/middleware.js';
 import * as authRoutes from './routes/auth.js';
 import * as mqttRoutes from './routes/mqtt.js';
+import { logger, generateRequestId } from '../../utils/logger.js';
 // import rpcRouter from '../rpc'; // TODO: RPC 라우터 구현 필요
 
 /**
@@ -31,6 +32,31 @@ export function createHttpServer() {
   
   // Transport Adapters 관리
   const adapters = new Map<string, any>();
+
+  // 요청 ID 미들웨어 (모든 요청에 UUID 부여)
+  app.use((req, res, next) => {
+    req.id = generateRequestId();
+    res.setHeader('X-Request-ID', req.id);
+    next();
+  });
+
+  // 로깅 미들웨어
+  app.use((req, res, next) => {
+    const startTime = Date.now();
+    
+    res.on('finish', () => {
+      const latency = Date.now() - startTime;
+      logger.httpRequest(req.method, req.path, res.statusCode, latency, {
+        reqId: req.id,
+        userAgent: req.get('User-Agent'),
+        ip: req.ip,
+        tenantId: req.get('X-Tenant-Id'),
+        deviceId: req.get('X-Device-Id')
+      });
+    });
+    
+    next();
+  });
 
   // 미들웨어
   app.use(helmet());
@@ -104,6 +130,65 @@ export function createHttpServer() {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       version: '2.0.0',
+    });
+  });
+
+  // 헬스체크 (Kubernetes/Docker 표준)
+  app.get('/healthz', (req, res) => {
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: '2.0.0'
+    });
+  });
+
+  // 레디니스 체크
+  app.get('/ready', (req, res) => {
+    // TODO: 데이터베이스 연결 상태, MQTT 브로커 연결 상태 등 확인
+    res.status(200).json({
+      status: 'ready',
+      timestamp: new Date().toISOString(),
+      services: {
+        database: 'connected', // TODO: 실제 DB 연결 상태 확인
+        mqtt_broker: 'running', // TODO: 실제 MQTT 브로커 상태 확인
+        legacy_mqtt: process.env.LEGACY_MQTT_SUPPORT === 'true' ? 'enabled' : 'disabled'
+      }
+    });
+  });
+
+  // 에러 핸들링 미들웨어
+  app.use((error: Error, req: any, res: any, next: any) => {
+    logger.logError(error, 'Unhandled request error', {
+      reqId: req.id,
+      method: req.method,
+      path: req.path,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip
+    });
+
+    res.status(500).json({
+      error: 'Internal Server Error',
+      reqId: req.id,
+      message: process.env.NODE_ENV === 'production' ? 'Something went wrong' : error.message
+    });
+  });
+
+  // 404 핸들러
+  app.use('*', (req, res) => {
+    logger.warn('Route not found', {
+      reqId: req.id,
+      method: req.method,
+      path: req.path,
+      userAgent: req.get('User-Agent'),
+      ip: req.ip
+    });
+
+    res.status(404).json({
+      error: 'Not Found',
+      reqId: req.id,
+      message: `Route ${req.method} ${req.path} not found`
     });
   });
 

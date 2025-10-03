@@ -131,8 +131,11 @@ export class MQTTClientManager {
             }
             break;
         }
-      } catch (error) {
-        logger.error(`Error processing message from ${topic}`, { error, message: message.toString() });
+      } catch (error: unknown) {
+        logger.error(`Error processing message from ${topic}`, { 
+          error: error instanceof Error ? error.message : String(error), 
+          message: message.toString() 
+        });
       }
     });
 

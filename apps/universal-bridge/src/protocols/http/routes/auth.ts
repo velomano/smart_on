@@ -5,9 +5,9 @@
  */
 
 import type { Request, Response } from 'express';
-import { tokenServer } from '../../security/jwt.js';
-import { authenticateDevice, type AuthenticatedRequest } from '../../security/middleware.js';
-import { logger } from '../../utils/logger.js';
+import { tokenServer } from '../../../security/jwt';
+import { authenticateDevice, type AuthenticatedRequest } from '../../../security/middleware';
+import { logger } from '../../../utils/logger';
 
 /**
  * 디바이스 토큰 발급
@@ -119,8 +119,19 @@ export async function refreshToken(
       return;
     }
 
+    if (!req.device) {
+      res.status(401).json({ error: 'Device not authenticated' });
+      return;
+    }
+
     const oldToken = authHeader.substring(7);
-    const newToken = tokenServer.refreshDeviceToken(oldToken);
+    const newToken = tokenServer.refreshDeviceToken(
+      req.device.deviceId,
+      req.device.tenantId,
+      req.device.farmId,
+      req.device.deviceType,
+      req.device.capabilities
+    );
     const ttl = tokenServer.getTokenTimeToLive(newToken);
 
     logger.info('Token refreshed', { 
@@ -165,11 +176,9 @@ export async function generateSetupToken(req: Request, res: Response): Promise<v
       return;
     }
 
-    const setupToken = tokenServer.generateSetupToken(
+    const tokenString = tokenServer.generateSetupToken(
       tenantId,
-      farmId,
-      ipWhitelist,
-      userAgent
+      farmId
     );
 
     logger.info('Setup token generated via API', { 
@@ -180,10 +189,10 @@ export async function generateSetupToken(req: Request, res: Response): Promise<v
 
     res.json({
       success: true,
-      setupToken: setupToken.token,
-      expiresAt: setupToken.expiresAt.toISOString(),
-      tenantId: setupToken.tenantId,
-      farmId: setupToken.farmId
+      setupToken: tokenString,
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1시간 후
+      tenantId,
+      farmId
     });
   } catch (error: any) {
     logger.error('Setup token generation failed', { error: error.message });
@@ -214,7 +223,7 @@ export async function verifySetupToken(req: Request, res: Response): Promise<voi
       return;
     }
 
-    const result = tokenServer.verifySetupToken(token, clientIp);
+    const result = tokenServer.verifySetupToken(token);
 
     logger.info('Setup token verified via API', { 
       token: token.substring(0, 10) + '...', // 보안을 위해 일부만 로그

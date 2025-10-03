@@ -102,8 +102,11 @@ export class LegacyMQTTClientManager {
         // Convert legacy topic to new format and save to iot_readings
         await this.handleLegacyMessage(farm_id, deviceId, messageType, payload);
         
-      } catch (error) {
-        logger.error(`[Legacy] Error processing message from ${topic}`, { error, message: message.toString() });
+      } catch (error: unknown) {
+        logger.error(`[Legacy] Error processing message from ${topic}`, { 
+          error: error instanceof Error ? error.message : String(error), 
+          message: message.toString() 
+        });
       }
     });
 
@@ -172,9 +175,11 @@ export class LegacyMQTTClientManager {
       if (device) {
         logger.info(`[Legacy] Device ${deviceId} registered successfully`);
       }
-    } catch (error) {
-      logger.error(`[Legacy] Error registering device ${deviceId}`, { error });
-    }
+        } catch (error: unknown) {
+          logger.error(`[Legacy] Error registering device ${deviceId}`, { 
+            error: error instanceof Error ? error.message : String(error) 
+          });
+        }
   }
 
   private async handleLegacyState(farmId: string, deviceId: string, payload: any): Promise<void> {
@@ -218,8 +223,10 @@ export class LegacyMQTTClientManager {
           logger.debug(`[Legacy] Inserted ${readings.length} readings for device ${deviceId}`);
         }
       }
-    } catch (error) {
-      logger.error(`[Legacy] Error processing telemetry for device ${deviceId}`, { error });
+    } catch (error: unknown) {
+      logger.error(`[Legacy] Error processing telemetry for device ${deviceId}`, { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   }
 
@@ -241,8 +248,10 @@ export class LegacyMQTTClientManager {
       } else {
         logger.debug(`[Legacy] Command ACK processed for device ${deviceId}, command ${payload.command_id}`);
       }
-    } catch (error) {
-      logger.error(`[Legacy] Error processing command ACK for device ${deviceId}`, { error });
+    } catch (error: unknown) {
+      logger.error(`[Legacy] Error processing command ACK for device ${deviceId}`, { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   }
 
@@ -268,8 +277,10 @@ export class LegacyMQTTClientManager {
       }
 
       return data || [];
-    } catch (error) {
-      logger.error('[Legacy] Error loading farm configurations', { error });
+    } catch (error: unknown) {
+      logger.error('[Legacy] Error loading farm configurations', { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
       return [];
     }
   }
@@ -298,8 +309,10 @@ export class LegacyMQTTClientManager {
       }
       
       logger.info(`[Legacy] Active connections: ${this.clients.size}`);
-    } catch (error) {
-      logger.error('[Legacy] Error reloading configurations', { error });
+    } catch (error: unknown) {
+      logger.error('[Legacy] Error reloading configurations', { 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   }
 

@@ -18,6 +18,8 @@ export interface Telemetry {
 // 공통 커맨드 스키마
 export interface Command {
   device_id: string;
+  command_id?: string;           // 명령 고유 ID
+  id?: string;                   // 명령 ID (command_id의 별칭)
   ts: string;                    // ISO 8601 timestamp
   type: string;                  // 'relay_control' | 'set_pwm' | 'set_servo' 등
   params: Record<string, any>;

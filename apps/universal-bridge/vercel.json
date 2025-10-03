@@ -1,7 +1,7 @@
 {
   "version": 2,
   "framework": null,
-  "buildCommand": "npm run vercel-build",
+  "buildCommand": "npm run build",
   "installCommand": "npm install",
   "regions": ["icn1"],
   "functions": {
@@ -10,22 +10,36 @@
     }
   },
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "BRIDGE_HTTP_PORT": "3000",
+    "BRIDGE_MQTT_PORT": "1883",
+    "LEGACY_MQTT_SUPPORT": "true",
+    "LOG_LEVEL": "info"
   },
   "build": {
     "env": {
       "SUPABASE_URL": "https://placeholder.supabase.co",
       "SUPABASE_SERVICE_ROLE_KEY": "placeholder-key",
-      "BRIDGE_ENCRYPTION_KEY": "placeholder-encryption-key",
-      "BRIDGE_HTTP_PORT": "3000",
-      "BRIDGE_WS_PORT": "8080",
-      "BRIDGE_SERVER_URL": "https://universal-bridge.vercel.app",
-      "WEB_ADMIN_URL": "https://smart-on-web-admin.vercel.app",
-      "LOG_LEVEL": "info",
-      "SIGNATURE_VERIFY_OFF": "true"
+      "JWT_SECRET": "placeholder-jwt-secret",
+      "MQTT_URL": "wss://placeholder-mqtt-broker:8083/mqtt",
+      "ENCRYPTION_KEY": "placeholder-encryption-key",
+      "BRIDGE_TENANT_ID": "00000000-0000-0000-0000-000000000001",
+      "CORS_ORIGIN": "https://your-admin.app"
     }
   },
   "routes": [
+    {
+      "src": "/healthz",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/ready",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.ts"
+    },
     {
       "src": "/(.*)",
       "dest": "/api/index.ts"

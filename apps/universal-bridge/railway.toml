@@ -1,0 +1,25 @@
+# ==================== Railway Deployment Configuration ====================
+# Railway에서 Universal Bridge 배포용 설정
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node dist/server.js"
+healthcheckPath = "/healthz"
+healthcheckTimeout = 300
+restartPolicyType = "always"
+
+[env]
+NODE_ENV = "production"
+PORT = "8080"
+BRIDGE_HTTP_PORT = "8080"
+BRIDGE_MQTT_PORT = "1883"
+LEGACY_MQTT_SUPPORT = "true"
+LOG_LEVEL = "info"
+
+# Railway에서 환경변수 설정 방법:
+# railway variables set JWT_SECRET="your-jwt-secret"
+# railway variables set MQTT_URL="mqtt://your-mqtt-broker:1883"
+# railway variables set SUPABASE_URL="https://your-project.supabase.co"
+# railway variables set SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"

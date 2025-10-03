@@ -1,0 +1,48 @@
+# ==================== Fly.io Deployment Configuration ====================
+# Fly.io에서 Universal Bridge 배포용 설정
+
+app = "universal-bridge"
+primary_region = "nrt"  # Tokyo
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  PORT = "8080"
+  BRIDGE_HTTP_PORT = "8080"
+  BRIDGE_MQTT_PORT = "1883"
+  LEGACY_MQTT_SUPPORT = "true"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 1883
+
+  [[services.ports]]
+    port = 1883
+    handlers = ["tcp"]
+
+  [[services.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+# Fly.io 배포 명령어:
+# fly deploy --remote-only

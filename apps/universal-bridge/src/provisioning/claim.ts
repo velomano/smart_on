@@ -12,6 +12,8 @@ import type { SetupToken } from '../types.js';
 export interface ClaimRequest {
   tenantId: string;
   farmId?: string;
+  deviceType?: string;
+  capabilities?: string[];
   ttl?: number;  // seconds, default 600 (10분)
   ipWhitelist?: string[];
   userAgent?: string;
@@ -27,20 +29,20 @@ export async function generateSetupToken(
   req: ClaimRequest
 ): Promise<SetupToken> {
   // JWT 토큰 서버를 사용하여 설정 토큰 생성
-  const setupTokenInfo = tokenServer.generateSetupToken(
+  const tokenString = tokenServer.generateSetupToken(
     req.tenantId,
     req.farmId,
-    req.ipWhitelist,
-    req.userAgent
+    req.deviceType,
+    req.capabilities
   );
 
   const setupToken: SetupToken = {
-    token: setupTokenInfo.token,
-    tenantId: setupTokenInfo.tenantId,
-    farmId: setupTokenInfo.farmId,
-    expiresAt: setupTokenInfo.expiresAt,
-    ipWhitelist: setupTokenInfo.ipWhitelist,
-    userAgent: setupTokenInfo.userAgent,
+    token: tokenString,
+    tenantId: req.tenantId,
+    farmId: req.farmId,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1시간 후
+    ipWhitelist: req.ipWhitelist,
+    userAgent: req.userAgent,
   };
 
   logger.info('Setup token generated via JWT server', {

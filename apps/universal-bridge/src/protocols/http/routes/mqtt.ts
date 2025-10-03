@@ -6,7 +6,7 @@
 
 import type { Request, Response } from 'express';
 import { getMQTTBroker } from '../../mqtt/broker.js';
-import { logger } from '../../utils/logger.js';
+import { logger } from '../../../utils/logger';
 
 /**
  * MQTT 브로커 상태 조회

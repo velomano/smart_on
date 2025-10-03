@@ -267,7 +267,7 @@ export class MQTTBrokerServer {
           error: error.message,
           ip: client.conn?.remoteAddress 
         });
-        callback(error, false);
+        callback(error instanceof Error ? error : new Error(error), false);
       }
     };
 
@@ -300,7 +300,7 @@ export class MQTTBrokerServer {
           clientId: client.id,
           error: error.message 
         });
-        callback(error, false);
+        callback(error instanceof Error ? error : new Error(error), false);
       }
     };
 
@@ -332,7 +332,7 @@ export class MQTTBrokerServer {
           clientId: client.id,
           error: error.message 
         });
-        callback(error, false);
+        callback(error instanceof Error ? error : new Error(error), false);
       }
     };
   }
