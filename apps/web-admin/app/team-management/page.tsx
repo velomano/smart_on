@@ -147,34 +147,34 @@ export default function TeamManagementPage() {
           </div>
 
           {/* 팀원 목록 */}
-          <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">팀원 목록</h3>
-              <div className="text-sm text-gray-500">
+          <div className="bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl p-3 sm:p-4 lg:p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 lg:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">팀원 목록</h3>
+              <div className="text-xs sm:text-sm text-gray-500">
                 활성: {teamMembers.filter(m => m.is_active).length}명 / 
                 비활성: {teamMembers.filter(m => !m.is_active).length}명
               </div>
             </div>
 
             {teamMembers.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <span className="text-4xl">👥</span>
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                  <span className="text-2xl sm:text-4xl">👥</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">팀원이 없습니다</h3>
-                <p className="text-gray-600">아직 등록된 팀원이 없습니다.</p>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">팀원이 없습니다</h3>
+                <p className="text-sm sm:text-base text-gray-600">아직 등록된 팀원이 없습니다.</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                 {teamMembers.map((member) => (
                   <div
                     key={member.id}
-                    className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-200"
+                    className="bg-gradient-to-r from-white/90 to-white/70 backdrop-blur-sm border border-gray-200 rounded-xl p-3 sm:p-4 lg:p-6 hover:shadow-lg transition-all duration-200"
                   >
                     {editingUser === member.id ? (
                       // 편집 모드
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                               이름
@@ -239,15 +239,15 @@ export default function TeamManagementPage() {
                       </div>
                     ) : (
                       // 보기 모드
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                            <span className="text-xl">👤</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <span className="text-lg sm:text-xl">👤</span>
                           </div>
                           <div>
-                            <h4 className="text-lg font-bold text-gray-900">{member.name}</h4>
-                            <p className="text-gray-600">{member.email}</p>
-                            <div className="flex items-center space-x-4 mt-1">
+                            <h4 className="text-base sm:text-lg font-bold text-gray-900">{member.name}</h4>
+                            <p className="text-sm sm:text-base text-gray-600">{member.email}</p>
+                            <div className="flex items-center space-x-2 sm:space-x-4 mt-1 flex-wrap">
                               <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                 member.role === 'team_leader' 
                                   ? 'bg-purple-100 text-purple-700' 
@@ -265,10 +265,10 @@ export default function TeamManagementPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
                           <button
                             onClick={() => toggleMemberStatus(member.id)}
-                            className={`px-3 py-1 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                            className={`px-2 py-1 sm:px-3 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
                               member.is_active
                                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
                                 : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -278,7 +278,7 @@ export default function TeamManagementPage() {
                           </button>
                           <button
                             onClick={() => handleEdit(member)}
-                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1 rounded-lg text-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-2 py-1 sm:px-3 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-200"
                           >
                             편집
                           </button>

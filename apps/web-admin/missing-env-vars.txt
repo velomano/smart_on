@@ -1,0 +1,5 @@
+# 필요한 환경 변수 목록
+# 날씨 API
+WEATHER_API_KEY=your_weather_api_key
+# OpenAI API
+OPENAI_API_KEY=your_openai_api_key

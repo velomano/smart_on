@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
     
     console.log('✅ Supabase 연결 성공');
 
-    // crop_profiles 테이블에서 실제 데이터 조회 (출처 정보는 직접 컬럼에서 추출)
+    // crop_profiles 테이블에서 실제 데이터 조회
     let query = sb
       .from('crop_profiles')
       .select(`
@@ -65,18 +65,7 @@ export async function GET(req: NextRequest) {
         stage,
         target_ppm,
         target_ec,
-        target_ph,
-        author,
-        source_title,
-        source_year,
-        license,
-        description,
-        growing_conditions,
-        nutrients_detail,
-        usage_notes,
-        warnings,
-        created_at,
-        updated_at
+        target_ph
       `);
 
     // 필터링 적용
@@ -139,14 +128,7 @@ export async function GET(req: NextRequest) {
     const recipes = profiles?.map(profile => {
       // target_ppm JSON에서 영양소 정보 추출
       const ppm = profile.target_ppm || {};
-      const npk_ratio = `${ppm.N || 0}:${ppm.P || 0}:${ppm.K || 0}`;
-      
-      // 직접 컬럼에서 출처 정보 추출
-      const sourceTitle = profile.source_title || '스마트팜 데이터베이스';
-      const sourceYear = profile.source_year || new Date(profile.created_at).getFullYear();
-      const sourceUrl = null; // crop_profiles 테이블에 source_url 컬럼이 없음
-      const license = profile.license || 'CC BY 4.0';
-      const author = profile.author || '스마트팜 시스템';
+      const npk_ratio = `${ppm.N_NO3 || 0}:${ppm.P || 0}:${ppm.K || 0}`;
       
       return {
         id: profile.id,
@@ -156,30 +138,30 @@ export async function GET(req: NextRequest) {
         ec_target: profile.target_ec,
         ph_target: profile.target_ph,
         npk_ratio: npk_ratio,
-        created_at: profile.created_at,
-        source_title: sourceTitle,
-        source_year: sourceYear,
-        source_url: sourceUrl,
-        license: license,
-        description: profile.description || `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
-        growing_conditions: profile.growing_conditions || {
+        created_at: new Date().toISOString(),
+        source_title: '스마트팜 데이터베이스',
+        source_year: 2025,
+        source_url: null,
+        license: 'CC BY 4.0',
+        description: `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
+        growing_conditions: {
           temperature: getTemperatureRange(profile.crop_name),
           humidity: getHumidityRange(profile.crop_name),
           light_hours: getLightHours(profile.crop_name),
           co2_level: getCO2Level(profile.crop_name)
         },
-        nutrients_detail: profile.nutrients_detail || {
-          nitrogen: ppm.N || 0,
+        nutrients_detail: {
+          nitrogen: ppm.N_NO3 || 0,
           phosphorus: ppm.P || 0,
           potassium: ppm.K || 0,
           calcium: ppm.Ca || 0,
           magnesium: ppm.Mg || 0,
           trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
         },
-        usage_notes: profile.usage_notes || getUsageNotes(profile.crop_name, profile.stage),
-        warnings: profile.warnings || getWarnings(profile.crop_name, profile.stage),
-        author: author,
-        last_updated: profile.updated_at || profile.created_at
+        usage_notes: getUsageNotes(profile.crop_name, profile.stage),
+        warnings: getWarnings(profile.crop_name, profile.stage),
+        author: '스마트팜 시스템',
+        last_updated: new Date().toISOString()
       };
     }) || [];
 

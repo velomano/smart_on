@@ -60,7 +60,7 @@ export default function TeamPage() {
         return;
       }
       setUser(currentUser);
-      await loadTeamMembers();
+      await loadTeamMembers(currentUser);
       await loadFarms();
       await loadInvites();
       setLoading(false);
@@ -107,23 +107,24 @@ export default function TeamPage() {
     }
   };
 
-  const loadTeamMembers = async () => {
+  const loadTeamMembers = async (currentUser?: AuthUser) => {
     try {
       const allUsers = await getApprovedUsers();
       
       // 현재 사용자의 농장 멤버들만 필터링
       let members: AuthUser[] = [];
       
-      console.log('현재 사용자:', user);
+      const userToCheck = currentUser || user;
+      console.log('현재 사용자:', userToCheck);
       console.log('전체 사용자:', allUsers);
       
-      if (user?.role === 'system_admin') {
+      if (userToCheck?.role === 'system_admin') {
         // 시스템 관리자는 모든 사용자 볼 수 있음 (자신 제외)
-        members = allUsers.filter(member => member.id !== user?.id) as AuthUser[];
-      } else if (user?.team_id) {
+        members = allUsers.filter(member => member.id !== userToCheck?.id) as AuthUser[];
+      } else if (userToCheck?.team_id) {
         // 농장장/팀원은 자신의 농장 멤버들만 볼 수 있음 (자신 포함)
         members = allUsers.filter(member => 
-          member.team_id === user.team_id && 
+          member.team_id === userToCheck.team_id && 
           member.role !== 'system_admin' // 시스템 관리자는 제외
         ) as AuthUser[];
       }
@@ -315,7 +316,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       {user && (
         <AppHeader
@@ -379,10 +380,10 @@ export default function TeamPage() {
       )}
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto pt-4 pb-8 sm:px-6 lg:px-8 relative z-10">
+      <main className="max-w-7xl mx-auto pt-6 pb-8 sm:pt-8 sm:pb-12 lg:pt-12 lg:pb-16 sm:px-6 lg:px-8 relative z-10">
         
 
-        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-4 sm:mb-6 lg:mb-8">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
             <div className="flex items-center">
               <div>
@@ -421,11 +422,11 @@ export default function TeamPage() {
               </div>
             </div>
 
-            <div className="space-y-2 sm:space-y-3 lg:space-y-6">
+            <div className="space-y-2 sm:space-y-3 lg:space-y-4">
               {teamMembers.map((member) => (
                 <div 
                   key={member.id} 
-                  className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-2xl p-2 sm:p-3 lg:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 min-h-[80px] sm:min-h-[90px] lg:min-h-[100px]"
+                  className="bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-sm border rounded-xl sm:rounded-2xl p-2 sm:p-3 lg:p-4 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <div className="flex items-center justify-between h-full">
                     <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 flex-1 min-w-0">
@@ -484,14 +485,14 @@ export default function TeamPage() {
               ))}
 
               {teamMembers.length === 0 && (
-                <div className="text-center py-16">
-                  <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                    <span className="text-4xl">👥</span>
+                <div className="text-center py-8 sm:py-12 lg:py-16">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                    <span className="text-2xl sm:text-3xl lg:text-4xl">👥</span>
                   </div>
-                  <h3 className="text-xl font-bold text-gray-600 mb-2">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-600 mb-2">
                     {user?.role === 'system_admin' ? '사용자가 없습니다' : '팀원이 없습니다'}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-sm sm:text-base text-gray-600">
                     {user?.role === 'system_admin' ? '아직 등록된 사용자가 없습니다.' :
                      `아직 ${user?.team_name || '농장'}에 다른 멤버가 없습니다.`}
                   </p>
@@ -505,24 +506,24 @@ export default function TeamPage() {
       {/* 편집 모달 */}
       {isEditModalOpen && editingUser && (
         <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6 rounded-t-2xl">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">팀원 정보 편집</h2>
-                  <p className="text-white/90">팀원의 정보를 수정할 수 있습니다</p>
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">팀원 정보 편집</h2>
+                  <p className="text-white/90 text-sm sm:text-base">팀원의 정보를 수정할 수 있습니다</p>
                 </div>
                 <button
                   onClick={handleCancelEdit}
-                  className="text-white/80 hover:text-white text-2xl"
+                  className="text-white/80 hover:text-white text-xl sm:text-2xl"
                 >
                   ×
                 </button>
               </div>
             </div>
 
-            <div className="px-8 py-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 {/* 이름 */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-600 mb-2">
