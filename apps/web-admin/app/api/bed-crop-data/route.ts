@@ -141,7 +141,7 @@ export const DELETE = withApiMiddleware(async (request: NextRequest) => {
     tier: tierNumber
   });
 
-  // 1. bed_crop_data 테이블에서 작물 정보 삭제
+  // bed_crop_data 테이블에서 작물 정보 삭제
   const { error: cropDataError } = await supabase
     .from('bed_crop_data')
     .delete()
@@ -151,53 +151,6 @@ export const DELETE = withApiMiddleware(async (request: NextRequest) => {
   if (cropDataError) {
     logger.error('bed_crop_data 삭제 실패', { error: cropDataError.message });
     throw createDatabaseError('작물 정보 삭제에 실패했습니다.');
-  }
-
-  // 2. 디바이스 정보 조회 (베드 정보 확인용)
-  const { data: device, error: deviceError } = await supabase
-    .from('devices')
-    .select('id, bed_id, meta')
-    .eq('id', body.deviceId)
-    .single();
-
-  if (deviceError) {
-    logger.warn('디바이스 조회 실패', { error: deviceError.message });
-  } else if (device?.bed_id) {
-    // 3. beds 테이블에서 crop 정보 삭제 (해당 베드가 단일 작물을 가진 경우)
-    const { error: bedError } = await supabase
-      .from('beds')
-      .update({ crop: null })
-      .eq('id', device.bed_id);
-
-    if (bedError) {
-      logger.warn('beds 테이블 crop 정보 삭제 실패', { error: bedError.message });
-    }
-
-    // 4. devices.meta에서 crop_name 정보 삭제
-    if (device.meta && device.meta.crop_name) {
-      const updatedMeta = { ...device.meta };
-      delete updatedMeta.crop_name;
-      
-      const { error: metaError } = await supabase
-        .from('devices')
-        .update({ meta: updatedMeta })
-        .eq('id', body.deviceId);
-
-      if (metaError) {
-        logger.warn('devices.meta crop_name 삭제 실패', { error: metaError.message });
-      }
-    }
-  }
-
-  // 5. bed_notes에서 해당 베드의 노트들 삭제 (선택적)
-  const { error: notesError } = await supabase
-    .from('bed_notes')
-    .delete()
-    .eq('bed_id', body.deviceId);
-
-  if (notesError) {
-    logger.warn('bed_notes 삭제 실패', { error: notesError.message });
-    // 노트 삭제 실패는 전체 작업을 중단하지 않음
   }
 
   logger.info('작물 정보 삭제 완료', {

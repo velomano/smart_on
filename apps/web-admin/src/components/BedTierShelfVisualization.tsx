@@ -757,15 +757,9 @@ export default function BedTierShelfVisualization({
   };
 
   if (compact) {
-    const activeCropCount = tierStatuses.filter(tier => tier.hasPlants).length;
     return (
       <div className="flex items-center space-x-2">
         <FixedBedSVG />
-        <div className="text-xs text-gray-600">
-          {activeCropCount > 0 && (
-            <span className="font-semibold">🌱 {activeCropCount}개 작물</span>
-          )}
-        </div>
       </div>
     );
   }
