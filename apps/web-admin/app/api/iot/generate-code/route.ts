@@ -958,40 +958,60 @@ function generateSensorReading(spec: SystemSpec): string {
     mqtt.publish((String(topicBase) + "/sensors/bme280_${sensorIndex}_${i}/humidity").c_str(), humStr, true);
     mqtt.publish((String(topicBase) + "/sensors/bme280_${sensorIndex}_${i}/pressure").c_str(), pressStr, true);`);
           break;
-      case 'ENS160':
-        readingCode.push(`
-    // ENS160 데이터 읽기
-    if (ens160_${index}.dataAvailable()) {
-      float aqi${index} = ens160_${index}.getAQI();
-      float tvoc${index} = ens160_${index}.getTVOC();
-      float eco2${index} = ens160_${index}.getECO2();
+        case 'ENS160':
+          readingCode.push(`
+    // ENS160 ${i + 1}번 데이터 읽기
+    if (ens160_${sensorIndex}_${i}.dataAvailable()) {
+      float aqi${sensorIndex}_${i} = ens160_${sensorIndex}_${i}.getAQI();
+      float tvoc${sensorIndex}_${i} = ens160_${sensorIndex}_${i}.getTVOC();
+      float eco2${sensorIndex}_${i} = ens160_${sensorIndex}_${i}.getECO2();
       
       char aqiStr[10], tvocStr[10], eco2Str[10];
-      dtostrf(aqi${index}, 1, 2, aqiStr);
-      dtostrf(tvoc${index}, 1, 2, tvocStr);
-      dtostrf(eco2${index}, 1, 2, eco2Str);
+      dtostrf(aqi${sensorIndex}_${i}, 1, 2, aqiStr);
+      dtostrf(tvoc${sensorIndex}_${i}, 1, 2, tvocStr);
+      dtostrf(eco2${sensorIndex}_${i}, 1, 2, eco2Str);
       
-      mqtt.publish((String(topicBase) + "/sensors/ens160_${index}/aqi").c_str(), aqiStr, true);
-      mqtt.publish((String(topicBase) + "/sensors/ens160_${index}/tvoc").c_str(), tvocStr, true);
-      mqtt.publish((String(topicBase) + "/sensors/ens160_${index}/eco2").c_str(), eco2Str, true);
+      mqtt.publish((String(topicBase) + "/sensors/ens160_${sensorIndex}_${i}/aqi").c_str(), aqiStr, true);
+      mqtt.publish((String(topicBase) + "/sensors/ens160_${sensorIndex}_${i}/tvoc").c_str(), tvocStr, true);
+      mqtt.publish((String(topicBase) + "/sensors/ens160_${sensorIndex}_${i}/eco2").c_str(), eco2Str, true);
     }`);
-        break;
-      case 'HC-SR04':
-        readingCode.push(`
-    // HC-SR04 거리 측정
-    digitalWrite(TRIG_PIN_${index}, LOW);
+          break;
+        case 'HC-SR04':
+          readingCode.push(`
+    // HC-SR04 ${i + 1}번 거리 측정
+    digitalWrite(${assignedPin || 'GPIO4'}, LOW);  // TRIG 핀
     delayMicroseconds(2);
-    digitalWrite(TRIG_PIN_${index}, HIGH);
+    digitalWrite(${assignedPin || 'GPIO4'}, HIGH);
     delayMicroseconds(10);
-    digitalWrite(TRIG_PIN_${index}, LOW);
+    digitalWrite(${assignedPin || 'GPIO4'}, LOW);
     
-    long duration${index} = pulseIn(ECHO_PIN_${index}, HIGH, 30000);
-    float distance${index} = duration${index} / 58.0;  // cm 단위
+    long duration${sensorIndex}_${i} = pulseIn(${assignedPin || 'GPIO5'}, HIGH, 30000);  // ECHO 핀
+    float distance${sensorIndex}_${i} = duration${sensorIndex}_${i} / 58.0;  // cm 단위
     
     char distStr[10];
-    dtostrf(distance${index}, 1, 2, distStr);
-    mqtt.publish((String(topicBase) + "/sensors/hcsr04_${index}/distance").c_str(), distStr, true);`);
-        break;
+    dtostrf(distance${sensorIndex}_${i}, 1, 2, distStr);
+    mqtt.publish((String(topicBase) + "/sensors/hcsr04_${sensorIndex}_${i}/distance").c_str(), distStr, true);`);
+          break;
+        case 'DHT22':
+          readingCode.push(`
+    // DHT22 ${i + 1}번 데이터 읽기
+    float temp${sensorIndex}_${i} = dht${sensorIndex}_${i}.readTemperature();
+    float hum${sensorIndex}_${i} = dht${sensorIndex}_${i}.readHumidity();
+    
+    char tempStr[10], humStr[10];
+    dtostrf(temp${sensorIndex}_${i}, 1, 2, tempStr);
+    dtostrf(hum${sensorIndex}_${i}, 1, 2, humStr);
+    
+    mqtt.publish((String(topicBase) + "/sensors/dht22_${sensorIndex}_${i}/temperature").c_str(), tempStr, true);
+    mqtt.publish((String(topicBase) + "/sensors/dht22_${sensorIndex}_${i}/humidity").c_str(), humStr, true);`);
+          break;
+        default:
+          readingCode.push(`
+    // ${sensor.type} ${i + 1}번 데이터 읽기
+    Serial.println("${sensor.type} ${i + 1}번 데이터 읽기");`);
+          break;
+      }
+    }
     }
   });
   

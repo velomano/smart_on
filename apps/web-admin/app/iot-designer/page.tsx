@@ -8,7 +8,7 @@ import { calculatePowerRequirements, suggestPowerSupplies } from '@/components/i
 import SchematicSVG from '@/components/iot-designer/SchematicSVG';
 import CodePreview from '@/components/iot-designer/CodePreview';
 // QR 코드는 네이티브 앱 전용으로 분리됨
-import { LiveLog } from '@/components/connect/LiveLog';
+import { LiveLog } from '../../../src/components/connect/LiveLog';
 import toast, { Toaster } from 'react-hot-toast';
 import LoRaWanForm from '@/components/iot-designer/LoRaWanForm';
 import AppHeader from '@/components/AppHeader';
@@ -1451,6 +1451,34 @@ function IoTDesignerContent() {
         {/* 모니터링 단계 */}
         {currentStep === 'monitor' && (
           <div className="space-y-6">
+            {/* 단계 표시기 */}
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <button 
+                    onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
+                    className="flex items-center text-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors">1</div>
+                    <span className="ml-2 font-medium">디자인</span>
+                  </button>
+                  <div className="flex-1 h-1 bg-gray-200 mx-4" />
+                  <button 
+                    onClick={() => router.push(`/iot-designer/connect?farmId=${farmId}`)}
+                    className="flex items-center text-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors">2</div>
+                    <span className="ml-2 font-medium">연결</span>
+                  </button>
+                  <div className="flex-1 h-1 bg-blue-200 mx-4" />
+                  <div className="flex items-center text-blue-600">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 text-white transition-colors">3</div>
+                    <span className="ml-2 font-medium">모니터링</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
         <div className="bg-white border rounded-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">📊 실시간 모니터링</h2>
               <p className="text-gray-700 mb-6">디바이스 연결 상태와 데이터를 실시간으로 확인하세요.</p>
@@ -1469,14 +1497,12 @@ function IoTDesignerContent() {
                 </button>
                 <button
                   onClick={() => {
-                    setCurrentStep('design');
-                    setGeneratedCode('');
-                    setSetupToken('');
-                    setIsConnected(false);
+                    // 농장 관리 페이지로 이동
+                    router.push(`/farms/${farmId}`);
                   }}
                   className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  새 프로젝트 시작
+                  완료
             </button>
           </div>
         </div>
