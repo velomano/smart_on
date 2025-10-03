@@ -7,7 +7,6 @@ import { getCurrentUser, AuthUser } from '@/lib/auth';
 import { normalizeBedName, validateBedName } from '@/lib/bedNaming';
 import AppHeader from '@/components/AppHeader';
 import BedTierShelfVisualization from '@/components/BedTierShelfVisualization';
-import ActuatorControlModal from '@/components/ActuatorControlModal';
 
 interface Farm {
   id: string;
@@ -51,6 +50,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   // 액추에이터 제어 관련 상태
   const [showActuatorModal, setShowActuatorModal] = useState(false);
   const [selectedBed, setSelectedBed] = useState<{id: string, name: string} | null>(null);
+  
+  // 작물 등록 모달 상태
+  const [showCropInputModal, setShowCropInputModal] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<number | null>(null);
+  const [cropInputData, setCropInputData] = useState({
+    cropName: '',
+    growingMethod: '담액식',
+    plantType: 'seed' as 'seed' | 'seedling',
+    startDate: '',
+    harvestDate: '',
+    stageBoundaries: {
+      seed: [15, 45, 85], // 발아 끝, 생식생장 끝, 영양생장 끝 (%)
+      seedling: [40, 80]  // 생식생장 끝, 영양생장 끝 (%)
+    }
+  });
   
   // 베드 관련 상태
   const [showAddBedModal, setShowAddBedModal] = useState(false);
@@ -309,7 +323,8 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                           waterLevelStatus="normal"
                           onTierClick={(tierNumber) => {
                             setSelectedBed({ id: bed.id, name: bed.name });
-                            setShowActuatorModal(true);
+                            setSelectedTier(tierNumber);
+                            setShowCropInputModal(true);
                           }}
                           compact={true}
                         />
@@ -517,22 +532,332 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
           </div>
         )}
 
-        {/* 액추에이터 제어 모달 */}
-        {showActuatorModal && selectedBed && (
-          <ActuatorControlModal
-            isOpen={showActuatorModal}
-            onClose={() => {
-              setShowActuatorModal(false);
-              setSelectedBed(null);
-            }}
-            actuatorName={selectedBed.name}
-            deviceId={selectedBed.id}
-            currentStatus={false}
-            onStatusChange={(deviceId, status) => {
-              console.log('액추에이터 상태 변경:', deviceId, status);
-              // 실제 제어 로직은 여기에 구현
-            }}
-          />
+        {/* 작물 등록 모달 */}
+        {showCropInputModal && selectedBed && selectedTier && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* 모달 헤더 */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 className="text-xl font-bold text-gray-800">
+                  {selectedTier}단 작물 정보 입력
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowCropInputModal(false);
+                    setSelectedBed(null);
+                    setSelectedTier(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* 모달 내용 */}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* 작물 이름 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      작물 이름 *
+                    </label>
+                    <input
+                      type="text"
+                      value={cropInputData.cropName}
+                      onChange={(e) => setCropInputData(prev => ({ ...prev, cropName: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                      placeholder="예: 토마토"
+                    />
+                  </div>
+
+                  {/* 재배 방법 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      재배 방법
+                    </label>
+                    <select
+                      value={cropInputData.growingMethod}
+                      onChange={(e) => setCropInputData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                    >
+                      <option value="담액식">담액식</option>
+                      <option value="NFT">NFT</option>
+                      <option value="DWC">DWC</option>
+                      <option value="토경재배">토경재배</option>
+                    </select>
+                  </div>
+
+                  {/* 작물 유형 */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      작물 유형
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seed' }))}
+                        className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                          cropInputData.plantType === 'seed'
+                            ? 'bg-green-500 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        파종
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seedling' }))}
+                        className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                          cropInputData.plantType === 'seedling'
+                            ? 'bg-green-500 text-white shadow-lg'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        육묘
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 정식 시작일자 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      정식 시작일자
+                    </label>
+                    <input
+                      type="date"
+                      value={cropInputData.startDate}
+                      onChange={(e) => setCropInputData(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                    />
+                  </div>
+
+                  {/* 수확 예정일자 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      수확 예정일자
+                    </label>
+                    <input
+                      type="date"
+                      value={cropInputData.harvestDate}
+                      onChange={(e) => setCropInputData(prev => ({ ...prev, harvestDate: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                    />
+                  </div>
+
+                  {/* 생육 단계 기간 설정 */}
+                  {cropInputData.startDate && cropInputData.harvestDate && (() => {
+                    const start = new Date(cropInputData.startDate);
+                    const end = new Date(cropInputData.harvestDate);
+                    const totalDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                    
+                    if (totalDays <= 0) return null;
+                    
+                    const boundaries = cropInputData.plantType === 'seed' 
+                      ? cropInputData.stageBoundaries.seed 
+                      : cropInputData.stageBoundaries.seedling;
+                    
+                    const calculateDay = (percent: number) => Math.round((totalDays * percent) / 100);
+                    
+                    return (
+                      <div className="md:col-span-2 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-purple-200 rounded-xl p-6 mt-4">
+                        <h4 className="text-lg font-bold text-gray-700 mb-4 flex items-center">
+                          <span className="mr-2">🌱</span>
+                          생육 단계 기간 설정 <span className="text-sm text-gray-500 ml-2">(총 {totalDays}일)</span>
+                        </h4>
+                        
+                        <div className="space-y-6">
+                          {cropInputData.plantType === 'seed' && (
+                            <>
+                              {/* 발아 기간 */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-sm font-semibold text-gray-700">
+                                    🟨 발아 기간 종료
+                                  </label>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {calculateDay(boundaries[0])}일 ({boundaries[0]}%)
+                                  </span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="5"
+                                  max="30"
+                                  value={boundaries[0]}
+                                  onChange={(e) => {
+                                    const newValue = parseInt(e.target.value);
+                                    setCropInputData(prev => ({
+                                      ...prev,
+                                      stageBoundaries: {
+                                        ...prev.stageBoundaries,
+                                        seed: [newValue, Math.max(newValue + 10, prev.stageBoundaries.seed[1]), prev.stageBoundaries.seed[2]]
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full h-2 bg-yellow-200 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                                />
+                              </div>
+
+                              {/* 생식생장 기간 */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-sm font-semibold text-gray-700">
+                                    🔵 생식생장 기간 종료
+                                  </label>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {calculateDay(boundaries[1])}일 ({boundaries[1]}%)
+                                  </span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={boundaries[0] + 10}
+                                  max="70"
+                                  value={boundaries[1]}
+                                  onChange={(e) => {
+                                    const newValue = parseInt(e.target.value);
+                                    setCropInputData(prev => ({
+                                      ...prev,
+                                      stageBoundaries: {
+                                        ...prev.stageBoundaries,
+                                        seed: [prev.stageBoundaries.seed[0], newValue, Math.max(newValue + 10, prev.stageBoundaries.seed[2])]
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                />
+                              </div>
+
+                              {/* 영양생장 기간 */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-sm font-semibold text-gray-700">
+                                    🟢 영양생장 기간 종료
+                                  </label>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {calculateDay(boundaries[2])}일 ({boundaries[2]}%)
+                                  </span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={boundaries[1] + 10}
+                                  max="95"
+                                  value={boundaries[2]}
+                                  onChange={(e) => {
+                                    const newValue = parseInt(e.target.value);
+                                    setCropInputData(prev => ({
+                                      ...prev,
+                                      stageBoundaries: {
+                                        ...prev.stageBoundaries,
+                                        seed: [prev.stageBoundaries.seed[0], prev.stageBoundaries.seed[1], newValue]
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {cropInputData.plantType === 'seedling' && (
+                            <>
+                              {/* 생식생장 기간 */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-sm font-semibold text-gray-700">
+                                    🔵 생식생장 기간 종료
+                                  </label>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {calculateDay(boundaries[0])}일 ({boundaries[0]}%)
+                                  </span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="20"
+                                  max="60"
+                                  value={boundaries[0]}
+                                  onChange={(e) => {
+                                    const newValue = parseInt(e.target.value);
+                                    setCropInputData(prev => ({
+                                      ...prev,
+                                      stageBoundaries: {
+                                        ...prev.stageBoundaries,
+                                        seedling: [newValue, Math.max(newValue + 10, prev.stageBoundaries.seedling[1])]
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                />
+                              </div>
+
+                              {/* 영양생장 기간 */}
+                              <div>
+                                <div className="flex items-center justify-between mb-2">
+                                  <label className="text-sm font-semibold text-gray-700">
+                                    🟢 영양생장 기간 종료
+                                  </label>
+                                  <span className="text-sm font-bold text-purple-600">
+                                    {calculateDay(boundaries[1])}일 ({boundaries[1]}%)
+                                  </span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min={boundaries[0] + 10}
+                                  max="95"
+                                  value={boundaries[1]}
+                                  onChange={(e) => {
+                                    const newValue = parseInt(e.target.value);
+                                    setCropInputData(prev => ({
+                                      ...prev,
+                                      stageBoundaries: {
+                                        ...prev.stageBoundaries,
+                                        seedling: [prev.stageBoundaries.seedling[0], newValue]
+                                      }
+                                    }));
+                                  }}
+                                  className="w-full h-2 bg-green-200 rounded-lg appearance-none cursor-pointer accent-green-500"
+                                />
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* 모달 푸터 */}
+              <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowCropInputModal(false);
+                    setSelectedBed(null);
+                    setSelectedTier(null);
+                  }}
+                  className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => {
+                    // 작물 정보 저장 로직
+                    console.log('작물 정보 저장:', {
+                      bedId: selectedBed.id,
+                      tier: selectedTier,
+                      cropData: cropInputData
+                    });
+                    setShowCropInputModal(false);
+                    setSelectedBed(null);
+                    setSelectedTier(null);
+                  }}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg"
+                >
+                  저장
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
