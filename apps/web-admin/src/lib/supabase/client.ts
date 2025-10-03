@@ -13,15 +13,20 @@ export function createClient() {
   return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// 기본 클라이언트는 런타임에 동적으로 생성
+// 전역 싱글톤 인스턴스
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
 
+export function getSupabaseInstance() {
+  if (!supabaseInstance) {
+    supabaseInstance = createClient();
+  }
+  return supabaseInstance;
+}
+
+// 기본 클라이언트는 런타임에 동적으로 생성
 export const supabase = {
   get instance() {
-    if (!supabaseInstance) {
-      supabaseInstance = createClient();
-    }
-    return supabaseInstance;
+    return getSupabaseInstance();
   }
 };
 

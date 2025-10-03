@@ -528,7 +528,7 @@ export default function AppHeader({
               {canManageFarms && (
                 <button
                   onClick={() => {
-                    router.push('/beds');
+                    router.push('/farms');
                     setIsMenuOpen(false);
                   }}
                   className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-green-600 hover:text-green-800 hover:bg-green-50"
@@ -598,7 +598,7 @@ export default function AppHeader({
               {/* 로그아웃 */}
               <button
                 onClick={() => {
-                  router.push('/login');
+                  handleLogout();
                   setIsMenuOpen(false);
                 }}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50"

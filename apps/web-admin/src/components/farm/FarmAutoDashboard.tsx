@@ -43,7 +43,7 @@ interface NewBedData {
 }
 
 
-export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
+export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
   const [farm, setFarm] = useState<Farm | null>(null);
   const [devices, setDevices] = useState<DeviceUIModel[]>([]);
   const [beds, setBeds] = useState<Bed[]>([]);
@@ -84,6 +84,14 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   const [newBedData, setNewBedData] = useState<NewBedData>({
     name: '',
     bedSystemType: 'multi-tier'
+  });
+  
+  // 농장 관련 상태
+  const [showAddFarmModal, setShowAddFarmModal] = useState(false);
+  const [newFarmData, setNewFarmData] = useState({
+    name: '',
+    description: '',
+    location: ''
   });
   
   // 생육 노트 관련 상태
@@ -194,7 +202,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   };
   
   const router = useRouter();
-  const supabase = createClient();
+  
+  // Supabase 클라이언트를 한 번만 생성
+  const [supabase] = useState(() => createClient());
 
   // 센서 설정 함수
   const getSensorConfig = (sensorKey: string) => {
@@ -241,7 +251,11 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   };
 
   useEffect(() => {
+    if (farmId) {
     fetchFarmData();
+    } else {
+      setLoading(false);
+    }
     fetchUserData();
   }, [farmId]);
 
@@ -305,7 +319,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
         name: normalizedBedName
       };
 
-      const { data, error } = await supabase
+        const { data, error } = await supabase
         .from('beds')
         .update(updateData)
         .eq('id', editingBed.id)
@@ -351,7 +365,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
       console.log('🗑️ 베드 삭제 시작:', deletingBed.id);
       
       // Supabase에서 베드 삭제
-      const { data, error } = await supabase
+        const { data, error } = await supabase
         .from('beds')
         .delete()
         .eq('id', deletingBed.id)
@@ -392,6 +406,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   // 센서 데이터 가져오기
   const fetchSensorData = async () => {
     try {
+      if (!farmId) {
+        console.log('farmId가 없어서 센서 데이터 조회를 건너뜁니다.');
+        return;
+      }
       const response = await fetch(`/api/farms/${farmId}/sensors/latest`);
       const result = await response.json();
       
@@ -416,6 +434,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   // 액추에이터 데이터 가져오기
   const fetchActuatorData = async () => {
     try {
+      if (!farmId) {
+        console.log('farmId가 없어서 액추에이터 데이터 조회를 건너뜁니다.');
+        return;
+      }
       const response = await fetch(`/api/farms/${farmId}/actuators/control`);
       const result = await response.json();
       
@@ -592,9 +614,102 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
     }
   };
 
+  // 새 농장 추가 함수
+  const handleAddFarm = async () => {
+    try {
+      if (!newFarmData.name.trim()) {
+        alert('농장 이름을 입력해주세요.');
+        return;
+      }
+
+      console.log('농장 생성 시작:', { newFarmData, user });
+      console.log('사용자 역할:', user?.role);
+      console.log('사용자 이메일:', user?.email);
+
+      // 시스템 관리자만 농장 생성 가능
+      if (user?.role !== 'system_admin' && user?.email !== 'sky3rain7@gmail.com') {
+        console.log('권한 없음 - 역할:', user?.role, '이메일:', user?.email);
+        alert('농장 생성 권한이 없습니다. 시스템 관리자만 농장을 생성할 수 있습니다.');
+        return;
+      }
+      
+      console.log('권한 확인 완료 - 농장 생성 진행');
+
+      // 기존 테넌트 조회 (첫 번째 테넌트 사용)
+      console.log('테넌트 조회 시작...');
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('id')
+        .limit(1)
+        .single();
+
+      console.log('테넌트 조회 결과:', { tenantData, tenantError });
+
+      if (tenantError || !tenantData) {
+        console.error('테넌트 조회 실패:', tenantError);
+        alert('테넌트를 찾을 수 없습니다. 관리자에게 문의하세요.');
+        return;
+      }
+
+      const tenantId = tenantData.id;
+      console.log('사용할 테넌트 ID:', tenantId);
+
+        const { data, error } = await supabase
+        .from('farms')
+        .insert([
+          {
+            name: newFarmData.name,
+            description: newFarmData.description,
+            location: newFarmData.location,
+            tenant_id: tenantId
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('농장 생성 오류:', error);
+        alert(`농장 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      const newFarm = data[0];
+      
+      // 새 농장에 기본 베드 생성
+      const { data: bedData, error: bedError } = await supabase
+        .from('beds')
+        .insert([
+          {
+            farm_id: newFarm.id,
+            name: `${newFarm.name}-베드1`
+          }
+        ])
+        .select();
+
+      if (bedError) {
+        console.error('기본 베드 생성 오류:', bedError);
+      }
+
+      setNewFarmData({ name: '', description: '', location: '' });
+      setShowAddFarmModal(false);
+      alert(`새 농장 "${newFarm.name}"이 추가되었습니다!`);
+      
+      // 페이지 새로고침으로 목록 업데이트
+      window.location.reload();
+    } catch (error) {
+      console.error('농장 생성 오류:', error);
+      alert('농장 생성에 실패했습니다.');
+    }
+  };
+
   const fetchFarmData = async () => {
     try {
       setLoading(true);
+      
+      // farmId가 없으면 함수 종료
+      if (!farmId) {
+        setLoading(false);
+        return;
+      }
       
       // 농장 정보 가져오기
       const { data: farmData, error: farmError } = await supabase
@@ -670,10 +785,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
             <h2 className="text-lg font-semibold text-red-800 mb-2">오류 발생</h2>
             <p className="text-red-600">{error}</p>
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/farms')}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
-              돌아가기
+              농장 목록으로
             </button>
           </div>
         </div>
@@ -681,7 +796,8 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
     );
   }
 
-  if (!farm) {
+  // farmId가 있지만 농장을 찾을 수 없는 경우
+  if (farmId && !farm) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppHeader user={user || undefined} />
@@ -689,11 +805,43 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-800 mb-4">농장을 찾을 수 없습니다</h2>
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/farms')}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              돌아가기
+              농장 목록으로
             </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // farmId가 없으면 농장 목록 표시
+  if (!farmId) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader user={user || undefined} />
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-3xl font-bold text-gray-900">농장 관리</h1>
+              {user && (user.role === 'system_admin' || user.email === 'sky3rain7@gmail.com') && (
+                <button
+                  onClick={() => setShowAddFarmModal(true)}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:from-purple-600 hover:to-pink-600 transition-all duration-200 flex items-center space-x-2"
+                >
+                  <span>+</span>
+                  <span>새 농장 추가</span>
+                </button>
+              )}
+            </div>
+            
+            <div className="text-center py-12 bg-white rounded-xl shadow-lg">
+              <div className="text-gray-400 text-6xl mb-4">🏡</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">농장 관리 기능</h3>
+              <p className="text-gray-500 mb-4">새로운 농장 관리 시스템이 준비되었습니다.</p>
+              <p className="text-sm text-gray-400">현재 농장 목록을 불러오는 중...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -708,41 +856,41 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           {/* 농장 헤더 */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{farm.name}</h1>
-            {farm.description && (
-              <p className="text-gray-600">{farm.description}</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{farm?.name}</h1>
+            {farm?.description && (
+            <p className="text-gray-600">{farm.description}</p>
+          )}
+        </div>
+
+        {/* 베드 관리 섹션 */}
+          <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">베드 관리</h2>
+            {user && user.role !== 'team_member' && (
+              <button
+                onClick={() => setShowAddBedModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                + 새 베드 추가
+              </button>
             )}
           </div>
 
-          {/* 베드 관리 섹션 */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">베드 관리</h2>
+          {beds.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <div className="text-gray-400 text-6xl mb-4">🌱</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 베드가 없습니다</h3>
+              <p className="text-gray-500 mb-4">첫 번째 베드를 추가하여 농장을 시작해보세요.</p>
               {user && user.role !== 'team_member' && (
                 <button
                   onClick={() => setShowAddBedModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                 >
-                  + 새 베드 추가
+                  + 첫 번째 베드 추가
                 </button>
               )}
             </div>
-
-            {beds.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <div className="text-gray-400 text-6xl mb-4">🌱</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 베드가 없습니다</h3>
-                <p className="text-gray-500 mb-4">첫 번째 베드를 추가하여 농장을 시작해보세요.</p>
-                {user && user.role !== 'team_member' && (
-                  <button
-                    onClick={() => setShowAddBedModal(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-                  >
-                    + 첫 번째 베드 추가
-                  </button>
-                )}
-              </div>
-            ) : (
+          ) : (
               <div className="grid grid-cols-1 gap-4 md:gap-6">
               {beds.map((bed) => (
                   <div key={bed.id} className="bg-white rounded-xl shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow">
@@ -816,12 +964,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                               <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                 <span className="text-sm font-medium text-gray-700">디바이스 상태</span>
-                              </div>
+                        </div>
                               <div className="flex items-center space-x-3 text-xs text-gray-600">
                                 <span>센서: {deviceStatus.sensors.active}/{deviceStatus.sensors.total}</span>
                                 <span>액추에이터: {deviceStatus.actuators.active}/{deviceStatus.actuators.total}</span>
-                              </div>
-                            </div>
+                      </div>
+                    </div>
                             
                             <div className="flex gap-2">
                               <button
@@ -845,7 +993,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                 <span>🔗</span>
                                 <span>유니버셜 브릿지</span>
                               </button>
-                            </div>
+                  </div>
             </div>
         </div>
 
@@ -876,13 +1024,13 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                     <div className="text-sm md:text-lg font-bold text-blue-600">24.5°C</div>
                                     <div className="text-xs text-green-600 font-medium">정상</div>
                                   </div>
-                                  <button
+              <button
                                     onClick={() => setShowSensorTargetModal({sensor: 'temperature', type: 'temperature'})}
                                     className="w-6 h-6 bg-blue-100 hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors"
                                     title="목표값 설정"
-                                  >
+              >
                                     <span className="text-blue-600 text-xs">⚙️</span>
-                                  </button>
+              </button>
                                 </div>
                               </div>
                               
@@ -948,16 +1096,16 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                     <div className="text-lg font-bold text-cyan-600">65%</div>
                                     <div className="text-xs text-green-600 font-medium">정상</div>
                                   </div>
-                                  <button
+                <button
                                     onClick={() => setShowSensorTargetModal({sensor: 'humidity', type: 'humidity'})}
                                     className="w-6 h-6 bg-cyan-100 hover:bg-cyan-200 rounded-lg flex items-center justify-center transition-colors"
                                     title="목표값 설정"
-                                  >
+                >
                                     <span className="text-cyan-600 text-xs">⚙️</span>
-                                  </button>
-                                </div>
-                              </div>
-                              
+                </button>
+            </div>
+          </div>
+
                               {/* 개선된 원형 게이지 */}
                               <div className="flex justify-center">
                                 <div className="relative w-16 h-16">
@@ -985,12 +1133,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                         <stop offset="100%" stopColor="#0891b2" />
                                       </linearGradient>
                                     </defs>
-                                  </svg>
+                </svg>
                                   <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="text-center">
                                       <div className="text-xs font-bold text-gray-700">65%</div>
                                       <div className="text-xs text-gray-500">습도</div>
-                                    </div>
+              </div>
                                   </div>
                                 </div>
                               </div>
@@ -2035,6 +2183,82 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                               </div>
                             </>
                           )}
+
+        {/* 새 농장 추가 모달 */}
+        {showAddFarmModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            {/* 배경 오버레이 */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            {/* 모달창 */}
+            <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-600">새 농장 추가</h3>
+                <button
+                  onClick={() => setShowAddFarmModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    농장 이름 *
+                  </label>
+                  <input
+                    type="text"
+                    value={newFarmData.name}
+                    onChange={(e) => setNewFarmData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                    placeholder="예: 스마트팜 A, 토마토 농장"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    농장 설명
+                  </label>
+                  <textarea
+                    value={newFarmData.description}
+                    onChange={(e) => setNewFarmData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                    placeholder="농장에 대한 간단한 설명을 입력해주세요"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    위치
+                  </label>
+                  <input
+                    type="text"
+                    value={newFarmData.location}
+                    onChange={(e) => setNewFarmData(prev => ({ ...prev, location: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                    placeholder="예: 경기도 안양시"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-8">
+                <button
+                  onClick={() => setShowAddFarmModal(false)}
+                  className="flex-1 px-4 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleAddFarm}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200"
+                >
+                  농장 추가
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
                         </div>
                       </div>
                     );
