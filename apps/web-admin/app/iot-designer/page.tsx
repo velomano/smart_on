@@ -337,13 +337,30 @@ function IoTDesignerContent() {
     setHasUnsavedChanges(false); // 초기화 시 변경사항 없음
   };
 
-  // 컴포넌트가 변경될 때마다 초기화
+  // 컴포넌트가 변경될 때마다 초기화 (세션 상태 우선)
   React.useEffect(() => {
-    // 저장된 핀 할당 정보가 있으면 불러오기
+    // 1. 세션 스토리지에서 현재 설정 불러오기 (페이지 이동 시 유지)
+    const sessionData = sessionStorage.getItem('iotDesignerState');
+    let initialPins: Record<string, string> = {};
+    
+    if (sessionData) {
+      try {
+        const sessionState = JSON.parse(sessionData);
+        if (sessionState.pinAssignments) {
+          initialPins = sessionState.pinAssignments;
+          setPinAssignments(initialPins);
+          setInitialPinAssignments(initialPins);
+          setHasUnsavedChanges(false);
+          return; // 세션 데이터가 있으면 그대로 사용
+        }
+      } catch (error) {
+        console.warn('세션 데이터 파싱 실패:', error);
+      }
+    }
+    
+    // 2. 세션 데이터가 없으면 localStorage에서 불러오기
     const savedSensorPins = localStorage.getItem('sensorPinAssignments');
     const savedActuatorPins = localStorage.getItem('actuatorPinAssignments');
-    
-    let initialPins: Record<string, string> = {};
     
     if (savedSensorPins || savedActuatorPins) {
       initialPins = {
@@ -352,7 +369,7 @@ function IoTDesignerContent() {
       };
       setPinAssignments(initialPins);
     } else {
-      // 초기 핀 할당 생성
+      // 3. 둘 다 없으면 초기 핀 할당 생성
       const allComponents = getAllComponents();
       const allPins = [
         ...getDevicePins(spec.device, 'digital'),
@@ -392,6 +409,14 @@ function IoTDesignerContent() {
     };
     setPinAssignments(newAssignments);
     checkForChanges(newAssignments); // 변경사항 체크
+    
+    // 세션 스토리지에 현재 상태 저장 (페이지 이동 시 유지)
+    const sessionState = {
+      pinAssignments: newAssignments,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
+    
     setShowPinSelector(null);
   };
 
@@ -1178,6 +1203,14 @@ function IoTDesignerContent() {
                 localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
                 setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
                 setHasUnsavedChanges(false); // 저장 완료
+                
+                // 세션 스토리지도 업데이트
+                const sessionState = {
+                  pinAssignments: pinAssignments,
+                  timestamp: Date.now()
+                };
+                sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
+                
                 toast.success('✅ 센서 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -1245,6 +1278,14 @@ function IoTDesignerContent() {
                 localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
                 setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
                 setHasUnsavedChanges(false); // 저장 완료
+                
+                // 세션 스토리지도 업데이트
+                const sessionState = {
+                  pinAssignments: pinAssignments,
+                  timestamp: Date.now()
+                };
+                sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
+                
                 toast.success('✅ 액추에이터 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -1614,6 +1655,14 @@ function IoTDesignerContent() {
                       setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
                       setHasUnsavedChanges(false); // 저장 완료
                       setShowSaveWarning(false);
+                      
+                      // 세션 스토리지도 업데이트
+                      const sessionState = {
+                        pinAssignments: pinAssignments,
+                        timestamp: Date.now()
+                      };
+                      sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
+                      
                       toast.success('✅ 자동 저장 완료! 연결 페이지로 이동합니다.');
                       // 연결 페이지로 이동
                       setTimeout(() => {
