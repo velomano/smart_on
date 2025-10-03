@@ -234,7 +234,7 @@ export function createHttpServer() {
   // WebSocket 서버 설정
   const wss = new WebSocketServer({ server });
   const clients = new Map<string, Map<string, any>>(); // farmId -> clientId -> WebSocket
-
+  
   wss.on('connection', (ws, req) => {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
     const pathname = url.pathname;
@@ -346,8 +346,8 @@ export function createHttpServer() {
         message: 'WebSocket 연결 성공',
         timestamp: new Date().toISOString()
       }));
-
-      ws.on('close', () => {
+    
+    ws.on('close', () => {
         logger.info('Test WebSocket disconnected');
       });
     } else {

@@ -1,0 +1,1475 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { getCurrentUser, AuthUser } from '@/lib/auth';
+import AppHeader from '@/components/AppHeader';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import SensorCard from '@/components/SensorCard';
+import WaterLevelSensorCard from '@/components/WaterLevelSensorCard';
+import ActuatorControlModal from '@/components/ActuatorControlModal';
+
+interface Farm {
+  id: string;
+  name: string;
+  description?: string;
+  created_at: string;
+}
+
+interface DeviceUIModel {
+  deviceId: string;
+  deviceName: string;
+  profile: any;
+  registry: any;
+  uiModel: any;
+}
+
+interface Bed {
+  id: string;
+  farm_id: string;
+  name: string;
+  type: string;
+  status: any;
+  meta: any;
+  created_at: string;
+}
+
+interface NewBedData {
+  name: string;
+  bedSystemType: string;
+  totalTiers: number;
+}
+
+interface Sensor {
+  id: string;
+  device_id: string;
+  type: string;
+  name: string;
+  status: any;
+}
+
+interface SensorReading {
+  id: string;
+  sensor_id: string;
+  value: number;
+  unit: string;
+  timestamp: string;
+}
+
+
+export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
+  const [farm, setFarm] = useState<Farm | null>(null);
+  const [devices, setDevices] = useState<DeviceUIModel[]>([]);
+  const [beds, setBeds] = useState<Bed[]>([]);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // 베드 관련 상태
+  const [showAddBedModal, setShowAddBedModal] = useState(false);
+  const [newBedData, setNewBedData] = useState<NewBedData>({
+    name: '',
+    bedSystemType: 'multi-tier',
+    totalTiers: 3
+  });
+  
+  // 베드 시각화 관련 상태
+  const [bedDashboardSettings, setBedDashboardSettings] = useState<Record<string, boolean>>({});
+  const [sensors, setSensors] = useState<Sensor[]>([]);
+  const [sensorReadings, setSensorReadings] = useState<SensorReading[]>([]);
+  const [sensorChartData, setSensorChartData] = useState<any[]>([]);
+  const [showActuatorModal, setShowActuatorModal] = useState(false);
+  const [selectedBed, setSelectedBed] = useState<Bed | null>(null);
+  
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchFarmData();
+    fetchUserData();
+  }, [farmId]);
+
+
+
+  const fetchUserData = async () => {
+    try {
+      const userData = await getCurrentUser();
+      setUser(userData);
+    } catch (error) {
+      console.error('사용자 정보 로드 실패:', error);
+    }
+  };
+
+  const fetchFarmData = async () => {
+    try {
+      setLoading(true);
+      
+      // 농장 정보 가져오기
+      const { data: farmData, error: farmError } = await supabase
+        .from('farms')
+        .select('*')
+        .eq('id', farmId)
+        .single();
+
+      if (farmError) throw farmError;
+      setFarm(farmData);
+
+      // 베드 정보 가져오기
+      const { data: bedsData, error: bedsError } = await supabase
+        .from('devices')
+        .select('*')
+        .eq('farm_id', farmId)
+        .eq('type', 'sensor_gateway')
+        .is('bed_id', null);
+
+      if (bedsError) {
+        console.error('베드 조회 오류:', bedsError);
+        setBeds([]);
+      } else {
+        setBeds(bedsData || []);
+        
+        // 베드 대시보드 설정 로드
+        loadBedDashboardSettings();
+        
+        // 베드별 센서 데이터 로드
+        if (bedsData && bedsData.length > 0) {
+          await loadBedSensorData(bedsData);
+        }
+      }
+
+
+      // 디바이스 UI 모델 가져오기
+      const response = await fetch(`/api/farms/${farmId}/devices/ui-model`);
+      if (response.ok) {
+        const deviceModels = await response.json();
+        setDevices(deviceModels);
+      } else {
+        setDevices([]);
+      }
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 베드 대시보드 설정 로드
+  const loadBedDashboardSettings = () => {
+    if (typeof window !== 'undefined') {
+      const savedSettings = localStorage.getItem('bed_dashboard_settings');
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings);
+          setBedDashboardSettings(settings);
+        } catch (error) {
+          console.error('베드 대시보드 설정 로드 오류:', error);
+        }
+      }
+    }
+  };
+
+  // 베드 센서 데이터 로드
+  const loadBedSensorData = async (bedsData: Bed[]) => {
+    try {
+      // 모든 베드의 센서 데이터 가져오기
+      const bedIds = bedsData.map(bed => bed.id);
+      
+      const { data: sensorsData, error: sensorsError } = await supabase
+        .from('sensors')
+        .select('*')
+        .in('device_id', bedIds);
+
+      if (sensorsError) {
+        console.error('센서 조회 오류:', sensorsError);
+        setSensors([]);
+      } else {
+        setSensors(sensorsData || []);
+      }
+
+      // 최신 센서 읽기 데이터 가져오기
+      if (sensorsData && sensorsData.length > 0) {
+        const sensorIds = sensorsData.map(sensor => sensor.id);
+        
+        const { data: readingsData, error: readingsError } = await supabase
+          .from('sensor_readings')
+          .select('*')
+          .in('sensor_id', sensorIds)
+          .order('timestamp', { ascending: false })
+          .limit(1000);
+
+        if (readingsError) {
+          console.error('센서 읽기 조회 오류:', readingsError);
+          setSensorReadings([]);
+        } else {
+          setSensorReadings(readingsData || []);
+          
+          // 차트 데이터 생성
+          generateSensorChartData(readingsData || []);
+        }
+      }
+    } catch (error) {
+      console.error('베드 센서 데이터 로드 오류:', error);
+    }
+  };
+
+  // 센서 차트 데이터 생성
+  const generateSensorChartData = (readingsData: SensorReading[]) => {
+    // 최근 24시간 데이터를 시간별로 그룹화
+    const now = new Date();
+    const chartData: any[] = [];
+    
+    for (let i = 23; i >= 0; i--) {
+      const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
+      const hourStart = new Date(hour.getFullYear(), hour.getMonth(), hour.getDate(), hour.getHours());
+      const hourEnd = new Date(hourStart.getTime() + 60 * 60 * 1000);
+      
+      const hourReadings = readingsData.filter(reading => {
+        const readingTime = new Date(reading.timestamp);
+        return readingTime >= hourStart && readingTime < hourEnd;
+      });
+      
+      const dataPoint: any = {
+        time: hourStart.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+        timestamp: hourStart.toISOString()
+      };
+      
+      // 각 센서 타입별 평균값 계산
+      const sensorTypes = ['temperature', 'humidity', 'ec', 'ph', 'light', 'water_level'];
+      sensorTypes.forEach(type => {
+        const typeReadings = hourReadings.filter(reading => {
+          const sensor = sensors.find(s => s.id === reading.sensor_id);
+          return sensor && sensor.type === type;
+        });
+        
+        if (typeReadings.length > 0) {
+          const avgValue = typeReadings.reduce((sum, reading) => sum + reading.value, 0) / typeReadings.length;
+          dataPoint[type] = avgValue;
+        } else {
+          dataPoint[type] = null;
+        }
+      });
+      
+      chartData.push(dataPoint);
+    }
+    
+    setSensorChartData(chartData);
+  };
+
+  // 베드 대시보드 토글
+  const handleBedDashboardToggle = (bedId: string, showOnDashboard: boolean) => {
+    const newSettings = {
+      ...bedDashboardSettings,
+      [bedId]: showOnDashboard
+    };
+    setBedDashboardSettings(newSettings);
+    
+    // 로컬 스토리지에 저장
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('bed_dashboard_settings', JSON.stringify(newSettings));
+    }
+  };
+
+  // 베드 이름 검증 함수
+  const validateBedName = (name: string) => {
+    if (!name.trim()) {
+      return { isValid: false, error: '베드 이름을 입력해주세요.' };
+    }
+    if (name.length < 2) {
+      return { isValid: false, error: '베드 이름은 최소 2자 이상이어야 합니다.' };
+    }
+    if (name.length > 20) {
+      return { isValid: false, error: '베드 이름은 최대 20자까지 가능합니다.' };
+    }
+    return { isValid: true, error: '' };
+  };
+
+  // 베드 이름 정규화 함수
+  const normalizeBedName = (name: string) => {
+    return name.trim().replace(/\s+/g, ' ');
+  };
+
+  // 베드 추가 함수
+  const handleAddBed = async () => {
+    try {
+      const normalizedBedName = normalizeBedName(newBedData.name);
+      const validation = validateBedName(normalizedBedName);
+      
+      if (!validation.isValid) {
+        alert(validation.error);
+        return;
+      }
+
+      const bedData = {
+        farm_id: farmId,
+        name: normalizedBedName,
+        type: 'sensor_gateway',
+        meta: {
+          location: normalizedBedName,
+          bed_system_type: newBedData.bedSystemType,
+          total_tiers: newBedData.totalTiers
+        },
+        status: {
+          online: false,
+          last_seen: null
+        }
+      };
+
+      const { data, error } = await supabase
+        .from('devices')
+        .insert([bedData])
+        .select();
+
+      if (error) {
+        console.error('베드 생성 오류:', error);
+        alert(`베드 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      const newBed = data[0];
+      console.log('🔄 베드 추가 완료, 데이터 다시 로드 중...');
+      
+      // 새 베드를 대시보드에 표시하도록 설정
+      setBedDashboardSettings(prev => ({
+        ...prev,
+        [newBed.id]: true
+      }));
+      
+      // 로컬 스토리지에도 저장
+      if (typeof window !== 'undefined') {
+        const updatedSettings = { ...bedDashboardSettings, [newBed.id]: true };
+        localStorage.setItem('bed_dashboard_settings', JSON.stringify(updatedSettings));
+      }
+      
+      await fetchFarmData(); // Reload data after adding bed
+      setNewBedData({ name: '', bedSystemType: 'multi-tier', totalTiers: 3 });
+      setShowAddBedModal(false);
+      alert(`새 베드 "${normalizedBedName}"가 ${farm?.name || '농장'}에 추가되었습니다!`);
+    } catch (error) {
+      console.error('베드 생성 오류:', error);
+      alert('베드 생성에 실패했습니다.');
+    }
+  };
+
+    if (!/^[가-힣a-zA-Z0-9\s\-_]+$/.test(name)) {
+      return { isValid: false, error: '베드 이름은 한글, 영문, 숫자, 공백, -, _ 만 사용할 수 있습니다.' };
+    }
+    return { isValid: true, error: '' };
+  };
+
+  // 베드 이름 정규화 함수
+  const normalizeBedName = (name: string) => {
+    return name.trim().replace(/\s+/g, ' ');
+  };
+
+  // 새 베드 추가
+  const handleAddBed = async () => {
+    if (!newBedData.name.trim()) {
+      alert('베드 이름을 입력해주세요.');
+      return;
+    }
+
+    // 베드 이름 검증 및 정규화
+    const validation = validateBedName(newBedData.name);
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
+
+    const normalizedBedName = normalizeBedName(newBedData.name);
+    console.log('🔄 베드 이름 정규화:', newBedData.name, '→', normalizedBedName);
+
+    try {
+      // Supabase에 새 베드 저장
+      const { data, error } = await supabase
+        .from('devices')
+        .insert([
+          {
+            farm_id: farmId,
+            bed_id: null, // 베드는 bed_id가 null (베드 자체가 디바이스)
+            type: 'sensor_gateway',
+            status: { online: true },
+            meta: {
+              location: normalizedBedName, // 정규화된 이름 저장
+              bed_system_type: newBedData.bedSystemType,
+              total_tiers: newBedData.totalTiers
+            }
+          }
+        ])
+        .select();
+
+      if (error) {
+        console.error('베드 생성 오류:', error);
+        alert(`베드 생성에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+        return;
+      }
+
+      const newBed = data[0];
+      console.log('🔄 베드 추가 완료, 데이터 다시 로드 중...');
+      
+      // 새 베드를 대시보드에 표시하도록 설정
+      setBedDashboardSettings(prev => ({
+        ...prev,
+        [newBed.id]: true
+      }));
+      
+      // 로컬 스토리지에도 저장
+      if (typeof window !== 'undefined') {
+        const updatedSettings = { ...bedDashboardSettings, [newBed.id]: true };
+        localStorage.setItem('bed_dashboard_settings', JSON.stringify(updatedSettings));
+      }
+      
+      await fetchFarmData(); // Reload data after adding bed
+      setNewBedData({ name: '', bedSystemType: 'multi-tier', totalTiers: 3 });
+      setShowAddBedModal(false);
+      alert(`새 베드 "${normalizedBedName}"가 ${farm?.name || '농장'}에 추가되었습니다!`);
+    } catch (error) {
+      console.error('베드 생성 오류:', error);
+      alert('베드 생성에 실패했습니다.');
+    }
+  };
+
+  // Early returns for loading, error, and missing farm states
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AppHeader user={user} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">농장 정보를 불러오는 중...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AppHeader user={user} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-red-800 mb-2">오류 발생</h2>
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={() => router.back()}
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              돌아가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!farm) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AppHeader user={user} />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">농장을 찾을 수 없습니다</h2>
+            <button
+              onClick={() => router.back()}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              돌아가기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader user={user} />
+      <div className="container mx-auto px-4 py-8">
+        {/* 농장 헤더 */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{farm.name}</h1>
+          {farm.description && (
+            <p className="text-gray-600">{farm.description}</p>
+          )}
+        </div>
+
+        {/* 베드 섹션 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">베드 관리</h2>
+            {user && user.role !== 'team_member' && (
+              <button
+                onClick={() => setShowAddBedModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl text-sm font-semibold"
+              >
+                + 새 베드 추가
+              </button>
+            )}
+          </div>
+
+          {beds.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-6 text-center">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">등록된 베드가 없습니다</h3>
+              <p className="text-gray-600 mb-4">새로운 베드를 추가하여 작물 재배 공간을 관리하세요.</p>
+              {user && user.role !== 'team_member' && (
+                <button
+                  onClick={() => setShowAddBedModal(true)}
+                  className="px-6 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl text-sm font-semibold"
+                >
+                  + 첫 번째 베드 추가
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {beds.map((bed) => (
+                <div key={bed.id} className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">{bed.meta?.location || bed.name}</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${bed.status?.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      {user && user.role !== 'team_member' && (
+                        <button
+                          onClick={() => handleBedDashboardToggle(bed.id, !bedDashboardSettings[bed.id])}
+                          className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors duration-200 ${
+                            bedDashboardSettings[bed.id] !== false ? 'bg-green-600' : 'bg-gray-200'
+                          }`}
+                          title={bedDashboardSettings[bed.id] !== false ? '대시보드에서 숨기기' : '대시보드에 표시하기'}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200 ${
+                              bedDashboardSettings[bed.id] !== false ? 'translate-x-4' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><span className="font-medium">시스템:</span> {bed.meta?.bed_system_type || 'N/A'}</p>
+                    <p><span className="font-medium">층수:</span> {bed.meta?.total_tiers || 'N/A'}</p>
+                    <p><span className="font-medium">상태:</span> {bed.status?.online ? '온라인' : '오프라인'}</p>
+                    <p className="text-xs">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        bedDashboardSettings[bed.id] !== false 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {bedDashboardSettings[bed.id] !== false ? '대시보드 표시' : '대시보드 숨김'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 디바이스 섹션 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">IoT 디바이스</h2>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={fetchFarmData}
+                className="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+              >
+                🔄 새로고침
+              </button>
+              {user && user.role !== 'team_member' && (
+                <button
+                  onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm font-semibold"
+                >
+                  + 새 디바이스 연결
+                </button>
+              )}
+            </div>
+          </div>
+
+          {devices.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="text-gray-400 mb-4">
+                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">연결된 디바이스가 없습니다</h3>
+              <p className="text-gray-600 mb-4">IoT 디바이스를 연결하여 농장을 모니터링하고 자동화하세요.</p>
+              {user && user.role !== 'team_member' && (
+                <button
+                  onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm font-semibold"
+                >
+                  ⚡ IoT 디바이스 생성 및 연결
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-700">
+                      <span className="font-medium">자동 새로고침 활성화:</span> 디바이스 연결 상태가 30초마다 자동으로 확인됩니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {devices.map((device) => (
+                <DeviceSection 
+                  key={device.deviceId} 
+                  device={device} 
+                  farmId={farmId}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 베드 관리 섹션 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">베드 관리</h2>
+            {user && user.role !== 'team_member' && (
+              <button
+                onClick={() => setShowAddBedModal(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                + 새 베드 추가
+              </button>
+            )}
+          </div>
+
+          {beds.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <div className="text-gray-400 text-6xl mb-4">🌱</div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 베드가 없습니다</h3>
+              <p className="text-gray-500 mb-4">첫 번째 베드를 추가하여 농장을 시작해보세요.</p>
+              {user && user.role !== 'team_member' && (
+                <button
+                  onClick={() => setShowAddBedModal(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  + 첫 번째 베드 추가
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {beds.map((bed) => (
+                <div key={bed.id} className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900">{bed.meta?.location || bed.name}</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${bed.status?.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      {user && user.role !== 'team_member' && (
+                        <button
+                          onClick={() => handleBedDashboardToggle(bed.id, !bedDashboardSettings[bed.id])}
+                          className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors duration-200 ${
+                            bedDashboardSettings[bed.id] !== false ? 'bg-green-600' : 'bg-gray-200'
+                          }`}
+                          title={bedDashboardSettings[bed.id] !== false ? '대시보드에서 숨기기' : '대시보드에 표시하기'}
+                        >
+                          <span
+                            className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform duration-200 ${
+                              bedDashboardSettings[bed.id] !== false ? 'translate-x-4' : 'translate-x-0.5'
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><span className="font-medium">시스템:</span> {bed.meta?.bed_system_type || 'N/A'}</p>
+                    <p><span className="font-medium">층수:</span> {bed.meta?.total_tiers || 'N/A'}</p>
+                    <p><span className="font-medium">상태:</span> {bed.status?.online ? '온라인' : '오프라인'}</p>
+                    <p className="text-xs">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        bedDashboardSettings[bed.id] !== false 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {bedDashboardSettings[bed.id] !== false ? '대시보드 표시' : '대시보드 숨김'}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 베드 시각화 섹션 */}
+        {beds.filter(bed => bedDashboardSettings[bed.id] !== false).length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">베드 모니터링</h2>
+              <div className="text-sm text-gray-600">
+                {beds.filter(bed => bedDashboardSettings[bed.id] !== false).length}개 베드 표시 중
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {beds
+                .filter(bed => bedDashboardSettings[bed.id] !== false)
+                .map((bed) => {
+                  const deviceSensors = sensors.filter(sensor => sensor.device_id === bed.id);
+                  
+                  return (
+                    <div key={bed.id} className="bg-white rounded-lg shadow p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                          <span className="mr-2">🌱</span>
+                          {bed.meta?.location || bed.name}
+                          <span className="ml-2 text-sm text-gray-500">
+                            ({bed.meta?.bed_system_type || 'N/A'} • {bed.meta?.total_tiers || 'N/A'}층)
+                          </span>
+                        </h3>
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${bed.status?.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                          <span className="text-sm text-gray-600">
+                            {bed.status?.online ? '온라인' : '오프라인'}
+                          </span>
+                          {user && user.role !== 'team_member' && (
+                            <button
+                              onClick={() => {
+                                setSelectedBed(bed);
+                                setShowActuatorModal(true);
+                              }}
+                              className="px-3 py-1 text-sm bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
+                            >
+                              제어
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 센서 데이터 */}
+                      <div>
+                        <h6 className="text-base font-bold text-gray-600 mb-3 flex items-center">
+                          <span className="text-lg mr-2">📊</span>
+                          센서 데이터
+                        </h6>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          <SensorCard
+                            type="temperature"
+                            value={(() => {
+                              const tempSensor = deviceSensors.find(s => s.type === 'temperature');
+                              const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                              return reading ? reading.value : 0;
+                            })()}
+                            unit="°C"
+                            icon="🌡️"
+                            color="#ef4444"
+                            chartData={sensorChartData}
+                            title="온도"
+                            isConnected={(() => {
+                              const tempSensor = deviceSensors.find(s => s.type === 'temperature');
+                              const reading = tempSensor && sensorReadings.find(r => r.sensor_id === tempSensor.id);
+                              return !!tempSensor && !!reading;
+                            })()}
+                          />
+                          
+                          <SensorCard
+                            type="humidity"
+                            value={(() => {
+                              const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
+                              const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                              return reading ? reading.value : 0;
+                            })()}
+                            unit="%"
+                            icon="💧"
+                            color="#3b82f6"
+                            chartData={sensorChartData}
+                            title="습도"
+                            isConnected={(() => {
+                              const humiditySensor = deviceSensors.find(s => s.type === 'humidity');
+                              const reading = humiditySensor && sensorReadings.find(r => r.sensor_id === humiditySensor.id);
+                              return !!humiditySensor && !!reading;
+                            })()}
+                          />
+                          
+                          <SensorCard
+                            type="ec"
+                            value={(() => {
+                              const ecSensor = deviceSensors.find(s => s.type === 'ec');
+                              const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
+                              return reading ? reading.value : 0;
+                            })()}
+                            unit="mS/cm"
+                            icon="⚡"
+                            color="#10b981"
+                            chartData={sensorChartData}
+                            title="EC"
+                            isConnected={(() => {
+                              const ecSensor = deviceSensors.find(s => s.type === 'ec');
+                              const reading = ecSensor && sensorReadings.find(r => r.sensor_id === ecSensor.id);
+                              return !!ecSensor && !!reading;
+                            })()}
+                          />
+                          
+                          <WaterLevelSensorCard
+                            level={(() => {
+                              const waterSensor = deviceSensors.find(s => s.type === 'water_level');
+                              const reading = waterSensor && sensorReadings.find(r => r.sensor_id === waterSensor.id);
+                              if (!waterSensor) return 'disconnected';
+                              if (!reading) return 'disconnected';
+                              const value = reading.value;
+                              if (value < 20) return 'low';
+                              if (value > 80) return 'high';
+                              return 'normal';
+                            })()}
+                            percentage={(() => {
+                              const waterSensor = deviceSensors.find(s => s.type === 'water_level');
+                              const reading = waterSensor && sensorReadings.find(r => r.sensor_id === waterSensor.id);
+                              return reading ? reading.value : 0;
+                            })()}
+                            chartData={sensorChartData}
+                            title="수위센서"
+                          />
+                          
+                          <SensorCard
+                            type="light"
+                            value={(() => {
+                              const lightSensor = deviceSensors.find(s => s.type === 'light');
+                              const reading = lightSensor && sensorReadings.find(r => r.sensor_id === lightSensor.id);
+                              return reading ? reading.value : 0;
+                            })()}
+                            unit="lux"
+                            icon="☀️"
+                            color="#f59e0b"
+                            chartData={sensorChartData}
+                            title="조도"
+                            isConnected={(() => {
+                              const lightSensor = deviceSensors.find(s => s.type === 'light');
+                              const reading = lightSensor && sensorReadings.find(r => r.sensor_id === lightSensor.id);
+                              return !!lightSensor && !!reading;
+                            })()}
+                          />
+                          
+                          <SensorCard
+                            type="ph"
+                            value={(() => {
+                              const phSensor = deviceSensors.find(s => s.type === 'ph');
+                              const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
+                              return reading ? reading.value : 0;
+                            })()}
+                            unit="pH"
+                            icon="🧪"
+                            color="#8b5cf6"
+                            chartData={sensorChartData}
+                            title="pH"
+                            isConnected={(() => {
+                              const phSensor = deviceSensors.find(s => s.type === 'ph');
+                              const reading = phSensor && sensorReadings.find(r => r.sensor_id === phSensor.id);
+                              return !!phSensor && !!reading;
+                            })()}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* 베드 추가 모달 */}
+        {showAddBedModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            {/* 배경 오버레이 */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAddBedModal(false)} />
+            
+            {/* 모달창 */}
+            <div className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-4 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-600">새 베드 추가</h3>
+                <button
+                  onClick={() => setShowAddBedModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* 베드 이름 입력 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    베드 이름 *
+                  </label>
+                  <input
+                    type="text"
+                    value={newBedData.name}
+                    onChange={(e) => setNewBedData({ ...newBedData, name: e.target.value })}
+                    placeholder="예: A구역 1층, 토마토 베드 등"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    maxLength={20}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    한글, 영문, 숫자, 공백, -, _ 만 사용 가능 (2-20자)
+                  </p>
+                </div>
+
+                {/* 베드 시스템 타입 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    베드 시스템 타입
+                  </label>
+                  <select
+                    value={newBedData.bedSystemType}
+                    onChange={(e) => setNewBedData({ ...newBedData, bedSystemType: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="multi-tier">다층 베드</option>
+                    <option value="single-tier">단층 베드</option>
+                    <option value="hydroponic">수경재배</option>
+                    <option value="soil">토양재배</option>
+                  </select>
+                </div>
+
+                {/* 총 층수 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    총 층수
+                  </label>
+                  <select
+                    value={newBedData.totalTiers}
+                    onChange={(e) => setNewBedData({ ...newBedData, totalTiers: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value={1}>1층</option>
+                    <option value={2}>2층</option>
+                    <option value={3}>3층</option>
+                    <option value={4}>4층</option>
+                    <option value={5}>5층</option>
+                  </select>
+                </div>
+
+                <div className="flex space-x-4 pt-4">
+                  <button
+                    onClick={() => setShowAddBedModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={handleAddBed}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 transition-all duration-200 font-semibold"
+                  >
+                    베드 추가
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 액추에이터 제어 모달 */}
+        {showActuatorModal && selectedBed && (
+          <ActuatorControlModal
+            bed={selectedBed}
+            onClose={() => {
+              setShowActuatorModal(false);
+              setSelectedBed(null);
+            }}
+            farmId={farmId}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 디바이스 섹션 컴포넌트
+function DeviceSection({ device, farmId }: { device: DeviceUIModel; farmId: string }) {
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">{device.deviceName}</h3>
+      
+      {device.uiModel?.cards ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {device.uiModel.cards.map((card: any, index: number) => (
+            <TemplateRenderer
+              key={index}
+              card={card}
+              deviceId={device.deviceId}
+              model={device.uiModel}
+              farmId={farmId}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="text-gray-500 text-center py-8">
+          UI 템플릿이 없습니다.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 템플릿 렌더러 컴포넌트
+function TemplateRenderer({ card, deviceId, model, farmId }: any) {
+  switch (card.type) {
+    case 'gauge':
+      return <GaugeCard metric={card.metric} thresholds={card.thresholds} deviceId={deviceId} model={model} farmId={farmId} />;
+    case 'line-chart':
+      return <LineChartCard series={card.series} deviceId={deviceId} model={model} farmId={farmId} />;
+    case 'actuator':
+      return <ActuatorPanel channels={card.channels} actuatorType={card.actuatorType} deviceId={deviceId} model={model} farmId={farmId} />;
+    case 'event-log':
+      return <EventLogCard metric={card.metric} deviceId={deviceId} model={model} farmId={farmId} />;
+    default:
+      return (
+        <div className="bg-gray-50 border rounded-lg p-4">
+          <p className="text-sm text-gray-500">지원하지 않는 카드 타입: {card.type}</p>
+        </div>
+      );
+  }
+}
+
+// 게이지 카드 컴포넌트 (WebSocket 실시간 업데이트)
+function GaugeCard({ metric, thresholds, deviceId, model, farmId }: any) {
+  const [sensorValue, setSensorValue] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const sensor = model?.sensors?.find((s: any) =>
+    s.canonical_key === metric || s.key === metric
+  );
+
+  // WebSocket 실시간 데이터 수신
+  const { connected } = useWebSocket({
+    farmId,
+    onTelemetry: (message) => {
+      // 해당 디바이스의 텔레메트리 데이터인지 확인
+      if (message.deviceId === deviceId && message.data) {
+        const metricData = message.data.find((d: any) => d.key === metric);
+        if (metricData) {
+          setSensorValue({
+            value: metricData.value,
+            unit: metricData.unit,
+            ts: message.timestamp
+          });
+          setError('');
+          setLoading(false);
+        }
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (!sensor || !farmId) return;
+
+    // 초기 데이터 로드
+    const fetchInitialValue = async () => {
+      try {
+        const res = await fetch(
+          `/api/farms/${farmId}/sensors/latest?deviceId=${deviceId}&keys=${metric}`,
+          { cache: 'no-store' }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setSensorValue(data[metric]);
+          setError('');
+        } else {
+          setError('데이터 소스 일시 중단');
+        }
+        setLoading(false);
+      } catch (err: any) {
+        setError('연결 오류');
+        setLoading(false);
+      }
+    };
+
+    fetchInitialValue();
+
+    // WebSocket 연결이 안된 경우 폴링 백업
+    if (!connected) {
+      const interval = setInterval(fetchInitialValue, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [sensor, deviceId, metric, farmId, connected]);
+
+  if (!sensor) {
+    return (
+      <div className="bg-gray-50 border rounded-lg p-4">
+        <p className="text-sm text-gray-500">센서 정보 없음: {metric}</p>
+      </div>
+    );
+  }
+
+  // Threshold 색상 결정
+  let bgColor = 'from-blue-50 to-blue-100';
+  let borderColor = 'border-blue-200';
+  let valueColor = 'text-blue-600';
+
+  if (sensorValue && thresholds) {
+    const value = sensorValue.value;
+    if (thresholds.danger && value >= thresholds.danger) {
+      bgColor = 'from-red-50 to-red-100';
+      borderColor = 'border-red-300';
+      valueColor = 'text-red-600';
+    } else if (thresholds.warn && value >= thresholds.warn) {
+      bgColor = 'from-yellow-50 to-yellow-100';
+      borderColor = 'border-yellow-300';
+      valueColor = 'text-yellow-600';
+    }
+  }
+
+  return (
+    <div className={`bg-gradient-to-br ${bgColor} border ${borderColor} rounded-lg p-4`}>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold">{sensor.label || sensor.key}</h3>
+        <div className="flex items-center gap-1">
+          <div className={`w-2 h-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          <span className="text-xs text-gray-500">
+            {connected ? '실시간' : '폴링'}
+          </span>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-2xl text-gray-400 mb-1">로딩...</div>
+      ) : error ? (
+        <div className="text-sm text-red-600 mb-1">⚠️ {error}</div>
+      ) : sensorValue ? (
+        <>
+          <div className={`text-3xl font-bold ${valueColor} mb-1`}>
+            {sensorValue.value.toFixed(1)}
+          </div>
+          <div className="text-sm text-gray-600">{sensorValue.unit || sensor.unit}</div>
+          <div className="text-xs text-gray-400 mt-1">
+            {new Date(sensorValue.ts).toLocaleTimeString('ko-KR')}
+          </div>
+        </>
+      ) : (
+        <div className="text-2xl text-gray-400 mb-1">--</div>
+      )}
+
+      {thresholds && (
+        <div className="text-xs text-gray-500 mt-2">
+          {thresholds.warn && `⚠️ ${thresholds.warn}${sensor.unit}`}
+          {thresholds.danger && ` / 🚨 ${thresholds.danger}${sensor.unit}`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 라인 차트 카드 컴포넌트 (WebSocket 실시간 업데이트)
+function LineChartCard({ series, deviceId, model, farmId }: any) {
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // WebSocket 실시간 데이터 수신
+  const { connected } = useWebSocket({
+    farmId,
+    onTelemetry: (message) => {
+      // 해당 디바이스의 텔레메트리 데이터인지 확인
+      if (message.deviceId === deviceId && message.data) {
+        // 새로운 데이터 포인트 추가
+        const newDataPoint = {
+          timestamp: new Date(message.timestamp).getTime(),
+          time: new Date(message.timestamp).toLocaleTimeString('ko-KR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }),
+          ...series.reduce((acc: any, key: string) => {
+            const metricData = message.data.find((d: any) => d.key === key);
+            acc[key] = metricData ? metricData.value : null;
+            return acc;
+          }, {})
+        };
+        
+        setChartData(prevData => {
+          const updatedData = [...prevData, newDataPoint];
+          // 최근 50개 데이터 포인트만 유지
+          return updatedData.slice(-50);
+        });
+      }
+    }
+  });
+
+  useEffect(() => {
+    if (!series || !deviceId || !farmId) return;
+
+    const fetchChartData = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        
+        // 최근 1시간 데이터 조회 (10분 간격)
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        
+        const response = await fetch(
+          `/api/farms/${farmId}/sensors/history?deviceId=${deviceId}&keys=${series.join(',')}&startTime=${oneHourAgo}`,
+          { cache: 'no-store' }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          
+          // 차트 데이터 형식으로 변환
+          const formattedData = data.map((item: any) => ({
+            timestamp: new Date(item.ts).getTime(),
+            time: new Date(item.ts).toLocaleTimeString('ko-KR', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            }),
+            ...series.reduce((acc: any, key: string) => {
+              acc[key] = item[key] || null;
+              return acc;
+            }, {})
+          }));
+          
+          setChartData(formattedData);
+        } else {
+          setError('데이터를 불러올 수 없습니다');
+        }
+      } catch (err: any) {
+        setError('연결 오류');
+        console.error('Chart data fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChartData();
+    
+    // WebSocket 연결이 안된 경우 폴링 백업 (10초마다)
+    if (!connected) {
+      const interval = setInterval(fetchChartData, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [series, deviceId, farmId, connected]);
+
+  if (isLoading) {
+    return (
+      <div className="bg-white border rounded-lg p-4">
+        <h3 className="font-bold mb-2">📊 실시간 차트</h3>
+        <div className="h-64 flex items-center justify-center">
+          <div className="text-gray-500">데이터 로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border rounded-lg p-4">
+        <h3 className="font-bold mb-2">📊 실시간 차트</h3>
+        <div className="h-64 flex items-center justify-center">
+          <div className="text-red-500">⚠️ {error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border rounded-lg p-4">
+      <h3 className="font-bold mb-2">📊 실시간 차트</h3>
+      <p className="text-sm text-gray-500 mb-4">시리즈: {series?.join(', ')}</p>
+      
+      <div className="h-64">
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis 
+                dataKey="time"
+                stroke="#666"
+                fontSize={12}
+              />
+              <YAxis 
+                stroke="#666"
+                fontSize={12}
+              />
+              <Tooltip 
+                labelFormatter={(value) => `시간: ${value}`}
+                formatter={(value: any, name: string) => [
+                  `${value?.toFixed(1) || 'N/A'}`, 
+                  name
+                ]}
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e5e5',
+                  borderRadius: '8px',
+                  fontSize: '12px'
+                }}
+              />
+              {series.map((serie: string, index: number) => (
+                <Line
+                  key={serie}
+                  type="monotone"
+                  dataKey={serie}
+                  stroke={`hsl(${index * 60}, 70%, 50%)`}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                  connectNulls={false}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-gray-400">데이터가 없습니다</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 이벤트 로그 카드 컴포넌트 (실제 로그 구현)
+function EventLogCard({ deviceId, model, farmId }: any) {
+  const [events, setEvents] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!deviceId || !farmId) return;
+
+    const fetchEvents = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        
+        const response = await fetch(
+          `/api/farms/${farmId}/devices/${deviceId}/events?limit=20`,
+          { cache: 'no-store' }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setEvents(data.events || []);
+        } else {
+          setError('이벤트를 불러올 수 없습니다');
+        }
+      } catch (err: any) {
+        setError('연결 오류');
+        console.error('Event log fetch error:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchEvents();
+    
+    // 5초마다 이벤트 갱신
+    const interval = setInterval(fetchEvents, 5000);
+    return () => clearInterval(interval);
+  }, [deviceId, farmId]);
+
+  const getLogColor = (level: string) => {
+    switch (level) {
+      case 'error': return 'text-red-600 bg-red-50 border-red-200';
+      case 'warn': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'info': return 'text-blue-600 bg-blue-50 border-blue-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getLogIcon = (level: string) => {
+    switch (level) {
+      case 'error': return '❌';
+      case 'warn': return '⚠️';
+      case 'info': return 'ℹ️';
+      default: return '📝';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white border rounded-lg p-4">
+        <h3 className="font-bold mb-2">📋 이벤트 로그</h3>
+        <div className="h-64 flex items-center justify-center">
+          <div className="text-gray-500">로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white border rounded-lg p-4">
+        <h3 className="font-bold mb-2">📋 이벤트 로그</h3>
+        <div className="h-64 flex items-center justify-center">
+          <div className="text-red-500">⚠️ {error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border rounded-lg p-4">
+      <h3 className="font-bold mb-2">📋 이벤트 로그</h3>
+      <div className="h-64 overflow-y-auto">
+        {events.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-gray-500">이벤트가 없습니다</div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {events.map((event, index) => (
+              <div 
+                key={index} 
+                className={`p-3 rounded-lg border text-sm ${getLogColor(event.level)}`}
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex items-center gap-2">
+                    <span>{getLogIcon(event.level)}</span>
+                    <span className="font-medium">{event.message}</span>
+                  </div>
+                  <span className="text-xs opacity-75">
+                    {new Date(event.timestamp).toLocaleTimeString('ko-KR')}
+                  </span>
+                </div>
+                {event.details && (
+                  <div className="text-xs opacity-75 mt-1 pl-6">
+                    {event.details}
+                  </div>
+                )}
+                {event.metadata && (
+                  <div className="text-xs opacity-50 mt-1 pl-6">
+                    {JSON.stringify(event.metadata)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 액추에이터 패널 컴포넌트 (플레이스홀더)
+function ActuatorPanel({ channels, actuatorType, deviceId, model, farmId }: any) {
+  return (
+    <div className="bg-white border rounded-lg p-4">
+      <h3 className="font-bold mb-2">액추에이터 패널</h3>
+      <p className="text-sm text-gray-500">채널: {channels}, 타입: {actuatorType}</p>
+      <p className="text-xs text-gray-400 mt-2">제어 패널 구현 예정</p>
+    </div>
+  );
+}
