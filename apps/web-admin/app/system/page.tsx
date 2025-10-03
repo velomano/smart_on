@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
+import UniversalBridgeManager from '@/components/UniversalBridgeManager';
 import { getCurrentUser } from '@/lib/auth';
 import { AuthUser } from '@/lib/auth';
 
@@ -115,6 +116,7 @@ export default function SystemPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<Device | null>(null);
+  const [activeTab, setActiveTab] = useState<'system' | 'bridge'>('system');
   const [deviceForm, setDeviceForm] = useState({
     name: '',
     device_type: 'sensor',
@@ -392,8 +394,8 @@ export default function SystemPage() {
         {/* 헤더 */}
         <div className="flex justify-between items-center mb-2 sm:mb-3 lg:mb-6">
           <div>
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600">시스템 모니터링</h1>
-            <p className="text-gray-600 font-medium text-sm sm:text-base">실시간 시스템 상태 및 성능 메트릭</p>
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600">시스템 관리</h1>
+            <p className="text-gray-600 font-medium text-sm sm:text-base">시스템 모니터링 및 Universal Bridge 관리</p>
           </div>
           <button
             onClick={fetchData}
@@ -403,8 +405,39 @@ export default function SystemPage() {
           </button>
         </div>
 
-        {/* 전체 상태 */}
-        {healthData && (
+        {/* 탭 네비게이션 */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('system')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'system'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                시스템 모니터링
+              </button>
+              <button
+                onClick={() => setActiveTab('bridge')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'bridge'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Universal Bridge
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* 탭 콘텐츠 */}
+        {activeTab === 'system' && (
+          <>
+            {/* 전체 상태 */}
+            {healthData && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2 sm:p-3 lg:p-6 mb-2 sm:mb-3 lg:mb-6">
             <h2 className="text-base sm:text-lg font-bold text-gray-600 mb-2 sm:mb-3 lg:mb-4">전체 시스템 상태</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
@@ -687,6 +720,13 @@ export default function SystemPage() {
             마지막 업데이트: {new Date(healthData.timestamp).toLocaleString('ko-KR')}
           </div>
         )}
+          </>
+        )}
+
+        {/* Universal Bridge 탭 */}
+        {activeTab === 'bridge' && (
+          <UniversalBridgeManager />
+        )}
       </div>
 
       {/* 디바이스 편집 모달 */}
@@ -809,6 +849,12 @@ export default function SystemPage() {
           </div>
         </div>
       )}
+
+        {/* Universal Bridge 탭 */}
+        {activeTab === 'bridge' && (
+          <UniversalBridgeManager />
+        )}
+      </div>
     </div>
   );
 }
