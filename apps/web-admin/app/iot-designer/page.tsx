@@ -769,32 +769,6 @@ function IoTDesignerContent() {
         {/* 디자인 단계 */}
         {currentStep === 'design' && (
           <div className="space-y-6">
-            {/* 1. WiFi 설정 안내 */}
-        <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-800">📶 WiFi 설정</h3>
-          
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <span className="text-blue-600 mr-3 text-xl">🔒</span>
-            <div>
-                    <h4 className="font-semibold text-blue-800 mb-2">보안을 위한 WiFi 설정 안내</h4>
-                    <p className="text-blue-700 text-sm mb-3">
-                      WiFi 비밀번호는 보안상 코드에 포함되지 않습니다.
-                      생성된 코드를 다운로드한 후 다음 부분을 직접 수정해주세요:
-                    </p>
-                    <div className="bg-gray-100 p-3 rounded border-l-4 border-blue-500">
-                      <code className="text-sm text-gray-800">
-                        const char* ssid = "YOUR_WIFI_SSID";<br/>
-                        const char* password = "YOUR_WIFI_PASSWORD";
-                      </code>
-                    </div>
-                    <p className="text-blue-700 text-sm mt-3">
-                      💡 <strong>팁:</strong> WiFi 정보를 미리 준비해두시면 코드 수정이 더욱 편리합니다.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* 2. 디바이스 및 프로토콜 선택 */}
             <div className="bg-white border rounded-lg p-6">
@@ -1008,32 +982,6 @@ function IoTDesignerContent() {
               </div>
             </div>
 
-            {/* 3. WiFi 설정 안내 */}
-            <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-800">📶 WiFi 설정</h3>
-              
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <span className="text-blue-600 mr-3 text-xl">🔒</span>
-              <div>
-                    <h4 className="font-semibold text-blue-800 mb-2">보안을 위한 WiFi 설정 안내</h4>
-                    <p className="text-blue-700 text-sm mb-3">
-                      WiFi 비밀번호는 보안상 코드에 포함되지 않습니다.
-                      생성된 코드를 다운로드한 후 다음 부분을 직접 수정해주세요:
-                    </p>
-                    <div className="bg-gray-100 p-3 rounded border-l-4 border-blue-500">
-                      <code className="text-sm text-gray-800">
-                        const char* ssid = "YOUR_WIFI_SSID";<br/>
-                        const char* password = "YOUR_WIFI_PASSWORD";
-                      </code>
-              </div>
-                    <p className="text-blue-700 text-xs mt-2">
-                      💡 <strong>예시:</strong> ssid = "MyHomeWiFi", password = "mypassword123"
-                    </p>
-              </div>
-                </div>
-              </div>
-            </div>
 
             {/* 4. 전원 계산 */}
             <div className="bg-white border rounded-lg p-6">
