@@ -64,7 +64,7 @@ jobs:
         export SUPABASE_URL="$SUPA_URL"
         export SUPABASE_SERVICE_ROLE_KEY="$SUPA_KEY"
         
-        # 실제 수집 및 crop_profiles 직접 저장
+        # 실제 수집 및 nutrient_recipes 직접 저장
         node -e "
         const { collectAllRecipes } = require('./dist/sources/all.js');
         
@@ -74,7 +74,10 @@ jobs:
             const recipes = await collectAllRecipes($BATCH);
             console.log(\`📊 수집 완료: \${recipes.length}건\`);
             
-            // crop_profiles 형식으로 변환하여 직접 저장
+            // 수집 건수를 환경변수로 설정 (텔레그램 알림용)
+            process.env.COLLECTED_COUNT = recipes.length.toString();
+            
+            // nutrient_recipes 형식으로 변환하여 직접 저장
             let savedCount = 0;
             for (const recipe of recipes) {
               const source = recipe.source;
@@ -167,6 +170,10 @@ jobs:
             
             console.log(\`🎉 저장 완료: \${savedCount}/\${recipes.length}건\`);
             
+            // 저장 건수를 환경변수로 설정 (텔레그램 알림용)
+            process.env.SAVED_COUNT = savedCount.toString();
+            process.env.TOTAL_COUNT = recipes.length.toString();
+            
             // 수집 통계 출력
             const sourceStats = recipes.reduce((acc, recipe) => {
               const sourceName = recipe.source?.name || 'Unknown';
@@ -195,12 +202,19 @@ jobs:
         SOURCE="${{ env.SOURCE }}"
         TRIGGER="${{ github.event_name }}"
         
+        # 수집 결과 정보 설정
         if [ "$STATUS" = "success" ]; then
           ICON="✅"
           MESSAGE="영양액 레시피 수집 작업이 성공적으로 완료되었습니다!"
+          
+          # 기본 정보 (실제 수집 결과는 로그에서 확인)
+          COLLECTED_INFO="📊 <b>수집 결과</b>: 성공적으로 완료"
+          SAVED_INFO="💾 <b>상태</b>: 데이터베이스에 저장됨"
         else
           ICON="❌"
           MESSAGE="영양액 레시피 수집 작업이 실패했습니다."
+          COLLECTED_INFO="📊 <b>수집 결과</b>: 실패"
+          SAVED_INFO="💾 <b>상태</b>: 저장되지 않음"
         fi
         
         FULL_MESSAGE="$ICON <b>스마트팜 영양액 수집 알림</b>
@@ -209,6 +223,8 @@ jobs:
         🌱 <b>수집 소스</b>: $SOURCE
         ⏰ <b>실행 시간</b>: $(date '+%Y-%m-%d %H:%M:%S')
         🔄 <b>트리거</b>: $TRIGGER
+        $COLLECTED_INFO
+        $SAVED_INFO
         
         $MESSAGE"
         

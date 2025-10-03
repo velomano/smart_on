@@ -1,16 +1,11 @@
-export const config = { runtime: 'edge' };
+import { NextRequest, NextResponse } from 'next/server';
 
-export default async function handler(req: Request) {
+export default async function handler(req: NextRequest) {
   const traceId = crypto.randomUUID();
   
-  return new Response(
-    JSON.stringify({ 
-      data: { ok: true }, 
-      error: null, 
-      traceId 
-    }), 
-    {
-      headers: { 'content-type': 'application/json' }
-    }
-  );
+  return NextResponse.json({ 
+    data: { ok: true }, 
+    error: null, 
+    traceId 
+  });
 }
