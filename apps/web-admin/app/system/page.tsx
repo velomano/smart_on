@@ -850,11 +850,10 @@ export default function SystemPage() {
         </div>
       )}
 
-        {/* Universal Bridge 탭 */}
-        {activeTab === 'bridge' && (
-          <UniversalBridgeManager />
-        )}
-      </div>
+      {/* Universal Bridge 탭 */}
+      {activeTab === 'bridge' && (
+        <UniversalBridgeManager />
+      )}
     </div>
   );
 }

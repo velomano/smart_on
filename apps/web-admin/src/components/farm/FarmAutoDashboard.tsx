@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getCurrentUser, AuthUser } from '@/lib/auth';
 import AppHeader from '@/components/AppHeader';
+import BedTierShelfVisualization from '@/components/BedTierShelfVisualization';
+import ActuatorControlModal from '@/components/ActuatorControlModal';
 
 interface Farm {
   id: string;
@@ -34,8 +36,8 @@ interface Bed {
 interface NewBedData {
   name: string;
   bedSystemType: string;
-  totalTiers: number;
 }
+
 
 export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   const [farm, setFarm] = useState<Farm | null>(null);
@@ -45,12 +47,15 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
+  // 액추에이터 제어 관련 상태
+  const [showActuatorModal, setShowActuatorModal] = useState(false);
+  const [selectedBed, setSelectedBed] = useState<{id: string, name: string} | null>(null);
+  
   // 베드 관련 상태
   const [showAddBedModal, setShowAddBedModal] = useState(false);
   const [newBedData, setNewBedData] = useState<NewBedData>({
     name: '',
-    bedSystemType: 'multi-tier',
-    totalTiers: 3
+    bedSystemType: 'multi-tier'
   });
   
   const router = useRouter();
@@ -85,7 +90,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
         meta: {
           location: newBedData.name.trim(),
           bed_system_type: newBedData.bedSystemType,
-          total_tiers: newBedData.totalTiers
+          total_tiers: 3
         },
         status: {
           online: false,
@@ -104,7 +109,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
         return;
       }
 
-      setNewBedData({ name: '', bedSystemType: 'multi-tier', totalTiers: 3 });
+      setNewBedData({ name: '', bedSystemType: 'multi-tier' });
       setShowAddBedModal(false);
       await fetchFarmData(); // 데이터 다시 로드
       alert(`새 베드 "${newBedData.name.trim()}"가 추가되었습니다!`);
@@ -159,6 +164,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
       setLoading(false);
     }
   };
+
 
   // Early returns for loading, error, and missing farm states
   if (loading) {
@@ -255,22 +261,64 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {beds.map((bed) => (
-                <div key={bed.id} className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900">{bed.meta?.location || bed.name}</h3>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-2 h-2 rounded-full ${bed.status?.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                  <div key={bed.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                    {/* 베드 헤더 */}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900 text-lg">{bed.meta?.location || bed.name}</h3>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-2 h-2 rounded-full ${bed.status?.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                        <span className="text-sm text-gray-500">{bed.status?.online ? '온라인' : '오프라인'}</span>
+                      </div>
+                    </div>
+
+                    {/* 베드 정보 */}
+                    <div className="text-sm text-gray-600 space-y-1 mb-4">
+                      <p><span className="font-medium">시스템:</span> {bed.meta?.bed_system_type || 'N/A'}</p>
+                      <p><span className="font-medium">층수:</span> {bed.meta?.total_tiers || 'N/A'}</p>
+                    </div>
+
+                    {/* 베드 시각화와 센서 데이터를 반응형으로 배치 */}
+                    <div className="flex flex-col lg:flex-row gap-4">
+                      {/* 베드 시각화 */}
+                      <div className="flex-shrink-0">
+                        <BedTierShelfVisualization
+                          activeTiers={bed.meta?.total_tiers || 1}
+                          tierStatuses={[1, 2, 3].map(tierNumber => ({
+                            tierNumber,
+                            hasPlants: false, // 실제 작물 데이터가 있다면 여기에 연결
+                            cropName: undefined,
+                            growingMethod: undefined,
+                            plantType: undefined,
+                            startDate: undefined,
+                            harvestDate: undefined,
+                            stageBoundaries: undefined
+                          }))}
+                          waterLevelStatus="normal"
+                          onTierClick={(tierNumber) => {
+                            setSelectedBed({ id: bed.id, name: bed.name });
+                            setShowActuatorModal(true);
+                          }}
+                          compact={true}
+                        />
+                      </div>
+
+                      {/* 센서 데이터 영역 - 다이나믹 UI에서 로드 예정 */}
+                      <div className="flex-1 min-w-0">
+                        <h6 className="text-base font-bold text-gray-600 mb-3 flex items-center">
+                          <span className="text-lg mr-2">📊</span>
+                          센서 데이터
+                        </h6>
+                        <div className="text-center py-8 text-gray-500">
+                          <div className="text-4xl mb-2">🔄</div>
+                          <p>센서 데이터는 다이나믹 UI 시스템에서 로드됩니다</p>
+                          <p className="text-sm mt-1">연결된 센서가 있으면 자동으로 표시됩니다</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <p><span className="font-medium">시스템:</span> {bed.meta?.bed_system_type || 'N/A'}</p>
-                    <p><span className="font-medium">층수:</span> {bed.meta?.total_tiers || 'N/A'}</p>
-                    <p><span className="font-medium">상태:</span> {bed.status?.online ? '온라인' : '오프라인'}</p>
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>
@@ -348,57 +396,95 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
               </div>
 
               <div className="space-y-6">
-                {/* 베드 이름 입력 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
                     베드 이름 *
                   </label>
                   <input
                     type="text"
                     value={newBedData.name}
-                    onChange={(e) => setNewBedData({ ...newBedData, name: e.target.value })}
-                    placeholder="예: A구역 1층, 토마토 베드 등"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    maxLength={20}
+                    onChange={(e) => setNewBedData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 placeholder-gray-500"
+                    placeholder="예: 베드2, 3, A구역"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    한글, 영문, 숫자, 공백, -, _ 만 사용 가능 (2-20자)
-                  </p>
+                  {/* 베드 이름 규칙 안내 */}
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-blue-500 text-sm">💡</span>
+                      <div className="text-sm text-blue-700">
+                        <p className="font-medium mb-2">베드 이름은 어떻게 정해지나요?</p>
+                        <div className="text-xs space-y-2">
+                          <div className="bg-white p-2 rounded border-l-4 border-blue-400">
+                            <span className="font-medium text-blue-800">입력하시면 자동으로 정리됩니다:</span>
+                            <div className="mt-1 text-gray-600 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">베드2</span>
+                                <span className="text-gray-400">→</span>
+                                <span className="font-medium text-blue-600">베드-2</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">3</span>
+                                <span className="text-gray-400">→</span>
+                                <span className="font-medium text-blue-600">베드-3</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">A구역</span>
+                                <span className="text-gray-400">→</span>
+                                <span className="font-medium text-blue-600">베드-A구역</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-blue-600 font-medium text-center">
+                            ✨ 어떤 형태로 입력하셔도 깔끔하게 정리됩니다!
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                {/* 베드 시스템 타입 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    베드 시스템 타입
+                  <label className="block text-sm font-semibold text-gray-600 mb-2">
+                    베드 시스템 유형
                   </label>
                   <select
                     value={newBedData.bedSystemType}
-                    onChange={(e) => setNewBedData({ ...newBedData, bedSystemType: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(e) => setNewBedData(prev => ({ ...prev, bedSystemType: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
                   >
-                    <option value="multi-tier">다층 베드</option>
-                    <option value="single-tier">단층 베드</option>
-                    <option value="hydroponic">수경재배</option>
-                    <option value="soil">토양재배</option>
+                    <option value="multi-tier" className="text-gray-600">🌱 다단 베드 시스템</option>
+                    <option value="vertical" className="text-gray-600" disabled>🏗️ 수직형 베드 시스템 (준비 중)</option>
                   </select>
-                </div>
-
-                {/* 총 층수 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    총 층수
-                  </label>
-                  <select
-                    value={newBedData.totalTiers}
-                    onChange={(e) => setNewBedData({ ...newBedData, totalTiers: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value={1}>1층</option>
-                    <option value={2}>2층</option>
-                    <option value={3}>3층</option>
-                    <option value={4}>4층</option>
-                    <option value={5}>5층</option>
-                  </select>
+                  
+                  {/* 베드 시스템 유형 안내 */}
+                  <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-green-500 text-sm">🌱</span>
+                      <div className="text-sm text-green-700">
+                        <p className="font-medium mb-1">다단 베드 시스템</p>
+                        <div className="text-xs text-green-600">
+                          <p>• 최대 3단으로 구성된 계단식 베드</p>
+                          <p>• 각 단별로 독립적인 작물 재배 가능</p>
+                          <p>• 공간 효율적인 수직 농업 시스템</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* 향후 확장 안내 */}
+                  <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <span className="text-amber-500 text-sm">🚀</span>
+                      <div className="text-sm text-amber-700">
+                        <p className="font-medium mb-1">다양한 베드 시스템 추가 예정</p>
+                        <div className="text-xs text-amber-600">
+                          <p>• 수직형 베드 시스템 (탑워터)</p>
+                          <p>• 원형 베드 시스템 (회전형)</p>
+                          <p>• 자동화 베드 시스템 (AI 제어)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex space-x-4 pt-4">
@@ -418,6 +504,24 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
               </div>
             </div>
           </div>
+        )}
+
+        {/* 액추에이터 제어 모달 */}
+        {showActuatorModal && selectedBed && (
+          <ActuatorControlModal
+            isOpen={showActuatorModal}
+            onClose={() => {
+              setShowActuatorModal(false);
+              setSelectedBed(null);
+            }}
+            actuatorName={selectedBed.name}
+            deviceId={selectedBed.id}
+            currentStatus={false}
+            onStatusChange={(deviceId, status) => {
+              console.log('액추에이터 상태 변경:', deviceId, status);
+              // 실제 제어 로직은 여기에 구현
+            }}
+          />
         )}
       </div>
     </div>
