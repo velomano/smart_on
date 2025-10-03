@@ -190,6 +190,89 @@ export function getStageColor(stage: string): string {
 }
 
 /**
+ * 생장단계 변경 감지 및 알림 발송
+ * @param location 농장/베드 위치
+ * @param cropName 작물명
+ * @param plantType 작물 타입
+ * @param startDate 시작일
+ * @param harvestDate 수확일
+ * @param lastKnownStage 마지막으로 알려진 단계
+ * @param customBoundaries 커스텀 경계
+ * @returns 현재 단계 정보
+ */
+export async function checkGrowthStageAndNotify(
+  location: string,
+  cropName: string,
+  plantType: 'seed' | 'seedling',
+  startDate: string,
+  harvestDate: string,
+  lastKnownStage?: string,
+  customBoundaries?: number[]
+): Promise<GrowthStageInfo | null> {
+  try {
+    const currentGrowthInfo = calculateGrowthStage(plantType, startDate, harvestDate, customBoundaries);
+    
+    if (!currentGrowthInfo) {
+      return null;
+    }
+
+    // 생장단계 변경 감지
+    if (lastKnownStage && lastKnownStage !== currentGrowthInfo.currentStage) {
+      console.log(`🌱 생장단계 변경 감지: ${location} - ${lastKnownStage} → ${currentGrowthInfo.currentStage}`);
+      
+      // 알림 서비스 동적 import (순환 의존성 방지)
+      const { notifyGrowthStageChange } = await import('./notificationService');
+      
+      await notifyGrowthStageChange(
+        location,
+        cropName,
+        lastKnownStage,
+        currentGrowthInfo.currentStage,
+        currentGrowthInfo.daysRemaining
+      );
+    }
+
+    return currentGrowthInfo;
+  } catch (error) {
+    console.error('❌ 생장단계 변경 감지 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 수확 알림 체크
+ * @param location 농장/베드 위치
+ * @param cropName 작물명
+ * @param harvestDate 수확일
+ * @param daysUntilHarvest 수확까지 남은 일수
+ */
+export async function checkHarvestAndNotify(
+  location: string,
+  cropName: string,
+  harvestDate: string,
+  daysUntilHarvest: number
+): Promise<void> {
+  try {
+    // 수확 3일 전, 1일 전, 당일 알림
+    if (daysUntilHarvest <= 3 && daysUntilHarvest >= 0) {
+      console.log(`🍅 수확 알림 체크: ${location} - ${daysUntilHarvest}일 남음`);
+      
+      // 알림 서비스 동적 import
+      const { notifyHarvestReminder } = await import('./notificationService');
+      
+      await notifyHarvestReminder(
+        location,
+        cropName,
+        harvestDate,
+        daysUntilHarvest
+      );
+    }
+  } catch (error) {
+    console.error('❌ 수확 알림 체크 실패:', error);
+  }
+}
+
+/**
  * 생육 단계 라벨 가져오기
  */
 export function getStageLabel(stage: string): string {

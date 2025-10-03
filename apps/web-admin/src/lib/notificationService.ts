@@ -34,6 +34,13 @@ export interface NotificationSettings {
     ph_notification: boolean;
     water_notification: boolean;
     nutrient_temperature_notification: boolean;
+    // 새로운 알림 유형들
+    season_notification: boolean; // 24절기 알림
+    growth_stage_notification: boolean; // 생장단계 변경 알림
+    nutrient_remaining_notification: boolean; // 배양액 잔량 알림
+    maintenance_notification: boolean; // 정기 관리 알림
+    equipment_failure_notification: boolean; // 장비 고장 알림
+    harvest_reminder_notification: boolean; // 수확 알림
   };
 }
 
@@ -50,7 +57,13 @@ export function loadNotificationSettings(): NotificationSettings {
         ph_notification: true,
         humidity_notification: true,
         water_notification: true,
-        nutrient_temperature_notification: true
+        nutrient_temperature_notification: true,
+        season_notification: true,
+        growth_stage_notification: true,
+        nutrient_remaining_notification: true,
+        maintenance_notification: true,
+        equipment_failure_notification: true,
+        harvest_reminder_notification: true
       }
     };
   }
@@ -68,7 +81,13 @@ export function loadNotificationSettings(): NotificationSettings {
       ec_notification: true,
       ph_notification: true,
       water_notification: true,
-      nutrient_temperature_notification: true
+      nutrient_temperature_notification: true,
+      season_notification: true,
+      growth_stage_notification: true,
+      nutrient_remaining_notification: true,
+      maintenance_notification: true,
+      equipment_failure_notification: true,
+      harvest_reminder_notification: true
     };
   } else {
     const parsed = JSON.parse(settings);
@@ -80,7 +99,13 @@ export function loadNotificationSettings(): NotificationSettings {
       ec_notification: true,
       ph_notification: true,
       water_notification: true,
-      nutrient_temperature_notification: true
+      nutrient_temperature_notification: true,
+      season_notification: true,
+      growth_stage_notification: true,
+      nutrient_remaining_notification: true,
+      maintenance_notification: true,
+      equipment_failure_notification: true,
+      harvest_reminder_notification: true
     };
   }
   
@@ -100,7 +125,13 @@ export function loadNotificationSettings(): NotificationSettings {
               ph_notification: true,
               humidity_notification: true,
               water_notification: true,
-              nutrient_temperature_notification: true
+              nutrient_temperature_notification: true,
+              season_notification: true,
+              growth_stage_notification: true,
+              nutrient_remaining_notification: true,
+              maintenance_notification: true,
+              equipment_failure_notification: true,
+              harvest_reminder_notification: true
             }
           };
         }
@@ -363,6 +394,296 @@ export async function notifyControlError(
     }
   } catch (error) {
     console.error('제어 시스템 오류 알림 처리 실패:', error);
+  }
+}
+
+// 24절기 알림 - API 연동 준비
+export async function notifySeasonChange(
+  seasonName: string,
+  seasonDate: string,
+  farmingTips: string[]
+): Promise<void> {
+  try {
+    console.log('🌸 24절기 알림:', { seasonName, seasonDate, farmingTips });
+
+    const chatId = await getCurrentUserTelegramChatId();
+    if (!chatId) {
+      console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+      return;
+    }
+
+    const message = `🌸 <b>${seasonName} 알림</b>
+
+📅 절기: ${seasonName} (${seasonDate})
+🌱 농사 조언:
+${farmingTips.map(tip => `• ${tip}`).join('\n')}
+
+새로운 절기에 맞는 작물 관리가 필요합니다.`;
+
+    await sendNotificationToTelegram(
+      'season_change',
+      '전체 농장',
+      seasonName,
+      '',
+      new Date(),
+      chatId
+    );
+
+    // 대시보드 알림에도 추가
+    const alert = dashboardAlertManager.addAlert({
+      type: 'system',
+      level: 'low',
+      title: `🌸 ${seasonName} 절기 알림`,
+      message: `새로운 절기 ${seasonName}이 시작되었습니다. 농사 조언을 확인해주세요.`,
+      location: '전체 농장',
+      sensorValue: 0,
+      threshold: 0
+    });
+
+    console.log('✅ 24절기 알림 전송 완료:', alert.title);
+
+  } catch (error) {
+    console.error('❌ 24절기 알림 전송 실패:', error);
+  }
+}
+
+// 생장단계 변경 알림 - 시각화 베드 게이지 연동
+export async function notifyGrowthStageChange(
+  location: string,
+  cropName: string,
+  oldStage: string,
+  newStage: string,
+  daysRemaining: number
+): Promise<void> {
+  try {
+    console.log('🌱 생장단계 변경 알림:', { location, cropName, oldStage, newStage, daysRemaining });
+
+    const chatId = await getCurrentUserTelegramChatId();
+    if (!chatId) {
+      console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+      return;
+    }
+
+    const stageEmoji: Record<string, string> = {
+      'germination': '🌱',
+      'reproductive': '🌸',
+      'vegetative': '🌿',
+      'harvest': '🍅'
+    };
+
+    const message = `🌱 <b>생장단계 변경 알림</b>
+
+📍 위치: ${location}
+🌾 작물: ${cropName}
+📊 단계 변경: ${stageEmoji[oldStage] || '🌱'} ${oldStage} → ${stageEmoji[newStage] || '🌿'} ${newStage}
+📅 수확까지: ${daysRemaining}일 남음
+
+새로운 생장단계에 맞는 관리가 필요합니다.`;
+
+    await sendNotificationToTelegram(
+      'growth_stage_change',
+      location,
+      `${oldStage} → ${newStage}`,
+      '',
+      new Date(),
+      chatId
+    );
+
+    // 대시보드 알림에도 추가
+    const alert = dashboardAlertManager.addAlert({
+      type: 'system',
+      level: 'medium',
+      title: `🌱 생장단계 변경`,
+      message: `${location}의 ${cropName}이 ${oldStage}에서 ${newStage}로 전환되었습니다.`,
+      location: location,
+      sensorValue: daysRemaining,
+      threshold: 0
+    });
+
+    console.log('✅ 생장단계 변경 알림 전송 완료:', alert.title);
+
+  } catch (error) {
+    console.error('❌ 생장단계 변경 알림 전송 실패:', error);
+  }
+}
+
+// 배양액 잔량 알림 - 센서 연동 준비
+export async function notifyNutrientRemaining(
+  location: string,
+  remainingPercent: number,
+  tankType: string
+): Promise<void> {
+  try {
+    console.log('💧 배양액 잔량 알림:', { location, remainingPercent, tankType });
+
+    const chatId = await getCurrentUserTelegramChatId();
+    if (!chatId) {
+      console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+      return;
+    }
+
+    let alertLevel = 'medium';
+    let emoji = '💧';
+    
+    if (remainingPercent < 10) {
+      alertLevel = 'critical';
+      emoji = '🚨';
+    } else if (remainingPercent < 20) {
+      alertLevel = 'high';
+      emoji = '⚠️';
+    }
+
+    const message = `${emoji} <b>배양액 잔량 알림</b>
+
+📍 위치: ${location}
+🪣 탱크: ${tankType}
+💧 잔량: ${remainingPercent}%
+
+${remainingPercent < 10 ? '긴급! 배양액 보충이 필요합니다!' : 
+  remainingPercent < 20 ? '배양액 보충을 준비해주세요.' : 
+  '배양액 잔량을 확인해주세요.'}`;
+
+    await sendNotificationToTelegram(
+      'nutrient_remaining',
+      location,
+      `${remainingPercent}%`,
+      '',
+      new Date(),
+      chatId
+    );
+
+    // 대시보드 알림에도 추가
+    const alert = dashboardAlertManager.addAlert({
+      type: 'system',
+      level: alertLevel as any,
+      title: `${emoji} 배양액 잔량 부족`,
+      message: `${location}의 ${tankType} 잔량이 ${remainingPercent}%입니다.`,
+      location: location,
+      sensorValue: remainingPercent,
+      threshold: 20
+    });
+
+    console.log('✅ 배양액 잔량 알림 전송 완료:', alert.title);
+
+  } catch (error) {
+    console.error('❌ 배양액 잔량 알림 전송 실패:', error);
+  }
+}
+
+// 정기 관리 알림
+export async function notifyMaintenanceSchedule(
+  maintenanceType: string,
+  location: string,
+  scheduledDate: string,
+  description: string
+): Promise<void> {
+  try {
+    console.log('🔧 정기 관리 알림:', { maintenanceType, location, scheduledDate, description });
+
+    const chatId = await getCurrentUserTelegramChatId();
+    if (!chatId) {
+      console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+      return;
+    }
+
+    const message = `🔧 <b>정기 관리 알림</b>
+
+📍 위치: ${location}
+🔧 작업: ${maintenanceType}
+📅 예정일: ${scheduledDate}
+📝 설명: ${description}
+
+정기 관리 작업이 예정되어 있습니다.`;
+
+    await sendNotificationToTelegram(
+      'maintenance_schedule',
+      location,
+      maintenanceType,
+      '',
+      new Date(scheduledDate),
+      chatId
+    );
+
+    // 대시보드 알림에도 추가
+    const alert = dashboardAlertManager.addAlert({
+      type: 'system',
+      level: 'medium',
+      title: `🔧 정기 관리 예정`,
+      message: `${location}에서 ${maintenanceType} 작업이 예정되어 있습니다.`,
+      location: location,
+      sensorValue: 0,
+      threshold: 0
+    });
+
+    console.log('✅ 정기 관리 알림 전송 완료:', alert.title);
+
+  } catch (error) {
+    console.error('❌ 정기 관리 알림 전송 실패:', error);
+  }
+}
+
+// 수확 알림
+export async function notifyHarvestReminder(
+  location: string,
+  cropName: string,
+  harvestDate: string,
+  daysUntilHarvest: number
+): Promise<void> {
+  try {
+    console.log('🍅 수확 알림:', { location, cropName, harvestDate, daysUntilHarvest });
+
+    const chatId = await getCurrentUserTelegramChatId();
+    if (!chatId) {
+      console.warn('⚠️ 텔레그램 채팅 ID가 설정되지 않음');
+      return;
+    }
+
+    let alertLevel = 'medium';
+    let emoji = '🍅';
+    
+    if (daysUntilHarvest <= 1) {
+      alertLevel = 'high';
+      emoji = '🚨';
+    } else if (daysUntilHarvest <= 3) {
+      alertLevel = 'high';
+      emoji = '⚠️';
+    }
+
+    const message = `${emoji} <b>수확 알림</b>
+
+📍 위치: ${location}
+🌾 작물: ${cropName}
+📅 수확일: ${harvestDate}
+⏰ 남은 기간: ${daysUntilHarvest}일
+
+${daysUntilHarvest <= 1 ? '오늘 수확하세요!' : 
+  daysUntilHarvest <= 3 ? '수확 준비를 시작하세요!' : 
+  '수확 시기가 다가오고 있습니다.'}`;
+
+    await sendNotificationToTelegram(
+      'harvest_reminder',
+      location,
+      `${daysUntilHarvest}일`,
+      '',
+      new Date(harvestDate),
+      chatId
+    );
+
+    // 대시보드 알림에도 추가
+    const alert = dashboardAlertManager.addAlert({
+      type: 'system',
+      level: alertLevel as any,
+      title: `${emoji} 수확 시기 알림`,
+      message: `${location}의 ${cropName} 수확이 ${daysUntilHarvest}일 남았습니다.`,
+      location: location,
+      sensorValue: daysUntilHarvest,
+      threshold: 3
+    });
+
+    console.log('✅ 수확 알림 전송 완료:', alert.title);
+
+  } catch (error) {
+    console.error('❌ 수확 알림 전송 실패:', error);
   }
 }
 

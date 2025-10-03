@@ -73,6 +73,31 @@ export default function NotificationButton({ className = '' }: NotificationButto
       id: 'maintenance_reminder',
       title: '🔧 관리 작업 알림',
       message: '<b>관리 작업 알림</b>\n\n🔧 정기 관리 시기가 되었습니다.\n📅 스케줄을 확인해주세요.'
+    },
+    {
+      id: 'season_change_spring',
+      title: '🌸 봄 절기 알림',
+      message: '<b>🌸 춘분 알림</b>\n\n📅 절기: 춘분 (3월 20일)\n🌱 농사 조언:\n• 봄 작물 파종 시작\n• 온실 환기 시간 조정\n• 배양액 농도 낮추기\n• 새싹 채소 재배 준비'
+    },
+    {
+      id: 'growth_stage_germination',
+      title: '🌱 생장단계 변경 알림',
+      message: '<b>🌱 생장단계 변경 알림</b>\n\n📍 위치: 조1-베드1\n🌾 작물: 상추\n📊 단계 변경: 🌱 발아 → 🌸 생식생장\n📅 수확까지: 45일 남음\n\n새로운 생장단계에 맞는 관리가 필요합니다.'
+    },
+    {
+      id: 'nutrient_remaining_low',
+      title: '🪣 배양액 잔량 알림',
+      message: '<b>🪣 배양액 잔량 알림</b>\n\n📍 위치: 조1-베드1\n🪣 탱크: A탱크\n💧 잔량: 15%\n\n배양액 보충을 준비해주세요.'
+    },
+    {
+      id: 'harvest_reminder',
+      title: '🍅 수확 알림',
+      message: '<b>🍅 수확 알림</b>\n\n📍 위치: 조1-베드1\n🌾 작물: 토마토\n📅 수확일: 2025-10-10\n⏰ 남은 기간: 3일\n\n수확 준비를 시작하세요!'
+    },
+    {
+      id: 'equipment_failure_pump',
+      title: '⚠️ 장비 고장 알림',
+      message: '<b>⚠️ 장비 고장 알림</b>\n\n📍 위치: 조1-베드1\n🔧 장비: 물펌프 A\n❌ 오류: 펌프 모터 과부하\n\n긴급 점검이 필요합니다.'
     }
   ];
 

@@ -272,7 +272,13 @@ export default function NotificationsPage() {
                   ec_notification: { title: '🔋 EC 알림', description: '배양액 농도 이상', icon: '🔋' },
                   ph_notification: { title: '⚗️ pH 알림', description: 'pH 값 이상', icon: '⚗️' },
                   water_notification: { title: '💧 수위 알림', description: '저수위/고수위 경고', icon: '💧' },
-                  nutrient_temperature_notification: { title: '🌊 배양액 온도 알림', description: '배양액 온도 이상', icon: '🌊' }
+                  nutrient_temperature_notification: { title: '🌊 배양액 온도 알림', description: '배양액 온도 이상', icon: '🌊' },
+                  season_notification: { title: '🌸 24절기 알림', description: '절기 변경 및 농사 조언', icon: '🌸' },
+                  growth_stage_notification: { title: '🌱 생장단계 알림', description: '작물 생장단계 변경', icon: '🌱' },
+                  nutrient_remaining_notification: { title: '🪣 배양액 잔량 알림', description: '배양액 탱크 잔량 부족', icon: '🪣' },
+                  maintenance_notification: { title: '🔧 정기 관리 알림', description: '정기 관리 작업 알림', icon: '🔧' },
+                  equipment_failure_notification: { title: '⚠️ 장비 고장 알림', description: '장비 오류 및 고장', icon: '⚠️' },
+                  harvest_reminder_notification: { title: '🍅 수확 알림', description: '수확 시기 알림', icon: '🍅' }
                 };
                 
                 const label = labels[key];
@@ -395,7 +401,13 @@ export default function NotificationsPage() {
                     ec_notification: { title: 'EC', icon: '🔋' },
                     ph_notification: { title: 'pH', icon: '⚗️' },
                     water_notification: { title: '수위', icon: '💧' },
-                    nutrient_temperature_notification: { title: '배양액온도', icon: '🌊' }
+                    nutrient_temperature_notification: { title: '배양액온도', icon: '🌊' },
+                    season_notification: { title: '24절기', icon: '🌸' },
+                    growth_stage_notification: { title: '생장단계', icon: '🌱' },
+                    nutrient_remaining_notification: { title: '배양액잔량', icon: '🪣' },
+                    maintenance_notification: { title: '정기관리', icon: '🔧' },
+                    equipment_failure_notification: { title: '장비고장', icon: '⚠️' },
+                    harvest_reminder_notification: { title: '수확', icon: '🍅' }
                   };
                   
                   const label = labels[key];
