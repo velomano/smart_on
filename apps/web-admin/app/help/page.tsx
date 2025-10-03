@@ -344,27 +344,26 @@ export default function HelpPage() {
               </div>
             </div>
           </div>
-            
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-lg p-4 border border-purple-100">
-                <h4 className="font-semibold text-purple-900 mb-2">➕ 농장 생성</h4>
-                <ol className="text-sm text-purple-800 font-medium space-y-1">
-                  <li>1. 관리자 페이지 → 농장 관리</li>
-                  <li>2. "새 농장 추가" 버튼 클릭</li>
-                  <li>3. 농장명, 위치, 설명 입력</li>
-                  <li>4. MQTT 브로커 설정</li>
-                </ol>
-              </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-lg p-4 border border-purple-100">
+              <h4 className="font-semibold text-purple-900 mb-2">➕ 농장 생성</h4>
+              <ol className="text-sm text-purple-800 font-medium space-y-1">
+                <li>1. 관리자 페이지 → 농장 관리</li>
+                <li>2. "새 농장 추가" 버튼 클릭</li>
+                <li>3. 농장명, 위치, 설명 입력</li>
+                <li>4. MQTT 브로커 설정</li>
+              </ol>
+            </div>
               
-              <div className="bg-white rounded-lg p-4 border border-purple-100">
-                <h4 className="font-semibold text-purple-900 mb-2">⚙️ MQTT 설정</h4>
-                <ol className="text-sm text-purple-800 font-medium space-y-1">
-                  <li>1. 브로커 URL 및 포트 설정</li>
-                  <li>2. 인증 정보 입력</li>
-                  <li>3. 토픽 구조 확인</li>
-                  <li>4. 연결 테스트 실행</li>
-                </ol>
-              </div>
+            <div className="bg-white rounded-lg p-4 border border-purple-100">
+              <h4 className="font-semibold text-purple-900 mb-2">⚙️ MQTT 설정</h4>
+              <ol className="text-sm text-purple-800 font-medium space-y-1">
+                <li>1. 브로커 URL 및 포트 설정</li>
+                <li>2. 인증 정보 입력</li>
+                <li>3. 토픽 구조 확인</li>
+                <li>4. 연결 테스트 실행</li>
+              </ol>
             </div>
           </div>
 
