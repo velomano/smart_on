@@ -551,7 +551,10 @@ function IoTDesignerContent() {
       ...getDevicePins(spec.device, 'analog')
     ];
     
-    return allPins.filter(pin => {
+    // 중복 제거 (Set 사용)
+    const uniquePins = [...new Set(allPins)];
+    
+    return uniquePins.filter(pin => {
       const assignedComponent = Object.entries(pinAssignments).find(([_, assignedPin]) => assignedPin === pin);
       return !assignedComponent || assignedComponent[0] === currentComponent;
     });
