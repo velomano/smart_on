@@ -88,9 +88,11 @@ PubSubClient mqtt(esp);
 const char* topicBase = "${topicBaseStr}";
 
 // I2C 설정 (디바이스별)
-${spec.device.startsWith('raspberry') ? 
-  'const int I2C_SDA = 2;  // 라즈베리파이 5 기본 I2C 핀 (핀3)\nconst int I2C_SCL = 3;  // 라즈베리파이 5 기본 I2C 핀 (핀5)' : 
-  'const int I2C_SDA = 21;  // ESP32/ESP8266 I2C 핀\nconst int I2C_SCL = 22;'}
+${spec.device === 'arduino' ? 
+  'const int I2C_SDA = A4;  // Arduino I2C 핀\nconst int I2C_SCL = A5;' :
+  spec.device.startsWith('raspberry') ? 
+    'const int I2C_SDA = 2;  // 라즈베리파이 기본 I2C 핀\nconst int I2C_SCL = 3;' : 
+    'const int I2C_SDA = 21;  // ESP32/ESP8266 I2C 핀\nconst int I2C_SCL = 22;'}
 
 // 센서 객체 선언
 ${generateSensorDeclarations(spec)}
@@ -102,9 +104,11 @@ void setup() {
   Serial.begin(115200);
   
   // WiFi 연결 (디바이스별)
-  ${spec.device.startsWith('raspberry') ? 
-    '// 라즈베리파이는 시스템 WiFi 사용\n  Serial.println("라즈베리파이 WiFi 연결 완료!");' : 
-    'WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(1000);\n    Serial.println("WiFi 연결 중...");\n  }\n  Serial.println("WiFi 연결 완료!");'}
+  ${spec.device === 'arduino' ?
+    '// Arduino는 WiFi 모듈 필요 (ESP8266/ESP32 기반)\n  Serial.println("Arduino WiFi 모듈 연결 필요!");' :
+    spec.device.startsWith('raspberry') ? 
+      '// 라즈베리파이는 시스템 WiFi 사용\n  Serial.println("라즈베리파이 WiFi 연결 완료!");' : 
+      'WiFi.begin(ssid, password);\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(1000);\n    Serial.println("WiFi 연결 중...");\n  }\n  Serial.println("WiFi 연결 완료!");'}
   
   // I2C 초기화
   Wire.begin(I2C_SDA, I2C_SCL);

@@ -188,11 +188,6 @@ function IoTDesignerContent() {
       'MQ306A': 800, // 가스센서 (아날로그)
       'MQ307A': 800, // 가스센서 (아날로그)
       'MQ308A': 800, // 가스센서 (아날로그)
-      'MQ309A': 800, // 가스센서 (아날로그)
-      'MQ311': 800, // 가스센서 (아날로그)
-      'MQ306A': 800, // 가스센서 (아날로그)
-      'MQ307A': 800, // 가스센서 (아날로그)
-      'MQ308A': 800, // 가스센서 (아날로그)
       // 기본값
       'temperature': 5,
       'humidity': 5,
@@ -259,7 +254,7 @@ function IoTDesignerContent() {
         spi: ['D5', 'D6', 'D7', 'D8'],
         uart: ['D0', 'D1']
       },
-      arduino_uno: {
+      arduino: {
         digital: ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'],
         pwm: ['3', '5', '6', '9', '10', '11'],
         analog: ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'],
@@ -275,7 +270,7 @@ function IoTDesignerContent() {
         spi: ['10', '11', '12', '13'],
         uart: ['0', '1']
       },
-      raspberry_pi5: {
+      raspberry_pi: {
         digital: ['GPIO2', 'GPIO3', 'GPIO4', 'GPIO5', 'GPIO6', 'GPIO7', 'GPIO8', 'GPIO9', 'GPIO10', 'GPIO11', 'GPIO12', 'GPIO13', 'GPIO14', 'GPIO15', 'GPIO16', 'GPIO17', 'GPIO18', 'GPIO19', 'GPIO20', 'GPIO21', 'GPIO22', 'GPIO23', 'GPIO24', 'GPIO25', 'GPIO26', 'GPIO27'],
         pwm: ['GPIO12', 'GPIO13', 'GPIO18', 'GPIO19'],
         analog: ['GPIO26', 'GPIO27'],
@@ -1206,7 +1201,7 @@ function IoTDesignerContent() {
                   <div className="bg-orange-50 p-3 rounded-lg">
                     <h5 className="font-medium text-orange-800 mb-2">통신 핀</h5>
                     <div className="space-y-3">
-                      <I2CPinDisplay />
+                      <I2CPinDisplay device={spec.device} />
                       <div className="space-y-1">
                         <div className="text-xs text-gray-800">
                           <span className="font-medium">SPI:</span> {getDevicePins(spec.device, 'spi').join(', ')}
@@ -1358,9 +1353,27 @@ function IoTDesignerContent() {
                 <div className="bg-yellow-50 p-4 rounded-lg">
                   <h4 className="font-semibold text-yellow-800 mb-2">⚠️ 핀 충돌 주의사항</h4>
                   <ul className="text-sm text-yellow-700 space-y-1">
-                    <li>• GPIO 0, 1은 시리얼 통신용으로 사용하지 마세요</li>
-                    <li>• GPIO 2, 3은 I2C 통신용으로 예약되어 있습니다</li>
-                    <li>• GPIO 6-11은 SPI 통신용으로 사용하지 마세요</li>
+                    {spec.device === 'esp32' && (
+                      <>
+                        <li>• GPIO 0, 1은 시리얼 통신용으로 사용하지 마세요</li>
+                        <li>• GPIO 21, 22는 I2C 통신용으로 예약되어 있습니다</li>
+                        <li>• GPIO 6-11은 SPI 통신용으로 사용하지 마세요</li>
+                      </>
+                    )}
+                    {spec.device === 'arduino' && (
+                      <>
+                        <li>• 핀 0, 1은 시리얼 통신용으로 사용하지 마세요</li>
+                        <li>• 핀 A4, A5는 I2C 통신용으로 예약되어 있습니다</li>
+                        <li>• 핀 10-13은 SPI 통신용으로 사용하지 마세요</li>
+                      </>
+                    )}
+                    {spec.device === 'raspberry_pi' && (
+                      <>
+                        <li>• GPIO 2, 3은 I2C 통신용으로 예약되어 있습니다</li>
+                        <li>• GPIO 8-11은 SPI 통신용으로 사용하지 마세요</li>
+                        <li>• GPIO 14, 15는 UART 통신용으로 사용하지 마세요</li>
+                      </>
+                    )}
                     <li>• 실제 하드웨어 연결 시 데이터시트를 확인하세요</li>
               </ul>
             </div>
