@@ -60,17 +60,19 @@ export class UniversalMessageBus {
       if (!device) {
         // 새 디바이스 생성
         device = await insertDevice({
-          deviceId: message.deviceId,
-          tenantId: message.tenantId,
-          farmId: message.farmId,
-          deviceType: message.payload.device_type || 'unknown',
+          device_id: message.deviceId,
+          tenant_id: message.tenantId,
+          farm_id: message.farmId,
+          device_type: message.payload.device_type || 'unknown',
           capabilities: message.payload.capabilities || {},
+          device_key_hash: '', // Will be set later
+          status: 'active'
         });
         console.log('[MessageBus] Created new device:', device.id);
       } else {
         // 기존 디바이스 프로필 업데이트
-        await updateDeviceProfile(device.id, {
-          deviceType: message.payload.device_type || device.device_type,
+        await updateDeviceProfile(device.device_id, message.tenantId, {
+          device_type: message.payload.device_type || device.device_type,
           capabilities: message.payload.capabilities || device.capabilities,
         });
         console.log('[MessageBus] Updated device profile:', device.id);
@@ -94,10 +96,9 @@ export class UniversalMessageBus {
       }
       
       // 디바이스 상태 업데이트
-      await updateDeviceState(device.id, {
-        online: message.payload.online !== false,
-        lastSeenAt: new Date().toISOString(),
-        state: message.payload.state || {},
+      await updateDeviceState(device.device_id, message.tenantId, {
+        status: message.payload.online !== false ? 'online' : 'offline',
+        metadata: message.payload.state || {},
       });
       
       console.log('[MessageBus] Updated device state:', device.id, message.payload);
@@ -148,10 +149,10 @@ export class UniversalMessageBus {
       
       // 명령 저장
       const command = await insertCommand({
-        deviceUuid: device.id,
-        tenantId: message.tenantId,
-        command: message.payload.command || message.payload.type,
-        payload: message.payload.payload || message.payload,
+        device_id: device.device_id,
+        command_id: message.payload.command_id || `cmd_${Date.now()}`,
+        type: message.payload.command || message.payload.type,
+        params: message.payload.payload || message.payload,
         status: 'pending',
       });
       

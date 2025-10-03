@@ -29,6 +29,9 @@ async function main() {
     console.warn('   환경 변수를 설정하면 DB 연동이 활성화됩니다.');
   }
 
+  // Global variables for graceful shutdown
+  let legacyMqttManager: LegacyMQTTClientManager | null = null;
+
   // 설정 로드
   const config = {
     http: {
@@ -61,9 +64,9 @@ async function main() {
   console.log('✅ MQTT Client Manager initialized');
 
   // Legacy MQTT 클라이언트 매니저 초기화 (기존 MQTT Bridge 호환성)
-  let legacyMqttManager: LegacyMQTTClientManager | null = null;
   if (process.env.LEGACY_MQTT_SUPPORT === 'true') {
     legacyMqttManager = new LegacyMQTTClientManager();
+    globalLegacyMqttManager = legacyMqttManager; // Set global reference
     console.log('✅ Legacy MQTT Client Manager initialized');
   } else {
     console.log('ℹ️  Legacy MQTT support disabled');
@@ -128,12 +131,15 @@ async function main() {
   console.log(`   WebSocket: ws://localhost:${config.http.port}`);
 }
 
+// Global variable for graceful shutdown
+let globalLegacyMqttManager: LegacyMQTTClientManager | null = null;
+
 // Graceful Shutdown
 process.on('SIGINT', async () => {
   console.log('\n⚠️  Shutting down gracefully...');
   // Legacy MQTT 클라이언트 정리
-  if (legacyMqttManager) {
-    await legacyMqttManager.shutdown();
+  if (globalLegacyMqttManager) {
+    await globalLegacyMqttManager.shutdown();
   }
   process.exit(0);
 });
@@ -141,8 +147,8 @@ process.on('SIGINT', async () => {
 process.on('SIGTERM', async () => {
   console.log('\n⚠️  Shutting down gracefully...');
   // Legacy MQTT 클라이언트 정리
-  if (legacyMqttManager) {
-    await legacyMqttManager.shutdown();
+  if (globalLegacyMqttManager) {
+    await globalLegacyMqttManager.shutdown();
   }
   process.exit(0);
 });

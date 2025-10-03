@@ -66,7 +66,7 @@ export interface MQTTClient {
 }
 
 export class MQTTBrokerServer {
-  private broker: aedes.Aedes;
+  private broker: any; // aedes.Aedes
   private server: any;
   private tlsServer?: any;
   private config: MQTTBrokerConfig;

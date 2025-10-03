@@ -227,13 +227,13 @@ export async function verifySetupToken(req: Request, res: Response): Promise<voi
       tenantId: result.tenantId,
       farmId: result.farmId
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.warn('Setup token verification failed', { 
-      error: error.message,
+      error: error?.message || 'Unknown error',
       clientIp: req.ip 
     });
     res.status(401).json({ 
-      error: 'Setup token verification failed: ' + error.message 
+      error: 'Setup token verification failed: ' + (error?.message || 'Unknown error')
     });
   }
 }

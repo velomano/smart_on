@@ -8,10 +8,11 @@ import { BridgeAdapter, TransportType } from '../types/core';
 import { HttpAdapter } from './http';
 import { MqttAdapter } from './mqtt';
 import { WebSocketAdapter } from './websocket';
-import { SerialAdapter } from './serial';
-import { BleAdapter } from './ble';
-import { WebhookAdapter } from './webhook';
-import { Rs485Adapter } from './rs485';
+// 비활성화된 어댑터들 (의존성 문제로 임시 비활성화)
+// import { SerialAdapter } from './serial';
+// import { BleAdapter } from './ble';
+// import { WebhookAdapter } from './webhook';
+// import { Rs485Adapter } from './rs485';
 
 export interface AdapterConfig {
   transport: TransportType;
@@ -55,45 +56,46 @@ export async function createAdapter(config: AdapterConfig): Promise<BridgeAdapte
         ...transportConfig
       });
 
-    case 'serial':
-      return new SerialAdapter({
-        port: transportConfig.port,
-        baudRate: transportConfig.baudRate || 9600,
-        tenantId,
-        farmId,
-        ...transportConfig
-      });
+    // 비활성화된 어댑터들 (의존성 문제로 임시 비활성화)
+    // case 'serial':
+    //   return new SerialAdapter({
+    //     port: transportConfig.port,
+    //     baudRate: transportConfig.baudRate || 9600,
+    //     tenantId,
+    //     farmId,
+    //     ...transportConfig
+    //   });
 
-    case 'ble':
-      return new BleAdapter({
-        serviceUuid: transportConfig.serviceUuid,
-        characteristicUuid: transportConfig.characteristicUuid,
-        tenantId,
-        farmId,
-        ...transportConfig
-      });
+    // case 'ble':
+    //   return new BleAdapter({
+    //     serviceUuid: transportConfig.serviceUuid,
+    //     characteristicUuid: transportConfig.characteristicUuid,
+    //     tenantId,
+    //     farmId,
+    //     ...transportConfig
+    //   });
 
-    case 'webhook':
-      return new WebhookAdapter({
-        webhookUrl: transportConfig.webhookUrl,
-        secret: transportConfig.secret,
-        tenantId,
-        farmId,
-        ...transportConfig
-      });
+    // case 'webhook':
+    //   return new WebhookAdapter({
+    //     webhookUrl: transportConfig.webhookUrl,
+    //     secret: transportConfig.secret,
+    //     tenantId,
+    //     farmId,
+    //     ...transportConfig
+    //   });
 
-    case 'rs485':
-      return new Rs485Adapter({
-        port: transportConfig.port,
-        baudRate: transportConfig.baudRate || 9600,
-        parity: transportConfig.parity || 'none',
-        stopBits: transportConfig.stopBits || 1,
-        slaveId: transportConfig.slaveId || 1,
-        timeoutMs: transportConfig.timeoutMs || 1000,
-        tenantId,
-        farmId,
-        ...transportConfig
-      });
+    // case 'rs485':
+    //   return new Rs485Adapter({
+    //     port: transportConfig.port,
+    //     baudRate: transportConfig.baudRate || 9600,
+    //     parity: transportConfig.parity || 'none',
+    //     stopBits: transportConfig.stopBits || 1,
+    //     slaveId: transportConfig.slaveId || 1,
+    //     timeoutMs: transportConfig.timeoutMs || 1000,
+    //     tenantId,
+    //     farmId,
+    //     ...transportConfig
+    //   });
 
     default:
       throw new Error(`Unsupported transport type: ${transport}`);

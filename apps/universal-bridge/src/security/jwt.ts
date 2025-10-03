@@ -1,12 +1,13 @@
 /**
  * JWT Token Server
  * 
- * 디바이스 인증용 JWT 토큰 발급/검증 서버
+ * 디바이스 토큰 발급 및 검증
  */
 
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { logger } from '../utils/logger.js';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const TOKEN_EXPIRES_IN = process.env.TOKEN_EXPIRES_IN || '24h';
 
 export interface DeviceTokenPayload {
   deviceId: string;
@@ -19,46 +20,19 @@ export interface DeviceTokenPayload {
 }
 
 export interface SetupTokenPayload {
-  token: string;
+  type: 'setup';
   tenantId: string;
   farmId?: string;
-  expiresAt: Date;
-  ipWhitelist?: string[];
-  userAgent?: string;
+  deviceType?: string;
+  capabilities?: string[];
+  setup: boolean;
+  iat?: number;
+  exp?: number;
 }
 
-export class JWTTokenServer {
-  private readonly secretKey: string;
-  private readonly algorithm: jwt.Algorithm = 'HS256';
-  private readonly deviceTokenExpiry = '24h'; // 디바이스 토큰 24시간
-  private readonly setupTokenExpiry = '1h';   // 설정 토큰 1시간
-
-  constructor() {
-    // 환경변수에서 JWT 시크릿 키 가져오기 (없으면 생성)
-    this.secretKey = process.env.JWT_SECRET_KEY || this.generateSecretKey();
-    
-    if (!process.env.JWT_SECRET_KEY) {
-      logger.warn('JWT_SECRET_KEY 환경변수가 설정되지 않았습니다. 임시 키를 사용합니다.');
-      logger.warn('프로덕션에서는 반드시 JWT_SECRET_KEY를 설정하세요.');
-    }
-  }
-
+export class TokenServer {
   /**
-   * 시크릿 키 생성
-   */
-  private generateSecretKey(): string {
-    return crypto.randomBytes(64).toString('hex');
-  }
-
-  /**
-   * 디바이스 토큰 발급
-   * 
-   * @param deviceId - 디바이스 ID
-   * @param tenantId - 테넌트 ID
-   * @param farmId - 농장 ID (선택사항)
-   * @param deviceType - 디바이스 타입 (선택사항)
-   * @param capabilities - 디바이스 기능 목록 (선택사항)
-   * @returns JWT 토큰
+   * 디바이스 토큰 생성
    */
   generateDeviceToken(
     deviceId: string,
@@ -72,145 +46,38 @@ export class JWTTokenServer {
       tenantId,
       farmId,
       deviceType,
-      capabilities,
+      capabilities
     };
 
-    const token = jwt.sign(payload, this.secretKey, {
-      algorithm: this.algorithm,
-      expiresIn: this.deviceTokenExpiry,
+    return jwt.sign(payload, JWT_SECRET, {
+      expiresIn: TOKEN_EXPIRES_IN,
       issuer: 'universal-bridge',
-      audience: 'iot-devices',
-    });
-
-    logger.info('Device token generated', { deviceId, tenantId, farmId });
-    return token;
+      audience: 'iot-devices'
+    } as any);
   }
 
   /**
-   * 설정 토큰 발급
-   * 
-   * @param tenantId - 테넌트 ID
-   * @param farmId - 농장 ID (선택사항)
-   * @param ipWhitelist - IP 화이트리스트 (선택사항)
-   * @param userAgent - 사용자 에이전트 (선택사항)
-   * @returns 설정 토큰 정보
+   * 토큰 검증
    */
-  generateSetupToken(
-    tenantId: string,
-    farmId?: string,
-    ipWhitelist?: string[],
-    userAgent?: string
-  ): SetupTokenPayload {
-    const token = `ST_${crypto.randomBytes(24).toString('hex')}`;
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1시간
-
-    const setupToken: SetupTokenPayload = {
-      token,
-      tenantId,
-      farmId,
-      expiresAt,
-      ipWhitelist,
-      userAgent,
-    };
-
-    logger.info('Setup token generated', { token, tenantId, farmId });
-    return setupToken;
-  }
-
-  /**
-   * JWT 토큰 검증
-   * 
-   * @param token - JWT 토큰
-   * @returns 토큰 페이로드
-   */
-  verifyDeviceToken(token: string): DeviceTokenPayload {
+  verifyToken(token: string): DeviceTokenPayload {
     try {
-      const payload = jwt.verify(token, this.secretKey, {
-        algorithms: [this.algorithm],
+      const payload = jwt.verify(token, JWT_SECRET, {
         issuer: 'universal-bridge',
-        audience: 'iot-devices',
-      }) as DeviceTokenPayload;
+        audience: 'iot-devices'
+      } as any) as unknown as DeviceTokenPayload;
 
-      logger.debug('Device token verified', { deviceId: payload.deviceId });
       return payload;
-    } catch (error: any) {
-      logger.error('Device token verification failed', { error: error.message });
-      throw new Error('Invalid or expired token');
+    } catch (error) {
+      throw new Error(`Invalid token: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
   /**
-   * 설정 토큰 검증
-   * 
-   * @param token - 설정 토큰
-   * @param clientIp - 클라이언트 IP (선택사항)
-   * @returns 검증 결과
-   */
-  verifySetupToken(token: string, clientIp?: string): { tenantId: string; farmId?: string } {
-    // TODO: DB에서 토큰 조회 및 검증
-    // 현재는 임시 구현
-    if (!token.startsWith('ST_')) {
-      throw new Error('Invalid setup token format');
-    }
-
-    // 임시 검증 (실제로는 DB에서 확인)
-    logger.info('Setup token verified (temporary)', { token, clientIp });
-    
-    return {
-      tenantId: 'tenant-temp',
-      farmId: 'farm-temp',
-    };
-  }
-
-  /**
-   * 토큰 갱신
-   * 
-   * @param oldToken - 기존 토큰
-   * @returns 새로운 토큰
-   */
-  refreshDeviceToken(oldToken: string): string {
-    try {
-      const payload = this.verifyDeviceToken(oldToken);
-      
-      // 새 토큰 발급
-      return this.generateDeviceToken(
-        payload.deviceId,
-        payload.tenantId,
-        payload.farmId,
-        payload.deviceType,
-        payload.capabilities
-      );
-    } catch (error: any) {
-      logger.error('Token refresh failed', { error: error.message });
-      throw new Error('Cannot refresh invalid token');
-    }
-  }
-
-  /**
-   * 토큰에서 디바이스 정보 추출 (검증 없이)
-   * 
-   * @param token - JWT 토큰
-   * @returns 디바이스 정보 (검증되지 않음)
-   */
-  decodeToken(token: string): DeviceTokenPayload | null {
-    try {
-      const payload = jwt.decode(token) as DeviceTokenPayload;
-      return payload;
-    } catch (error: any) {
-      logger.error('Token decode failed', { error: error.message });
-      return null;
-    }
-  }
-
-  /**
-   * 토큰 만료 시간 확인
-   * 
-   * @param token - JWT 토큰
-   * @returns 만료까지 남은 시간 (초)
+   * 토큰 TTL 확인
    */
   getTokenTimeToLive(token: string): number {
     try {
-      const payload = this.decodeToken(token);
+      const payload = jwt.decode(token) as DeviceTokenPayload;
       if (!payload || !payload.exp) {
         return 0;
       }
@@ -221,7 +88,50 @@ export class JWTTokenServer {
       return 0;
     }
   }
+
+  /**
+   * 토큰에서 디바이스 정보 추출
+   */
+  extractDeviceInfo(token: string): DeviceTokenPayload {
+    const payload = jwt.decode(token) as DeviceTokenPayload;
+    if (!payload) {
+      throw new Error('Invalid token payload');
+    }
+
+    return payload;
+  }
+
+  /**
+   * 디바이스 토큰 검증 (별칭)
+   */
+  verifyDeviceToken(token: string): DeviceTokenPayload {
+    return this.verifyToken(token);
+  }
+
+  /**
+   * Setup Token 생성 (프로비저닝용)
+   */
+  generateSetupToken(
+    tenantId: string,
+    farmId?: string,
+    deviceType?: string,
+    capabilities?: string[]
+  ): string {
+    const payload = {
+      type: 'setup',
+      tenantId,
+      farmId,
+      deviceType,
+      capabilities,
+      setup: true
+    };
+
+    return jwt.sign(payload, JWT_SECRET, {
+      expiresIn: '1h',
+      issuer: 'universal-bridge',
+      audience: 'setup-tokens'
+    } as any);
+  }
 }
 
-// 싱글톤 인스턴스
-export const tokenServer = new JWTTokenServer();
+export const tokenServer = new TokenServer();

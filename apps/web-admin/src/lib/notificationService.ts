@@ -34,13 +34,8 @@ export interface NotificationSettings {
     ph_notification: boolean;
     water_notification: boolean;
     nutrient_temperature_notification: boolean;
-    // 새로운 알림 유형들
-    season_notification: boolean; // 24절기 알림
-    growth_stage_notification: boolean; // 생장단계 변경 알림
-    nutrient_remaining_notification: boolean; // 배양액 잔량 알림
-    maintenance_notification: boolean; // 정기 관리 알림
-    equipment_failure_notification: boolean; // 장비 고장 알림
-    harvest_reminder_notification: boolean; // 수확 알림
+    // 24절기 알림
+    season_notification: boolean;
   };
 }
 
@@ -58,12 +53,7 @@ export function loadNotificationSettings(): NotificationSettings {
         humidity_notification: true,
         water_notification: true,
         nutrient_temperature_notification: true,
-        season_notification: true,
-        growth_stage_notification: true,
-        nutrient_remaining_notification: true,
-        maintenance_notification: true,
-        equipment_failure_notification: true,
-        harvest_reminder_notification: true
+        season_notification: true
       }
     };
   }
@@ -82,12 +72,7 @@ export function loadNotificationSettings(): NotificationSettings {
       ph_notification: true,
       water_notification: true,
       nutrient_temperature_notification: true,
-      season_notification: true,
-      growth_stage_notification: true,
-      nutrient_remaining_notification: true,
-      maintenance_notification: true,
-      equipment_failure_notification: true,
-      harvest_reminder_notification: true
+      season_notification: true
     };
   } else {
     const parsed = JSON.parse(settings);
@@ -102,11 +87,6 @@ export function loadNotificationSettings(): NotificationSettings {
       water_notification: true,
       nutrient_temperature_notification: true,
       season_notification: true,
-      growth_stage_notification: true,
-      nutrient_remaining_notification: true,
-      maintenance_notification: true,
-      equipment_failure_notification: true,
-      harvest_reminder_notification: true,
       // 기존 설정이 있으면 유지, 없으면 기본값 사용
       ...(parsed.notifications || {})
     };
@@ -182,12 +162,7 @@ export function initializeNotificationSettings() {
       ph_notification: true,
       water_notification: true,
       nutrient_temperature_notification: true,
-      season_notification: true,
-      growth_stage_notification: true,
-      nutrient_remaining_notification: true,
-      maintenance_notification: true,
-      equipment_failure_notification: true,
-      harvest_reminder_notification: true
+      season_notification: true
     }
   };
   

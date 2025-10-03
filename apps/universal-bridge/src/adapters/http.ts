@@ -83,7 +83,7 @@ export class HttpAdapter implements BridgeAdapter {
       throw new Error(`HTTP ${response.status}: ${await response.text()}`);
     }
 
-    return await response.json();
+    return await response.json() as CommandAck;
   }
 
   subscribeCommands?(onCmd: (cmd: Command) => Promise<CommandAck>): () => void {
@@ -118,11 +118,11 @@ export class HttpAdapter implements BridgeAdapter {
         });
 
         if (response.ok) {
-          const command = await response.json();
+          const command = await response.json() as Command;
           if (command && onCmd) {
             const ack = await onCmd(command);
             // ACK 전송
-            await this.sendAck(command.id, ack);
+            await this.sendAck(command.command_id || command.id || '', ack);
           }
         }
       } catch (error) {
@@ -168,24 +168,24 @@ export class HttpAdapter implements BridgeAdapter {
     // HMAC-SHA256 서명 생성
     const message = `${payload.device_id}:${payload.ts}:${JSON.stringify(payload.metrics)}`;
     
-    // 브라우저 환경에서는 Web Crypto API 사용
-    if (typeof window !== 'undefined' && window.crypto) {
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(key);
-      const messageData = encoder.encode(message);
-      
-      const cryptoKey = await window.crypto.subtle.importKey(
-        'raw',
-        keyData,
-        { name: 'HMAC', hash: 'SHA-256' },
-        false,
-        ['sign']
-      );
-      
-      const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, messageData);
-      const hashArray = Array.from(new Uint8Array(signature));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
+    // 브라우저 환경에서는 Web Crypto API 사용 (현재 비활성화)
+    // if (typeof window !== 'undefined' && window.crypto) {
+    //   const encoder = new TextEncoder();
+    //   const keyData = encoder.encode(key);
+    //   const messageData = encoder.encode(message);
+    //   
+    //   const cryptoKey = await window.crypto.subtle.importKey(
+    //     'raw',
+    //     keyData,
+    //     { name: 'HMAC', hash: 'SHA-256' },
+    //     false,
+    //     ['sign']
+    //   );
+    //   
+    //   const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, messageData);
+    //   const hashArray = Array.from(new Uint8Array(signature));
+    //   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // }
     
     // Node.js 환경에서는 crypto 모듈 사용
     const crypto = require('crypto');

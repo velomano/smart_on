@@ -19,7 +19,28 @@ export interface UserSettings {
   id: string;
   user_id: string;
   notification_preferences?: {
-    [key: string]: boolean;
+    // 기존 알림 유형들
+    email?: boolean;
+    telegram?: boolean;
+    dashboard?: boolean;
+    ph_alerts?: boolean;
+    water_level?: boolean;
+    low_humidity?: boolean;
+    sensor_alerts?: boolean;
+    system_alerts?: boolean;
+    high_temperature?: boolean;
+    
+          // 센서 기반 알림 유형들
+          temperature_notification?: boolean;
+          humidity_notification?: boolean;
+          ec_notification?: boolean;
+          ph_notification?: boolean;
+          water_notification?: boolean;
+          nutrient_temperature_notification?: boolean;
+          // 24절기 알림
+          season_notification?: boolean;
+    
+    [key: string]: boolean | undefined;
   };
   telegram_chat_id?: string;
   telegram_bot_token?: string;

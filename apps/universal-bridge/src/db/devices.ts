@@ -98,3 +98,59 @@ export async function updateDeviceLastSeen(deviceId: string) {
   }
 }
 
+/**
+ * 디바이스 삽입 (레거시 호환성)
+ */
+export async function insertDevice(device: DeviceRecord) {
+  return createDevice(device);
+}
+
+/**
+ * 디바이스 프로필 업데이트
+ */
+export async function updateDeviceProfile(
+  deviceId: string, 
+  tenantId: string,
+  profileData: Partial<DeviceRecord>
+) {
+  const supabase = getSupabase();
+  
+  const { error } = await supabase
+    .from('iot_devices')
+    .update({
+      ...profileData,
+      updated_at: new Date().toISOString()
+    })
+    .eq('device_id', deviceId)
+    .eq('tenant_id', tenantId);
+
+  if (error) {
+    throw new Error(`Failed to update device profile: ${error.message}`);
+  }
+}
+
+/**
+ * 디바이스 상태 업데이트
+ */
+export async function updateDeviceState(
+  deviceId: string,
+  tenantId: string,
+  state: Partial<DeviceRecord>
+) {
+  const supabase = getSupabase();
+  
+  const { error } = await supabase
+    .from('iot_devices')
+    .update({
+      ...state,
+      last_seen_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('device_id', deviceId)
+    .eq('tenant_id', tenantId);
+
+  if (error) {
+    throw new Error(`Failed to update device state: ${error.message}`);
+  }
+}
+

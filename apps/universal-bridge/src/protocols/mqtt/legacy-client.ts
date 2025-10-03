@@ -81,7 +81,7 @@ export class LegacyMQTTClientManager {
       ];
       
       farmTopics.forEach(topic => {
-        client.subscribe(topic, { qos: qos_default });
+        client.subscribe(topic, { qos: qos_default as any });
         logger.info(`[Legacy] Subscribed to ${topic}`);
       });
     });
