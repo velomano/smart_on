@@ -9,6 +9,7 @@ import { createHttpServer } from './protocols/http/server.js';
 import { UniversalMessageBus } from './core/messagebus.js';
 import { initSupabase } from './db/index.js';
 import { MQTTClientManager } from './protocols/mqtt/client.js';
+import { LegacyMQTTClientManager } from './protocols/mqtt/legacy-client.js';
 import { createMQTTBroker } from './protocols/mqtt/broker.js';
 import { loadFarmConfigs } from './protocols/mqtt/loadConfig.js';
 import cron from 'node-cron';
@@ -59,6 +60,15 @@ async function main() {
   const mqttManager = new MQTTClientManager();
   console.log('✅ MQTT Client Manager initialized');
 
+  // Legacy MQTT 클라이언트 매니저 초기화 (기존 MQTT Bridge 호환성)
+  let legacyMqttManager: LegacyMQTTClientManager | null = null;
+  if (process.env.LEGACY_MQTT_SUPPORT === 'true') {
+    legacyMqttManager = new LegacyMQTTClientManager();
+    console.log('✅ Legacy MQTT Client Manager initialized');
+  } else {
+    console.log('ℹ️  Legacy MQTT support disabled');
+  }
+
   // HTTP + WebSocket 통합 서버 시작
   const { app, server } = createHttpServer();
   server.listen(config.http.port, () => {
@@ -79,6 +89,17 @@ async function main() {
     console.warn('   MQTT 기능이 비활성화됩니다. HTTP/WebSocket만 사용 가능합니다.');
   }
 
+  // Legacy MQTT 농장 연결 시작 (기존 MQTT Bridge 호환성)
+  if (legacyMqttManager) {
+    try {
+      await legacyMqttManager.reloadConfigs();
+      console.log(`📡 Legacy MQTT connections: ${legacyMqttManager.getActiveConnections()}`);
+    } catch (error: any) {
+      console.warn('⚠️  Legacy MQTT connections failed:', error.message);
+      console.warn('   Legacy MQTT 기능이 비활성화됩니다.');
+    }
+  }
+
   // Cron jobs 설정
   // 명령 디스패치 (30초마다)
   cron.schedule('*/30 * * * * *', async () => {
@@ -88,6 +109,18 @@ async function main() {
       console.error('❌ Command dispatch error:', error);
     }
   });
+
+  // Legacy MQTT 설정 리로드 (5분마다)
+  if (legacyMqttManager) {
+    cron.schedule('*/5 * * * *', async () => {
+      try {
+        await legacyMqttManager!.reloadConfigs();
+      } catch (error) {
+        console.error('❌ Legacy MQTT config reload error:', error);
+      }
+    });
+  }
+  
   console.log('✅ Cron jobs scheduled');
 
   console.log('🚀 Universal IoT Bridge v2.0 Started!');
@@ -98,13 +131,19 @@ async function main() {
 // Graceful Shutdown
 process.on('SIGINT', async () => {
   console.log('\n⚠️  Shutting down gracefully...');
-  // TODO: 모든 연결 정리
+  // Legacy MQTT 클라이언트 정리
+  if (legacyMqttManager) {
+    await legacyMqttManager.shutdown();
+  }
   process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
   console.log('\n⚠️  Shutting down gracefully...');
-  // TODO: 모든 연결 정리
+  // Legacy MQTT 클라이언트 정리
+  if (legacyMqttManager) {
+    await legacyMqttManager.shutdown();
+  }
   process.exit(0);
 });
 
