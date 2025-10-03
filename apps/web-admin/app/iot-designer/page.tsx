@@ -901,7 +901,18 @@ function IoTDesignerContent() {
                   <label className="block text-sm font-medium mb-2 text-gray-800">디바이스 타입</label>
               <select
                 value={spec.device}
-                onChange={(e) => setSpec(prev => ({ ...prev, device: e.target.value }))}
+                onChange={(e) => {
+                  const newDevice = e.target.value;
+                  // 디바이스 변경 시 핀 할당 초기화
+                  setPinAssignments({});
+                  setInitialPinAssignments({});
+                  setHasUnsavedChanges(false);
+                  // 스토리지도 정리
+                  localStorage.removeItem('sensorPinAssignments');
+                  localStorage.removeItem('actuatorPinAssignments');
+                  sessionStorage.removeItem('iotDesignerState');
+                  setSpec(prev => ({ ...prev, device: newDevice }));
+                }}
                 className="w-full p-2 border rounded-lg text-gray-800"
               >
                 <option value="esp32">ESP32</option>
@@ -1341,6 +1352,23 @@ function IoTDesignerContent() {
             <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
                   <h4 className="font-semibold text-gray-800">📋 {spec.device.toUpperCase()} 핀맵</h4>
+                  <button
+                    onClick={() => {
+                      if (confirm('모든 핀 할당을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                        setPinAssignments({});
+                        setInitialPinAssignments({});
+                        setHasUnsavedChanges(false);
+                        localStorage.removeItem('sensorPinAssignments');
+                        localStorage.removeItem('actuatorPinAssignments');
+                        sessionStorage.removeItem('iotDesignerState');
+                        toast.success('✅ 핀 할당이 초기화되었습니다.');
+                      }
+                    }}
+                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                    title="모든 핀 할당 초기화"
+                  >
+                    🔄 초기화
+                  </button>
                     </div>
                 
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
