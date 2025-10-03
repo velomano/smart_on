@@ -100,6 +100,8 @@ export class MQTTBrokerServer {
         createWillStream: () => new Map(),
         createSubscriptionStream: () => new Map(),
         createOutgoingStream: () => new Map(),
+        // streamWill 함수 추가 (aedes 호환성)
+        streamWill: () => new Map(),
       },
     });
 

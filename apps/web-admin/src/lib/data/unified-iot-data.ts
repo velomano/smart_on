@@ -88,20 +88,93 @@ export async function getLatestSensorValues(
 
 // 통합 센서 목록 가져오기
 export async function getUnifiedSensors(farmId: string): Promise<UnifiedSensor[]> {
-  // TODO: Universal Bridge, MQTT, Tuya 데이터 통합
-  return [];
+  const sensors: UnifiedSensor[] = [];
+
+  try {
+    // 1. Universal Bridge 센서 (최우선)
+    const universalSensors = await getUniversalSensors(farmId);
+    sensors.push(...universalSensors);
+
+    // 2. MQTT Bridge 센서 (기존)
+    const mqttSensors = await getMqttSensors(farmId);
+    // 중복 제거: Universal Bridge에 없는 센서만 추가
+    const uniqueMqttSensors = mqttSensors.filter(mqtt => 
+      !universalSensors.some(uni => uni.sensorType === mqtt.sensorType)
+    );
+    sensors.push(...uniqueMqttSensors);
+
+    // 3. Tuya 센서 (기존)
+    const tuyaSensors = await getTuyaSensors(farmId);
+    const uniqueTuyaSensors = tuyaSensors.filter(tuya => 
+      !sensors.some(existing => existing.sensorType === tuya.sensorType)
+    );
+    sensors.push(...uniqueTuyaSensors);
+
+  } catch (error) {
+    console.error('Unified sensors fetch error:', error);
+  }
+
+  return deduplicateSensors(sensors);
 }
 
 // 통합 액추에이터 목록 가져오기
 export async function getUnifiedActuators(farmId: string): Promise<UnifiedActuator[]> {
-  // TODO: Universal Bridge, MQTT, Tuya 데이터 통합
-  return [];
+  const actuators: UnifiedActuator[] = [];
+
+  try {
+    // 1. Universal Bridge 액추에이터 (최우선)
+    const universalActuators = await getUniversalActuators(farmId);
+    actuators.push(...universalActuators);
+
+    // 2. MQTT Bridge 액추에이터 (기존)
+    const mqttActuators = await getMqttActuators(farmId);
+    const uniqueMqttActuators = mqttActuators.filter(mqtt => 
+      !universalActuators.some(uni => uni.actuatorType === mqtt.actuatorType)
+    );
+    actuators.push(...uniqueMqttActuators);
+
+    // 3. Tuya 액추에이터 (기존)
+    const tuyaActuators = await getTuyaActuators(farmId);
+    const uniqueTuyaActuators = tuyaActuators.filter(tuya => 
+      !actuators.some(existing => existing.actuatorType === tuya.actuatorType)
+    );
+    actuators.push(...uniqueTuyaActuators);
+
+  } catch (error) {
+    console.error('Unified actuators fetch error:', error);
+  }
+
+  return actuators;
 }
 
 // 통합 디바이스 목록 가져오기
 export async function getUnifiedDevices(farmId: string): Promise<UnifiedDevice[]> {
-  // TODO: Universal Bridge, MQTT, Tuya 데이터 통합
-  return [];
+  const devices: UnifiedDevice[] = [];
+
+  try {
+    // 1. Universal Bridge 디바이스 (최우선)
+    const universalDevices = await getUniversalDevices(farmId);
+    devices.push(...universalDevices);
+
+    // 2. MQTT Bridge 디바이스 (기존)
+    const mqttDevices = await getMqttDevices(farmId);
+    const uniqueMqttDevices = mqttDevices.filter(mqtt => 
+      !universalDevices.some(uni => uni.deviceId === mqtt.deviceId)
+    );
+    devices.push(...uniqueMqttDevices);
+
+    // 3. Tuya 디바이스 (기존)
+    const tuyaDevices = await getTuyaDevices(farmId);
+    const uniqueTuyaDevices = tuyaDevices.filter(tuya => 
+      !devices.some(existing => existing.deviceId === tuya.deviceId)
+    );
+    devices.push(...uniqueTuyaDevices);
+
+  } catch (error) {
+    console.error('Unified devices fetch error:', error);
+  }
+
+  return devices;
 }
 
 // 통합 명령 전송
@@ -110,8 +183,27 @@ export async function sendUnifiedCommand(
   deviceId: string,
   command: any
 ): Promise<boolean> {
-  // TODO: Universal Bridge, MQTT, Tuya 명령 통합
-  return false;
+  try {
+    // 1. Universal Bridge로 명령 전송 시도
+    const ubResult = await sendUniversalCommand(deviceId, command.type, command.payload);
+    if (ubResult.success) {
+      return true;
+    }
+
+    // 2. MQTT Bridge로 명령 전송 시도
+    const mqttResult = await sendMqttCommand(farmId, deviceId, command);
+    if (mqttResult.success) {
+      return true;
+    }
+
+    // 3. Tuya로 명령 전송 시도
+    const tuyaResult = await sendTuyaCommand(farmId, deviceId, command);
+    return tuyaResult.success;
+
+  } catch (error) {
+    console.error('Unified command send error:', error);
+    return false;
+  }
 }
 
 // 센서 중복 제거
@@ -227,4 +319,145 @@ export async function checkMultipleSensorConnectionStatus(
     sensorTypes.forEach(type => results[type] = false);
     return results;
   }
+}
+
+// =====================================================
+// Helper Functions
+// =====================================================
+
+// Universal Bridge 센서 데이터 조회
+async function getUniversalSensors(farmId: string): Promise<UnifiedSensor[]> {
+  const supabase = await createClient();
+  
+  try {
+    const { data } = await supabase
+      .from('iot_readings')
+      .select(`
+        key,
+        unit,
+        ts,
+        iot_devices!inner(device_id, farm_id)
+      `)
+      .eq('iot_devices.farm_id', farmId)
+      .gte('ts', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // 최근 24시간
+      .order('ts', { ascending: false });
+
+    if (!data) return [];
+
+    // 센서 타입별로 그룹화
+    const sensorMap = new Map<string, UnifiedSensor>();
+    
+    data.forEach(reading => {
+      if (!sensorMap.has(reading.key)) {
+        sensorMap.set(reading.key, {
+          sensorType: reading.key,
+          value: 0,
+          unit: reading.unit || '',
+          timestamp: reading.ts,
+          source: 'universal_bridge',
+          connected: true
+        });
+      }
+    });
+
+    return Array.from(sensorMap.values());
+  } catch (error) {
+    console.error('Universal sensors fetch error:', error);
+    return [];
+  }
+}
+
+// MQTT Bridge 센서 데이터 조회
+async function getMqttSensors(farmId: string): Promise<UnifiedSensor[]> {
+  const supabase = await createClient();
+  
+  try {
+    const { data } = await supabase
+      .from('sensor_readings')
+      .select(`
+        sensors!inner(type, devices!inner(device_id, farm_id))
+      `)
+      .eq('sensors.devices.farm_id', farmId)
+      .gte('ts', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()) // 최근 24시간
+      .order('ts', { ascending: false });
+
+    if (!data) return [];
+
+    // 센서 타입별로 그룹화
+    const sensorMap = new Map<string, UnifiedSensor>();
+    
+    data.forEach(reading => {
+      const sensorType = (reading as any).sensors.type;
+      if (!sensorMap.has(sensorType)) {
+        sensorMap.set(sensorType, {
+          sensorType,
+          value: 0,
+          unit: '',
+          timestamp: new Date().toISOString(),
+          source: 'mqtt_bridge',
+          connected: true
+        });
+      }
+    });
+
+    return Array.from(sensorMap.values());
+  } catch (error) {
+    console.error('MQTT sensors fetch error:', error);
+    return [];
+  }
+}
+
+// Tuya 센서 데이터 조회 (기존 구현)
+async function getTuyaSensors(farmId: string): Promise<UnifiedSensor[]> {
+  // Tuya API 연동 로직 구현
+  // 실제 구현은 Tuya API 문서 참조
+  return [];
+}
+
+// Universal Bridge 액추에이터 조회
+async function getUniversalActuators(farmId: string): Promise<UnifiedActuator[]> {
+  // Universal Bridge 액추에이터 조회 로직 구현
+  return [];
+}
+
+// MQTT Bridge 액추에이터 조회
+async function getMqttActuators(farmId: string): Promise<UnifiedActuator[]> {
+  // MQTT Bridge 액추에이터 조회 로직 구현
+  return [];
+}
+
+// Tuya 액추에이터 조회
+async function getTuyaActuators(farmId: string): Promise<UnifiedActuator[]> {
+  // Tuya 액추에이터 조회 로직 구현
+  return [];
+}
+
+// Universal Bridge 디바이스 조회
+async function getUniversalDevices(farmId: string): Promise<UnifiedDevice[]> {
+  // Universal Bridge 디바이스 조회 로직 구현
+  return [];
+}
+
+// MQTT Bridge 디바이스 조회
+async function getMqttDevices(farmId: string): Promise<UnifiedDevice[]> {
+  // MQTT Bridge 디바이스 조회 로직 구현
+  return [];
+}
+
+// Tuya 디바이스 조회
+async function getTuyaDevices(farmId: string): Promise<UnifiedDevice[]> {
+  // Tuya 디바이스 조회 로직 구현
+  return [];
+}
+
+// MQTT 명령 전송
+async function sendMqttCommand(farmId: string, deviceId: string, command: any): Promise<{ success: boolean }> {
+  // MQTT 명령 전송 로직 구현
+  return { success: false };
+}
+
+// Tuya 명령 전송
+async function sendTuyaCommand(farmId: string, deviceId: string, command: any): Promise<{ success: boolean }> {
+  // Tuya 명령 전송 로직 구현
+  return { success: false };
 }

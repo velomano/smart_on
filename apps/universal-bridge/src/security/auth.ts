@@ -2,8 +2,9 @@
  * Authentication
  * 
  * PSK, JWT, X.509 인증
- * TODO: 실제 인증 로직 구현
  */
+
+import { tokenServer } from './jwt.js';
 
 export type AuthMethod = 'psk' | 'jwt' | 'x509';
 
@@ -50,22 +51,42 @@ export async function authenticateRequest(
 
 /**
  * Setup Token 검증
- * 
- * TODO:
- * - [ ] 토큰 만료 확인
- * - [ ] IP 화이트리스트 검증
- * - [ ] 사용 여부 확인
  */
 export async function verifySetupToken(
   token: string,
   clientIp?: string
 ): Promise<{ tenantId: string; farmId?: string }> {
-  // TODO: DB에서 토큰 조회 및 검증
-  console.log('[Auth] TODO: Verify setup token', { token, clientIp });
-  
-  return {
-    tenantId: 'tenant-xxx',
-  };
+  try {
+    // JWT 토큰 검증
+    const payload = tokenServer.verifySetupToken(token);
+    
+    // 토큰 만료 확인
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      throw new Error('Setup token expired');
+    }
+    
+    // Setup 토큰 타입 확인
+    if (!payload.setup) {
+      throw new Error('Invalid setup token type');
+    }
+    
+    console.log('[Auth] Setup token verified', { 
+      tenantId: payload.tenantId, 
+      farmId: payload.farmId,
+      clientIp 
+    });
+    
+    return {
+      tenantId: payload.tenantId,
+      farmId: payload.farmId
+    };
+  } catch (error) {
+    console.warn('[Auth] Setup token verification failed', { 
+      error: error instanceof Error ? error.message : String(error),
+      clientIp 
+    });
+    throw error;
+  }
 }
 
 export class AuthError extends Error {

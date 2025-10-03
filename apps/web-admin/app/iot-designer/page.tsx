@@ -18,12 +18,27 @@ import SelfTestPanel from './components/SelfTestPanel';
 
 interface SystemSpec {
   device: string;
-  protocol: 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan';
+  protocol: 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' | 'webhook';
   sensors: Array<{ type: string; count: number }>;
   controls: Array<{ type: string; count: number }>;
   wifi: {
     ssid: string;
     password: string;
+  };
+  webhookConfig?: {
+    endpoint: string;
+    method: 'POST' | 'PUT' | 'PATCH';
+    headers?: Record<string, string>;
+    auth?: {
+      type: 'none' | 'bearer' | 'basic' | 'api-key';
+      token?: string;
+      username?: string;
+      password?: string;
+      apiKey?: string;
+      apiKeyHeader?: string;
+    };
+    retryCount?: number;
+    timeout?: number;
   };
   modbusConfig?: {
     host: string;
@@ -87,6 +102,16 @@ function IoTDesignerContent() {
     sensors: [],
     controls: [],
     wifi: { ssid: '', password: '' },
+    webhookConfig: {
+      endpoint: '',
+      method: 'POST',
+      headers: {},
+      auth: {
+        type: 'none'
+      },
+      retryCount: 3,
+      timeout: 5000
+    },
     modbusConfig: {
       host: '',
       port: 502,
@@ -932,10 +957,11 @@ function IoTDesignerContent() {
               <label className="block text-sm font-medium mb-2 text-gray-800">통신 프로토콜</label>
               <select
                 value={spec.protocol}
-                    onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' }))}
+                    onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' | 'webhook' }))}
                 className="w-full p-2 border rounded-lg text-gray-800"
               >
                 <option value="mqtt">MQTT (권장) ✅</option>
+                <option value="webhook">Webhook (HTTP) ✅</option>
                 <option value="serial">Serial (USB) 🔄 향후 지원</option>
                 <option value="ble">Bluetooth LE 🔄 향후 지원</option>
                 <option value="rs485">RS-485 (Modbus RTU) 🔄 향후 지원</option>
@@ -945,6 +971,222 @@ function IoTDesignerContent() {
             </div>
           </div>
         </div>
+
+        {/* 웹훅 설정 (웹훅 선택 시에만 표시) */}
+        {spec.protocol === 'webhook' && (
+          <div className="bg-white border rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-4 text-gray-800">🌐 웹훅 설정</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-800">웹훅 엔드포인트 URL</label>
+                <input
+                  type="url"
+                  value={spec.webhookConfig?.endpoint || ''}
+                  onChange={(e) => setSpec(prev => ({
+                    ...prev,
+                    webhookConfig: {
+                      ...prev.webhookConfig!,
+                      endpoint: e.target.value
+                    }
+                  }))}
+                  placeholder="https://your-server.com/webhook"
+                  className="w-full p-2 border rounded-lg text-gray-800"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-800">HTTP 메서드</label>
+                <select
+                  value={spec.webhookConfig?.method || 'POST'}
+                  onChange={(e) => setSpec(prev => ({
+                    ...prev,
+                    webhookConfig: {
+                      ...prev.webhookConfig!,
+                      method: e.target.value as 'POST' | 'PUT' | 'PATCH'
+                    }
+                  }))}
+                  className="w-full p-2 border rounded-lg text-gray-800"
+                >
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="PATCH">PATCH</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 인증 설정 */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium mb-2 text-gray-800">인증 방식</label>
+              <select
+                value={spec.webhookConfig?.auth?.type || 'none'}
+                onChange={(e) => setSpec(prev => ({
+                  ...prev,
+                  webhookConfig: {
+                    ...prev.webhookConfig!,
+                    auth: {
+                      ...prev.webhookConfig!.auth!,
+                      type: e.target.value as 'none' | 'bearer' | 'basic' | 'api-key'
+                    }
+                  }
+                }))}
+                className="w-full p-2 border rounded-lg text-gray-800"
+              >
+                <option value="none">인증 없음</option>
+                <option value="bearer">Bearer Token</option>
+                <option value="basic">Basic Auth</option>
+                <option value="api-key">API Key</option>
+              </select>
+            </div>
+
+            {/* 인증 설정에 따른 추가 필드 */}
+            {spec.webhookConfig?.auth?.type === 'bearer' && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-2 text-gray-800">Bearer Token</label>
+                <input
+                  type="password"
+                  value={spec.webhookConfig?.auth?.token || ''}
+                  onChange={(e) => setSpec(prev => ({
+                    ...prev,
+                    webhookConfig: {
+                      ...prev.webhookConfig!,
+                      auth: {
+                        ...prev.webhookConfig!.auth!,
+                        token: e.target.value
+                      }
+                    }
+                  }))}
+                  placeholder="your-bearer-token"
+                  className="w-full p-2 border rounded-lg text-gray-800"
+                />
+              </div>
+            )}
+
+            {spec.webhookConfig?.auth?.type === 'basic' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-800">사용자명</label>
+                  <input
+                    type="text"
+                    value={spec.webhookConfig?.auth?.username || ''}
+                    onChange={(e) => setSpec(prev => ({
+                      ...prev,
+                      webhookConfig: {
+                        ...prev.webhookConfig!,
+                        auth: {
+                          ...prev.webhookConfig!.auth!,
+                          username: e.target.value
+                        }
+                      }
+                    }))}
+                    placeholder="username"
+                    className="w-full p-2 border rounded-lg text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-800">비밀번호</label>
+                  <input
+                    type="password"
+                    value={spec.webhookConfig?.auth?.password || ''}
+                    onChange={(e) => setSpec(prev => ({
+                      ...prev,
+                      webhookConfig: {
+                        ...prev.webhookConfig!,
+                        auth: {
+                          ...prev.webhookConfig!.auth!,
+                          password: e.target.value
+                        }
+                      }
+                    }))}
+                    placeholder="password"
+                    className="w-full p-2 border rounded-lg text-gray-800"
+                  />
+                </div>
+              </div>
+            )}
+
+            {spec.webhookConfig?.auth?.type === 'api-key' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-800">API Key</label>
+                  <input
+                    type="password"
+                    value={spec.webhookConfig?.auth?.apiKey || ''}
+                    onChange={(e) => setSpec(prev => ({
+                      ...prev,
+                      webhookConfig: {
+                        ...prev.webhookConfig!,
+                        auth: {
+                          ...prev.webhookConfig!.auth!,
+                          apiKey: e.target.value
+                        }
+                      }
+                    }))}
+                    placeholder="your-api-key"
+                    className="w-full p-2 border rounded-lg text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-800">헤더 이름</label>
+                  <input
+                    type="text"
+                    value={spec.webhookConfig?.auth?.apiKeyHeader || 'X-API-Key'}
+                    onChange={(e) => setSpec(prev => ({
+                      ...prev,
+                      webhookConfig: {
+                        ...prev.webhookConfig!,
+                        auth: {
+                          ...prev.webhookConfig!.auth!,
+                          apiKeyHeader: e.target.value
+                        }
+                      }
+                    }))}
+                    placeholder="X-API-Key"
+                    className="w-full p-2 border rounded-lg text-gray-800"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 고급 설정 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-800">재시도 횟수</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  value={spec.webhookConfig?.retryCount || 3}
+                  onChange={(e) => setSpec(prev => ({
+                    ...prev,
+                    webhookConfig: {
+                      ...prev.webhookConfig!,
+                      retryCount: parseInt(e.target.value) || 3
+                    }
+                  }))}
+                  className="w-full p-2 border rounded-lg text-gray-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-800">타임아웃 (ms)</label>
+                <input
+                  type="number"
+                  min="1000"
+                  max="30000"
+                  value={spec.webhookConfig?.timeout || 5000}
+                  onChange={(e) => setSpec(prev => ({
+                    ...prev,
+                    webhookConfig: {
+                      ...prev.webhookConfig!,
+                      timeout: parseInt(e.target.value) || 5000
+                    }
+                  }))}
+                  className="w-full p-2 border rounded-lg text-gray-800"
+                />
+              </div>
+            </div>
+          </div>
+        )}
         
             {/* 3. 센서 및 액추에이터 설정 */}
         <div className="bg-white border rounded-lg p-6">

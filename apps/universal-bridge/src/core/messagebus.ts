@@ -128,6 +128,17 @@ export class UniversalMessageBus {
         await updateDeviceLastSeen(device.id);
         
         console.log('[MessageBus] Saved telemetry:', device.id, message.payload.readings.length, 'readings');
+        
+        // WebSocket으로 실시간 브로드캐스트
+        if ((global as any).broadcastToFarm && device.farm_id) {
+          (global as any).broadcastToFarm(device.farm_id, {
+            type: 'telemetry',
+            deviceId: message.deviceId,
+            data: message.payload.readings,
+            timestamp: new Date().toISOString(),
+            source: 'universal_bridge'
+          });
+        }
       }
     } catch (error) {
       console.error('[MessageBus] Telemetry error:', error);
