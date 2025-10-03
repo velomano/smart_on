@@ -7,14 +7,10 @@
       "config": {
         "distDir": "apps/web-admin/.next"
       }
-    },
-    {
-      "src": "api/bridge/*.ts",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
-    { "src": "/bridge", "dest": "/api/bridge/index" },
+    { "src": "/bridge", "dest": "/api/bridge" },
     { "src": "/ws", "dest": "/api/bridge/ws" },
     { "src": "/bridge/(.*)", "dest": "/api/bridge/$1" },
     {
