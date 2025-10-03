@@ -253,24 +253,20 @@ export default function BedTierShelfVisualization({
       }
     };
     
-    // 단별 색상 결정 (개선된 색상 팔레트)
+    // 단별 색상 결정 (미색 계열로 통일)
     const getTierColor = (tierNumber: number) => {
-      const tier = tierStatuses.find(t => t.tierNumber === tierNumber);
       const isActive = tierNumber <= activeTiers;
       
-      if (!isActive) return '#F3F4F6'; // 비활성 - 연한 회색
-      if (tier?.hasPlants) return '#D1FAE5'; // 작물 있음 - 연한 녹색
-      return '#FEF3C7'; // 기본 - 연한 노란색 (클릭 대기 상태)
+      if (!isActive) return '#F9FAFB'; // 비활성 - 연한 회색
+      return '#FEFEFE'; // 모든 활성 단은 미색 계열로 통일
     };
 
-    // 단별 테두리 색상 결정
+    // 단별 테두리 색상 결정 (미색 계열로 통일)
     const getTierBorderColor = (tierNumber: number) => {
-      const tier = tierStatuses.find(t => t.tierNumber === tierNumber);
       const isActive = tierNumber <= activeTiers;
       
       if (!isActive) return '#E5E7EB'; // 비활성
-      if (tier?.hasPlants) return '#10B981'; // 작물 있음 - 녹색
-      return '#F59E0B'; // 기본 - 노란색 (클릭 가능)
+      return '#D1D5DB'; // 모든 활성 단은 회색 테두리로 통일
     };
     
     return (
@@ -281,11 +277,11 @@ export default function BedTierShelfVisualization({
           viewBox={`0 0 ${shelfWidth + 60} ${totalHeight}`}
           className="drop-shadow-xl filter"
         >
-          {/* 베드 프레임 (좌우 지지대) - 개선된 디자인 */}
+          {/* 베드 프레임 (좌우 지지대) - 진한 회색 계열 */}
           <defs>
             <linearGradient id="frameGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#6366F1" />
-              <stop offset="100%" stopColor="#4F46E5" />
+              <stop offset="0%" stopColor="#6B7280" />
+              <stop offset="100%" stopColor="#4B5563" />
             </linearGradient>
           </defs>
           
@@ -403,28 +399,27 @@ export default function BedTierShelfVisualization({
                   <g>
                     {/* 클릭 안내 배경 - 단의 중앙에 배치 */}
                     <rect 
-                      x={27 + shelfWidth / 2 - 70} 
-                      y={15 + shelfHeight / 2 - 18} 
-                      width="140" 
-                      height="36" 
-                      fill="#FFFFFF" 
-                      stroke="#3B82F6" 
-                      strokeWidth="2"
-                      rx="18"
+                      x={27 + shelfWidth / 2 - 50} 
+                      y={15 + shelfHeight / 2 - 15} 
+                      width="100" 
+                      height="30" 
+                      fill="#F9FAFB" 
+                      stroke="#E5E7EB" 
+                      strokeWidth="1.5"
+                      rx="15"
                       opacity="0.95"
                     />
-                    {/* 클릭 안내 텍스트 (한 줄) */}
+                    {/* 작물 등록 버튼 텍스트 */}
                     <text 
                       x={27 + shelfWidth / 2} 
-                      y={15 + shelfHeight / 2 + 5} 
+                      y={15 + shelfHeight / 2 + 4} 
                       fontSize="14" 
-                      fill="#1E40AF"
+                      fill="#374151"
                       textAnchor="middle"
-                      fontWeight="bold"
+                      fontWeight="600"
                       fontFamily="system-ui, -apple-system, sans-serif"
-                      style={{ fontWeight: 'bold' }}
                     >
-                      + 작물 등록
+                      🌱 작물 등록
                     </text>
                   </g>
                 );
@@ -533,28 +528,27 @@ export default function BedTierShelfVisualization({
                   <g>
                     {/* 클릭 안내 배경 - 단의 중앙에 배치 */}
                     <rect 
-                      x={27 + shelfWidth / 2 - 70} 
-                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 - 18} 
-                      width="140" 
-                      height="36" 
-                      fill="#FFFFFF" 
-                      stroke="#3B82F6" 
-                      strokeWidth="2"
-                      rx="18"
+                      x={27 + shelfWidth / 2 - 50} 
+                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 - 15} 
+                      width="100" 
+                      height="30" 
+                      fill="#F9FAFB" 
+                      stroke="#E5E7EB" 
+                      strokeWidth="1.5"
+                      rx="15"
                       opacity="0.95"
                     />
-                    {/* 클릭 안내 텍스트 (한 줄) */}
+                    {/* 작물 등록 버튼 텍스트 */}
                     <text 
                       x={27 + shelfWidth / 2} 
-                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 + 5} 
+                      y={15 + shelfHeight + shelfSpacing + shelfHeight / 2 + 4} 
                       fontSize="14" 
-                      fill="#1E40AF"
+                      fill="#374151"
                       textAnchor="middle"
-                      fontWeight="bold"
+                      fontWeight="600"
                       fontFamily="system-ui, -apple-system, sans-serif"
-                      style={{ fontWeight: 'bold' }}
                     >
-                      + 작물 등록
+                      🌱 작물 등록
                     </text>
                   </g>
                 );
@@ -663,28 +657,27 @@ export default function BedTierShelfVisualization({
                   <g>
                     {/* 클릭 안내 배경 - 단의 중앙에 배치 */}
                     <rect 
-                      x={27 + shelfWidth / 2 - 70} 
-                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 - 18} 
-                      width="140" 
-                      height="36" 
-                      fill="#FFFFFF" 
-                      stroke="#3B82F6" 
-                      strokeWidth="2"
-                      rx="18"
+                      x={27 + shelfWidth / 2 - 50} 
+                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 - 15} 
+                      width="100" 
+                      height="30" 
+                      fill="#F9FAFB" 
+                      stroke="#E5E7EB" 
+                      strokeWidth="1.5"
+                      rx="15"
                       opacity="0.95"
                     />
-                    {/* 클릭 안내 텍스트 (한 줄) */}
+                    {/* 작물 등록 버튼 텍스트 */}
                     <text 
                       x={27 + shelfWidth / 2} 
-                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 + 5} 
+                      y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight / 2 + 4} 
                       fontSize="14" 
-                      fill="#1E40AF"
+                      fill="#374151"
                       textAnchor="middle"
-                      fontWeight="bold"
+                      fontWeight="600"
                       fontFamily="system-ui, -apple-system, sans-serif"
-                      style={{ fontWeight: 'bold' }}
                     >
-                      + 작물 등록
+                      🌱 작물 등록
                     </text>
                   </g>
                 );

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getCurrentUser, AuthUser } from '@/lib/auth';
+import { normalizeBedName, validateBedName } from '@/lib/bedNaming';
 import AppHeader from '@/components/AppHeader';
 import BedTierShelfVisualization from '@/components/BedTierShelfVisualization';
 import ActuatorControlModal from '@/components/ActuatorControlModal';
@@ -83,12 +84,22 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
         return;
       }
 
+      // 베드 이름 검증 및 정규화
+      const validation = validateBedName(newBedData.name);
+      if (!validation.isValid) {
+        alert(validation.error);
+        return;
+      }
+
+      const normalizedBedName = normalizeBedName(newBedData.name);
+      console.log('🔄 베드 이름 정규화:', newBedData.name, '→', normalizedBedName);
+
       const bedData = {
         farm_id: farmId,
-        name: newBedData.name.trim(),
+        name: normalizedBedName,
         type: 'sensor_gateway',
         meta: {
-          location: newBedData.name.trim(),
+          location: normalizedBedName,
           bed_system_type: newBedData.bedSystemType,
           total_tiers: 3
         },
@@ -112,7 +123,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
       setNewBedData({ name: '', bedSystemType: 'multi-tier' });
       setShowAddBedModal(false);
       await fetchFarmData(); // 데이터 다시 로드
-      alert(`새 베드 "${newBedData.name.trim()}"가 추가되었습니다!`);
+      alert(`새 베드 "${normalizedBedName}"가 추가되었습니다!`);
     } catch (error) {
       console.error('베드 생성 오류:', error);
       alert('베드 생성에 실패했습니다.');
@@ -266,7 +277,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                   <div key={bed.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
                     {/* 베드 헤더 */}
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900 text-lg">{bed.meta?.location || bed.name}</h3>
+                      <h3 className="font-semibold text-gray-900 text-lg">{bed.name}</h3>
                       <div className="flex items-center space-x-2">
                         <div className={`w-2 h-2 rounded-full ${bed.status?.online ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                         <span className="text-sm text-gray-500">{bed.status?.online ? '온라인' : '오프라인'}</span>
@@ -284,10 +295,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                       {/* 베드 시각화 */}
                       <div className="flex-shrink-0">
                         <BedTierShelfVisualization
-                          activeTiers={bed.meta?.total_tiers || 1}
+                          activeTiers={bed.meta?.total_tiers || 3}
                           tierStatuses={[1, 2, 3].map(tierNumber => ({
                             tierNumber,
-                            hasPlants: false, // 실제 작물 데이터가 있다면 여기에 연결
+                            hasPlants: false, // 작물 등록 버튼을 표시하기 위해 false로 설정
                             cropName: undefined,
                             growingMethod: undefined,
                             plantType: undefined,
