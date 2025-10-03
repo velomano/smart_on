@@ -937,36 +937,110 @@ function IoTDesignerContent() {
                         className="flex-1 p-2 border rounded-lg text-gray-800"
                       >
                         <optgroup label="🌡️ 환경 센서">
-                          <option value="BME280">BME280 온습압 센서 (I2C)</option>
-                          <option value="ADS1115">ADS1115 ADC 모듈 (I2C)</option>
-                          <option value="BMP280">BMP280 기압센서 (I2C)</option>
-                          <option value="DHT22">DHT22 온습도센서 (디지털)</option>
+                          <option 
+                            value="BME280" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'BME280')}
+                          >
+                            BME280 온습압 센서 (I2C)
+                          </option>
+                          <option 
+                            value="ADS1115" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'ADS1115')}
+                          >
+                            ADS1115 ADC 모듈 (I2C)
+                          </option>
+                          <option 
+                            value="BMP280" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'BMP280')}
+                          >
+                            BMP280 기압센서 (I2C)
+                          </option>
+                          <option 
+                            value="DHT22" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'DHT22')}
+                          >
+                            DHT22 온습도센서 (디지털)
+                          </option>
                         </optgroup>
                         <optgroup label="🌡️ 온도 센서">
-                          <option value="DS18B20">DS18B20 온도센서 (방수 프로브)</option>
+                          <option 
+                            value="DS18B20" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'DS18B20')}
+                          >
+                            DS18B20 온도센서 (방수 프로브)
+                          </option>
                         </optgroup>
                         <optgroup label="💡 조도 센서">
-                          <option value="BH1750">BH1750 조도센서 (I2C)</option>
+                          <option 
+                            value="BH1750" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'BH1750')}
+                          >
+                            BH1750 조도센서 (I2C)
+                          </option>
                         </optgroup>
                         <optgroup label="🌬️ 공기질 센서">
-                          <option value="SCD30">SCD30 CO₂ 센서 (I2C)</option>
-                          <option value="SCD41">SCD41 CO₂ 센서 (저전력)</option>
-                          <option value="ENS160">ENS160 VOC/가스센서 (I2C)</option>
+                          <option 
+                            value="SCD30" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'SCD30')}
+                          >
+                            SCD30 CO₂ 센서 (I2C)
+                          </option>
+                          <option 
+                            value="SCD41" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'SCD41')}
+                          >
+                            SCD41 CO₂ 센서 (저전력)
+                          </option>
+                          <option 
+                            value="ENS160" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'ENS160')}
+                          >
+                            ENS160 VOC/가스센서 (I2C)
+                          </option>
                         </optgroup>
                         <optgroup label="🌱 토양 센서">
-                          <option value="Generic_Analog">토양수분센서 (아날로그)</option>
+                          <option 
+                            value="Generic_Analog" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'Generic_Analog')}
+                          >
+                            토양수분센서 (아날로그)
+                          </option>
                         </optgroup>
                         <optgroup label="💧 수위 센서">
-                          <option value="HC-SR04">HC-SR04 초음파 거리센서</option>
+                          <option 
+                            value="HC-SR04" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'HC-SR04')}
+                          >
+                            HC-SR04 초음파 거리센서
+                          </option>
                         </optgroup>
                         <optgroup label="⚡ 전력 센서">
-                          <option value="INA219">INA219 전류/전압 센서 (I2C)</option>
+                          <option 
+                            value="INA219" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'INA219')}
+                          >
+                            INA219 전류/전압 센서 (I2C)
+                          </option>
                         </optgroup>
                         <optgroup label="📊 확장 센서">
-                          <option value="ADS1115">ADS1115 외부 ADC (I2C)</option>
-                          <option value="MPU6050">MPU6050 IMU 센서 (자세/진동)</option>
-                          <option value="Generic_Analog_pH">pH 센서 (아날로그 보드)</option>
-                          <option value="Generic_Analog_EC">EC 센서 (전기전도도)</option>
+                          <option 
+                            value="MPU6050" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'MPU6050')}
+                          >
+                            MPU6050 IMU 센서 (자세/진동)
+                          </option>
+                          <option 
+                            value="Generic_Analog_pH" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'Generic_Analog_pH')}
+                          >
+                            pH 센서 (아날로그 보드)
+                          </option>
+                          <option 
+                            value="Generic_Analog_EC" 
+                            disabled={spec.sensors.filter((_, i) => i !== idx).some(s => s.type === 'Generic_Analog_EC')}
+                          >
+                            EC 센서 (전기전도도)
+                          </option>
                         </optgroup>
                       </select>
               <input
@@ -994,11 +1068,24 @@ function IoTDesignerContent() {
             </div>
                   ))}
                   <button
-                    onClick={() => setSpec(prev => ({
-                      ...prev,
-                      sensors: [...prev.sensors, { type: 'BME280', count: 1 }]
-                    }))}
-                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={() => {
+                      const availableSensors = [
+                        'BME280', 'ADS1115', 'BMP280', 'DHT22', 'DS18B20', 'BH1750',
+                        'SCD30', 'SCD41', 'ENS160', 'Generic_Analog', 'HC-SR04', 
+                        'INA219', 'MPU6050', 'Generic_Analog_pH', 'Generic_Analog_EC'
+                      ];
+                      const usedSensors = spec.sensors.map(s => s.type);
+                      const firstAvailable = availableSensors.find(s => !usedSensors.includes(s));
+                      
+                      if (firstAvailable) {
+                        setSpec(prev => ({
+                          ...prev,
+                          sensors: [...prev.sensors, { type: firstAvailable, count: 1 }]
+                        }));
+                      }
+                    }}
+                    disabled={spec.sensors.length >= 14} // 최대 14개 센서
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     센서 추가
                   </button>
@@ -1022,34 +1109,100 @@ function IoTDesignerContent() {
                         className="flex-1 p-2 border rounded-lg text-gray-800"
                       >
                         <optgroup label="💡 조명">
-                          <option value="AC_Relay_Lamp">AC_Relay_Lamp (AC 램프)</option>
-                          <option value="PWM_12V_LED">12V LED (MOSFET PWM)</option>
-                          <option value="WS2812B_NeoPixel">WS2812B / NeoPixel Strip</option>
-                          <option value="AC_Dimmer_TRIAC">AC 디머 (TRIAC + ZCD)</option>
+                          <option 
+                            value="AC_Relay_Lamp" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'AC_Relay_Lamp')}
+                          >
+                            AC_Relay_Lamp (AC 램프)
+                          </option>
+                          <option 
+                            value="PWM_12V_LED" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'PWM_12V_LED')}
+                          >
+                            12V LED (MOSFET PWM)
+                          </option>
+                          <option 
+                            value="WS2812B_NeoPixel" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'WS2812B_NeoPixel')}
+                          >
+                            WS2812B / NeoPixel Strip
+                          </option>
+                          <option 
+                            value="AC_Dimmer_TRIAC" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'AC_Dimmer_TRIAC')}
+                          >
+                            AC 디머 (TRIAC + ZCD)
+                          </option>
                         </optgroup>
                         <optgroup label="🔧 모터">
-                          <option value="TB6612_DC_Motor">DC 모터 (TB6612FNG 드라이버)</option>
-                          <option value="L298N_DC_Motor">DC 모터 (L298N 드라이버)</option>
-                          <option value="SG90_Servo">SG90 서보모터 (PWM)</option>
-                          <option value="A4988_Stepper">스테퍼모터 (A4988 드라이버)</option>
+                          <option 
+                            value="TB6612_DC_Motor" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'TB6612_DC_Motor')}
+                          >
+                            DC 모터 (TB6612FNG 드라이버)
+                          </option>
+                          <option 
+                            value="L298N_DC_Motor" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'L298N_DC_Motor')}
+                          >
+                            DC 모터 (L298N 드라이버)
+                          </option>
+                          <option 
+                            value="SG90_Servo" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'SG90_Servo')}
+                          >
+                            SG90 서보모터 (PWM)
+                          </option>
+                          <option 
+                            value="A4988_Stepper" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'A4988_Stepper')}
+                          >
+                            스테퍼모터 (A4988 드라이버)
+                          </option>
                         </optgroup>
                         <optgroup label="🚰 밸브/펌프">
-                          <option value="Solenoid_Valve">솔레노이드 밸브 (릴레이 제어)</option>
-                          <option value="Peristaltic_Pump">퍼리스탈틱 펌프 (DC 드라이버)</option>
+                          <option 
+                            value="Solenoid_Valve" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'Solenoid_Valve')}
+                          >
+                            솔레노이드 밸브 (릴레이 제어)
+                          </option>
+                          <option 
+                            value="Peristaltic_Pump" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'Peristaltic_Pump')}
+                          >
+                            퍼리스탈틱 펌프 (DC 드라이버)
+                          </option>
                         </optgroup>
                         <optgroup label="🌪️ 팬/환기">
-                          <option value="PWM_DC_Fan">DC 팬 (PWM 제어)</option>
+                          <option 
+                            value="PWM_DC_Fan" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'PWM_DC_Fan')}
+                          >
+                            DC 팬 (PWM 제어)
+                          </option>
                         </optgroup>
                         <optgroup label="🔌 릴레이">
-                          <option value="AC_Relay_Lamp">AC_Relay_Lamp (AC 릴레이)</option>
-                          <option value="Solid_State_Relay">Solid_State_Relay (SSR)</option>
-                        </optgroup>
-                        <optgroup label="💧 펌프">
-                          <option value="Peristaltic_Pump">Peristaltic_Pump (펌프)</option>
+                          <option 
+                            value="Solid_State_Relay" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'Solid_State_Relay')}
+                          >
+                            Solid_State_Relay (SSR)
+                          </option>
                         </optgroup>
                         <optgroup label="💡 표시/알람">
-                          <option value="Generic_LED">일반 LED (PWM/GPIO)</option>
-                          <option value="PWM_Buzzer">PWM_Buzzer (부저)</option>
+                          <option 
+                            value="Generic_LED" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'Generic_LED')}
+                          >
+                            일반 LED (PWM/GPIO)
+                          </option>
+                          <option 
+                            value="PWM_Buzzer" 
+                            disabled={spec.controls.filter((_, i) => i !== idx).some(c => c.type === 'PWM_Buzzer')}
+                          >
+                            PWM_Buzzer (부저)
+                          </option>
                         </optgroup>
                 </select>
                 <input
@@ -1077,11 +1230,25 @@ function IoTDesignerContent() {
               </div>
                   ))}
                   <button
-                    onClick={() => setSpec(prev => ({
-                      ...prev,
-                      controls: [...prev.controls, { type: 'AC_Relay_Lamp', count: 1 }]
-                    }))}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                    onClick={() => {
+                      const availableActuators = [
+                        'AC_Relay_Lamp', 'PWM_12V_LED', 'WS2812B_NeoPixel', 'AC_Dimmer_TRIAC',
+                        'TB6612_DC_Motor', 'L298N_DC_Motor', 'SG90_Servo', 'A4988_Stepper',
+                        'Solenoid_Valve', 'Peristaltic_Pump', 'PWM_DC_Fan', 'Solid_State_Relay',
+                        'Generic_LED', 'PWM_Buzzer'
+                      ];
+                      const usedActuators = spec.controls.map(c => c.type);
+                      const firstAvailable = availableActuators.find(a => !usedActuators.includes(a));
+                      
+                      if (firstAvailable) {
+                        setSpec(prev => ({
+                          ...prev,
+                          controls: [...prev.controls, { type: firstAvailable, count: 1 }]
+                        }));
+                      }
+                    }}
+                    disabled={spec.controls.length >= 14} // 최대 14개 액추에이터
+                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     액추에이터 추가
                   </button>
