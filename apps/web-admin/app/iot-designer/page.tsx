@@ -1464,7 +1464,7 @@ function IoTDesignerContent() {
                   onClick={() => setCurrentStep('monitor')}
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  모니터링 단계 →
+                  연결 단계 →
                 </button>
             </div>
           </div>
@@ -1486,24 +1486,24 @@ function IoTDesignerContent() {
                     <span className="ml-2 font-medium">디자인</span>
                   </button>
                   <div className="flex-1 h-1 bg-gray-200 mx-4" />
-                  <button 
-                    onClick={() => router.push(`/iot-designer/connect?farmId=${farmId}`)}
-                    className="flex items-center text-gray-400 hover:text-gray-700 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors">2</div>
-                    <span className="ml-2 font-medium">연결</span>
-                  </button>
+                <button 
+                  onClick={() => router.push(`/iot-designer/connect?farmId=${farmId}`)}
+                  className="flex items-center text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-600 transition-colors">2</div>
+                  <span className="ml-2 font-medium">코드생성</span>
+                </button>
                   <div className="flex-1 h-1 bg-blue-200 mx-4" />
                   <div className="flex items-center text-blue-600">
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-600 text-white transition-colors">3</div>
-                    <span className="ml-2 font-medium">모니터링</span>
+                    <span className="ml-2 font-medium">연결</span>
                   </div>
                 </div>
               </div>
             </div>
 
         <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">📊 실시간 모니터링</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">🔗 디바이스 연결</h2>
               <p className="text-gray-700 mb-6">디바이스 연결 상태와 데이터를 실시간으로 확인하세요.</p>
               
               <LiveLog 
