@@ -401,6 +401,26 @@ function IoTDesignerContent() {
     setHasUnsavedChanges(hasChanges);
   };
 
+  // 자동 저장 함수
+  const autoSave = (assignments: Record<string, string>) => {
+    // localStorage에 자동 저장
+    localStorage.setItem('sensorPinAssignments', JSON.stringify(assignments));
+    localStorage.setItem('actuatorPinAssignments', JSON.stringify(assignments));
+    
+    // 세션 스토리지에도 저장
+    const sessionState = {
+      pinAssignments: assignments,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
+    
+    // 초기 상태 업데이트 (변경사항 추적용)
+    setInitialPinAssignments(assignments);
+    setHasUnsavedChanges(false);
+    
+    console.log('✅ 자동 저장 완료');
+  };
+
   // 핀 할당 함수
   const assignPin = (pin: string, component: string) => {
     const newAssignments = {
@@ -410,12 +430,10 @@ function IoTDesignerContent() {
     setPinAssignments(newAssignments);
     checkForChanges(newAssignments); // 변경사항 체크
     
-    // 세션 스토리지에 현재 상태 저장 (페이지 이동 시 유지)
-    const sessionState = {
-      pinAssignments: newAssignments,
-      timestamp: Date.now()
-    };
-    sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
+    // 0.5초 후 자동 저장 (debounce)
+    setTimeout(() => {
+      autoSave(newAssignments);
+    }, 500);
     
     setShowPinSelector(null);
   };
@@ -1148,17 +1166,7 @@ function IoTDesignerContent() {
             <h4 className="font-semibold text-gray-800">📡 센서 핀 할당</h4>
             <button
               onClick={() => {
-                localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
-                setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
-                setHasUnsavedChanges(false); // 저장 완료
-                
-                // 세션 스토리지도 업데이트
-                const sessionState = {
-                  pinAssignments: pinAssignments,
-                  timestamp: Date.now()
-                };
-                sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
-                
+                autoSave(pinAssignments);
                 toast.success('✅ 센서 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -1223,17 +1231,7 @@ function IoTDesignerContent() {
             <h4 className="font-semibold text-gray-800">🎛️ 액추에이터 핀 할당</h4>
             <button
               onClick={() => {
-                localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
-                setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
-                setHasUnsavedChanges(false); // 저장 완료
-                
-                // 세션 스토리지도 업데이트
-                const sessionState = {
-                  pinAssignments: pinAssignments,
-                  timestamp: Date.now()
-                };
-                sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
-                
+                autoSave(pinAssignments);
                 toast.success('✅ 액추에이터 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -1348,6 +1346,9 @@ function IoTDesignerContent() {
             <div className="bg-white border rounded-lg p-6 mb-8">
               <button
                 onClick={() => {
+                  // 연결 페이지로 이동 시 저장
+                  autoSave(pinAssignments);
+                  
                   // 연결 페이지로 이동 (코드 데이터 전달)
                   const codeData = {
                     device: spec.device,
@@ -1420,11 +1421,8 @@ function IoTDesignerContent() {
                   </p>
                   <button
                     onClick={() => {
-                      // 저장되지 않은 변경사항이 있으면 경고 표시
-                      if (hasUnsavedChanges) {
-                        setShowSaveWarning(true);
-                        return;
-                      }
+                      // 자동 저장
+                      autoSave(pinAssignments);
                       
                       // 연결 페이지로 이동 (코드 데이터 전달)
                       const codeData = {
@@ -1597,21 +1595,12 @@ function IoTDesignerContent() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      // 자동으로 저장하고 연결 페이지로 이동
-                      localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
-                      localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
-                      setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
-                      setHasUnsavedChanges(false); // 저장 완료
+                      // 자동 저장
+                      autoSave(pinAssignments);
                       setShowSaveWarning(false);
                       
-                      // 세션 스토리지도 업데이트
-                      const sessionState = {
-                        pinAssignments: pinAssignments,
-                        timestamp: Date.now()
-                      };
-                      sessionStorage.setItem('iotDesignerState', JSON.stringify(sessionState));
-                      
                       toast.success('✅ 자동 저장 완료! 연결 페이지로 이동합니다.');
+                      
                       // 연결 페이지로 이동
                       setTimeout(() => {
                         const codeData = {
