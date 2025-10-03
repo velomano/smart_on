@@ -97,10 +97,101 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
     name: '',
     bedSystemType: 'multi-tier'
   });
+
+  // 스케줄러 모달 상태
+  const [showSchedulerModal, setShowSchedulerModal] = useState<{actuator: string, type: string} | null>(null);
+  
+  // 개별 센서 목표값 설정 모달 상태
+  const [showSensorTargetModal, setShowSensorTargetModal] = useState<{sensor: string, type: string} | null>(null);
+  const [targetValues, setTargetValues] = useState({
+    temperature: { min: 22, max: 26 },
+    humidity: { min: 60, max: 80 },
+    ec: { min: 1.0, max: 2.5 },
+    ph: { min: 5.5, max: 7.0 },
+    waterLevel: { min: 70, max: 90 }
+  });
+  
+  // 액추에이터 상태 관리
+  const [actuatorStates, setActuatorStates] = useState<{[key: string]: {
+    status: 'on' | 'off';
+    value: number;
+    mode: 'manual' | 'auto' | 'schedule';
+    schedule?: {
+      onTime: string;
+      offTime: string;
+      dualTime?: {
+        period1: { start: string; end: string };
+        period2: { start: string; end: string };
+      };
+    };
+  }}>({
+    led: { status: 'on', value: 75, mode: 'auto' },
+    pump: { status: 'off', value: 0, mode: 'schedule' },
+    fan: { status: 'on', value: 60, mode: 'auto' },
+    heater: { status: 'off', value: 25, mode: 'schedule' }
+  });
   
   // 베드 삭제 관련 상태
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletingBed, setDeletingBed] = useState<Bed | null>(null);
+
+  // 액추에이터 제어 함수
+  const handleActuatorControl = async (actuatorType: string, action: string, value?: number) => {
+    try {
+      console.log(`🎛️ 액추에이터 제어: ${actuatorType} - ${action}`, value);
+      
+      // 로컬 상태 업데이트
+      setActuatorStates(prev => ({
+        ...prev,
+        [actuatorType]: {
+          ...prev[actuatorType],
+          status: action === 'toggle' 
+            ? (prev[actuatorType].status === 'on' ? 'off' : 'on')
+            : prev[actuatorType].status,
+          value: value !== undefined ? value : prev[actuatorType].value,
+          mode: action === 'toggle' ? 'manual' : prev[actuatorType].mode
+        }
+      }));
+
+      // API 호출
+      const response = await fetch(`/api/farms/${farmId}/actuators/control`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId: `device_${actuatorType}_${Date.now()}`, // 임시 디바이스 ID
+          actuatorType,
+          action: action === 'toggle' 
+            ? (actuatorStates[actuatorType].status === 'on' ? 'off' : 'on')
+            : action,
+          value
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '액추에이터 제어에 실패했습니다.');
+      }
+
+      console.log(`✅ 액추에이터 제어 성공: ${actuatorType} - ${action}`);
+    } catch (error: any) {
+      console.error('액추에이터 제어 오류:', error);
+      alert(`액추에이터 제어에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
+      
+      // 실패 시 상태 롤백
+      setActuatorStates(prev => ({
+        ...prev,
+        [actuatorType]: {
+          ...prev[actuatorType],
+          status: action === 'toggle' 
+            ? (prev[actuatorType].status === 'on' ? 'off' : 'on')
+            : prev[actuatorType].status
+        }
+      }));
+    }
+  };
   
   const router = useRouter();
   const supabase = createClient();
@@ -445,7 +536,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
         // 작물 정보 및 센서 데이터 다시 로드
         await Promise.all([
           fetchBedCropData([selectedBed.id]),
-          fetchBedSensorData([selectedBed.id])
+          fetchSensorData()
         ]);
       } else {
         console.error('작물 정보 저장 실패:', { response: response.ok, result });
@@ -721,12 +812,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                               <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                 <span className="text-sm font-medium text-gray-700">디바이스 상태</span>
-                              </div>
+                        </div>
                               <div className="flex items-center space-x-4 text-xs text-gray-600">
                                 <span>센서: {deviceStatus.sensors.active}/{deviceStatus.sensors.total}</span>
                                 <span>액추에이터: {deviceStatus.actuators.active}/{deviceStatus.actuators.total}</span>
-                              </div>
-                            </div>
+                      </div>
+                    </div>
                             
                             <div className="flex gap-2">
                               <button
@@ -750,9 +841,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                 <span>🔗</span>
                                 <span>유니버셜 브릿지</span>
                               </button>
-                            </div>
-                          </div>
-                        </div>
+                  </div>
+            </div>
+        </div>
 
                         {/* 센서 데이터 및 액추에이터 제어 - 나란히 배치 */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -763,98 +854,604 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                               실시간 센서 데이터
                             </h6>
                             
-                            <div className="grid grid-cols-1 gap-2">
-                              {sensorData.length > 0 ? (
-                                sensorData.map((sensor, index) => {
-                                  const sensorConfig = getSensorConfig(sensor.sensorKey);
-                                  const qualityColor = getQualityColor(sensor.quality);
-                                  
-                                  return (
-                                    <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-2">
-                                          <div className={`w-8 h-8 ${sensorConfig.bgColor} rounded-lg flex items-center justify-center`}>
-                                            <span className={`${sensorConfig.textColor} text-sm`}>{sensorConfig.icon}</span>
-                                          </div>
-                                          <div>
-                                            <div className="text-sm font-medium text-gray-700">{sensorConfig.label}</div>
-                                            <div className="text-xs text-gray-500">{sensor.deviceName || 'Unknown'}</div>
-                                          </div>
-                                        </div>
-                                        <div className="text-right">
-                                          <div className={`text-lg font-bold ${sensorConfig.textColor}`}>
-                                            {sensor.value}{sensor.unit}
-                                          </div>
-                                          <div className={`text-xs ${qualityColor}`}>
-                                            {getQualityText(sensor.quality)}
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                <div className="text-center py-4 text-gray-400">
-                                  <div className="text-2xl mb-2">📡</div>
-                                  <p className="text-sm">연결된 센서가 없습니다</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            {/* 온도 센서 - 개선된 디자인 */}
+                            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-sm">🌡️</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-gray-800">온도</div>
+                                    <div className="text-xs text-gray-500">Temperature</div>
+                                  </div>
                                 </div>
-                              )}
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-blue-600">24.5°C</div>
+                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowSensorTargetModal({sensor: 'temperature', type: 'temperature'})}
+                                    className="w-6 h-6 bg-blue-100 hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors"
+                                    title="목표값 설정"
+                                  >
+                                    <span className="text-blue-600 text-xs">⚙️</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 개선된 원형 게이지 */}
+                              <div className="flex justify-center">
+                                <div className="relative w-16 h-16">
+                                  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                                    {/* 배경 원 */}
+                                    <path
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="#e2e8f0"
+                                      strokeWidth="2.5"
+                                    />
+                                    {/* 진행 원 */}
+                                    <path
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="url(#tempGradient)"
+                                      strokeWidth="2.5"
+                                      strokeDasharray="75, 100"
+                                      strokeLinecap="round"
+                                      className="drop-shadow-sm"
+                                    />
+                                    <defs>
+                                      <linearGradient id="tempGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#3b82f6" />
+                                        <stop offset="100%" stopColor="#1d4ed8" />
+                                      </linearGradient>
+                                    </defs>
+                                  </svg>
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-center">
+                                      <div className="text-xs font-bold text-gray-700">75%</div>
+                                      <div className="text-xs text-gray-500">범위</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* 범위 표시 */}
+                              <div className="mt-2 text-center">
+                                <div className="text-xs text-gray-600">
+                                  목표: {targetValues.temperature.min}-{targetValues.temperature.max}°C
+                                </div>
+                              </div>
                             </div>
+
+                            {/* 습도 센서 - 개선된 디자인 */}
+                            <div className="bg-gradient-to-br from-white to-cyan-50 border border-cyan-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-sm">💧</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-gray-800">습도</div>
+                                    <div className="text-xs text-gray-500">Humidity</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-cyan-600">65%</div>
+                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowSensorTargetModal({sensor: 'humidity', type: 'humidity'})}
+                                    className="w-6 h-6 bg-cyan-100 hover:bg-cyan-200 rounded-lg flex items-center justify-center transition-colors"
+                                    title="목표값 설정"
+                                  >
+                                    <span className="text-cyan-600 text-xs">⚙️</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 개선된 원형 게이지 */}
+                              <div className="flex justify-center">
+                                <div className="relative w-16 h-16">
+                                  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                                    {/* 배경 원 */}
+                                    <path
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="#e2e8f0"
+                                      strokeWidth="2.5"
+                                    />
+                                    {/* 진행 원 */}
+                                    <path
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="url(#humidityGradient)"
+                                      strokeWidth="2.5"
+                                      strokeDasharray="65, 100"
+                                      strokeLinecap="round"
+                                      className="drop-shadow-sm"
+                                    />
+                                    <defs>
+                                      <linearGradient id="humidityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#06b6d4" />
+                                        <stop offset="100%" stopColor="#0891b2" />
+                                      </linearGradient>
+                                    </defs>
+                                  </svg>
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-center">
+                                      <div className="text-xs font-bold text-gray-700">65%</div>
+                                      <div className="text-xs text-gray-500">습도</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* 범위 표시 */}
+                              <div className="mt-2 text-center">
+                                <div className="text-xs text-gray-600">
+                                  목표: {targetValues.humidity.min}-{targetValues.humidity.max}%
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* EC 센서 - 수평 바 */}
+                            <div className="bg-gradient-to-br from-white to-green-50 border border-green-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-sm">⚡</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-gray-800">EC</div>
+                                    <div className="text-xs text-gray-500">Conductivity</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-green-600">1.8 mS/cm</div>
+                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowSensorTargetModal({sensor: 'ec', type: 'ec'})}
+                                    className="w-6 h-6 bg-green-100 hover:bg-green-200 rounded-lg flex items-center justify-center transition-colors"
+                                    title="목표값 설정"
+                                  >
+                                    <span className="text-green-600 text-xs">⚙️</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 개선된 수평 바 */}
+                              <div className="space-y-2">
+                                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                                  <div 
+                                    className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-700 ease-out shadow-sm" 
+                                    style={{ width: '60%' }}
+                                  >
+                                    <div className="flex justify-end items-center h-full pr-2">
+                                      <span className="text-xs font-bold text-white drop-shadow-sm">60%</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>0.0</span>
+                                  <span className="font-medium">1.8 / 3.0</span>
+                                  <span>3.0 mS/cm</span>
+                                </div>
+                              </div>
+                              
+                              {/* 범위 표시 */}
+                              <div className="mt-2 text-center">
+                                <div className="text-xs text-gray-600">
+                                  목표: {targetValues.ec.min}-{targetValues.ec.max} mS/cm
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* pH 센서 - 원형 게이지 */}
+                            <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-sm">🧪</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-gray-800">pH</div>
+                                    <div className="text-xs text-gray-500">Acidity</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-purple-600">6.2</div>
+                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowSensorTargetModal({sensor: 'ph', type: 'ph'})}
+                                    className="w-6 h-6 bg-purple-100 hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors"
+                                    title="목표값 설정"
+                                  >
+                                    <span className="text-purple-600 text-xs">⚙️</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 개선된 원형 게이지 */}
+                              <div className="flex justify-center">
+                                <div className="relative w-16 h-16">
+                                  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                                    {/* 배경 원 */}
+                                    <path
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="#e2e8f0"
+                                      strokeWidth="2.5"
+                                    />
+                                    {/* 진행 원 */}
+                                    <path
+                                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="url(#phGradient)"
+                                      strokeWidth="2.5"
+                                      strokeDasharray="70, 100"
+                                      strokeLinecap="round"
+                                      className="drop-shadow-sm"
+                                    />
+                                    <defs>
+                                      <linearGradient id="phGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" stopColor="#8b5cf6" />
+                                        <stop offset="100%" stopColor="#7c3aed" />
+                                      </linearGradient>
+                                    </defs>
+                                  </svg>
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-center">
+                                      <div className="text-xs font-bold text-gray-700">70%</div>
+                                      <div className="text-xs text-gray-500">범위</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* 범위 표시 */}
+                              <div className="mt-2 text-center">
+                                <div className="text-xs text-gray-600">
+                                  목표: {targetValues.ph.min}-{targetValues.ph.max}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 수위 센서 - 개선된 디자인 */}
+                            <div className="bg-gradient-to-br from-white to-cyan-50 border border-cyan-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-sm">💦</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-sm font-semibold text-gray-800">수위</div>
+                                    <div className="text-xs text-gray-500">Water Level</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-cyan-600">85%</div>
+                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowSensorTargetModal({sensor: 'waterLevel', type: 'waterLevel'})}
+                                    className="w-6 h-6 bg-cyan-100 hover:bg-cyan-200 rounded-lg flex items-center justify-center transition-colors"
+                                    title="목표값 설정"
+                                  >
+                                    <span className="text-cyan-600 text-xs">⚙️</span>
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 개선된 수직 바 */}
+                              <div className="flex justify-center">
+                                <div className="relative w-8 h-16 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                                  <div 
+                                    className="absolute bottom-0 w-full bg-gradient-to-t from-cyan-500 via-cyan-400 to-cyan-300 rounded-full transition-all duration-700 ease-out shadow-sm" 
+                                    style={{ height: '85%' }}
+                                  >
+                                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                                      <span className="text-xs font-bold text-white drop-shadow-sm">85%</span>
+                                    </div>
+                                    {/* 물결 효과 */}
+                                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"></div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* 범위 표시 */}
+                              <div className="mt-2 text-center">
+                                <div className="text-xs text-gray-600">
+                                  목표: {targetValues.waterLevel.min}-{targetValues.waterLevel.max}%
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                           </div>
 
                           {/* 액추에이터 제어 */}
-                          <div className="space-y-3">
-                            <h6 className="text-sm font-semibold text-gray-600 flex items-center">
-                              <span className="mr-2">🎛️</span>
+                          <div className="space-y-2">
+                            <h6 className="text-xs font-semibold text-gray-600 flex items-center">
+                              <span className="mr-1">🎛️</span>
                               액추에이터 제어
                             </h6>
                             
-                            <div className="grid grid-cols-1 gap-2">
-                              {actuatorData.length > 0 ? (
-                                actuatorData.map((actuator, index) => {
-                                  const actuatorConfig = getActuatorConfig(actuator.deviceType);
-                                  const isOn = actuator.status === 'on';
-                                  const statusColor = isOn ? 'bg-green-500' : 'bg-gray-300';
-                                  const statusText = isOn ? 'ON' : 'OFF';
-                                  const statusTextColor = isOn ? 'text-green-600' : 'text-gray-500';
-                                  
-                                  return (
-                                    <div key={index} className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-2">
-                                          <div className={`w-8 h-8 ${actuatorConfig.bgColor} rounded-lg flex items-center justify-center`}>
-                                            <span className={`${actuatorConfig.textColor} text-sm`}>{actuatorConfig.icon}</span>
-                                          </div>
-                                          <div>
-                                            <div className="text-sm font-medium text-gray-700">{actuator.deviceName}</div>
-                                            <div className="text-xs text-gray-500">{actuatorConfig.description}</div>
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                          <div className="text-right">
-                                            <div className="text-sm font-medium text-gray-700">{statusText}</div>
-                                            <div className={`text-xs ${statusTextColor}`}>
-                                              {actuator.isOnline ? '온라인' : '오프라인'}
-                                            </div>
-                                          </div>
-                                          <button 
-                                            onClick={() => controlActuator(actuator.deviceId, actuator.deviceType, 'toggle')}
-                                            className={`w-8 h-8 ${statusColor} rounded-full flex items-center justify-center hover:opacity-80 transition-all`}
-                                          >
-                                            <span className="text-white text-xs">●</span>
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              ) : (
-                                <div className="text-center py-4 text-gray-400">
-                                  <div className="text-2xl mb-2">🎛️</div>
-                                  <p className="text-sm">연결된 액추에이터가 없습니다</p>
+                          <div className="grid grid-cols-1 gap-2">
+                            {/* LED 조명 - 밝기 슬라이더 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-yellow-600 text-xs">💡</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-medium text-gray-700">LED 조명</div>
+                                  </div>
                                 </div>
-                              )}
+                                <div className="flex items-center space-x-2">
+                                <div className="text-right">
+                                  <div className="text-xs font-medium text-gray-700">{actuatorStates.led.status.toUpperCase()}</div>
+                                  <div className="text-xs text-green-600">{actuatorStates.led.mode === 'auto' ? '자동' : actuatorStates.led.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                </div>
+                <button
+                                    onClick={() => handleActuatorControl('led', 'toggle')}
+                                    className={`w-8 h-6 text-white text-xs rounded transition-colors ${
+                                      actuatorStates.led.status === 'on' 
+                                        ? 'bg-green-600 hover:bg-green-700' 
+                                        : 'bg-gray-400 hover:bg-gray-500'
+                                    }`}
+                                  >
+                                    {actuatorStates.led.status === 'on' ? 'ON' : 'OFF'}
+                </button>
+                                </div>
+                              </div>
+                              
+                              {/* 밝기 슬라이더 */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>밝기</span>
+                                  <span className="font-medium">{actuatorStates.led.value}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={actuatorStates.led.value}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                  style={{
+                                    background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${actuatorStates.led.value}%, #e5e7eb ${actuatorStates.led.value}%, #e5e7eb 100%)`
+                                  }}
+                                  onChange={(e) => handleActuatorControl('led', 'brightness', parseInt(e.target.value))}
+                                />
+                              </div>
+
+                              {/* 스케줄러 설정 */}
+                              <div className="mt-3 pt-2 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs text-gray-600">스케줄</span>
+                <button
+                                    onClick={() => setShowSchedulerModal({ actuator: 'led', type: 'led' })}
+                                    className="text-xs text-blue-600 hover:text-blue-800"
+                >
+                                    설정
+                </button>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {actuatorStates.led.schedule ? `켜기: ${actuatorStates.led.schedule.onTime} | 끄기: ${actuatorStates.led.schedule.offTime}` : '스케줄 미설정'}
+                                </div>
+                              </div>
                             </div>
+
+                            {/* 순환 펌프 - 속도 슬라이더 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-blue-600 text-xs">🚰</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-medium text-gray-700">순환 펌프</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.pump.status.toUpperCase()}</div>
+                                    <div className="text-xs text-gray-500">{actuatorStates.pump.mode === 'auto' ? '자동' : actuatorStates.pump.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleActuatorControl('pump', 'toggle')}
+                                    className={`w-8 h-6 text-white text-xs rounded transition-colors ${
+                                      actuatorStates.pump.status === 'on' 
+                                        ? 'bg-blue-600 hover:bg-blue-700' 
+                                        : 'bg-gray-400 hover:bg-gray-500'
+                                    }`}
+                                  >
+                                    {actuatorStates.pump.status === 'on' ? 'ON' : 'OFF'}
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 속도 슬라이더 */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>속도</span>
+                                  <span className="font-medium">{actuatorStates.pump.value}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={actuatorStates.pump.value}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                  style={{
+                                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${actuatorStates.pump.value}%, #e5e7eb ${actuatorStates.pump.value}%, #e5e7eb 100%)`
+                                  }}
+                                  onChange={(e) => handleActuatorControl('pump', 'speed', parseInt(e.target.value))}
+                                />
+                              </div>
+
+                              {/* 듀얼타임 설정 */}
+                              <div className="mt-3 pt-2 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs text-gray-600">듀얼타임</span>
+                                  <button
+                                    onClick={() => setShowSchedulerModal({ actuator: 'pump', type: 'dual-time' })}
+                                    className="text-xs text-blue-600 hover:text-blue-800"
+                                  >
+                                    설정
+                                  </button>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {actuatorStates.pump.schedule?.dualTime ? 
+                                    `작동: 10분 → 휴지: 5분 (08:00-18:00)` : 
+                                    '듀얼타임 미설정'
+                                  }
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 환기 팬 - 속도 슬라이더 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-gray-600 text-xs">🌀</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-medium text-gray-700">환기 팬</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.fan.status.toUpperCase()}</div>
+                                    <div className="text-xs text-blue-600">{actuatorStates.fan.mode === 'auto' ? '자동' : actuatorStates.fan.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleActuatorControl('fan', 'toggle')}
+                                    className={`w-8 h-6 text-white text-xs rounded transition-colors ${
+                                      actuatorStates.fan.status === 'on' 
+                                        ? 'bg-blue-600 hover:bg-blue-700' 
+                                        : 'bg-gray-400 hover:bg-gray-500'
+                                    }`}
+                                  >
+                                    {actuatorStates.fan.status === 'on' ? 'ON' : 'OFF'}
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 속도 슬라이더 */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>속도</span>
+                                  <span className="font-medium">{actuatorStates.fan.value}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={actuatorStates.fan.value}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                  style={{
+                                    background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${actuatorStates.fan.value}%, #e5e7eb ${actuatorStates.fan.value}%, #e5e7eb 100%)`
+                                  }}
+                                  onChange={(e) => handleActuatorControl('fan', 'speed', parseInt(e.target.value))}
+                                />
+                              </div>
+
+                              {/* 스케줄러 설정 */}
+                              <div className="mt-3 pt-2 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs text-gray-600">스케줄</span>
+                                  <button
+                                    onClick={() => setShowSchedulerModal({ actuator: 'fan', type: 'schedule' })}
+                                    className="text-xs text-blue-600 hover:text-blue-800"
+                                  >
+                                    설정
+                                  </button>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {actuatorStates.fan.schedule ? `켜기: ${actuatorStates.fan.schedule.onTime} | 끄기: ${actuatorStates.fan.schedule.offTime}` : '스케줄 미설정'}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* 히터 - 온도 설정 */}
+                            <div className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-all">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-orange-600 text-xs">🔥</span>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-medium text-gray-700">히터</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-right">
+                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.heater.status.toUpperCase()}</div>
+                                    <div className="text-xs text-gray-500">{actuatorStates.heater.mode === 'auto' ? '자동' : actuatorStates.heater.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                  </div>
+                                  <button
+                                    onClick={() => handleActuatorControl('heater', 'toggle')}
+                                    className={`w-8 h-6 text-white text-xs rounded transition-colors ${
+                                      actuatorStates.heater.status === 'on' 
+                                        ? 'bg-orange-600 hover:bg-orange-700' 
+                                        : 'bg-gray-400 hover:bg-gray-500'
+                                    }`}
+                                  >
+                                    {actuatorStates.heater.status === 'on' ? 'ON' : 'OFF'}
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* 온도 설정 */}
+                              <div className="space-y-2">
+                                <div className="flex justify-between text-xs text-gray-600">
+                                  <span>목표 온도</span>
+                                  <span className="font-medium">{actuatorStates.heater.value}°C</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="15"
+                                  max="35"
+                                  value={actuatorStates.heater.value}
+                                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                                  style={{
+                                    background: `linear-gradient(to right, #f97316 0%, #f97316 ${((actuatorStates.heater.value - 15) / 20) * 100}%, #e5e7eb ${((actuatorStates.heater.value - 15) / 20) * 100}%, #e5e7eb 100%)`
+                                  }}
+                                  onChange={(e) => handleActuatorControl('heater', 'temperature', parseInt(e.target.value))}
+                                />
+                              </div>
+
+                              {/* 듀얼타임 설정 */}
+                              <div className="mt-3 pt-2 border-t border-gray-100">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-xs text-gray-600">듀얼타임</span>
+                                  <button
+                                    onClick={() => setShowSchedulerModal({ actuator: 'heater', type: 'dual-time' })}
+                                    className="text-xs text-blue-600 hover:text-blue-800"
+                                  >
+                                    설정
+                                  </button>
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {actuatorStates.heater.schedule?.dualTime ? 
+                                    `작동: 15분 → 휴지: 10분 (18:00-06:00)` : 
+                                    '듀얼타임 미설정'
+                                  }
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                           </div>
                         </div>
                       </div>
@@ -927,8 +1524,8 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                       📢
                                     </span>
-                                  )}
-                                </div>
+              )}
+            </div>
                                 <div className="text-xs text-gray-600 mt-1 line-clamp-2">
                                   {note.content}
                                 </div>
@@ -970,13 +1567,13 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                           </div>
                         );
                       })()}
-                    </div>
-                    
+          </div>
+
                     {/* 액션 버튼들 */}
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div className="text-xs text-gray-500">
                         마지막 업데이트: {new Date().toLocaleTimeString()}
-                      </div>
+              </div>
                       <div className="flex items-center space-x-2">
                         <button 
                           onClick={() => {
@@ -990,8 +1587,8 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                         >
                           📝 생육 노트
                         </button>
-                        {user && user.role !== 'team_member' && (
-                          <button 
+              {user && user.role !== 'team_member' && (
+                <button
                             onClick={() => handleEditBed(bed)}
                             className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                           >
@@ -1004,69 +1601,27 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                             className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                           >
                             🗑️ 삭제
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {/* IoT 디바이스 섹션 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">IoT 디바이스</h2>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={fetchFarmData}
-                className="px-3 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
-              >
-                🔄 새로고침
-              </button>
-              {user && user.role !== 'team_member' && (
-                <button
-                  onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  + 새 디바이스 연결
                 </button>
               )}
             </div>
-          </div>
-
-          {devices.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <div className="text-gray-400 mb-4">
-                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">연결된 디바이스가 없습니다</h3>
-              <p className="text-gray-600 mb-4">IoT 디바이스를 연결하여 농장을 모니터링하고 자동화하세요.</p>
-              {user && user.role !== 'team_member' && (
-                <button
-                  onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  ⚡ IoT 디바이스 생성 및 연결
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {devices.map((device) => (
-                <div key={device.deviceId} className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">{device.deviceName}</h3>
-                  <div className="text-gray-500 text-center py-8">
-                    디바이스 UI 템플릿이 없습니다.
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* 새 베드 추가 버튼 */}
+        {user && user.role !== 'team_member' && (
+          <div className="mb-8 text-center">
+            <button
+              onClick={() => setShowAddBedModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl"
+            >
+              + 새 베드 추가
+            </button>
+          </div>
+        )}
 
         {/* 베드 추가 모달 */}
         {showAddBedModal && (
@@ -1712,6 +2267,410 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                     className="flex-1 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                   >
                     삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 스케줄러 설정 모달 */}
+        {showSchedulerModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            {/* 배경 오버레이 */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            {/* 모달창 */}
+            <div className="relative bg-white rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-800">
+                  {showSchedulerModal.type === 'dual-time' ? '듀얼타임 설정' : '스케줄러 설정'}
+                </h3>
+                <button
+                  onClick={() => setShowSchedulerModal(null)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* 요일 선택 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-3">적용 요일</label>
+                  <div className="grid grid-cols-7 gap-2">
+                    {['월', '화', '수', '목', '금', '토', '일'].map((day, index) => (
+                      <label key={day} className="flex flex-col items-center">
+                        <span className="text-xs font-medium text-gray-600 mb-1">{day}</span>
+                        <input
+                          type="checkbox"
+                          defaultChecked={index < 5} // 월-금 기본 선택
+                          className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {showSchedulerModal.type === 'dual-time' ? (
+                  // 듀얼타임 설정 (작동/휴지 주기)
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">작동 주기 설정</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <span className="text-xs text-gray-600">작동 시간 (분)</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="1440"
+                            defaultValue="10"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                            placeholder="10"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-600">휴지 시간 (분)</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="1440"
+                            defaultValue="5"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                            placeholder="5"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">적용 시간대</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <span className="text-xs text-gray-600">시작 시간</span>
+                          <input
+                            type="time"
+                            defaultValue="08:00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-600">종료 시간</span>
+                          <input
+                            type="time"
+                            defaultValue="18:00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start space-x-2">
+                        <span className="text-blue-500 text-sm">💡</span>
+                        <div className="text-xs text-blue-700">
+                          <p className="font-medium mb-1">듀얼타임 작동 방식:</p>
+                          <p>• 10분 작동 → 5분 휴지 → 10분 작동 → 5분 휴지 (반복)</p>
+                          <p>• 설정된 시간대 내에서만 주기적으로 작동합니다</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // 일반 스케줄러 설정
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">켜기 시간</label>
+                      <input
+                        type="time"
+                        defaultValue="06:00"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">끄기 시간</label>
+                      <input
+                        type="time"
+                        defaultValue="22:00"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* 설정 미리보기 */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2">설정 미리보기</h4>
+                  <div className="text-xs text-gray-600">
+                    {showSchedulerModal.type === 'dual-time' ? (
+                      <div>
+                        <div>• 작동: 10분 → 휴지: 5분 (반복)</div>
+                        <div>• 적용 시간: 08:00 - 18:00</div>
+                        <div>• 적용 요일: 월, 화, 수, 목, 금</div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div>• 켜기: 06:00</div>
+                        <div>• 끄기: 22:00</div>
+                        <div>• 적용: 월, 화, 수, 목, 금</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowSchedulerModal(null)}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={() => {
+                      // TODO: 스케줄러 설정 저장 로직
+                      setShowSchedulerModal(null);
+                      alert('스케줄러 설정이 저장되었습니다.');
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  저장
+                </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 개별 센서 목표값 설정 모달 */}
+        {showSensorTargetModal && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            {/* 배경 오버레이 */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            {/* 모달창 */}
+            <div className="relative bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-800">
+                  {showSensorTargetModal.sensor === 'temperature' && '🌡️ 온도 목표값 설정'}
+                  {showSensorTargetModal.sensor === 'humidity' && '💧 습도 목표값 설정'}
+                  {showSensorTargetModal.sensor === 'ec' && '⚡ EC 목표값 설정'}
+                  {showSensorTargetModal.sensor === 'ph' && '🧪 pH 목표값 설정'}
+                  {showSensorTargetModal.sensor === 'waterLevel' && '💦 수위 목표값 설정'}
+                </h3>
+                <button
+                  onClick={() => setShowSensorTargetModal(null)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* 센서별 설정 */}
+                {showSensorTargetModal.sensor === 'temperature' && (
+                  <div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-xs text-gray-600">최소 온도 (°C)</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={targetValues.temperature.min}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            temperature: { ...prev.temperature, min: parseFloat(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-600">최대 온도 (°C)</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={targetValues.temperature.max}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            temperature: { ...prev.temperature, max: parseFloat(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="text-sm text-blue-700">
+                        <strong>현재 설정:</strong> {targetValues.temperature.min}°C ~ {targetValues.temperature.max}°C
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {showSensorTargetModal.sensor === 'humidity' && (
+                  <div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-xs text-gray-600">최소 습도 (%)</span>
+                        <input
+                          type="number"
+                          step="1"
+                          value={targetValues.humidity.min}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            humidity: { ...prev.humidity, min: parseInt(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-gray-800"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-600">최대 습도 (%)</span>
+                        <input
+                          type="number"
+                          step="1"
+                          value={targetValues.humidity.max}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            humidity: { ...prev.humidity, max: parseInt(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-gray-800"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                      <div className="text-sm text-cyan-700">
+                        <strong>현재 설정:</strong> {targetValues.humidity.min}% ~ {targetValues.humidity.max}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {showSensorTargetModal.sensor === 'ec' && (
+                  <div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-xs text-gray-600">최소 EC (mS/cm)</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={targetValues.ec.min}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            ec: { ...prev.ec, min: parseFloat(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-gray-800"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-600">최대 EC (mS/cm)</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={targetValues.ec.max}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            ec: { ...prev.ec, max: parseFloat(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-gray-800"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="text-sm text-green-700">
+                        <strong>현재 설정:</strong> {targetValues.ec.min} ~ {targetValues.ec.max} mS/cm
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {showSensorTargetModal.sensor === 'ph' && (
+                  <div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-xs text-gray-600">최소 pH</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={targetValues.ph.min}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            ph: { ...prev.ph, min: parseFloat(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-800"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-600">최대 pH</span>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={targetValues.ph.max}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            ph: { ...prev.ph, max: parseFloat(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 text-gray-800"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                      <div className="text-sm text-purple-700">
+                        <strong>현재 설정:</strong> {targetValues.ph.min} ~ {targetValues.ph.max}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {showSensorTargetModal.sensor === 'waterLevel' && (
+                  <div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-xs text-gray-600">최소 수위 (%)</span>
+                        <input
+                          type="number"
+                          step="1"
+                          value={targetValues.waterLevel.min}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            waterLevel: { ...prev.waterLevel, min: parseInt(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-gray-800"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-xs text-gray-600">최대 수위 (%)</span>
+                        <input
+                          type="number"
+                          step="1"
+                          value={targetValues.waterLevel.max}
+                          onChange={(e) => setTargetValues(prev => ({
+                            ...prev,
+                            waterLevel: { ...prev.waterLevel, max: parseInt(e.target.value) }
+                          }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-500 text-gray-800"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                      <div className="text-sm text-cyan-700">
+                        <strong>현재 설정:</strong> {targetValues.waterLevel.min}% ~ {targetValues.waterLevel.max}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowSensorTargetModal(null)}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+                  >
+                    취소
+                  </button>
+                  <button
+                    onClick={() => {
+                      // TODO: 목표값 저장 로직
+                      setShowSensorTargetModal(null);
+                      alert('목표값이 저장되었습니다.');
+                    }}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    저장
                   </button>
                 </div>
               </div>
