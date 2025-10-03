@@ -742,6 +742,8 @@ function generateDeviceCode(spec: SystemSpec): string {
     case 'arduino_r4':
       return generateArduinoCode(spec);
     case 'raspberry-pi':
+    case 'raspberry_pi3':
+    case 'raspberry_pi4':
     case 'raspberry_pi5':
       return generateRaspberryPiCode(spec);
     default:

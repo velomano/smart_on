@@ -267,6 +267,14 @@ function IoTDesignerContent() {
         spi: ['10', '11', '12', '13'],
         uart: ['0', '1']
       },
+      arduino_uno: {
+        digital: ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'],
+        pwm: ['3', '5', '6', '9', '10', '11'],
+        analog: ['A0', 'A1', 'A2', 'A3', 'A4', 'A5'],
+        i2c: ['A4', 'A5'],
+        spi: ['10', '11', '12', '13'],
+        uart: ['0', '1']
+      },
       arduino_r4: {
         digital: ['2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'],
         pwm: ['3', '5', '6', '9', '10', '11'],
@@ -275,7 +283,7 @@ function IoTDesignerContent() {
         spi: ['10', '11', '12', '13'],
         uart: ['0', '1']
       },
-      raspberry_pi: {
+      raspberry_pi5: {
         digital: ['GPIO2', 'GPIO3', 'GPIO4', 'GPIO5', 'GPIO6', 'GPIO7', 'GPIO8', 'GPIO9', 'GPIO10', 'GPIO11', 'GPIO12', 'GPIO13', 'GPIO14', 'GPIO15', 'GPIO16', 'GPIO17', 'GPIO18', 'GPIO19', 'GPIO20', 'GPIO21', 'GPIO22', 'GPIO23', 'GPIO24', 'GPIO25', 'GPIO26', 'GPIO27'],
         pwm: ['GPIO12', 'GPIO13', 'GPIO18', 'GPIO19'],
         analog: ['GPIO26', 'GPIO27'],
@@ -292,6 +300,14 @@ function IoTDesignerContent() {
         uart: ['GPIO14', 'GPIO15']
       },
       raspberry_pi3: {
+        digital: ['GPIO2', 'GPIO3', 'GPIO4', 'GPIO5', 'GPIO6', 'GPIO7', 'GPIO8', 'GPIO9', 'GPIO10', 'GPIO11', 'GPIO12', 'GPIO13', 'GPIO14', 'GPIO15', 'GPIO16', 'GPIO17', 'GPIO18', 'GPIO19', 'GPIO20', 'GPIO21', 'GPIO22', 'GPIO23', 'GPIO24', 'GPIO25', 'GPIO26', 'GPIO27'],
+        pwm: ['GPIO12', 'GPIO13', 'GPIO18', 'GPIO19'],
+        analog: ['GPIO26', 'GPIO27'],
+        i2c: ['GPIO2', 'GPIO3'],
+        spi: ['GPIO10', 'GPIO11', 'GPIO8', 'GPIO9'],
+        uart: ['GPIO14', 'GPIO15']
+      },
+      raspberry_pi: {
         digital: ['GPIO2', 'GPIO3', 'GPIO4', 'GPIO5', 'GPIO6', 'GPIO7', 'GPIO8', 'GPIO9', 'GPIO10', 'GPIO11', 'GPIO12', 'GPIO13', 'GPIO14', 'GPIO15', 'GPIO16', 'GPIO17', 'GPIO18', 'GPIO19', 'GPIO20', 'GPIO21', 'GPIO22', 'GPIO23', 'GPIO24', 'GPIO25', 'GPIO26', 'GPIO27'],
         pwm: ['GPIO12', 'GPIO13', 'GPIO18', 'GPIO19'],
         analog: ['GPIO26', 'GPIO27'],
@@ -1310,8 +1326,8 @@ function IoTDesignerContent() {
                 <p className="text-sm text-blue-800 mt-2">
                   💡 {spec.device.toUpperCase()}는 최대 {
                     spec.device === 'esp32' ? '500' : 
-                    spec.device === 'arduino' ? '200' : 
-                    spec.device === 'raspberry_pi' ? '2500' : '500'
+                    (spec.device === 'arduino' || spec.device === 'arduino_uno' || spec.device === 'arduino_r4') ? '200' : 
+                    (spec.device === 'raspberry_pi' || spec.device === 'raspberry_pi3' || spec.device === 'raspberry_pi4' || spec.device === 'raspberry_pi5') ? '2500' : '500'
                   }mA까지 공급 가능합니다. 전력 소비가 높으면 외부 전원 공급을 고려하세요.
                 </p>
                       </div>
