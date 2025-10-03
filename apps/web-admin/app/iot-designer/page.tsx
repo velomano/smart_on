@@ -155,8 +155,9 @@ function IoTDesignerContent() {
     loadFarmInfo();
   }, [farmId]);
 
-  // 전원 계산 함수들
-  const getSensorPower = (sensorType: string): number => {
+  // 전원 계산 함수들 (메모이제이션으로 즉시 반응)
+  const getSensorPower = useMemo(() => {
+    return (sensorType: string): number => {
     const powerMap: Record<string, number> = {
       // 환경 센서
       'BME280': 3.6, // 온습압 센서 (I2C)
@@ -199,9 +200,11 @@ function IoTDesignerContent() {
       'co2': 20
     };
     return powerMap[sensorType] || 5;
-  };
+    };
+  }, [spec.sensors]); // 센서 변경 시에만 재계산
 
-  const getActuatorPower = (actuatorType: string): number => {
+  const getActuatorPower = useMemo(() => {
+    return (actuatorType: string): number => {
     const powerMap: Record<string, number> = {
       // 조명
       'AC_Relay_Lamp': 200, // AC 램프 (릴레이 제어)
@@ -233,10 +236,12 @@ function IoTDesignerContent() {
       'led': 20
     };
     return powerMap[actuatorType] || 50;
-  };
+    };
+  }, [spec.controls]); // 액추에이터 변경 시에만 재계산
 
-  // 디바이스별 핀 정보 가져오기
-  const getDevicePins = (device: string, type: 'digital' | 'pwm' | 'analog' | 'i2c' | 'spi' | 'uart'): string[] => {
+  // 디바이스별 핀 정보 가져오기 (메모이제이션으로 즉시 반응)
+  const getDevicePins = useMemo(() => {
+    return (device: string, type: 'digital' | 'pwm' | 'analog' | 'i2c' | 'spi' | 'uart'): string[] => {
     const pinMaps: Record<string, Record<string, string[]>> = {
       esp32: {
         digital: ['GPIO2', 'GPIO4', 'GPIO5', 'GPIO12', 'GPIO13', 'GPIO14', 'GPIO15', 'GPIO16', 'GPIO17', 'GPIO18', 'GPIO19', 'GPIO21', 'GPIO22', 'GPIO23', 'GPIO25', 'GPIO26', 'GPIO27', 'GPIO32', 'GPIO33'],
@@ -297,7 +302,8 @@ function IoTDesignerContent() {
     };
     
     return pinMaps[device]?.[type] || [];
-  };
+    };
+  }, [spec.device]); // 디바이스 변경 시에만 재계산
 
   // 핀이 사용 중인지 확인
   const isPinUsed = (pin: string, type: string): boolean => {
@@ -453,9 +459,9 @@ function IoTDesignerContent() {
     setHasUnsavedChanges(hasChanges);
   };
 
-  // 자동 저장 함수
-  const autoSave = (assignments: Record<string, string>) => {
-    // localStorage에 자동 저장
+  // 저장 함수 (페이지 이동 시에만 호출)
+  const savePinAssignments = (assignments: Record<string, string>) => {
+    // localStorage에 저장
     localStorage.setItem('sensorPinAssignments', JSON.stringify(assignments));
     localStorage.setItem('actuatorPinAssignments', JSON.stringify(assignments));
     
@@ -470,22 +476,17 @@ function IoTDesignerContent() {
     setInitialPinAssignments(assignments);
     setHasUnsavedChanges(false);
     
-    console.log('✅ 자동 저장 완료');
+    console.log('✅ 핀 할당 저장 완료');
   };
 
-  // 핀 할당 함수
+  // 핀 할당 함수 (즉시 반응, 자동저장 제거)
   const assignPin = (pin: string, component: string) => {
     const newAssignments = {
       ...pinAssignments,
       [component]: pin
     };
     setPinAssignments(newAssignments);
-    checkForChanges(newAssignments); // 변경사항 체크
-    
-    // 0.5초 후 자동 저장 (debounce)
-    setTimeout(() => {
-      autoSave(newAssignments);
-    }, 500);
+    checkForChanges(newAssignments); // 변경사항 체크만
     
     setShowPinSelector(null);
   };
@@ -1222,7 +1223,7 @@ function IoTDesignerContent() {
             <h4 className="font-semibold text-gray-800">📡 센서 핀 할당</h4>
             <button
               onClick={() => {
-                autoSave(pinAssignments);
+                savePinAssignments(pinAssignments);
                 toast.success('✅ 센서 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -1287,7 +1288,7 @@ function IoTDesignerContent() {
             <h4 className="font-semibold text-gray-800">🎛️ 액추에이터 핀 할당</h4>
             <button
               onClick={() => {
-                autoSave(pinAssignments);
+                savePinAssignments(pinAssignments);
                 toast.success('✅ 액추에이터 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -1421,7 +1422,7 @@ function IoTDesignerContent() {
               <button
                 onClick={() => {
                   // 연결 페이지로 이동 시 저장
-                  autoSave(pinAssignments);
+                  savePinAssignments(pinAssignments);
                   
                   // 연결 페이지로 이동 (코드 데이터 전달)
                   const codeData = {
@@ -1495,8 +1496,8 @@ function IoTDesignerContent() {
                   </p>
                   <button
                     onClick={() => {
-                      // 자동 저장
-                      autoSave(pinAssignments);
+                      // 페이지 이동 시 저장
+                      savePinAssignments(pinAssignments);
                       
                       // 연결 페이지로 이동 (코드 데이터 전달)
                       const codeData = {
@@ -1669,11 +1670,11 @@ function IoTDesignerContent() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      // 자동 저장
-                      autoSave(pinAssignments);
+                      // 저장 후 페이지 이동
+                      savePinAssignments(pinAssignments);
                       setShowSaveWarning(false);
                       
-                      toast.success('✅ 자동 저장 완료! 연결 페이지로 이동합니다.');
+                      toast.success('✅ 저장 완료! 연결 페이지로 이동합니다.');
                       
                       // 연결 페이지로 이동
                       setTimeout(() => {
@@ -1694,7 +1695,7 @@ function IoTDesignerContent() {
                     }}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
-                    🤖 자동 저장하고 계속
+                    💾 저장하고 계속
                   </button>
                   
                   <button
