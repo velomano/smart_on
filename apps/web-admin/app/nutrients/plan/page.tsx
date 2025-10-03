@@ -144,8 +144,8 @@ export default function NutrientPlanPage() {
         const totalResponse = await fetch('/api/nutrients/browse?limit=1');
         const totalResult = await totalResponse.json();
         
-        // 모든 레시피를 가져와서 클라이언트에서 오늘 날짜 필터링
-        const allResponse = await fetch('/api/nutrients/browse?limit=1000');
+        // 최근 레시피를 가져와서 클라이언트에서 오늘 날짜 필터링
+        const allResponse = await fetch('/api/nutrients/browse?limit=100');
         const allResult = await allResponse.json();
         
         // 오늘 날짜 계산
@@ -192,12 +192,12 @@ export default function NutrientPlanPage() {
   useEffect(() => {
     if (user) {
       setCurrentPage(1);
-      loadRecipes(1, false);
+      loadRecipes(1);
     }
   }, [searchTerm, selectedCrop, selectedStage, user]);
 
   // 실제 Supabase에서 레시피 브라우징 데이터 로드
-  async function loadRecipes(page = 1, append = false, filterDate?: string) {
+  async function loadRecipes(page = 1, filterDate?: string) {
     try {
       setLoadingRecipes(true);
       const params = new URLSearchParams();
@@ -205,7 +205,7 @@ export default function NutrientPlanPage() {
       if (selectedStage) params.append('stage', selectedStage);
       if (searchTerm) params.append('search', searchTerm);
       params.append('page', page.toString());
-      params.append('limit', '1000'); // 더 많은 데이터를 가져와서 클라이언트에서 필터링
+      params.append('limit', '21'); // 21개씩 페이지네이션
       
       const url = `/api/nutrients/browse?${params.toString()}`;
       console.log('🔍 API 호출:', url);
@@ -234,11 +234,8 @@ export default function NutrientPlanPage() {
         console.log('✅ 레시피 로드 성공:', filteredRecipes.length, '개');
         console.log('📊 페이지네이션 정보:', j.pagination);
         
-        if (append && page > 1) {
-          setRecipes(prev => [...prev, ...filteredRecipes]);
-        } else {
-          setRecipes(filteredRecipes);
-        }
+        // 페이지네이션: 항상 현재 페이지 데이터로 교체
+        setRecipes(filteredRecipes);
         
         // 페이지네이션 정보 업데이트
         setTotalCount(j.pagination.total);
@@ -780,7 +777,7 @@ export default function NutrientPlanPage() {
                         return (
                           <button
                             key={pageNum}
-                            onClick={() => loadRecipes(pageNum, false)}
+                            onClick={() => loadRecipes(pageNum)}
                             disabled={loadingRecipes}
                             className={`px-3 py-2 text-sm font-medium rounded-lg ${
                               currentPage === pageNum
@@ -795,7 +792,7 @@ export default function NutrientPlanPage() {
                     </div>
                     
                     <button
-                      onClick={() => loadRecipes(currentPage + 1, false)}
+                      onClick={() => loadRecipes(currentPage + 1)}
                       disabled={currentPage === totalPages || loadingRecipes}
                       className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -875,7 +872,7 @@ export default function NutrientPlanPage() {
                 {recipes.length > 0 && (
                   <div className="text-center">
                     <p className="text-gray-600">
-                      총 <span className="font-semibold text-gray-600">{recipes.length}</span>개의 레시피를 찾았습니다.
+                      총 <span className="font-semibold text-gray-600">{totalCount}</span>개의 레시피를 찾았습니다.
                     </p>
                   </div>
                 )}

@@ -704,44 +704,46 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
     <div className="min-h-screen bg-gray-50">
       <AppHeader user={user || undefined} />
       <div className="container mx-auto px-4 py-8">
-        {/* 농장 헤더 */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{farm.name}</h1>
-          {farm.description && (
-            <p className="text-gray-600">{farm.description}</p>
-          )}
-        </div>
-
-        {/* 베드 관리 섹션 */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">베드 관리</h2>
-            {user && user.role !== 'team_member' && (
-              <button
-                onClick={() => setShowAddBedModal(true)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                + 새 베드 추가
-              </button>
+        {/* 농장 카드 */}
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          {/* 농장 헤더 */}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{farm.name}</h1>
+            {farm.description && (
+              <p className="text-gray-600">{farm.description}</p>
             )}
           </div>
 
-          {beds.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <div className="text-gray-400 text-6xl mb-4">🌱</div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 베드가 없습니다</h3>
-              <p className="text-gray-500 mb-4">첫 번째 베드를 추가하여 농장을 시작해보세요.</p>
+          {/* 베드 관리 섹션 */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">베드 관리</h2>
               {user && user.role !== 'team_member' && (
                 <button
                   onClick={() => setShowAddBedModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
-                  + 첫 번째 베드 추가
+                  + 새 베드 추가
                 </button>
               )}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:gap-6">
+
+            {beds.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 rounded-lg">
+                <div className="text-gray-400 text-6xl mb-4">🌱</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">등록된 베드가 없습니다</h3>
+                <p className="text-gray-500 mb-4">첫 번째 베드를 추가하여 농장을 시작해보세요.</p>
+                {user && user.role !== 'team_member' && (
+                  <button
+                    onClick={() => setShowAddBedModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                  >
+                    + 첫 번째 베드 추가
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:gap-6">
               {beds.map((bed) => (
                   <div key={bed.id} className="bg-white rounded-xl shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow">
                     {/* 베드 헤더 - 모바일 최적화 */}
@@ -2679,6 +2681,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

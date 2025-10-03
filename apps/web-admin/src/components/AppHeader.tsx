@@ -368,14 +368,14 @@ export default function AppHeader({
     <>
       <header className="bg-white/80 backdrop-blur-md shadow-xl border-b border-white/20 sticky top-0 z-[50] relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
+          <div className="flex justify-between items-center py-3 md:py-4">
+            <div className="flex items-center space-x-3">
               <div 
-                className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center shadow-lg cursor-pointer hover:opacity-80 transition-opacity duration-200"
                 onClick={handleHomeClick}
                 title="홈으로"
               >
-                <span className="text-2xl">🏠</span>
+                <span className="text-lg md:text-xl">🏠</span>
               </div>
               <div 
                 className="flex items-center space-x-4 cursor-pointer hover:opacity-90 transition-all duration-300"
@@ -385,12 +385,12 @@ export default function AppHeader({
                   {(title || subtitle) && (isDashboard ? (
                     <>
                       {title && (
-                        <h1 className="text-4xl font-black bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
+                        <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
                           {title}
                         </h1>
                       )}
                       {subtitle && (
-                        <p className="text-xs text-gray-600 font-semibold bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">
+                        <p className="text-xs text-gray-600 font-medium bg-gradient-to-r from-gray-700 to-gray-500 bg-clip-text text-transparent">
                           {subtitle}
                         </p>
                       )}
@@ -398,12 +398,12 @@ export default function AppHeader({
                   ) : (
                     <>
                       {title && (
-                        <h1 className="text-3xl font-black text-gray-600 tracking-tight">
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-600 tracking-tight">
                           {title}
                         </h1>
                       )}
                       {subtitle && (
-                        <p className="text-sm text-gray-500 font-medium">
+                        <p className="text-xs text-gray-500 font-medium">
                           {subtitle}
                         </p>
                       )}
@@ -413,16 +413,16 @@ export default function AppHeader({
               </div>
             </div>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-4">
               {/* 데스크톱 사용자 정보 */}
-              <div className="hidden md:flex items-center space-x-4 text-sm">
+              <div className="hidden md:flex items-center space-x-3 text-xs">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   <span className="text-gray-600 font-medium">시스템 정상</span>
                 </div>
                 <div className="text-gray-400">|</div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-gray-600 font-semibold">
+                <div className="flex items-center space-x-2">
+                  <span className="text-gray-600 font-medium">
                     {safeUser.name} ({safeUser.email === 'sky3rain7@gmail.com' ? '최종 관리자' : 
                      safeUser.role === 'system_admin' ? '시스템 관리자' : 
                      safeUser.role === 'team_leader' ? '농장장' : '팀원'})
@@ -441,12 +441,12 @@ export default function AppHeader({
                   {/* 공지사항 아이콘 */}
                   <button
                     onClick={() => setIsNoticeOpen(true)}
-                    className="relative flex items-center justify-center w-8 h-8 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
+                    className="relative flex items-center justify-center w-6 h-6 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors"
                     title="공지사항"
                   >
-                    <span className="text-lg">📢</span>
+                    <span className="text-sm">📢</span>
                     {hasNewNotice && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                     )}
                   </button>
                 </div>
@@ -457,7 +457,7 @@ export default function AppHeader({
               {canManageUsers && (
                 <button
                   onClick={() => router.push('/admin')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
+                  className="hidden md:flex items-center px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[100px] justify-center"
                 >
                   승인 관리
                 </button>
@@ -465,7 +465,7 @@ export default function AppHeader({
               {canAccessUserManagement && (
                 <button
                   onClick={() => router.push('/team')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
+                  className="hidden md:flex items-center px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[100px] justify-center"
                 >
                   멤버 관리
                 </button>
@@ -473,7 +473,7 @@ export default function AppHeader({
               {canManageFarms && (
                 <button
                   onClick={() => router.push('/beds')}
-                  className="hidden md:flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-base font-bold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[140px] justify-center"
+                  className="hidden md:flex items-center px-3 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg text-sm font-semibold transition-all duration-200 hover:shadow-md transform hover:-translate-y-0.5 whitespace-nowrap min-w-[100px] justify-center"
                 >
                   {safeUser.role === 'team_member' ? '농장 보기' : '농장 관리'}
                 </button>
@@ -482,11 +482,11 @@ export default function AppHeader({
               {/* 햄버거 메뉴 버튼 */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                className="p-1.5 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                 title="메뉴"
               >
                 <span className="sr-only">메뉴 열기</span>
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
