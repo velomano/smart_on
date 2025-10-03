@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/AppHeader';
 import NotificationButton from '@/components/NotificationButton';
 import { getCurrentUser, AuthUser } from '@/lib/auth';
-import { loadNotificationSettings, saveNotificationSettings, NotificationSettings } from '@/lib/notificationService';
+import { loadNotificationSettings, saveNotificationSettings, initializeNotificationSettings, NotificationSettings } from '@/lib/notificationService';
 import { UserService } from '@/lib/userService';
 
 export default function NotificationsPage() {
@@ -48,11 +48,33 @@ export default function NotificationsPage() {
             });
           } else {
             // Supabase 설정이 없으면 localStorage에서 로드
-            setNotificationSettings(loadNotificationSettings());
+            const settings = loadNotificationSettings();
+            
+            // 새로운 알림 유형들이 없으면 초기화
+            const hasNewNotificationTypes = settings.notifications.season_notification !== undefined;
+            if (!hasNewNotificationTypes) {
+              console.log('🔄 새로운 알림 유형들을 위해 설정을 업데이트합니다.');
+              initializeNotificationSettings();
+              const updatedSettings = loadNotificationSettings();
+              setNotificationSettings(updatedSettings);
+            } else {
+              setNotificationSettings(settings);
+            }
           }
         } catch (error) {
           console.warn('Supabase 설정 로드 실패, localStorage 사용:', error);
-          setNotificationSettings(loadNotificationSettings());
+          const settings = loadNotificationSettings();
+          
+          // 새로운 알림 유형들이 없으면 초기화
+          const hasNewNotificationTypes = settings.notifications.season_notification !== undefined;
+          if (!hasNewNotificationTypes) {
+            console.log('🔄 새로운 알림 유형들을 위해 설정을 업데이트합니다.');
+            initializeNotificationSettings();
+            const updatedSettings = loadNotificationSettings();
+            setNotificationSettings(updatedSettings);
+          } else {
+            setNotificationSettings(settings);
+          }
         }
       } catch (err) {
         console.error('인증 확인 실패:', err);

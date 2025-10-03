@@ -93,7 +93,8 @@ export function loadNotificationSettings(): NotificationSettings {
     const parsed = JSON.parse(settings);
     telegramEnabled = parsed.telegramEnabled || false;
     telegramChatId = parsed.telegramChatId || '';
-    notifications = parsed.notifications || {
+    // 기존 설정에 새로운 알림 유형들을 기본값으로 추가
+    notifications = {
       temperature_notification: true,
       humidity_notification: true,
       ec_notification: true,
@@ -105,7 +106,9 @@ export function loadNotificationSettings(): NotificationSettings {
       nutrient_remaining_notification: true,
       maintenance_notification: true,
       equipment_failure_notification: true,
-      harvest_reminder_notification: true
+      harvest_reminder_notification: true,
+      // 기존 설정이 있으면 유지, 없으면 기본값 사용
+      ...(parsed.notifications || {})
     };
   }
   
@@ -160,6 +163,39 @@ export function saveNotificationSettings(settings: NotificationSettings) {
   } catch (error) {
     console.error('알림 설정 저장 실패:', error);
     throw error;
+  }
+}
+
+// 알림 설정 초기화 (새로운 알림 유형 추가 시 사용)
+export function initializeNotificationSettings() {
+  if (typeof window === 'undefined') {
+    return; // 서버사이드에서는 실행하지 않음
+  }
+  
+  const defaultSettings: NotificationSettings = {
+    telegramEnabled: false,
+    telegramChatId: '',
+    notifications: {
+      temperature_notification: true,
+      humidity_notification: true,
+      ec_notification: true,
+      ph_notification: true,
+      water_notification: true,
+      nutrient_temperature_notification: true,
+      season_notification: true,
+      growth_stage_notification: true,
+      nutrient_remaining_notification: true,
+      maintenance_notification: true,
+      equipment_failure_notification: true,
+      harvest_reminder_notification: true
+    }
+  };
+  
+  try {
+    localStorage.setItem('notificationSettings', JSON.stringify(defaultSettings));
+    console.log('알림 설정이 초기화되었습니다:', defaultSettings);
+  } catch (error) {
+    console.error('알림 설정 초기화 실패:', error);
   }
 }
 
