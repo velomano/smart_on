@@ -8,7 +8,7 @@ import { calculatePowerRequirements, suggestPowerSupplies } from '@/components/i
 import SchematicSVG from '@/components/iot-designer/SchematicSVG';
 import CodePreview from '@/components/iot-designer/CodePreview';
 // QR 코드는 네이티브 앱 전용으로 분리됨
-import { LiveLog } from '../../../src/components/connect/LiveLog';
+import { LiveLog } from '@/components/connect/LiveLog';
 import toast, { Toaster } from 'react-hot-toast';
 import LoRaWanForm from '@/components/iot-designer/LoRaWanForm';
 import AppHeader from '@/components/AppHeader';

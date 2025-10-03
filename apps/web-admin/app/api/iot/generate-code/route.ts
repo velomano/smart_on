@@ -941,6 +941,9 @@ function generateSensorReading(spec: SystemSpec): string {
   
   spec.sensors.forEach((sensor, sensorIndex) => {
     for (let i = 0; i < sensor.count; i++) {
+      const componentKey = `sensor_${sensorIndex}_${i}_${sensor.type}`;
+      const assignedPin = spec.pinAssignments?.[componentKey];
+      
       switch(sensor.type) {
         case 'BME280':
           readingCode.push(`
@@ -1011,7 +1014,6 @@ function generateSensorReading(spec: SystemSpec): string {
     Serial.println("${sensor.type} ${i + 1}번 데이터 읽기");`);
           break;
       }
-    }
     }
   });
   
