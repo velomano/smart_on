@@ -131,3 +131,100 @@ export function deduplicateSensors(sensors: UnifiedSensor[]): UnifiedSensor[] {
 export function normalizeKey(key: string): string {
   return key.toLowerCase().replace(/[^a-z0-9]/g, '_');
 }
+
+// 센서 연결 상태 확인 (최근 5분 이내 데이터가 있으면 연결됨)
+export async function checkSensorConnectionStatus(
+  farmId: string,
+  sensorType: string
+): Promise<boolean> {
+  try {
+    const supabase = await import('@/lib/supabase').then(m => m.getSupabaseClient());
+    
+    // 최근 5분 이내의 센서 데이터가 있는지 확인
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    
+    // 1. Universal Bridge 데이터 우선 확인 (iot_readings)
+    const { data: ubData, error: ubError } = await supabase
+      .from('iot_readings')
+      .select('id, ts, iot_devices!inner(farm_id)')
+      .eq('iot_devices.farm_id', farmId)
+      .eq('key', sensorType)
+      .gte('ts', fiveMinutesAgo)
+      .limit(1);
+    
+    if (ubData && ubData.length > 0) {
+      console.log(`📊 센서 ${sensorType} 연결 상태 (Universal Bridge):`, '연결됨');
+      return true;
+    }
+    
+    // 2. 기존 MQTT Bridge 데이터 확인 (sensor_readings)
+    const { data: mqttData, error: mqttError } = await supabase
+      .from('sensor_readings')
+      .select('id, ts, sensors!inner(type, devices!inner(farm_id))')
+      .eq('sensors.devices.farm_id', farmId)
+      .eq('sensors.type', sensorType)
+      .gte('ts', fiveMinutesAgo)
+      .limit(1);
+    
+    if (mqttData && mqttData.length > 0) {
+      console.log(`📊 센서 ${sensorType} 연결 상태 (MQTT Bridge):`, '연결됨');
+      return true;
+    }
+    
+    console.log(`📊 센서 ${sensorType} 연결 상태:`, '연결 안됨');
+    return false;
+  } catch (error) {
+    console.warn(`센서 ${sensorType} 연결 상태 확인 실패:`, error);
+    return false;
+  }
+}
+
+// 여러 센서의 연결 상태를 한번에 확인
+export async function checkMultipleSensorConnectionStatus(
+  farmId: string,
+  sensorTypes: string[]
+): Promise<Record<string, boolean>> {
+  const results: Record<string, boolean> = {};
+  
+  try {
+    const supabase = await import('@/lib/supabase').then(m => m.getSupabaseClient());
+    
+    // 먼저 실제로 존재하는 센서 타입들만 확인
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    
+    // Universal Bridge 데이터 우선 확인 (iot_readings)
+    const { data: ubData } = await supabase
+      .from('iot_readings')
+      .select('key, iot_devices!inner(farm_id)')
+      .eq('iot_devices.farm_id', farmId)
+      .in('key', sensorTypes)
+      .gte('ts', fiveMinutesAgo);
+    
+    // 기존 MQTT Bridge 데이터 확인 (sensor_readings)
+    const { data: mqttData } = await supabase
+      .from('sensor_readings')
+      .select('sensors!inner(type, devices!inner(farm_id))')
+      .eq('sensors.devices.farm_id', farmId)
+      .in('sensors.type', sensorTypes)
+      .gte('ts', fiveMinutesAgo);
+    
+    // Universal Bridge에서 연결된 센서들
+    const ubConnectedTypes = new Set(ubData?.map(item => item.key) || []);
+    
+    // MQTT Bridge에서 연결된 센서들
+    const mqttConnectedTypes = new Set(mqttData?.map(item => (item as any).sensors.type) || []);
+    
+    // 각 센서 타입별로 연결 상태 설정 (Universal Bridge 우선)
+    sensorTypes.forEach(sensorType => {
+      results[sensorType] = ubConnectedTypes.has(sensorType) || mqttConnectedTypes.has(sensorType);
+    });
+    
+    console.log('📊 센서 연결 상태 일괄 확인 결과:', results);
+    return results;
+  } catch (error) {
+    console.warn('센서 연결 상태 일괄 확인 실패:', error);
+    // 오류 발생 시 모든 센서를 연결 안됨으로 처리
+    sensorTypes.forEach(type => results[type] = false);
+    return results;
+  }
+}

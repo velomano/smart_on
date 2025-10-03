@@ -7,6 +7,7 @@ import NotificationButton from '@/components/NotificationButton';
 import { getCurrentUser, AuthUser } from '@/lib/auth';
 import { loadNotificationSettings, saveNotificationSettings, initializeNotificationSettings, NotificationSettings } from '@/lib/notificationService';
 import { UserService } from '@/lib/userService';
+import { checkMultipleSensorConnectionStatus } from '@/lib/data/unified-iot-data';
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function NotificationsPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [notificationSettings, setNotificationSettings] = useState<NotificationSettings>(() => loadNotificationSettings());
   const [saveStatus, setSaveStatus] = useState('');
+  const [sensorConnectionStatus, setSensorConnectionStatus] = useState<Record<string, boolean>>({});
+  const [sensorStatusLoading, setSensorStatusLoading] = useState(true);
 
   // 사용자 인증 확인
   useEffect(() => {
@@ -97,6 +100,49 @@ export default function NotificationsPage() {
     };
   }, []);
 
+  // 센서 연결 상태 확인
+  useEffect(() => {
+    const checkSensorStatus = async () => {
+      if (!user) return;
+      
+      try {
+        setSensorStatusLoading(true);
+        
+        // 현재 사용자의 농장 ID 가져오기 (team_id 또는 기본값 사용)
+        const farmId = user.team_id || '00000000-0000-0000-0000-000000000001';
+        
+        // 센서 타입 목록 정의 (실제 데이터베이스에 있을 수 있는 타입들)
+        const sensorTypes = [
+          'temperature',
+          'humidity', 
+          'ph',
+          'ec',
+          'water_level',
+          'nutrient_temperature'
+        ];
+        
+        // 센서 연결 상태 확인
+        const connectionStatus = await checkMultipleSensorConnectionStatus(farmId, sensorTypes);
+        setSensorConnectionStatus(connectionStatus);
+        
+        console.log('📊 센서 연결 상태:', connectionStatus);
+      } catch (error) {
+        console.warn('센서 연결 상태 확인 실패:', error);
+        // 오류 발생 시 모든 센서를 연결 안됨으로 처리
+        const fallbackStatus: Record<string, boolean> = {};
+        ['temperature', 'humidity', 'ph', 'ec', 'water_level', 'nutrient_temperature'].forEach((type: string) => fallbackStatus[type] = false);
+        setSensorConnectionStatus(fallbackStatus);
+      } finally {
+        setSensorStatusLoading(false);
+      }
+    };
+    
+    checkSensorStatus();
+    
+    // 30초마다 센서 상태 업데이트
+    const interval = setInterval(checkSensorStatus, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // 알림 설정 저장
   const handleSaveSettings = async () => {
@@ -284,46 +330,95 @@ export default function NotificationsPage() {
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center">
               <span className="text-2xl sm:text-3xl mr-2 sm:mr-3">🔔</span>
               알림 유형 설정
+              {sensorStatusLoading && (
+                <div className="ml-3 flex items-center text-sm text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                  센서 상태 확인 중...
+                </div>
+              )}
             </h2>
             
             <div className="space-y-3 sm:space-y-4">
               {Object.entries(notificationSettings.notifications).map(([key, enabled]) => {
-                const labels: Record<string, { title: string; description: string; icon: string }> = {
-                  temperature_notification: { title: '🌡️ 온도 알림', description: '높은/낮은 온도 경고', icon: '🌡️' },
-                  humidity_notification: { title: '💧 습도 알림', description: '높은/낮은 습도 경고', icon: '💧' },
-                  ec_notification: { title: '🔋 EC 알림', description: '배양액 농도 이상', icon: '🔋' },
-                  ph_notification: { title: '⚗️ pH 알림', description: 'pH 값 이상', icon: '⚗️' },
-                  water_notification: { title: '💧 수위 알림', description: '저수위/고수위 경고', icon: '💧' },
-                  nutrient_temperature_notification: { title: '🌊 배양액 온도 알림', description: '배양액 온도 이상', icon: '🌊' },
-                  season_notification: { title: '🌸 24절기 알림', description: '절기 변경 및 농사 조언', icon: '🌸' },
-                  growth_stage_notification: { title: '🌱 생장단계 알림', description: '작물 생장단계 변경', icon: '🌱' },
-                  nutrient_remaining_notification: { title: '🪣 배양액 잔량 알림', description: '배양액 탱크 잔량 부족', icon: '🪣' },
-                  maintenance_notification: { title: '🔧 정기 관리 알림', description: '정기 관리 작업 알림', icon: '🔧' },
-                  equipment_failure_notification: { title: '⚠️ 장비 고장 알림', description: '장비 오류 및 고장', icon: '⚠️' },
-                  harvest_reminder_notification: { title: '🍅 수확 알림', description: '수확 시기 알림', icon: '🍅' }
+                const labels: Record<string, { title: string; description: string; icon: string; sensorType?: string }> = {
+                  temperature_notification: { title: '🌡️ 온도 알림', description: '높은/낮은 온도 경고', icon: '🌡️', sensorType: 'temperature' },
+                  humidity_notification: { title: '💧 습도 알림', description: '높은/낮은 습도 경고', icon: '💧', sensorType: 'humidity' },
+                  ec_notification: { title: '🔋 EC 알림', description: '배양액 농도 이상', icon: '🔋', sensorType: 'ec' },
+                  ph_notification: { title: '⚗️ pH 알림', description: 'pH 값 이상', icon: '⚗️', sensorType: 'ph' },
+                  water_notification: { title: '💧 수위 알림', description: '저수위/고수위 경고', icon: '💧', sensorType: 'water_level' },
+                  nutrient_temperature_notification: { title: '🌊 배양액 온도 알림', description: '배양액 온도 이상', icon: '🌊', sensorType: 'nutrient_temperature' },
+                  season_notification: { title: '🌸 24절기 알림', description: '절기 변경 및 농사 조언', icon: '🌸' }
                 };
                 
                 const label = labels[key];
                 
+                // label이 정의되지 않은 알림 유형은 건너뛰기
+                if (!label) {
+                  return null;
+                }
+                
+                const isSensorNotification = label.sensorType !== undefined;
+                const isConnected = isSensorNotification ? sensorConnectionStatus[label.sensorType!] : true;
+                const isDisabled = isSensorNotification && !isConnected;
+                
                 return (
-                  <div key={key} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg">
+                  <div key={key} className={`flex items-center justify-between p-3 sm:p-4 rounded-lg transition-all duration-200 ${
+                    isDisabled 
+                      ? 'bg-gray-100 opacity-60' 
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  }`}>
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-1 mr-3">
-                      <span className="text-xl sm:text-2xl">{label.icon}</span>
-                      <div className="min-w-0">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900">{label.title}</h3>
-                        <p className="text-gray-600 text-xs sm:text-sm">{label.description}</p>
+                      {/* 센서 연결 상태 표시 */}
+                      <div className="relative">
+                        <span className="text-xl sm:text-2xl">{label.icon}</span>
+                        {isSensorNotification && (
+                          <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${
+                            isConnected ? 'bg-green-500' : 'bg-gray-400'
+                          }`}></div>
+                        )}
                       </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <h3 className={`text-base sm:text-lg font-semibold ${
+                            isDisabled ? 'text-gray-500' : 'text-gray-900'
+                          }`}>
+                            {label.title}
+                          </h3>
+                          {isSensorNotification && !isConnected && (
+                            <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full">
+                              연결 안됨
+                            </span>
+                          )}
                         </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                        checked={enabled}
-                        onChange={(e) => handleSettingChange(`notifications.${key}`, e.target.checked)}
+                        <p className={`text-xs sm:text-sm ${
+                          isDisabled ? 'text-gray-400' : 'text-gray-600'
+                        }`}>
+                          {label.description}
+                          {isSensorNotification && !isConnected && (
+                            <span className="block text-red-500 mt-1">
+                              ⚠️ 센서가 연결되지 않아 알림을 받을 수 없습니다
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <label className={`relative inline-flex items-center ${
+                      isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={enabled && !isDisabled}
+                        onChange={(e) => !isDisabled && handleSettingChange(`notifications.${key}`, e.target.checked)}
+                        disabled={isDisabled}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                          </label>
-                        </div>
+                      <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                        isDisabled 
+                          ? 'bg-gray-300 peer-checked:bg-gray-300' 
+                          : 'bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 peer-checked:bg-blue-600'
+                      }`}></div>
+                    </label>
+                  </div>
                 );
               })}
             </div>
@@ -417,34 +512,51 @@ export default function NotificationsPage() {
               <h4 className="text-sm sm:text-base font-semibold text-blue-900 mb-3">📋 알림 유형별 상태</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
                 {Object.entries(notificationSettings.notifications).map(([key, enabled]) => {
-                  const labels: Record<string, { title: string; icon: string }> = {
-                    temperature_notification: { title: '온도', icon: '🌡️' },
-                    humidity_notification: { title: '습도', icon: '💧' },
-                    ec_notification: { title: 'EC', icon: '🔋' },
-                    ph_notification: { title: 'pH', icon: '⚗️' },
-                    water_notification: { title: '수위', icon: '💧' },
-                    nutrient_temperature_notification: { title: '배양액온도', icon: '🌊' },
-                    season_notification: { title: '24절기', icon: '🌸' },
-                    growth_stage_notification: { title: '생장단계', icon: '🌱' },
-                    nutrient_remaining_notification: { title: '배양액잔량', icon: '🪣' },
-                    maintenance_notification: { title: '정기관리', icon: '🔧' },
-                    equipment_failure_notification: { title: '장비고장', icon: '⚠️' },
-                    harvest_reminder_notification: { title: '수확', icon: '🍅' }
+                  const labels: Record<string, { title: string; icon: string; sensorType?: string }> = {
+                    temperature_notification: { title: '온도', icon: '🌡️', sensorType: 'temperature' },
+                    humidity_notification: { title: '습도', icon: '💧', sensorType: 'humidity' },
+                    ec_notification: { title: 'EC', icon: '🔋', sensorType: 'ec' },
+                    ph_notification: { title: 'pH', icon: '⚗️', sensorType: 'ph' },
+                    water_notification: { title: '수위', icon: '💧', sensorType: 'water_level' },
+                    nutrient_temperature_notification: { title: '배양액온도', icon: '🌊', sensorType: 'nutrient_temperature' },
+                    season_notification: { title: '24절기', icon: '🌸' }
                   };
                   
                   const label = labels[key];
                   
+                  // label이 정의되지 않은 알림 유형은 건너뛰기
+                  if (!label) {
+                    return null;
+                  }
+                  
+                  const isSensorNotification = label.sensorType !== undefined;
+                  const isConnected = isSensorNotification ? sensorConnectionStatus[label.sensorType!] : true;
+                  const isDisabled = isSensorNotification && !isConnected;
+                  
                   return (
-                    <div key={key} className={`rounded-lg p-2 sm:p-3 text-center border ${
-                      enabled 
-                        ? 'bg-green-50 border-green-200 text-green-800' 
-                        : 'bg-gray-50 border-gray-200 text-gray-500'
+                    <div key={key} className={`rounded-lg p-2 sm:p-3 text-center border relative ${
+                      isDisabled 
+                        ? 'bg-gray-100 border-gray-300 text-gray-400' 
+                        : enabled 
+                          ? 'bg-green-50 border-green-200 text-green-800' 
+                          : 'bg-gray-50 border-gray-200 text-gray-500'
                     }`}>
+                      {/* 센서 연결 상태 표시 */}
+                      {isSensorNotification && (
+                        <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
+                          isConnected ? 'bg-green-500' : 'bg-gray-400'
+                        }`}></div>
+                      )}
                       <div className="text-lg sm:text-xl mb-1">{label.icon}</div>
                       <div className="text-xs sm:text-sm font-medium">{label.title}</div>
                       <div className="text-xs">
-                        {enabled ? '✅' : '⭕'}
+                        {isDisabled ? '🔴' : enabled ? '✅' : '⭕'}
                       </div>
+                      {isDisabled && (
+                        <div className="text-xs text-red-500 mt-1">
+                          연결 안됨
+                        </div>
+                      )}
                     </div>
                   );
                 })}
