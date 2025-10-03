@@ -69,7 +69,7 @@ export const sensors = [
     name: 'DHT22',
     pins: ['DATA','VCC','GND'],
     requires: [{ part: 'resistor', value: '4.7kΩ', between: 'DATA-3.3V' }],
-    power: { voltage: 3.3 as Voltage, current_mA: 2 },
+    power: { voltage: 3.3 as Voltage, current_mA: 5 },
     bus: 'single-wire',
     alloc: { prefer: 'digital', count: 1 }
   },
@@ -81,6 +81,22 @@ export const sensors = [
     power: { voltage: 3.3 as Voltage, current_mA: 1.5 },
     bus: 'onewire',
     alloc: { prefer: 'onewire', count: 1 }
+  },
+  {
+    type: 'bme280',
+    name: 'BME280',
+    pins: ['SDA','SCL','VCC','GND'],
+    power: { voltage: 3.3 as Voltage, current_mA: 5 },
+    bus: 'i2c',
+    alloc: { i2c: true }
+  },
+  {
+    type: 'ads1115',
+    name: 'ADS1115',
+    pins: ['SDA','SCL','VCC','GND','A0','A1','A2','A3'],
+    power: { voltage: 3.3 as Voltage, current_mA: 5 },
+    bus: 'i2c',
+    alloc: { i2c: true }
   },
   {
     type: 'bh1750',
@@ -149,6 +165,41 @@ export const sensors = [
 ] as const;
 
 export const controls = [
+  {
+    type: 'ac_relay_lamp',
+    name: 'AC_Relay_Lamp',
+    control: 'boolean' as ControlType,
+    driver: 'relay-module',
+    pins: ['IN','VCC','GND'],
+    power: { voltage: 5 as Voltage, current_mA: 50 },
+    load_note: 'AC 부하 전원 분리, 공통접지, 광절연 권장'
+  },
+  {
+    type: 'solid_state_relay',
+    name: 'Solid_State_Relay',
+    control: 'boolean' as ControlType,
+    driver: 'ssr-module',
+    pins: ['IN','VCC','GND'],
+    power: { voltage: 5 as Voltage, current_mA: 50 },
+    load_note: 'SSR 구동, AC 부하 전원 분리'
+  },
+  {
+    type: 'peristaltic_pump',
+    name: 'Peristaltic_Pump',
+    control: 'boolean' as ControlType,
+    driver: 'relay-module',
+    pins: ['IN','VCC','GND'],
+    power: { voltage: 5 as Voltage, current_mA: 50 },
+    load_note: '펌프 구동, 역기전력 보호 필요'
+  },
+  {
+    type: 'pwm_buzzer',
+    name: 'PWM_Buzzer',
+    control: 'pwm' as ControlType,
+    pins: ['PWM','VCC','GND'],
+    power: { voltage: 5 as Voltage, current_mA: 50 },
+    load_note: 'PWM 제어, 전류 제한 저항 필요'
+  },
   {
     type: 'relay',
     name: '릴레이(채널1)',

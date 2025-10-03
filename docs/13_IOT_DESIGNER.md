@@ -308,6 +308,8 @@ function calculatePowerRequirements(items: Array<{
 - [x] MQTT 전용 아키텍처 적용
 - [x] 장치별 PlatformIO 설정
 - [x] 하드웨어 검증 완료
+- [x] **연결 페이지 워크플로우 개선** (2025-01-03)
+- [x] **QR 코드 네이티브 앱 전용 분리** (2025-01-03)
 
 ### **Phase 2: 확장 기능 (진행 중)**
 - [ ] RS-485/Modbus RTU 어댑터 (산업용 PLC)

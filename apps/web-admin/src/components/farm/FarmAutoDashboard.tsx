@@ -152,9 +152,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => router.push(`/iot-designer?farmId=${farmId}`)}
-                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
               >
-                ⚡ IoT 연결
+                ⚡ 유니버셜 브릿지 연결
               </button>
             </div>
           </div>

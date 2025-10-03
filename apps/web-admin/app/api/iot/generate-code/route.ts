@@ -587,62 +587,107 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `코드 생성 오류: ${codeError instanceof Error ? codeError.message : '알 수 없는 오류'}` }, { status: 500 });
     }
     
-    // ZIP 파일 생성
-    const zip = new JSZip();
+    // returnType 파라미터 확인
+    const returnType = (spec as any).returnType || 'zip';
     
-    // 메인 코드 파일 추가
-    zip.file(mainFilename, code);
-    
-    // ZIP 파일명 생성 (재현성/검색성)
-    const zipFilename = generateZipFilename(spec.farmId || 'demo', spec.device, spec.protocol);
-    
-    if (spec.device.startsWith('raspberry')) {
-      // 라즈베리 파이 전용 파일들
-      const configContent = generateRaspberryPiConfig(spec);
-      zip.file('config.yaml', configContent);
+    if (returnType === 'text') {
+      // 텍스트 형태로 파일들을 결합하여 반환
+      const files: Record<string, string> = {};
       
-      const requirementsContent = generateRaspberryPiRequirements(spec);
-      zip.file('requirements.txt', requirementsContent);
+      // 메인 코드 파일 추가
+      files[mainFilename] = code;
       
-      const serviceContent = generateRaspberryPiService(spec);
-      zip.file('terahub-rpi.service', serviceContent);
-      
-      const readmeContent = generateRaspberryPiReadme(spec);
-      zip.file('README.md', readmeContent);
-    } else {
-      // ESP32/Arduino 전용 파일들
-      const configContent = generateConfigFile(spec);
-      zip.file('config.json', configContent);
-      
-      // 캘리브레이션 파일 추가 (센서가 있는 경우)
-      if (spec.sensors.length > 0) {
-        const calibrationContent = generateCalibrationFile(spec);
-        zip.file('calibration.json', calibrationContent);
+      if (spec.device.startsWith('raspberry')) {
+        // 라즈베리 파이 전용 파일들
+        files['config.yaml'] = generateRaspberryPiConfig(spec);
+        files['requirements.txt'] = generateRaspberryPiRequirements(spec);
+        files['terahub-rpi.service'] = generateRaspberryPiService(spec);
+        files['README.md'] = generateRaspberryPiReadme(spec);
+      } else {
+        // ESP32/Arduino 전용 파일들
+        files['config.json'] = generateConfigFile(spec);
+        
+        // 캘리브레이션 파일 추가 (센서가 있는 경우)
+        if (spec.sensors.length > 0) {
+          files['calibration.json'] = generateCalibrationFile(spec);
+        }
+        
+        files['platformio.ini'] = generatePlatformIOConfig(spec);
+        files['README.md'] = generateSimpleReadme(spec);
       }
       
-      const platformioContent = generatePlatformIOConfig(spec);
-      zip.file('platformio.ini', platformioContent);
+      // JSON 형태로 파일들을 반환 (인코딩 문제 해결)
+      console.log('📝 JSON 형태 코드 반환, 파일 수:', Object.keys(files).length);
       
-      const readmeContent = generateSimpleReadme(spec);
-      zip.file('README.md', readmeContent);
+      return NextResponse.json({
+        files: files,
+        device: spec.device,
+        protocol: spec.protocol,
+        farmId: spec.farmId
+      }, {
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'no-store',
+        },
+      });
+    } else {
+      // ZIP 파일 생성
+      const zip = new JSZip();
+      
+      // 메인 코드 파일 추가
+      zip.file(mainFilename, code);
+      
+      // ZIP 파일명 생성 (재현성/검색성)
+      const zipFilename = generateZipFilename(spec.farmId || 'demo', spec.device, spec.protocol);
+      
+      if (spec.device.startsWith('raspberry')) {
+        // 라즈베리 파이 전용 파일들
+        const configContent = generateRaspberryPiConfig(spec);
+        zip.file('config.yaml', configContent);
+        
+        const requirementsContent = generateRaspberryPiRequirements(spec);
+        zip.file('requirements.txt', requirementsContent);
+        
+        const serviceContent = generateRaspberryPiService(spec);
+        zip.file('terahub-rpi.service', serviceContent);
+        
+        const readmeContent = generateRaspberryPiReadme(spec);
+        zip.file('README.md', readmeContent);
+      } else {
+        // ESP32/Arduino 전용 파일들
+        const configContent = generateConfigFile(spec);
+        zip.file('config.json', configContent);
+        
+        // 캘리브레이션 파일 추가 (센서가 있는 경우)
+        if (spec.sensors.length > 0) {
+          const calibrationContent = generateCalibrationFile(spec);
+          zip.file('calibration.json', calibrationContent);
+        }
+        
+        const platformioContent = generatePlatformIOConfig(spec);
+        zip.file('platformio.ini', platformioContent);
+        
+        const readmeContent = generateSimpleReadme(spec);
+        zip.file('README.md', readmeContent);
+      }
+      
+      console.log('📦 ZIP 파일 생성 중...');
+      
+      // NodeBuffer 대신 범용적인 uint8array로 생성
+      const content = await zip.generateAsync({ type: 'uint8array' });
+      
+      console.log('📦 ZIP 파일 생성 완료, 크기:', content.byteLength, 'bytes');
+      
+      // ZIP 파일로 다운로드
+      return new Response(content as any, {
+        headers: {
+          'Content-Type': 'application/zip',
+          'Content-Disposition': `attachment; filename="${zipFilename}"`,
+          'Content-Length': String(content.byteLength),
+          'Cache-Control': 'no-store',
+        },
+      });
     }
-    
-    console.log('📦 ZIP 파일 생성 중...');
-    
-    // NodeBuffer 대신 범용적인 uint8array로 생성
-    const content = await zip.generateAsync({ type: 'uint8array' });
-    
-    console.log('📦 ZIP 파일 생성 완료, 크기:', content.byteLength, 'bytes');
-    
-    // ZIP 파일로 다운로드
-    return new Response(content as any, {
-      headers: {
-        'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${zipFilename}"`,
-        'Content-Length': String(content.byteLength),
-        'Cache-Control': 'no-store',
-      },
-    });
   } catch (error) {
     console.error('코드 생성 오류:', error);
     return NextResponse.json({ error: '코드 생성 중 오류가 발생했습니다' }, { status: 500 });
@@ -781,18 +826,44 @@ function generateSensorDeclarations(spec: SystemSpec): string {
 function generateActuatorPins(spec: SystemSpec): string {
   const pins: string[] = [];
   
-  spec.controls.forEach((control, index) => {
-    switch(control.type) {
-      case 'WS2812B_NeoPixel':
-        pins.push(`// WS2812B 핀: DATA=GPIO27 (레벨시프터 권장)`);
-        break;
-      case 'A4988_Stepper':
-        pins.push(`// A4988 핀: STEP=GPIO33, DIR=GPIO32, EN=GPIO14`);
-        break;
-      case 'AC_Relay_Lamp':
-        pins.push(`// 릴레이 핀: GPIO26 (외부 전원 필요)`);
-      break;
-  }
+  spec.controls.forEach((control, controlIndex) => {
+    for (let i = 0; i < control.count; i++) {
+      const componentKey = `control_${controlIndex}_${i}_${control.type}`;
+      const assignedPin = spec.pinAssignments?.[componentKey];
+      
+      switch(control.type) {
+        case 'WS2812B_NeoPixel':
+          pins.push(`// WS2812B ${i + 1}번 핀: DATA=${assignedPin || 'GPIO27'} (레벨시프터 권장)`);
+          break;
+        case 'A4988_Stepper':
+          pins.push(`// A4988 ${i + 1}번 핀: STEP=${assignedPin || 'GPIO33'}, DIR=GPIO32, EN=GPIO14`);
+          break;
+        case 'AC_Relay_Lamp':
+          pins.push(`// AC 릴레이 ${i + 1}번 핀: ${assignedPin || 'GPIO26'} (외부 전원 필요)`);
+          break;
+        case 'PWM_12V_LED':
+          pins.push(`// 12V LED ${i + 1}번 핀: ${assignedPin || 'GPIO25'} (MOSFET PWM)`);
+          break;
+        case 'TB6612_DC_Motor':
+          pins.push(`// DC 모터 ${i + 1}번 핀: AIN1=${assignedPin || 'GPIO32'}, AIN2=GPIO33, PWMA=GPIO25`);
+          break;
+        case 'SG90_Servo':
+          pins.push(`// 서보모터 ${i + 1}번 핀: ${assignedPin || 'GPIO18'} (PWM)`);
+          break;
+        case 'Solenoid_Valve':
+          pins.push(`// 솔레노이드 밸브 ${i + 1}번 핀: ${assignedPin || 'GPIO26'} (릴레이 제어)`);
+          break;
+        case 'PWM_DC_Fan':
+          pins.push(`// DC 팬 ${i + 1}번 핀: ${assignedPin || 'GPIO25'} (PWM 제어)`);
+          break;
+        case 'Generic_LED':
+          pins.push(`// LED ${i + 1}번 핀: ${assignedPin || 'GPIO2'}`);
+          break;
+        default:
+          pins.push(`// ${control.type} ${i + 1}번 핀: ${assignedPin || 'GPIO26'}`);
+          break;
+      }
+    }
   });
   
   return pins.join('\n');
@@ -802,97 +873,91 @@ function generateActuatorPins(spec: SystemSpec): string {
 function generateSensorInitialization(spec: SystemSpec): string {
   const initCode: string[] = [];
   
-  spec.sensors.forEach((sensor, index) => {
-    switch(sensor.type) {
-      case 'BME280':
-        initCode.push(`
-  // BME280 초기화 (I2C 주소 자동 감지: 0x76 또는 0x77)
-  if (!bme${index}.begin(0x76)) {
-    if (!bme${index}.begin(0x77)) {
-      Serial.println("BME280 초기화 실패!");
+  spec.sensors.forEach((sensor, sensorIndex) => {
+    for (let i = 0; i < sensor.count; i++) {
+      const componentKey = `sensor_${sensorIndex}_${i}_${sensor.type}`;
+      const assignedPin = spec.pinAssignments?.[componentKey];
+      
+      switch(sensor.type) {
+        case 'BME280':
+          initCode.push(`
+  // BME280 ${i + 1}번 초기화 (I2C 주소 자동 감지: 0x76 또는 0x77)
+  if (!bme${sensorIndex}_${i}.begin(0x76)) {
+    if (!bme${sensorIndex}_${i}.begin(0x77)) {
+      Serial.println("BME280 ${i + 1}번 초기화 실패!");
     } else {
-      Serial.println("BME280 초기화 성공 (주소: 0x77)");
+      Serial.println("BME280 ${i + 1}번 초기화 성공 (주소: 0x77)");
     }
   } else {
-    Serial.println("BME280 초기화 성공 (주소: 0x76)");
+    Serial.println("BME280 ${i + 1}번 초기화 성공 (주소: 0x76)");
   }`);
-        break;
-      case 'ENS160':
-        initCode.push(`
-  // ENS160 초기화 (I2C 주소 자동 감지: 0x52 또는 0x53)
-  if (!ens160_${index}.begin(0x52)) {
-    if (!ens160_${index}.begin(0x53)) {
-      Serial.println("ENS160 초기화 실패!");
+          break;
+        case 'ENS160':
+          initCode.push(`
+  // ENS160 ${i + 1}번 초기화 (I2C 주소 자동 감지: 0x52 또는 0x53)
+  if (!ens160_${sensorIndex}_${i}.begin(0x52)) {
+    if (!ens160_${sensorIndex}_${i}.begin(0x53)) {
+      Serial.println("ENS160 ${i + 1}번 초기화 실패!");
     } else {
-      Serial.println("ENS160 초기화 성공 (주소: 0x53)");
+      Serial.println("ENS160 ${i + 1}번 초기화 성공 (주소: 0x53)");
     }
   } else {
-    Serial.println("ENS160 초기화 성공 (주소: 0x52)");
+    Serial.println("ENS160 ${i + 1}번 초기화 성공 (주소: 0x52)");
   }`);
-        break;
-      case 'HC-SR04':
-        initCode.push(`
-  // HC-SR04 초기화 (TRIG/ECHO 핀 설정)
-  pinMode(TRIG_PIN_${index}, OUTPUT);
-  pinMode(ECHO_PIN_${index}, INPUT);
-  Serial.println("HC-SR04 초기화 완료");`);
-        break;
+          break;
+        case 'HC-SR04':
+          initCode.push(`
+  // HC-SR04 ${i + 1}번 초기화 (TRIG/ECHO 핀 설정)
+  pinMode(${assignedPin || 'GPIO4'}, OUTPUT);  // TRIG 핀
+  pinMode(${assignedPin || 'GPIO5'}, INPUT);   // ECHO 핀
+  Serial.println("HC-SR04 ${i + 1}번 초기화 완료");`);
+          break;
+        case 'DHT22':
+          initCode.push(`
+  // DHT22 ${i + 1}번 초기화 (디지털 핀)
+  pinMode(${assignedPin || 'GPIO4'}, INPUT_PULLUP);
+  Serial.println("DHT22 ${i + 1}번 초기화 완료");`);
+          break;
+        case 'Generic_Analog':
+          initCode.push(`
+  // 아날로그 센서 ${i + 1}번 초기화
+  Serial.println("아날로그 센서 ${i + 1}번 초기화 완료 (핀: ${assignedPin || 'A0'})");`);
+          break;
+        default:
+          initCode.push(`
+  // ${sensor.type} ${i + 1}번 초기화
+  Serial.println("${sensor.type} ${i + 1}번 초기화 완료");`);
+          break;
+      }
     }
   });
   
-  spec.controls.forEach((control, index) => {
-    switch(control.type) {
-      case 'WS2812B_NeoPixel':
-        initCode.push(`
-  // WS2812B 초기화
-  strip${index}.begin();
-  strip${index}.show();
-  Serial.println("WS2812B 초기화 완료");`);
-        break;
-      case 'A4988_Stepper':
-        initCode.push(`
-  // A4988 스테퍼 초기화
-  pinMode(STEP_PIN_${index}, OUTPUT);
-  pinMode(DIR_PIN_${index}, OUTPUT);
-  pinMode(EN_PIN_${index}, OUTPUT);
-  digitalWrite(EN_PIN_${index}, LOW);  // 활성화
-  Serial.println("A4988 스테퍼 초기화 완료");`);
-        break;
-      case 'AC_Relay_Lamp':
-        initCode.push(`
-  // 릴레이 초기화
-  pinMode(RELAY_PIN_${index}, OUTPUT);
-  digitalWrite(RELAY_PIN_${index}, LOW);  // 초기값 OFF
-  Serial.println("릴레이 초기화 완료");`);
-        break;
-    }
-  });
-  
-  return initCode.join('');
+  return initCode.join('\n');
 }
 
 // 센서 데이터 읽기 코드 생성
 function generateSensorReading(spec: SystemSpec): string {
   const readingCode: string[] = [];
   
-  spec.sensors.forEach((sensor, index) => {
-    switch(sensor.type) {
-      case 'BME280':
-        readingCode.push(`
-    // BME280 데이터 읽기
-    float temp${index} = bme${index}.readTemperature();
-    float hum${index} = bme${index}.readHumidity();
-    float press${index} = bme${index}.readPressure() / 100.0;
+  spec.sensors.forEach((sensor, sensorIndex) => {
+    for (let i = 0; i < sensor.count; i++) {
+      switch(sensor.type) {
+        case 'BME280':
+          readingCode.push(`
+    // BME280 ${i + 1}번 데이터 읽기
+    float temp${sensorIndex}_${i} = bme${sensorIndex}_${i}.readTemperature();
+    float hum${sensorIndex}_${i} = bme${sensorIndex}_${i}.readHumidity();
+    float press${sensorIndex}_${i} = bme${sensorIndex}_${i}.readPressure() / 100.0;
     
     char tempStr[10], humStr[10], pressStr[10];
-    dtostrf(temp${index}, 1, 2, tempStr);
-    dtostrf(hum${index}, 1, 2, humStr);
-    dtostrf(press${index}, 1, 2, pressStr);
+    dtostrf(temp${sensorIndex}_${i}, 1, 2, tempStr);
+    dtostrf(hum${sensorIndex}_${i}, 1, 2, humStr);
+    dtostrf(press${sensorIndex}_${i}, 1, 2, pressStr);
     
-    mqtt.publish((String(topicBase) + "/sensors/bme280_${index}/temperature").c_str(), tempStr, true);
-    mqtt.publish((String(topicBase) + "/sensors/bme280_${index}/humidity").c_str(), humStr, true);
-    mqtt.publish((String(topicBase) + "/sensors/bme280_${index}/pressure").c_str(), pressStr, true);`);
-        break;
+    mqtt.publish((String(topicBase) + "/sensors/bme280_${sensorIndex}_${i}/temperature").c_str(), tempStr, true);
+    mqtt.publish((String(topicBase) + "/sensors/bme280_${sensorIndex}_${i}/humidity").c_str(), humStr, true);
+    mqtt.publish((String(topicBase) + "/sensors/bme280_${sensorIndex}_${i}/pressure").c_str(), pressStr, true);`);
+          break;
       case 'ENS160':
         readingCode.push(`
     // ENS160 데이터 읽기

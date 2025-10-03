@@ -9,6 +9,7 @@ import { createHttpServer } from './protocols/http/server.js';
 import { UniversalMessageBus } from './core/messagebus.js';
 import { initSupabase } from './db/index.js';
 import { MQTTClientManager } from './protocols/mqtt/client.js';
+import { createMQTTBroker } from './protocols/mqtt/broker.js';
 import { loadFarmConfigs } from './protocols/mqtt/loadConfig.js';
 import cron from 'node-cron';
 
@@ -41,7 +42,20 @@ async function main() {
   const messageBus = new UniversalMessageBus();
   console.log('✅ Message Bus initialized');
 
-  // MQTT 클라이언트 매니저 초기화
+  // MQTT 브로커 서버 생성
+  const mqttBroker = createMQTTBroker({
+    port: parseInt(process.env.BRIDGE_MQTT_PORT || '1883'),
+    tlsPort: process.env.BRIDGE_MQTT_TLS_PORT ? parseInt(process.env.BRIDGE_MQTT_TLS_PORT) : undefined,
+    tlsCert: process.env.BRIDGE_MQTT_TLS_CERT,
+    tlsKey: process.env.BRIDGE_MQTT_TLS_KEY,
+    maxConnections: parseInt(process.env.BRIDGE_MQTT_MAX_CONNECTIONS || '1000'),
+  });
+
+  // MQTT 브로커 서버 시작
+  await mqttBroker.start();
+  console.log('✅ MQTT Broker Server started');
+
+  // MQTT 클라이언트 매니저 초기화 (외부 브로커 연결용)
   const mqttManager = new MQTTClientManager();
   console.log('✅ MQTT Client Manager initialized');
 

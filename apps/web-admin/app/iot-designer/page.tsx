@@ -7,12 +7,14 @@ import { allocatePins } from '@/components/iot-designer/PinAllocator';
 import { calculatePowerRequirements, suggestPowerSupplies } from '@/components/iot-designer/PowerEstimator';
 import SchematicSVG from '@/components/iot-designer/SchematicSVG';
 import CodePreview from '@/components/iot-designer/CodePreview';
-import { QRCodeCard } from '@/components/connect/QRCodeCard';
+// QR 코드는 네이티브 앱 전용으로 분리됨
 import { LiveLog } from '@/components/connect/LiveLog';
 import toast, { Toaster } from 'react-hot-toast';
 import LoRaWanForm from '@/components/iot-designer/LoRaWanForm';
 import AppHeader from '@/components/AppHeader';
 import { getCurrentUser, type AuthUser } from '@/lib/auth';
+import { PinPicker, I2CPinDisplay } from './components/PinPicker';
+import SelfTestPanel from './components/SelfTestPanel';
 
 interface SystemSpec {
   device: string;
@@ -73,6 +75,7 @@ function IoTDesignerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const farmId = searchParams.get('farmId');
+  const step = searchParams.get('step');
   
   const [user, setUser] = useState<AuthUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -119,6 +122,17 @@ function IoTDesignerContent() {
     };
     checkAuth();
   }, [router]);
+
+  // step 파라미터에 따라 currentStep 설정
+  useEffect(() => {
+    if (step === 'monitor') {
+      setCurrentStep('monitor');
+    } else if (step === 'connect') {
+      setCurrentStep('connect');
+    } else {
+      setCurrentStep('design');
+    }
+  }, [step]);
 
   // 농장 정보 로드
   useEffect(() => {
@@ -252,6 +266,7 @@ function IoTDesignerContent() {
   const [componentColors, setComponentColors] = useState<Record<string, string>>({});
   const [showPinSelector, setShowPinSelector] = useState<string | null>(null);
   const [showSaveWarning, setShowSaveWarning] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // 색상 팔레트
   const colorPalette = [
@@ -318,6 +333,7 @@ function IoTDesignerContent() {
     });
     
     setPinAssignments(assignments);
+    setHasUnsavedChanges(false); // 초기화 시 변경사항 없음
   };
 
   // 컴포넌트가 변경될 때마다 초기화
@@ -343,6 +359,7 @@ function IoTDesignerContent() {
       ...prev,
       [component]: pin
     }));
+    setHasUnsavedChanges(true); // 변경사항 추적
     setShowPinSelector(null);
   };
 
@@ -550,70 +567,7 @@ function IoTDesignerContent() {
     return suggestPowerSupplies(powerRequirements);
   }, [powerRequirements]);
   
-  // 코드 생성 함수 (토큰 발급 없이)
-  const generateCode = async () => {
-    try {
-      console.log('🚀 코드 생성 시작:', spec);
-      
-        // 저장된 핀 할당 정보 가져오기
-        const savedSensorPins = localStorage.getItem('sensorPinAssignments');
-        const savedActuatorPins = localStorage.getItem('actuatorPinAssignments');
-        const savedPinAssignments = {
-          ...JSON.parse(savedSensorPins || '{}'),
-          ...JSON.parse(savedActuatorPins || '{}')
-        };
-
-        // 핀 할당이 변경되었는데 저장되지 않았으면 경고
-        const hasUnsavedChanges = Object.keys(pinAssignments).length > 0 && 
-          JSON.stringify(pinAssignments) !== JSON.stringify(savedPinAssignments);
-        
-        if (hasUnsavedChanges) {
-          setShowSaveWarning(true);
-          return;
-        }
-
-        // 로컬 API로 코드 생성
-        console.log('🔧 코드 생성 중...');
-        const codeResponse = await fetch('/api/iot/generate-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...spec,
-            bridgeIntegration: false, // 토큰 없이 코드만 생성
-            pinAssignments: savedPinAssignments, // 저장된 핀 할당 정보 전송
-            farmId: farmId // 농장 ID 포함
-          })
-        });
-
-        console.log('🔧 코드 생성 응답 상태:', codeResponse.status);
-        
-        if (!codeResponse.ok) {
-          const errorText = await codeResponse.text();
-          console.error('코드 생성 실패:', errorText);
-          throw new Error(`코드 생성 실패: ${codeResponse.status} - ${errorText}`);
-        }
-
-        // ZIP 파일 다운로드 처리
-        const blob = await codeResponse.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `iot_system_${spec.device}_${spec.protocol}_${farmId || 'demo'}.zip`;
-        a.click();
-        URL.revokeObjectURL(url);
-
-        console.log('✅ ZIP 파일 다운로드 완료');
-        setGeneratedCode('ZIP 파일로 다운로드됨');
-
-        // 연결 단계로 이동
-        setCurrentStep('connect');
-        toast.success('✅ ZIP 파일 다운로드 완료! Universal Bridge로 코드가 전송되었습니다.');
-      
-    } catch (error: any) {
-      console.error('❌ 코드 생성 오류:', error);
-      toast.error(`오류: ${error.message}`);
-    }
-  };
+  // 코드 생성 함수 제거됨 - 연결 페이지에서만 다운로드 가능
 
   // 토큰 생성 함수 (2단계에서 사용)
   const generateToken = async () => {
@@ -649,18 +603,7 @@ function IoTDesignerContent() {
     }
   };
 
-  const downloadCode = () => {
-    const blob = new Blob([generatedCode], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${spec.device}_${spec.protocol}_system.ino`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success('코드 다운로드 완료!');
-  };
+  // downloadCode 함수 제거됨 - 연결 페이지에서만 다운로드 가능
 
   const nextStep = () => {
     if (currentStep === 'design') {
@@ -684,7 +627,7 @@ function IoTDesignerContent() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">인증 확인 중...</p>
+          <p className="mt-4 text-gray-700">인증 확인 중...</p>
         </div>
       </div>
     );
@@ -725,15 +668,15 @@ function IoTDesignerContent() {
         )}
         
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">⚡ 빠른 IoT 빌더</h1>
-          <p className="text-gray-900 font-medium">빠르고 간편하게 IoT 시스템을 설계하고 자동으로 연결하세요</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">⚡ 빠른 IoT 빌더</h1>
+          <p className="text-gray-700 font-medium">빠르고 간편하게 IoT 시스템을 설계하고 자동으로 연결하세요</p>
           
           {/* 단계 표시기 - 클릭 가능 */}
           <div className="mt-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => setCurrentStep('design')}
-                className={`flex items-center ${currentStep === 'design' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                className={`flex items-center ${currentStep === 'design' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-700'} transition-colors`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'design' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}>
                   1
@@ -743,7 +686,7 @@ function IoTDesignerContent() {
               <div className="flex-1 h-1 bg-gray-200 mx-4" />
               <button 
                 onClick={() => setCurrentStep('connect')}
-                className={`flex items-center ${currentStep === 'connect' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                className={`flex items-center ${currentStep === 'connect' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-700'} transition-colors`}
                 disabled={!generatedCode && currentStep !== 'connect'}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'connect' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}>
@@ -754,7 +697,7 @@ function IoTDesignerContent() {
               <div className="flex-1 h-1 bg-gray-200 mx-4" />
               <button 
                 onClick={() => setCurrentStep('monitor')}
-                className={`flex items-center ${currentStep === 'monitor' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'} transition-colors`}
+                className={`flex items-center ${currentStep === 'monitor' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-700'} transition-colors`}
                 disabled={!generatedCode && currentStep !== 'monitor'}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'monitor' ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-gray-300'} transition-colors`}>
@@ -771,7 +714,7 @@ function IoTDesignerContent() {
           <div className="space-y-6">
             {/* 1. WiFi 설정 안내 */}
         <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-900">📶 WiFi 설정</h3>
+              <h3 className="text-lg font-bold mb-4 text-gray-800">📶 WiFi 설정</h3>
           
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start">
@@ -798,14 +741,14 @@ function IoTDesignerContent() {
 
             {/* 2. 디바이스 및 프로토콜 선택 */}
             <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-900">🔧 디바이스 및 프로토콜 선택</h3>
+              <h3 className="text-lg font-bold mb-4 text-gray-800">🔧 디바이스 및 프로토콜 선택</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-900">디바이스 타입</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-800">디바이스 타입</label>
               <select
                 value={spec.device}
                 onChange={(e) => setSpec(prev => ({ ...prev, device: e.target.value }))}
-                className="w-full p-2 border rounded-lg text-gray-900"
+                className="w-full p-2 border rounded-lg text-gray-800"
               >
                 <option value="esp32">ESP32</option>
                 <option value="esp8266">ESP8266</option>
@@ -818,11 +761,11 @@ function IoTDesignerContent() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-900">통신 프로토콜</label>
+              <label className="block text-sm font-medium mb-2 text-gray-800">통신 프로토콜</label>
               <select
                 value={spec.protocol}
                     onChange={(e) => setSpec(prev => ({ ...prev, protocol: e.target.value as 'mqtt' | 'serial' | 'ble' | 'rs485' | 'modbus-tcp' | 'lorawan' }))}
-                className="w-full p-2 border rounded-lg text-gray-900"
+                className="w-full p-2 border rounded-lg text-gray-800"
               >
                 <option value="mqtt">MQTT (권장) ✅</option>
                 <option value="serial">Serial (USB) 🔄 향후 지원</option>
@@ -837,11 +780,11 @@ function IoTDesignerContent() {
         
             {/* 3. 센서 및 액추에이터 설정 */}
         <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-900">📊 센서 및 액추에이터 설정</h3>
+              <h3 className="text-lg font-bold mb-4 text-gray-800">📊 센서 및 액추에이터 설정</h3>
               
               {/* 센서 설정 */}
               <div className="mb-6">
-                <h4 className="font-semibold mb-3 text-gray-900">센서</h4>
+                <h4 className="font-semibold mb-3 text-gray-800">센서</h4>
                 <div className="space-y-3">
                   {spec.sensors.map((sensor, idx) => (
                     <div key={idx} className="flex items-center space-x-3">
@@ -853,10 +796,11 @@ function IoTDesignerContent() {
                             i === idx ? { ...s, type: e.target.value } : s
                           )
                         }))}
-                        className="flex-1 p-2 border rounded-lg text-gray-900"
+                        className="flex-1 p-2 border rounded-lg text-gray-800"
                       >
                         <optgroup label="🌡️ 환경 센서">
                           <option value="BME280">BME280 온습압 센서 (I2C)</option>
+                          <option value="ADS1115">ADS1115 ADC 모듈 (I2C)</option>
                           <option value="BMP280">BMP280 기압센서 (I2C)</option>
                           <option value="DHT22">DHT22 온습도센서 (디지털)</option>
                         </optgroup>
@@ -898,7 +842,7 @@ function IoTDesignerContent() {
                         }))}
                         min="1"
                         max="10"
-                        className="w-20 p-2 border rounded-lg text-gray-900"
+                        className="w-20 p-2 border rounded-lg text-gray-800"
                       />
                       <button
                         onClick={() => setSpec(prev => ({
@@ -925,7 +869,7 @@ function IoTDesignerContent() {
 
               {/* 액추에이터 설정 */}
               <div>
-                <h4 className="font-semibold mb-3 text-gray-900">액추에이터</h4>
+                <h4 className="font-semibold mb-3 text-gray-800">액추에이터</h4>
                 <div className="space-y-3">
                   {spec.controls.map((control, idx) => (
                     <div key={idx} className="flex items-center space-x-3">
@@ -937,10 +881,10 @@ function IoTDesignerContent() {
                             i === idx ? { ...c, type: e.target.value } : c
                           )
                         }))}
-                        className="flex-1 p-2 border rounded-lg text-gray-900"
+                        className="flex-1 p-2 border rounded-lg text-gray-800"
                       >
                         <optgroup label="💡 조명">
-                          <option value="AC_Relay_Lamp">AC 램프 (릴레이 On/Off)</option>
+                          <option value="AC_Relay_Lamp">AC_Relay_Lamp (AC 램프)</option>
                           <option value="PWM_12V_LED">12V LED (MOSFET PWM)</option>
                           <option value="WS2812B_NeoPixel">WS2812B / NeoPixel Strip</option>
                           <option value="AC_Dimmer_TRIAC">AC 디머 (TRIAC + ZCD)</option>
@@ -959,12 +903,15 @@ function IoTDesignerContent() {
                           <option value="PWM_DC_Fan">DC 팬 (PWM 제어)</option>
                         </optgroup>
                         <optgroup label="🔌 릴레이">
-                          <option value="AC_Relay_Lamp">AC 릴레이 (On/Off)</option>
-                          <option value="Solid_State_Relay">솔리드스테이트릴레이 (SSR)</option>
+                          <option value="AC_Relay_Lamp">AC_Relay_Lamp (AC 릴레이)</option>
+                          <option value="Solid_State_Relay">Solid_State_Relay (SSR)</option>
+                        </optgroup>
+                        <optgroup label="💧 펌프">
+                          <option value="Peristaltic_Pump">Peristaltic_Pump (펌프)</option>
                         </optgroup>
                         <optgroup label="💡 표시/알람">
                           <option value="Generic_LED">일반 LED (PWM/GPIO)</option>
-                          <option value="PWM_Buzzer">부저 (PWM 제어)</option>
+                          <option value="PWM_Buzzer">PWM_Buzzer (부저)</option>
                         </optgroup>
                 </select>
                 <input
@@ -978,7 +925,7 @@ function IoTDesignerContent() {
                         }))}
                         min="1"
                         max="10"
-                        className="w-20 p-2 border rounded-lg text-gray-900"
+                        className="w-20 p-2 border rounded-lg text-gray-800"
                       />
                       <button
                         onClick={() => setSpec(prev => ({
@@ -1006,7 +953,7 @@ function IoTDesignerContent() {
 
             {/* 3. WiFi 설정 안내 */}
             <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-900">📶 WiFi 설정</h3>
+              <h3 className="text-lg font-bold mb-4 text-gray-800">📶 WiFi 설정</h3>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-start">
@@ -1033,7 +980,7 @@ function IoTDesignerContent() {
 
             {/* 4. 전원 계산 */}
             <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-900">⚡ 전원 계산</h3>
+              <h3 className="text-lg font-bold mb-4 text-gray-800">⚡ 전원 계산</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-lg">
@@ -1041,14 +988,14 @@ function IoTDesignerContent() {
                   <div className="space-y-2">
                     {spec.sensors.map((sensor, idx) => (
                       <div key={idx} className="flex justify-between text-sm">
-                        <span>{sensor.type} × {sensor.count}</span>
-                        <span className="text-blue-600">{getSensorPower(sensor.type) * sensor.count}mA</span>
+                        <span className="text-gray-800">{sensor.type} × {sensor.count}</span>
+                        <span className="text-blue-700 font-medium">{getSensorPower(sensor.type) * sensor.count}mA</span>
                     </div>
                     ))}
                     <div className="border-t pt-2 font-semibold">
                       <div className="flex justify-between">
-                        <span>센서 총합</span>
-                        <span className="text-blue-600">{spec.sensors.reduce((sum, s) => sum + getSensorPower(s.type) * s.count, 0)}mA</span>
+                        <span className="text-gray-800">센서 총합</span>
+                        <span className="text-blue-700 font-bold">{spec.sensors.reduce((sum, s) => sum + getSensorPower(s.type) * s.count, 0)}mA</span>
                       </div>
                       </div>
                       </div>
@@ -1059,14 +1006,14 @@ function IoTDesignerContent() {
                   <div className="space-y-2">
                     {spec.controls.map((control, idx) => (
                       <div key={idx} className="flex justify-between text-sm">
-                        <span>{control.type} × {control.count}</span>
-                        <span className="text-green-600">{getActuatorPower(control.type) * control.count}mA</span>
+                        <span className="text-gray-800">{control.type} × {control.count}</span>
+                        <span className="text-green-700 font-medium">{getActuatorPower(control.type) * control.count}mA</span>
                       </div>
                     ))}
                     <div className="border-t pt-2 font-semibold">
                       <div className="flex justify-between">
-                        <span>액추에이터 총합</span>
-                        <span className="text-green-600">{spec.controls.reduce((sum, c) => sum + getActuatorPower(c.type) * c.count, 0)}mA</span>
+                        <span className="text-gray-800">액추에이터 총합</span>
+                        <span className="text-green-700 font-bold">{spec.controls.reduce((sum, c) => sum + getActuatorPower(c.type) * c.count, 0)}mA</span>
                     </div>
                   </div>
                   </div>
@@ -1075,13 +1022,13 @@ function IoTDesignerContent() {
 
               <div className="mt-4 bg-blue-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
-                  <span className="font-semibold text-blue-800">총 전력 소비</span>
-                  <span className="text-xl font-bold text-blue-600">
+                  <span className="font-semibold text-blue-900">총 전력 소비</span>
+                  <span className="text-xl font-bold text-blue-800">
                     {spec.sensors.reduce((sum, s) => sum + getSensorPower(s.type) * s.count, 0) + 
                      spec.controls.reduce((sum, c) => sum + getActuatorPower(c.type) * c.count, 0)}mA
                   </span>
                     </div>
-                <p className="text-sm text-blue-700 mt-2">
+                <p className="text-sm text-blue-800 mt-2">
                   💡 ESP32는 최대 500mA까지 공급 가능합니다. 전력 소비가 높으면 외부 전원 공급을 고려하세요.
                 </p>
                       </div>
@@ -1089,7 +1036,7 @@ function IoTDesignerContent() {
 
             {/* 5. 디바이스 핀맵 및 연결 다이어그램 */}
             <div className="bg-white border rounded-lg p-6">
-              <h3 className="text-lg font-bold mb-4 text-gray-900">🔌 핀 연결 다이어그램</h3>
+              <h3 className="text-lg font-bold mb-4 text-gray-800">🔌 핀 연결 다이어그램</h3>
               
               {/* 디바이스별 핀맵 표시 */}
             <div className="mb-6">
@@ -1126,7 +1073,7 @@ function IoTDesignerContent() {
                         );
                       })}
                       </div>
-                    <p className="text-xs text-gray-600 mt-2">* PWM 가능</p>
+                    <p className="text-xs text-gray-700 mt-2">* PWM 가능</p>
                       </div>
                   
                   <div className="bg-green-50 p-3 rounded-lg">
@@ -1151,7 +1098,7 @@ function IoTDesignerContent() {
                         );
                       })}
                     </div>
-                    <p className="text-xs text-gray-600 mt-2">* 디지털 핀과 겹침</p>
+                    <p className="text-xs text-gray-700 mt-2">* 디지털 핀과 겹침</p>
                   </div>
 
                   <div className="bg-purple-50 p-3 rounded-lg">
@@ -1174,16 +1121,16 @@ function IoTDesignerContent() {
 
                   <div className="bg-orange-50 p-3 rounded-lg">
                     <h5 className="font-medium text-orange-800 mb-2">통신 핀</h5>
-                    <div className="space-y-1">
-                      <div className="text-xs">
-                        <span className="font-medium">I2C:</span> {getDevicePins(spec.device, 'i2c').join(', ')}
-              </div>
-                      <div className="text-xs">
-                        <span className="font-medium">SPI:</span> {getDevicePins(spec.device, 'spi').join(', ')}
-            </div>
-                      <div className="text-xs">
-                        <span className="font-medium">UART:</span> {getDevicePins(spec.device, 'uart').join(', ')}
-          </div>
+                    <div className="space-y-3">
+                      <I2CPinDisplay />
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-800">
+                          <span className="font-medium">SPI:</span> {getDevicePins(spec.device, 'spi').join(', ')}
+                        </div>
+                        <div className="text-xs text-gray-800">
+                          <span className="font-medium">UART:</span> {getDevicePins(spec.device, 'uart').join(', ')}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1197,6 +1144,7 @@ function IoTDesignerContent() {
             <button
               onClick={() => {
                 localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
+                setHasUnsavedChanges(false); // 저장 완료
                 toast.success('✅ 센서 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -1209,7 +1157,7 @@ function IoTDesignerContent() {
                       <div key={idx} className="bg-gray-50 p-4 rounded-lg border">
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-medium text-gray-800">{getComponentKoreanName(sensor.type)}</span>
-                  <span className="text-sm text-gray-600 bg-gray-200 px-2 py-1 rounded">{sensor.count}개</span>
+                  <span className="text-sm text-gray-700 bg-gray-200 px-2 py-1 rounded">{sensor.count}개</span>
               </div>
               
                         {/* 센서별 상세 정보 */}
@@ -1219,19 +1167,19 @@ function IoTDesignerContent() {
                             return (
                       <div key={i} className="bg-white p-3 rounded border-l-4 border-blue-500">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">{getComponentKoreanName(sensor.type)} {i + 1}번</span>
-                          <span className="text-xs text-gray-500">{pinInfo.power}mA</span>
+                          <span className="text-sm font-medium text-gray-800">{getComponentKoreanName(sensor.type)} {i + 1}번</span>
+                          <span className="text-xs text-gray-600 font-medium">{pinInfo.power}mA</span>
                         </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div>
-                                    <span className="text-gray-600">데이터 핀:</span>
+                                    <span className="text-gray-800 font-medium">데이터 핀:</span>
                             <div className="flex items-center gap-2">
                               <span className={`px-2 py-1 rounded text-white text-xs ${getComponentColor(`sensor_${idx}_${i}_${sensor.type}`)}`}>
                                 {pinAssignments[`sensor_${idx}_${i}_${sensor.type}`] || pinInfo.dataPin}
                               </span>
                     <button
                                 onClick={() => setShowPinSelector(`sensor_${idx}_${i}_${sensor.type}`)}
-                                className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                                className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                               >
                                 변경
                     </button>
@@ -1239,12 +1187,12 @@ function IoTDesignerContent() {
                                   </div>
                                   {pinInfo.powerPin && (
                                     <div>
-                                      <span className="text-gray-600">전원 핀:</span>
-                                      <span className="ml-1 px-2 py-1 bg-red-100 text-red-800 rounded">{pinInfo.powerPin}</span>
+                                      <span className="text-gray-800 font-medium">전원 핀:</span>
+                                      <span className="ml-1 px-2 py-1 bg-red-100 text-red-800 rounded font-medium">{pinInfo.powerPin}</span>
                   </div>
                 )}
                                 </div>
-                                <div className="mt-2 text-xs text-gray-600">
+                                <div className="mt-2 text-xs text-gray-800">
                                   연결: {pinInfo.connection}
                                 </div>
                               </div>
@@ -1262,6 +1210,7 @@ function IoTDesignerContent() {
             <button
               onClick={() => {
                 localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
+                setHasUnsavedChanges(false); // 저장 완료
                 toast.success('✅ 액추에이터 핀 할당이 저장되었습니다!');
               }}
               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -1274,7 +1223,7 @@ function IoTDesignerContent() {
                       <div key={idx} className="bg-gray-50 p-4 rounded-lg border">
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-medium text-gray-800">{getComponentKoreanName(control.type)}</span>
-                  <span className="text-sm text-gray-600 bg-gray-200 px-2 py-1 rounded">{control.count}개</span>
+                  <span className="text-sm text-gray-700 bg-gray-200 px-2 py-1 rounded">{control.count}개</span>
               </div>
               
                         {/* 액추에이터별 상세 정보 */}
@@ -1284,19 +1233,19 @@ function IoTDesignerContent() {
                             return (
                       <div key={i} className="bg-white p-3 rounded border-l-4 border-green-500">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-medium">{getComponentKoreanName(control.type)} {i + 1}번</span>
-                          <span className="text-xs text-gray-500">{pinInfo.power}mA</span>
+                          <span className="text-sm font-medium text-gray-800">{getComponentKoreanName(control.type)} {i + 1}번</span>
+                          <span className="text-xs text-gray-600 font-medium">{pinInfo.power}mA</span>
                     </div>
                                 <div className="grid grid-cols-2 gap-2 text-xs">
                                   <div>
-                                    <span className="text-gray-600">제어 핀:</span>
+                                    <span className="text-gray-800 font-medium">제어 핀:</span>
                             <div className="flex items-center gap-2">
                               <span className={`px-2 py-1 rounded text-white text-xs ${getComponentColor(`control_${idx}_${i}_${control.type}`)}`}>
                                 {pinAssignments[`control_${idx}_${i}_${control.type}`] || pinInfo.controlPin}
                               </span>
                     <button
                                 onClick={() => setShowPinSelector(`control_${idx}_${i}_${control.type}`)}
-                                className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                                className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                               >
                                 변경
                     </button>
@@ -1304,12 +1253,12 @@ function IoTDesignerContent() {
                                   </div>
                                   {pinInfo.powerPin && (
                                     <div>
-                                      <span className="text-gray-600">전원 핀:</span>
-                                      <span className="ml-1 px-2 py-1 bg-red-100 text-red-800 rounded">{pinInfo.powerPin}</span>
+                                      <span className="text-gray-800 font-medium">전원 핀:</span>
+                                      <span className="ml-1 px-2 py-1 bg-red-100 text-red-800 rounded font-medium">{pinInfo.powerPin}</span>
                   </div>
                 )}
               </div>
-                                <div className="mt-2 text-xs text-gray-600">
+                                <div className="mt-2 text-xs text-gray-800">
                                   제어 방식: {pinInfo.controlType}
             </div>
           </div>
@@ -1349,7 +1298,7 @@ function IoTDesignerContent() {
             {/* 6. LoRaWAN 설정 */}
             {spec.protocol === 'lorawan' && (
               <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-bold mb-4 text-gray-900">📡 LoRaWAN 설정</h3>
+                <h3 className="text-lg font-bold mb-4 text-gray-800">📡 LoRaWAN 설정</h3>
                 
                 <LoRaWanForm 
                   value={spec.lorawanConfig} 
@@ -1372,13 +1321,32 @@ function IoTDesignerContent() {
           </div>
             )}
 
-            {/* 5. 코드 생성 버튼 */}
+            {/* 5. 연결 페이지로 이동 버튼 */}
             <div className="bg-white border rounded-lg p-6 mb-8">
               <button
-                onClick={generateCode}
+                onClick={() => {
+                  // 연결 페이지로 이동 (코드 데이터 전달)
+                  const codeData = {
+                    device: spec.device,
+                    protocol: spec.protocol,
+                    sensors: spec.sensors,
+                    controls: spec.controls,
+                    pinAssignments: pinAssignments,
+                    powerRequirements: powerRequirements,
+                    generatedCode: generatedCode,
+                    setupToken: setupToken,
+                    farmId: farmId
+                  };
+                  
+                  // sessionStorage에 코드 데이터 저장
+                  sessionStorage.setItem('iotCodeData', JSON.stringify(codeData));
+                  
+                  // 연결 페이지로 이동
+                  router.push(`/iot-designer/connect?farmId=${farmId}`);
+                }}
                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold text-lg rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                🔧 코드 생성 및 연결 시작
+                🔗 연결 페이지로 이동
               </button>
         </div>
           </div>
@@ -1388,8 +1356,8 @@ function IoTDesignerContent() {
         {currentStep === 'connect' && generatedCode && (
           <div className="space-y-6">
         <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">🔗 디바이스 연결</h2>
-              <p className="text-gray-600 mb-6">생성된 코드를 다운로드하고 디바이스에 업로드하세요.</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">🔗 디바이스 연결</h2>
+              <p className="text-gray-700 mb-6">생성된 코드를 다운로드하고 디바이스에 업로드하세요.</p>
           
               {/* 토큰 생성 버튼 */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1413,24 +1381,52 @@ function IoTDesignerContent() {
                   </button>
                   </div>
               </div>
+
+              {/* Self-Test 패널 */}
+              <div className="mb-6">
+                <SelfTestPanel />
+              </div>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* 코드 미리보기 */}
-                <div>
-                  <CodePreview 
-                    code={generatedCode} 
-                    onDownload={downloadCode}
-                    deviceType={spec.device.toUpperCase()}
-                  />
-            </div>
-            
-                {/* QR 코드 */}
-            <div>
-                  <QRCodeCard 
-                    qrData={`http://localhost:3001/connect?token=${setupToken}`}
-                    setupToken={setupToken}
-                  />
-                  </div>
+              {/* 연결 페이지로 이동 */}
+              <div className="bg-white border rounded-lg p-6">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">🔗</div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-4">디바이스 연결 준비 완료</h3>
+                  <p className="text-gray-600 mb-6">
+                    생성된 펌웨어 코드를 검토하고 다운로드하여 디바이스에 업로드하세요.
+                  </p>
+                  <button
+                    onClick={() => {
+                      // 저장되지 않은 변경사항이 있으면 경고 표시
+                      if (hasUnsavedChanges) {
+                        setShowSaveWarning(true);
+                        return;
+                      }
+                      
+                      // 연결 페이지로 이동 (코드 데이터 전달)
+                      const codeData = {
+                        device: spec.device,
+                        protocol: spec.protocol,
+                        sensors: spec.sensors,
+                        controls: spec.controls,
+                        pinAssignments: pinAssignments,
+                        powerRequirements: powerRequirements,
+                        generatedCode: generatedCode,
+                        setupToken: setupToken,
+                        farmId: farmId
+                      };
+                      
+                      // sessionStorage에 코드 데이터 저장
+                      sessionStorage.setItem('iotCodeData', JSON.stringify(codeData));
+                      
+                      // 연결 페이지로 이동
+                      router.push(`/iot-designer/connect?farmId=${farmId}`);
+                    }}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-lg"
+                  >
+                    🔗 연결 페이지로 이동
+                  </button>
+                </div>
               </div>
               
               {/* 네비게이션 버튼 */}
@@ -1445,7 +1441,7 @@ function IoTDesignerContent() {
                   onClick={() => setCurrentStep('monitor')}
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  다음 단계 →
+                  모니터링 단계 →
                 </button>
             </div>
           </div>
@@ -1456,8 +1452,8 @@ function IoTDesignerContent() {
         {currentStep === 'monitor' && (
           <div className="space-y-6">
         <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">📊 실시간 모니터링</h2>
-              <p className="text-gray-600 mb-6">디바이스 연결 상태와 데이터를 실시간으로 확인하세요.</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">📊 실시간 모니터링</h2>
+              <p className="text-gray-700 mb-6">디바이스 연결 상태와 데이터를 실시간으로 확인하세요.</p>
               
               <LiveLog 
                 setupToken={setupToken}
@@ -1493,7 +1489,7 @@ function IoTDesignerContent() {
         <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-bold mb-4">핀 선택</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-700 mb-4">
               {showPinSelector ? (() => {
                 const parts = showPinSelector.split('_');
                 const type = parts[parts.length - 1];
@@ -1552,13 +1548,28 @@ function IoTDesignerContent() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      // 자동으로 저장하고 코드 생성 진행
+                      // 자동으로 저장하고 연결 페이지로 이동
                       localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
                       localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
+                      setHasUnsavedChanges(false); // 저장 완료
                       setShowSaveWarning(false);
-                      toast.success('✅ 자동 저장 완료! 코드를 생성합니다.');
-                      // 코드 생성 재시도
-                      setTimeout(() => generateCode(), 100);
+                      toast.success('✅ 자동 저장 완료! 연결 페이지로 이동합니다.');
+                      // 연결 페이지로 이동
+                      setTimeout(() => {
+                        const codeData = {
+                          device: spec.device,
+                          protocol: spec.protocol,
+                          sensors: spec.sensors,
+                          controls: spec.controls,
+                          pinAssignments: pinAssignments,
+                          powerRequirements: powerRequirements,
+                          generatedCode: generatedCode,
+                          setupToken: setupToken,
+                          farmId: farmId
+                        };
+                        sessionStorage.setItem('iotCodeData', JSON.stringify(codeData));
+                        router.push(`/iot-designer/connect?farmId=${farmId}`);
+                      }, 100);
                     }}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
@@ -1588,7 +1599,7 @@ export default function IoTDesignerPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">로딩 중...</p>
+          <p className="mt-4 text-gray-700">로딩 중...</p>
         </div>
       </div>
     }>

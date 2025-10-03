@@ -87,7 +87,7 @@ export class MQTTClientManager {
       ];
       
       farmTopics.forEach(topic => {
-        client.subscribe(topic, { qos: qos_default }, () => {
+        client.subscribe(topic, { qos: qos_default as any }, () => {
           logger.info(`Subscribed to ${topic}`);
         });
       });
@@ -99,7 +99,7 @@ export class MQTTClientManager {
         bridge_id: clientId,
         status: 'offline',
         timestamp: new Date().toISOString()
-      }), { qos: 1, retain: true });
+      }), { qos: 1 as any, retain: true });
     });
 
     client.on('message', async (topic, message) => {

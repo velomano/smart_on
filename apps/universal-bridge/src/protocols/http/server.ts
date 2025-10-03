@@ -10,8 +10,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
-import { createAdapter, MultiAdapter } from '../../adapters';
+import { createAdapter } from '../../adapters';
 import { Telemetry, Command } from '../../types/core';
+import { authenticateDevice } from '../../security/middleware.js';
+import * as authRoutes from './routes/auth.js';
+import * as mqttRoutes from './routes/mqtt.js';
 // import rpcRouter from '../rpc'; // TODO: RPC 라우터 구현 필요
 
 /**
@@ -27,7 +30,7 @@ export function createHttpServer() {
   const server = createServer(app);
   
   // Transport Adapters 관리
-  const adapters = new Map<string, MultiAdapter>();
+  const adapters = new Map<string, any>();
 
   // 미들웨어
   app.use(helmet());
@@ -103,6 +106,23 @@ export function createHttpServer() {
       version: '2.0.0',
     });
   });
+
+  // 인증 라우터 설정
+  app.post('/api/auth/token', authRoutes.generateToken);
+  app.get('/api/auth/verify', authenticateDevice, authRoutes.verifyToken);
+  app.post('/api/auth/refresh', authenticateDevice, authRoutes.refreshToken);
+  app.post('/api/auth/setup-token', authRoutes.generateSetupToken);
+  app.post('/api/auth/verify-setup-token', authRoutes.verifySetupToken);
+  app.post('/api/auth/decode-token', authRoutes.decodeToken);
+  app.get('/api/auth/status', authenticateDevice, authRoutes.getAuthStatus);
+
+  // MQTT 브로커 관리 라우터 설정
+  app.get('/api/mqtt/status', mqttRoutes.getBrokerStatus);
+  app.get('/api/mqtt/clients', mqttRoutes.getClients);
+  app.delete('/api/mqtt/clients/:clientId', mqttRoutes.disconnectClient);
+  app.post('/api/mqtt/stats/reset', mqttRoutes.resetStats);
+  app.post('/api/mqtt/restart', mqttRoutes.restartBroker);
+  app.get('/api/mqtt/config', mqttRoutes.getBrokerConfig);
 
   // 프로비저닝 엔드포인트
   app.post('/api/provisioning/claim', async (req, res) => {

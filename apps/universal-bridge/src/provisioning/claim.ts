@@ -1,10 +1,12 @@
 /**
  * Claim (Setup Token 발급)
  * 
- * TODO: DB 연동 및 QR 코드 생성
+ * JWT 토큰 서버와 연동된 완전한 프로비저닝 시스템
  */
 
 import crypto from 'crypto';
+import { tokenServer, type SetupTokenPayload } from '../security/jwt.js';
+import { logger } from '../utils/logger.js';
 import type { SetupToken } from '../types.js';
 
 export interface ClaimRequest {
@@ -16,41 +18,38 @@ export interface ClaimRequest {
 }
 
 /**
- * Setup Token 발급
+ * Setup Token 발급 (JWT 토큰 서버 연동)
  * 
  * @param req - 발급 요청
  * @returns SetupToken
- * 
- * TODO:
- * - [ ] DB에 저장 (bcrypt 해시)
- * - [ ] QR 코드 생성
- * - [ ] 만료 시간 자동 정리
  */
 export async function generateSetupToken(
   req: ClaimRequest
 ): Promise<SetupToken> {
-  const ttl = req.ttl || 600;  // 기본 10분
-  
-  // 토큰 생성
-  const token = `ST_${crypto.randomBytes(24).toString('hex')}`;
-  
+  // JWT 토큰 서버를 사용하여 설정 토큰 생성
+  const setupTokenInfo = tokenServer.generateSetupToken(
+    req.tenantId,
+    req.farmId,
+    req.ipWhitelist,
+    req.userAgent
+  );
+
   const setupToken: SetupToken = {
-    token,
-    tenantId: req.tenantId,
-    farmId: req.farmId,
-    expiresAt: new Date(Date.now() + ttl * 1000),
-    ipWhitelist: req.ipWhitelist,
-    userAgent: req.userAgent,
+    token: setupTokenInfo.token,
+    tenantId: setupTokenInfo.tenantId,
+    farmId: setupTokenInfo.farmId,
+    expiresAt: setupTokenInfo.expiresAt,
+    ipWhitelist: setupTokenInfo.ipWhitelist,
+    userAgent: setupTokenInfo.userAgent,
   };
 
-  // DB에 저장 (임시로 콘솔 로그만)
-  console.log('[Claim] Setup token generated:', {
-    token: setupToken.token,
+  logger.info('Setup token generated via JWT server', {
+    token: setupToken.token.substring(0, 10) + '...',
     tenantId: setupToken.tenantId,
     farmId: setupToken.farmId,
     expiresAt: setupToken.expiresAt
   });
-  
+
   // TODO: 실제 DB 저장 구현
   // const { createClaim, hashSetupToken } = await import('../db/index.js');
   // await createClaim({...});

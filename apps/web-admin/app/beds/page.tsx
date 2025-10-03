@@ -934,16 +934,32 @@ function BedsManagementContent() {
               <h4 className="text-lg font-semibold text-gray-600">농장별 보기</h4>
               <div className="flex items-center space-x-3">
                 
-                {/* IoT 연결 - 관리자와 농장장 모두 접근 가능 */}
+                {/* QR 연결 (네이티브 앱용) - 관리자와 농장장 모두 접근 가능 */}
+                {user && (user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com') && selectedFarmTab && selectedFarmTab !== 'all' && (
+                  <button
+                    onClick={() => {
+                      // QR 코드 연결 페이지로 이동 (임시 토큰 생성)
+                      const tempToken = `QR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                      sessionStorage.setItem('qrToken', tempToken);
+                      router.push(`/iot-designer/connect?farmId=${selectedFarmTab}&qr=true`);
+                    }}
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
+                  >
+                    <span className="text-sm">📱</span>
+                    <span>QR 연결</span>
+                  </button>
+                )}
+                
+                {/* 유니버셜 브릿지 연결 - 관리자와 농장장 모두 접근 가능 */}
                 {user && (user.role === 'system_admin' || user.role === 'team_leader' || user.email === 'sky3rain7@gmail.com') && selectedFarmTab && selectedFarmTab !== 'all' && (
                   <button
                     onClick={() => router.push(`/iot-designer?farmId=${selectedFarmTab}`)}
-                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
+                    className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center space-x-1 sm:space-x-2"
                   >
                     <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    <span>IoT 연결</span>
+                    <span>유니버셜 브릿지 연결</span>
                   </button>
                 )}
                 

@@ -13,6 +13,7 @@
 
 ## 🔧 IoT Designer (NEW!)
 - [**IoT Designer 가이드**](./13_IOT_DESIGNER.md) - 다중 장치 지원 IoT 설계 시스템
+- [**IoT Designer 워크플로우 개선**](./IOT_DESIGNER_WORKFLOW_UPDATE_2025_01_03.md) - QR 코드 분리 및 워크플로우 개선 (2025-01-03)
 - [**펌웨어 템플릿 퀵스타트**](./14_FIRMWARE_TEMPLATES_QUICKSTART.md) - 펌웨어 템플릿 사용 가이드
 - [**LoRaWAN 통합 가이드**](./15_LORAWAN_INTEGRATION_GUIDE.md) - LoRaWAN 프로토콜 통합
 - [**연결 마법사**](./15_CONNECTION_WIZARD.md) - 디바이스 연결 설정 가이드
