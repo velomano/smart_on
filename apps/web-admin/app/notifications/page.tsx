@@ -311,37 +311,110 @@ export default function NotificationsPage() {
                   </div>
                   
           {/* 현재 설정 상태 */}
-          <div className="bg-gray-100 rounded-lg p-4 sm:p-6">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">📊 현재 설정 상태</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
-              <div>
-                <span className="font-medium">텔레그램 활성화:</span>
-                <span className={`ml-2 px-2 py-1 rounded text-xs ${
-                  notificationSettings.telegramEnabled ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {notificationSettings.telegramEnabled ? '활성화됨' : '비활성화됨'}
-                </span>
-                    </div>
-              <div>
-                <span className="font-medium">채팅 ID:</span>
-                <span className="ml-2 text-gray-600">
-                  {notificationSettings.telegramChatId || '설정되지 않음'}
-                </span>
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 sm:p-6 border border-blue-200">
+            <h3 className="text-base sm:text-lg font-bold text-blue-900 mb-4 sm:mb-6 flex items-center">
+              <span className="text-xl sm:text-2xl mr-2">📊</span>
+              현재 설정 상태
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              {/* 텔레그램 활성화 상태 */}
+              <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">🤖</span>
+                    <span className="font-medium text-gray-700 text-sm sm:text-base">텔레그램 활성화</span>
                   </div>
-              <div>
-                <span className="font-medium">활성 알림:</span>
-                <span className="ml-2 text-gray-600">
-                  {Object.values(notificationSettings.notifications).filter(Boolean).length}개
-                </span>
-                    </div>
-              <div>
-                <span className="font-medium">마지막 업데이트:</span>
-                <span className="ml-2 text-gray-600">
-                  {new Date().toLocaleString('ko-KR')}
-                </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    notificationSettings.telegramEnabled 
+                      ? 'bg-green-100 text-green-800 border border-green-200' 
+                      : 'bg-red-100 text-red-800 border border-red-200'
+                  }`}>
+                    {notificationSettings.telegramEnabled ? '✅ 활성화됨' : '❌ 비활성화됨'}
+                  </span>
+                </div>
+              </div>
+
+              {/* 채팅 ID 상태 */}
+              <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">💬</span>
+                    <span className="font-medium text-gray-700 text-sm sm:text-base">채팅 ID</span>
                   </div>
+                  <span className="text-xs sm:text-sm text-gray-600 font-mono bg-gray-50 px-2 py-1 rounded">
+                    {notificationSettings.telegramChatId ? 
+                      `${notificationSettings.telegramChatId.slice(0, 8)}...` : 
+                      '미설정'
+                    }
+                  </span>
                 </div>
+              </div>
+
+              {/* 활성 알림 개수 */}
+              <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">🔔</span>
+                    <span className="font-medium text-gray-700 text-sm sm:text-base">활성 알림</span>
+                  </div>
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-bold">
+                    {Object.values(notificationSettings.notifications).filter(Boolean).length}개
+                  </span>
                 </div>
+              </div>
+
+              {/* 마지막 업데이트 */}
+              <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">🕒</span>
+                    <span className="font-medium text-gray-700 text-sm sm:text-base">마지막 업데이트</span>
+                  </div>
+                  <span className="text-xs sm:text-sm text-gray-500">
+                    {new Date().toLocaleString('ko-KR', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 알림 유형별 상세 상태 */}
+            <div className="mt-4 sm:mt-6">
+              <h4 className="text-sm sm:text-base font-semibold text-blue-900 mb-3">📋 알림 유형별 상태</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+                {Object.entries(notificationSettings.notifications).map(([key, enabled]) => {
+                  const labels: Record<string, { title: string; icon: string }> = {
+                    temperature_notification: { title: '온도', icon: '🌡️' },
+                    humidity_notification: { title: '습도', icon: '💧' },
+                    ec_notification: { title: 'EC', icon: '🔋' },
+                    ph_notification: { title: 'pH', icon: '⚗️' },
+                    water_notification: { title: '수위', icon: '💧' }
+                  };
+                  
+                  const label = labels[key];
+                  
+                  return (
+                    <div key={key} className={`rounded-lg p-2 sm:p-3 text-center border ${
+                      enabled 
+                        ? 'bg-green-50 border-green-200 text-green-800' 
+                        : 'bg-gray-50 border-gray-200 text-gray-500'
+                    }`}>
+                      <div className="text-lg sm:text-xl mb-1">{label.icon}</div>
+                      <div className="text-xs sm:text-sm font-medium">{label.title}</div>
+                      <div className="text-xs">
+                        {enabled ? '✅' : '⭕'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
               </div>
             </div>
           </div>

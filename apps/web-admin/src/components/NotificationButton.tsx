@@ -217,7 +217,7 @@ export default function NotificationButton({ className = '' }: NotificationButto
         onClick={() => setIsOpen(true)}
         className={`inline-flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-sm font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${className}`}
       >
-        📢 즉시 알림 보내기
+        📢 알림 테스트
       </button>
 
       {/* 알림 모달 */}
