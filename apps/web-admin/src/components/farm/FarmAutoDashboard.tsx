@@ -741,32 +741,34 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-4 md:gap-6">
               {beds.map((bed) => (
-                  <div key={bed.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
-                    {/* 베드 헤더 */}
+                  <div key={bed.id} className="bg-white rounded-xl shadow-sm p-4 md:p-6 hover:shadow-md transition-shadow">
+                    {/* 베드 헤더 - 모바일 최적화 */}
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900 text-lg">{bed.name}</h3>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <span className="text-sm text-gray-500">온라인</span>
-                      </div>
-                    </div>
-
-                    {/* 베드 정보 */}
-                    <div className="text-sm text-gray-600 space-y-1 mb-4">
-                      {(() => {
-                        const bedCrops = bedCropData[bed.id];
-                        if (bedCrops && bedCrops.length > 0) {
-                          const cropNames = bedCrops.map(crop => crop.crop_name).join(', ');
+                      <div className="flex items-center space-x-3">
+                        <h3 className="font-bold text-gray-900 text-lg md:text-xl">{bed.name}</h3>
+                        {(() => {
+                          const bedCrops = bedCropData[bed.id];
+                          if (bedCrops && bedCrops.length > 0) {
+                            const cropNames = bedCrops.map(crop => crop.crop_name).join(', ');
+                            return (
+                              <span className="text-xs md:text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full border border-green-200">
+                                🌱 {bedCrops.length}개
+                              </span>
+                            );
+                          }
                           return (
-                            <p><span className="font-medium">🌱 {bedCrops.length}개 작물:</span> {cropNames}</p>
+                            <span className="text-xs md:text-sm text-gray-500 bg-gray-50 px-2 py-1 rounded-full border border-gray-200">
+                              🌱 없음
+                            </span>
                           );
-                        }
-                        return (
-                          <p><span className="font-medium">🌱 작물:</span> 등록된 작물 없음</p>
-                        );
-                      })()}
+                        })()}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-xs md:text-sm text-gray-500">온라인</span>
+                      </div>
                     </div>
 
                     {/* 베드 시각화와 센서 데이터를 반응형으로 배치 */}
@@ -805,19 +807,19 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                           IoT 디바이스 상태
                         </h6>
                         
-                        {/* 디바이스 상태 카드 - 한 행 */}
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                          <div className="flex items-center justify-between">
+                        {/* 디바이스 상태 카드 - 모바일 최적화 */}
+                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 rounded-xl p-3 md:p-4 mb-4">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
                             <div className="flex items-center space-x-3">
                               <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                 <span className="text-sm font-medium text-gray-700">디바이스 상태</span>
-                        </div>
-                              <div className="flex items-center space-x-4 text-xs text-gray-600">
+                              </div>
+                              <div className="flex items-center space-x-3 text-xs text-gray-600">
                                 <span>센서: {deviceStatus.sensors.active}/{deviceStatus.sensors.total}</span>
                                 <span>액추에이터: {deviceStatus.actuators.active}/{deviceStatus.actuators.total}</span>
-                      </div>
-                    </div>
+                              </div>
+                            </div>
                             
                             <div className="flex gap-2">
                               <button
@@ -825,7 +827,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                   const qrUrl = `${window.location.origin}/farms/${farmId}/bed/${bed.id}/qr`;
                                   window.open(qrUrl, '_blank');
                                 }}
-                                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                                className="flex items-center space-x-1 px-3 md:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs md:text-sm font-medium"
                               >
                                 <span>📱</span>
                                 <span>앱 연결</span>
@@ -836,40 +838,40 @@ export default function FarmAutoDashboard({ farmId }: { farmId: string }) {
                                   const bridgeUrl = `${window.location.origin}/system?tab=bridge&farmId=${farmId}&bedId=${bed.id}`;
                                   window.open(bridgeUrl, '_blank');
                                 }}
-                                className="flex items-center space-x-1 px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+                                className="flex items-center space-x-1 px-3 md:px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-xs md:text-sm font-medium"
                               >
                                 <span>🔗</span>
                                 <span>유니버셜 브릿지</span>
                               </button>
-                  </div>
+                            </div>
             </div>
         </div>
 
-                        {/* 센서 데이터 및 액추에이터 제어 - 나란히 배치 */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* 센서 데이터 및 액추에이터 제어 - 모바일 최적화 */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                           {/* 센서 데이터 그리드 */}
                           <div className="space-y-3">
-                            <h6 className="text-sm font-semibold text-gray-600 flex items-center">
+                            <h6 className="text-sm md:text-base font-semibold text-gray-600 flex items-center">
                               <span className="mr-2">📊</span>
                               실시간 센서 데이터
                             </h6>
                             
-                          <div className="grid grid-cols-2 gap-3">
-                            {/* 온도 센서 - 개선된 디자인 */}
-                            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                            {/* 온도 센서 - 모바일 최적화 */}
+                            <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-200 rounded-xl p-3 md:p-4 hover:shadow-md transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
-                                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-                                    <span className="text-white text-sm">🌡️</span>
+                                  <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                                    <span className="text-white text-xs md:text-sm">🌡️</span>
                                   </div>
                                   <div>
-                                    <div className="text-sm font-semibold text-gray-800">온도</div>
+                                    <div className="text-xs md:text-sm font-semibold text-gray-800">온도</div>
                                     <div className="text-xs text-gray-500">Temperature</div>
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-blue-600">24.5°C</div>
+                                    <div className="text-sm md:text-lg font-bold text-blue-600">24.5°C</div>
                                     <div className="text-xs text-green-600 font-medium">정상</div>
                                   </div>
                                   <button
