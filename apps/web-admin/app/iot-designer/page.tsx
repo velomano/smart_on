@@ -158,6 +158,42 @@ function IoTDesignerContent() {
   // 전원 계산 함수들
   const getSensorPower = (sensorType: string): number => {
     const powerMap: Record<string, number> = {
+      // 환경 센서
+      'BME280': 3.6, // 온습압 센서 (I2C)
+      'ADS1115': 0.15, // ADC 모듈 (I2C)
+      'BMP280': 2.7, // 기압센서 (I2C)
+      'DHT22': 2.5, // 온습도센서 (디지털)
+      'DS18B20': 1.5, // 온도센서 (방수 프로브)
+      'SHT30': 1.4, // 온습도센서 (I2C)
+      'ENS160': 4.7, // 공기질센서 (I2C)
+      'Generic_Analog': 0.1, // 토양수분센서 (아날로그)
+      'HC-SR04': 15, // 초음파 거리센서
+      'INA219': 0.7, // 전류/전압 센서 (I2C)
+      'PMS5003': 100, // 미세먼지센서 (UART)
+      'MQ135': 150, // 공기질센서 (아날로그)
+      'MQ7': 150, // CO 센서 (아날로그)
+      'MQ2': 800, // 가스센서 (아날로그)
+      'MQ9': 800, // 가스센서 (아날로그)
+      'MQ4': 800, // 가스센서 (아날로그)
+      'MQ5': 800, // 가스센서 (아날로그)
+      'MQ6': 800, // 가스센서 (아날로그)
+      'MQ8': 800, // 가스센서 (아날로그)
+      'MQ131': 800, // 가스센서 (아날로그)
+      'MQ136': 800, // 가스센서 (아날로그)
+      'MQ137': 800, // 가스센서 (아날로그)
+      'MQ138': 800, // 가스센서 (아날로그)
+      'MQ303A': 800, // 가스센서 (아날로그)
+      'MQ309A': 800, // 가스센서 (아날로그)
+      'MQ311': 800, // 가스센서 (아날로그)
+      'MQ306A': 800, // 가스센서 (아날로그)
+      'MQ307A': 800, // 가스센서 (아날로그)
+      'MQ308A': 800, // 가스센서 (아날로그)
+      'MQ309A': 800, // 가스센서 (아날로그)
+      'MQ311': 800, // 가스센서 (아날로그)
+      'MQ306A': 800, // 가스센서 (아날로그)
+      'MQ307A': 800, // 가스센서 (아날로그)
+      'MQ308A': 800, // 가스센서 (아날로그)
+      // 기본값
       'temperature': 5,
       'humidity': 5,
       'pressure': 10,
@@ -172,6 +208,27 @@ function IoTDesignerContent() {
 
   const getActuatorPower = (actuatorType: string): number => {
     const powerMap: Record<string, number> = {
+      // 조명
+      'AC_Relay_Lamp': 200, // AC 램프 (릴레이 제어)
+      'PWM_12V_LED': 60, // 12V LED (MOSFET PWM)
+      'WS2812B_NeoPixel': 60, // NeoPixel Strip (60mA per LED)
+      'AC_Dimmer_TRIAC': 5, // AC 디머 (TRIAC + ZCD)
+      
+      // 모터
+      'TB6612_DC_Motor': 1000, // DC 모터 (TB6612FNG 드라이버)
+      'L298N_DC_Motor': 1200, // DC 모터 (L298N 드라이버)
+      'SG90_Servo': 500, // 서보모터 (PWM)
+      'A4988_Stepper': 800, // 스테퍼모터 (A4988 드라이버)
+      
+      // 밸브/펌프
+      'Solenoid_Valve': 200, // 솔레노이드 밸브 (릴레이 제어)
+      'Peristaltic_Pump': 300, // 페리스탈틱 펌프 (DC 모터)
+      'PWM_DC_Fan': 120, // DC 팬 (PWM 제어)
+      
+      // 릴레이
+      'Solid_State_Relay': 5, // SSR (거의 전력 소모 없음)
+      
+      // 기본값
       'relay': 50,
       'servo': 100,
       'motor': 200,
@@ -1052,7 +1109,11 @@ function IoTDesignerContent() {
                   </span>
                     </div>
                 <p className="text-sm text-blue-800 mt-2">
-                  💡 ESP32는 최대 500mA까지 공급 가능합니다. 전력 소비가 높으면 외부 전원 공급을 고려하세요.
+                  💡 {spec.device.toUpperCase()}는 최대 {
+                    spec.device === 'esp32' ? '500' : 
+                    spec.device === 'arduino' ? '200' : 
+                    spec.device === 'raspberry_pi' ? '2500' : '500'
+                  }mA까지 공급 가능합니다. 전력 소비가 높으면 외부 전원 공급을 고려하세요.
                 </p>
                       </div>
                       </div>
