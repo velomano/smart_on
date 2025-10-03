@@ -1867,20 +1867,40 @@ function IoTDesignerContent() {
               })() : '핀을 선택하세요'}
             </p>
             
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {getAvailablePins(showPinSelector).map((pin, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => assignPin(pin, showPinSelector)}
-                  className={`px-3 py-2 text-sm rounded transition-colors ${
-                    pinAssignments[showPinSelector] === pin
-                      ? `${getComponentColor(showPinSelector)} text-white`
-                      : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  {pin}
-                </button>
-              ))}
+            <div className="space-y-3 mb-4">
+              {/* 현재 할당된 핀 표시 */}
+              {pinAssignments[showPinSelector] && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">현재 할당된 핀:</p>
+                  <button
+                    onClick={() => assignPin(pinAssignments[showPinSelector], showPinSelector)}
+                    className={`w-full px-4 py-3 text-sm rounded-lg border-2 transition-colors ${getComponentColor(showPinSelector)} text-white border-current shadow-md`}
+                  >
+                    <span className="font-bold">{pinAssignments[showPinSelector]}</span>
+                    <span className="ml-2 text-xs opacity-90">(현재 할당됨)</span>
+                  </button>
+                </div>
+              )}
+              
+              {/* 다른 사용 가능한 핀들 */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  {pinAssignments[showPinSelector] ? '다른 핀으로 변경:' : '핀을 선택하세요:'}
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {getAvailablePins(showPinSelector)
+                    .filter(pin => pin !== pinAssignments[showPinSelector]) // 현재 할당된 핀 제외
+                    .map((pin, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => assignPin(pin, showPinSelector)}
+                        className="px-3 py-2 text-sm rounded transition-colors bg-gray-100 text-gray-800 hover:bg-gray-200 hover:shadow-sm"
+                      >
+                        {pin}
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
             
             <div className="flex justify-end gap-2">
