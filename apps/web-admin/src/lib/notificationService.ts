@@ -5,7 +5,7 @@ import { dashboardAlertManager } from './dashboardAlerts';
 
 export interface SensorData {
   id: string;
-  type: 'temperature' | 'humidity' | 'ec' | 'ph' | 'water';
+  type: 'temperature' | 'humidity' | 'ec' | 'ph' | 'water' | 'nutrient_temperature';
   value: number;
   location: string;
   timestamp: Date;
@@ -33,6 +33,7 @@ export interface NotificationSettings {
     ec_notification: boolean;
     ph_notification: boolean;
     water_notification: boolean;
+    nutrient_temperature_notification: boolean;
   };
 }
 
@@ -48,7 +49,8 @@ export function loadNotificationSettings(): NotificationSettings {
         ec_notification: true,
         ph_notification: true,
         humidity_notification: true,
-        water_notification: true
+        water_notification: true,
+        nutrient_temperature_notification: true
       }
     };
   }
@@ -65,7 +67,8 @@ export function loadNotificationSettings(): NotificationSettings {
       humidity_notification: true,
       ec_notification: true,
       ph_notification: true,
-      water_notification: true
+      water_notification: true,
+      nutrient_temperature_notification: true
     };
   } else {
     const parsed = JSON.parse(settings);
@@ -76,7 +79,8 @@ export function loadNotificationSettings(): NotificationSettings {
       humidity_notification: true,
       ec_notification: true,
       ph_notification: true,
-      water_notification: true
+      water_notification: true,
+      nutrient_temperature_notification: true
     };
   }
   
@@ -95,7 +99,8 @@ export function loadNotificationSettings(): NotificationSettings {
               ec_notification: true,
               ph_notification: true,
               humidity_notification: true,
-              water_notification: true
+              water_notification: true,
+              nutrient_temperature_notification: true
             }
           };
         }

@@ -55,6 +55,16 @@ export default function NotificationButton({ className = '' }: NotificationButto
       message: '<b>저수위 경고</b>\n\n📍 위치: 조1-베드1\n💧 현재 수위: 15%\n⚠️ 최소 수위: 20%'
     },
     {
+      id: 'sensor_nutrient_temp_high',
+      title: '🌊 배양액 고온 경고 알림',
+      message: '<b>배양액 고온 경고</b>\n\n📍 위치: 조1-베드1\n🌊 현재 배양액 온도: 28°C\n⚠️ 임계값: 25°C'
+    },
+    {
+      id: 'sensor_nutrient_temp_low',
+      title: '🌊 배양액 저온 경고 알림',
+      message: '<b>배양액 저온 경고</b>\n\n📍 위치: 조1-베드1\n🌊 현재 배양액 온도: 12°C\n⚠️ 임계값: 15°C'
+    },
+    {
       id: 'system_alert',
       title: '⚠️ 시스템 경고 알림',
       message: '<b>시스템 경고</b>\n\n⚠️ 시스템 이상 상황이 발생했습니다.\n📍 위치: 전체 농장'

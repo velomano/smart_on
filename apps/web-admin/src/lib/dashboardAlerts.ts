@@ -4,7 +4,7 @@ export interface DashboardAlert {
   id: string;
   type: 'sensor' | 'system' | 'control';
   level: 'low' | 'medium' | 'high' | 'critical';
-  sensorType?: 'temperature' | 'humidity' | 'ec' | 'ph' | 'water';
+  sensorType?: 'temperature' | 'humidity' | 'ec' | 'ph' | 'water' | 'nutrient_temperature';
   title: string;
   message: string;
   location: string;
@@ -22,6 +22,7 @@ export interface AlertThresholds {
   ec: { min: number; max: number };
   ph: { min: number; max: number };
   water: { min: number; max: number };
+  nutrient_temperature: { min: number; max: number };
 }
 
 // 기본 임계값 설정
@@ -30,7 +31,8 @@ export const DEFAULT_THRESHOLDS: AlertThresholds = {
   humidity: { min: 30, max: 80 },
   ec: { min: 0.8, max: 3.5 },
   ph: { min: 5.5, max: 6.5 },
-  water: { min: 20, max: 90 }
+  water: { min: 20, max: 90 },
+  nutrient_temperature: { min: 15, max: 25 }
 };
 
 // 로컬 스토리지 키
@@ -165,6 +167,18 @@ class DashboardAlertManager {
         alertLevel = 'medium';
         title = '🌊 고수위 경고';
         message = `${location}에서 수위가 과도합니다.`;
+        threshold = typeThresholds.max;
+      }
+    } else if (sensorType === 'nutrient_temperature') {
+      if (typeThresholds.min && value < typeThresholds.min) {
+        alertLevel = 'high';
+        title = '🌊 배양액 저온 경고';
+        message = `${location}에서 배양액 온도가 낮습니다.`;
+        threshold = typeThresholds.min;
+      } else if (typeThresholds.max && value > typeThresholds.max) {
+        alertLevel = 'high';
+        title = '🌊 배양액 고온 경고';
+        message = `${location}에서 배양액 온도가 높습니다.`;
         threshold = typeThresholds.max;
       }
     }

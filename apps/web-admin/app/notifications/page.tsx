@@ -271,7 +271,8 @@ export default function NotificationsPage() {
                   humidity_notification: { title: '💧 습도 알림', description: '높은/낮은 습도 경고', icon: '💧' },
                   ec_notification: { title: '🔋 EC 알림', description: '배양액 농도 이상', icon: '🔋' },
                   ph_notification: { title: '⚗️ pH 알림', description: 'pH 값 이상', icon: '⚗️' },
-                  water_notification: { title: '💧 수위 알림', description: '저수위/고수위 경고', icon: '💧' }
+                  water_notification: { title: '💧 수위 알림', description: '저수위/고수위 경고', icon: '💧' },
+                  nutrient_temperature_notification: { title: '🌊 배양액 온도 알림', description: '배양액 온도 이상', icon: '🌊' }
                 };
                 
                 const label = labels[key];
@@ -393,7 +394,8 @@ export default function NotificationsPage() {
                     humidity_notification: { title: '습도', icon: '💧' },
                     ec_notification: { title: 'EC', icon: '🔋' },
                     ph_notification: { title: 'pH', icon: '⚗️' },
-                    water_notification: { title: '수위', icon: '💧' }
+                    water_notification: { title: '수위', icon: '💧' },
+                    nutrient_temperature_notification: { title: '배양액온도', icon: '🌊' }
                   };
                   
                   const label = labels[key];
