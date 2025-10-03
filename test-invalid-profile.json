@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "1.0.0",
+  "board": "raspberry-pi-4",
+  "i2c": { "sda": 1, "scl": 2 },
+  "sensors": [
+    { "type": "BME280", "addr": "0x76" }
+  ],
+  "actuators": [
+    { "name": "WS2812B_NeoPixel", "pin": 16 },
+    { "name": "PWM_LED", "pin": 5 },
+    { "name": "Reserved_Pin_Test", "pin": 14 }
+  ]
+}

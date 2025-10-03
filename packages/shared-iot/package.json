@@ -1,0 +1,14 @@
+{
+  "name": "@shared-iot",
+  "version": "1.0.0",
+  "description": "Shared IoT hardware profiles and validation utilities",
+  "main": "index.ts",
+  "types": "index.ts",
+  "exports": {
+    "./boards": "./boards/index.ts",
+    "./config/hardwareProfile.schema.json": "./config/hardwareProfile.schema.json"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "arduino-uno",
+  "i2c": { "sda": "A4", "scl": "A5" },
+  "pwmPins": [3, 5, 6, 9, 10, 11]
+}

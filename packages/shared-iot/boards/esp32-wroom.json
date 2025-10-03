@@ -1,0 +1,6 @@
+{
+  "name": "esp32-wroom",
+  "i2c": { "sda": 21, "scl": 22 },
+  "forbiddenOutPins": [0, 2, 4, 12, 15, 34, 35, 36, 37, 38, 39],
+  "recommendedOutPins": [16, 17, 18, 19, 23, 25, 26, 27, 32, 33]
+}

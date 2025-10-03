@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0.0",
+  "board": "raspberry-pi-4",
+  "i2c": { "sda": 2, "scl": 3 },
+  "sensors": [
+    { "type": "BME280", "addr": "0x76" },
+    { "type": "BMP280", "addr": "0x77" },
+    { "type": "ADS1115", "addr": "0x48" },
+    { "type": "ADS1115", "addr": "0x49" }
+  ],
+  "actuators": [
+    { "name": "AC_Relay_Lamp", "pin": 23 },
+    { "name": "WS2812B_NeoPixel", "pin": 18 },
+    { "name": "PWM_12V_LED_1", "pin": 12 },
+    { "name": "PWM_12V_LED_2", "pin": 13 },
+    { "name": "AC_Dimmer", "pins": { "zcd": 5, "triac": 6 } },
+    { "name": "TB6612_DC_Motor", "pins": { "pwm": 19, "in1": 16, "in2": 20 } }
+  ]
+}

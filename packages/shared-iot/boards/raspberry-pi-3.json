@@ -1,0 +1,8 @@
+{
+  "name": "raspberry-pi-3",
+  "i2c": { "sda": 2, "scl": 3 },
+  "hwPwmPins": [12, 13, 18, 19],
+  "reservedPins": [14, 15, 8, 9, 10, 11],
+  "relayPreferred": [16, 23, 24, 25],
+  "ws2812Preferred": 18
+}

@@ -1,0 +1,29 @@
+{
+  "wifi": { 
+    "ssid": "YOUR_WIFI_SSID", 
+    "password": "YOUR_WIFI_PASSWORD" 
+  },
+  "mqtt": { 
+    "host": "YOUR_MQTT_HOST", 
+    "port": 1883, 
+    "user": "", 
+    "pass": "", 
+    "baseTopic": "farm/bridge1" 
+  },
+  "hardwareProfile": {
+    "schemaVersion": "1.0.0",
+    "board": "esp32-wroom",
+    "i2c": { "sda": 21, "scl": 22 },
+    "sensors": [
+      { "type": "BME280", "addr": "0x76" },
+      { "type": "ADS1115", "addr": "0x48" },
+      { "type": "DHT22", "pin": 27 }
+    ],
+    "actuators": [
+      { "name": "AC_Relay_Lamp", "pin": 16, "activeLow": true, "driver": "relay" },
+      { "name": "Solid_State_Relay", "pin": 17, "activeLow": false, "driver": "ssr" },
+      { "name": "Peristaltic_Pump", "pin": 18, "driver": "mosfet" },
+      { "name": "PWM_Buzzer", "pin": 25, "pwm": true }
+    ]
+  }
+}

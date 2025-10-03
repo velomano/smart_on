@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HardwareProfile",
+  "type": "object",
+  "required": ["schemaVersion","board","i2c","sensors","actuators"],
+  "properties": {
+    "schemaVersion": { "type": "string", "pattern": "^1\\.0\\.0$" },
+    "board": { "type": "string" },
+    "i2c": {
+      "type": "object",
+      "required": ["sda","scl"],
+      "properties": { "sda": { "type": ["integer","string"] }, "scl": { "type": ["integer","string"] } }
+    },
+    "sensors": {
+      "type": "array",
+      "items": {
+        "type":"object",
+        "required":["type"],
+        "properties":{
+          "type":{"type":"string","enum":["BME280","BMP280","ADS1115","DHT22"]},
+          "addr":{"type":"string","pattern":"^0x[0-9a-fA-F]{2}$"},
+          "pin":{"type":["integer","string"]}
+        },
+        "allOf":[
+          { "if":{"properties":{"type":{"const":"DHT22"}}},"then":{"required":["pin"]}},
+          { "if":{"properties":{"type":{"enum":["BME280","BMP280","ADS1115"]}}},"then":{"not":{"required":["pin"]}}}
+        ]
+      }
+    },
+    "actuators": {
+      "type": "array",
+      "items": {
+        "type":"object",
+        "required":["name"],
+        "properties":{
+          "name":{"type":"string"},
+          "pin":{"type":"integer"},
+          "pins":{"type":"object"}
+        }
+      }
+    }
+  }
+}

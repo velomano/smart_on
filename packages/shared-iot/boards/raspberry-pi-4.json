@@ -1,0 +1,13 @@
+{
+  "name": "raspberry-pi-4",
+  "i2c": { "sda": 2, "scl": 3 },
+  "hwPwmPins": [12, 13, 18, 19],
+  "reservedPins": [14, 15, 8, 9, 10, 11],
+  "relayPreferred": [16, 23, 24, 25],
+  "ws2812Preferred": 18,
+  "notes": [
+    "Analog-in 없음(ADS1115 등 I2C ADC 필요)",
+    "WS2812B는 GPIO18 + 레벨시프터 권장",
+    "AC Dimmer는 ZCD(input) + TRIAC(output) 2핀 필요"
+  ]
+}

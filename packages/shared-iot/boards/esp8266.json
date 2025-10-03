@@ -1,0 +1,6 @@
+{
+  "name": "esp8266",
+  "i2c": { "sda": 4, "scl": 5 },
+  "bootstrapPins": [0, 2, 15],
+  "notes": ["부팅 스트랩 핀 주의(D0/D4/D8)"]
+}
