@@ -267,6 +267,7 @@ function IoTDesignerContent() {
   const [showPinSelector, setShowPinSelector] = useState<string | null>(null);
   const [showSaveWarning, setShowSaveWarning] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [initialPinAssignments, setInitialPinAssignments] = useState<Record<string, string>>({});
 
   // 색상 팔레트
   const colorPalette = [
@@ -342,24 +343,55 @@ function IoTDesignerContent() {
     const savedSensorPins = localStorage.getItem('sensorPinAssignments');
     const savedActuatorPins = localStorage.getItem('actuatorPinAssignments');
     
+    let initialPins: Record<string, string> = {};
+    
     if (savedSensorPins || savedActuatorPins) {
-      const savedPins = {
+      initialPins = {
         ...JSON.parse(savedSensorPins || '{}'),
         ...JSON.parse(savedActuatorPins || '{}')
       };
-      setPinAssignments(savedPins);
+      setPinAssignments(initialPins);
     } else {
-      initializePinAssignments();
+      // 초기 핀 할당 생성
+      const allComponents = getAllComponents();
+      const allPins = [
+        ...getDevicePins(spec.device, 'digital'),
+        ...getDevicePins(spec.device, 'pwm'),
+        ...getDevicePins(spec.device, 'analog')
+      ];
+      
+      const uniquePins = [...new Set(allPins)];
+      
+      allComponents.forEach((component, index) => {
+        if (index < uniquePins.length) {
+          initialPins[component] = uniquePins[index];
+        }
+      });
+      
+      setPinAssignments(initialPins);
     }
+    
+    // 초기 상태 저장 (변경사항 비교용)
+    setInitialPinAssignments(initialPins);
+    setHasUnsavedChanges(false); // 초기화 시에는 변경사항 없음
   }, [spec.sensors, spec.controls, spec.device]);
+
+  // 핀 할당 변경사항 체크 함수
+  const checkForChanges = (currentAssignments: Record<string, string>) => {
+    const hasChanges = Object.keys(currentAssignments).some(key => 
+      currentAssignments[key] !== initialPinAssignments[key]
+    );
+    setHasUnsavedChanges(hasChanges);
+  };
 
   // 핀 할당 함수
   const assignPin = (pin: string, component: string) => {
-    setPinAssignments(prev => ({
-      ...prev,
+    const newAssignments = {
+      ...pinAssignments,
       [component]: pin
-    }));
-    setHasUnsavedChanges(true); // 변경사항 추적
+    };
+    setPinAssignments(newAssignments);
+    checkForChanges(newAssignments); // 변경사항 체크
     setShowPinSelector(null);
   };
 
@@ -1144,6 +1176,7 @@ function IoTDesignerContent() {
             <button
               onClick={() => {
                 localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
+                setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
                 setHasUnsavedChanges(false); // 저장 완료
                 toast.success('✅ 센서 핀 할당이 저장되었습니다!');
               }}
@@ -1210,6 +1243,7 @@ function IoTDesignerContent() {
             <button
               onClick={() => {
                 localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
+                setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
                 setHasUnsavedChanges(false); // 저장 완료
                 toast.success('✅ 액추에이터 핀 할당이 저장되었습니다!');
               }}
@@ -1577,6 +1611,7 @@ function IoTDesignerContent() {
                       // 자동으로 저장하고 연결 페이지로 이동
                       localStorage.setItem('sensorPinAssignments', JSON.stringify(pinAssignments));
                       localStorage.setItem('actuatorPinAssignments', JSON.stringify(pinAssignments));
+                      setInitialPinAssignments(pinAssignments); // 초기 상태 업데이트
                       setHasUnsavedChanges(false); // 저장 완료
                       setShowSaveWarning(false);
                       toast.success('✅ 자동 저장 완료! 연결 페이지로 이동합니다.');
