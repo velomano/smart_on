@@ -10,14 +10,12 @@ export async function POST(request: NextRequest) {
     
     // 환경변수 확인 (민감한 정보는 로깅하지 않음)
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     console.log('🔍 환경변수 확인:', {
-      hasUrl: !!url,
-      hasServiceKey: !!serviceKey
+      hasUrl: !!url
     });
     
-    if (!url || !serviceKey) {
+    if (!url) {
       console.error('❌ Supabase 환경변수 누락');
       return NextResponse.json({ 
         error: 'Supabase 환경변수가 설정되지 않았습니다' 

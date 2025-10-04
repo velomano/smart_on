@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { createSbServer } from '@/lib/db';
 
 // 나만의 레시피 조회
 export async function GET() {
   try {
     console.log('🔍 나만의 레시피 조회 시작');
 
-    const { data, error } = await supabase
+    const sb = createSbServer();
+    if (!sb) {
+      return NextResponse.json({ ok: false, error: '데이터베이스 연결 실패' }, { status: 500 });
+    }
+
+    const { data, error } = await sb
       .from('custom_nutrient_recipes')
       .select('*')
       .order('created_at', { ascending: false });
@@ -76,7 +77,12 @@ export async function POST(request: NextRequest) {
       created_at: body.created_at || new Date().toISOString()
     };
 
-    const { data, error } = await supabase
+    const sb = createSbServer();
+    if (!sb) {
+      return NextResponse.json({ ok: false, error: '데이터베이스 연결 실패' }, { status: 500 });
+    }
+
+    const { data, error } = await sb
       .from('custom_nutrient_recipes')
       .insert([recipeData])
       .select()
