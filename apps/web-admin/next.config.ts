@@ -11,9 +11,7 @@ const nextConfig: NextConfig = {
   },
   // Vercel 배포를 위한 설정
   output: 'standalone',
-  experimental: {
-    outputFileTracingRoot: '../../',
-  },
+  outputFileTracingRoot: '/Users/seochunwoo/Documents/50se/smart on',
 };
 
 export default nextConfig;
