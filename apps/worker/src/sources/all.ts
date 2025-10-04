@@ -4,9 +4,10 @@ import { fetchCornellLettuce } from "./cornell";
 import { fetchRDARecipes } from "./rda";
 import { fetchFAORecipes } from "./fao";
 import { fetchAcademicRecipes } from "./academic";
+import { fetchAdditionalRecipes } from "./additional";
 
 // 통합 수집 함수 (배치 처리 지원)
-export async function collectAllRecipes(batchSize: number = 10) {
+export async function collectAllRecipes(batchSize: number = 100) {
   const allRecipes = [];
   
   try {
@@ -51,6 +52,17 @@ export async function collectAllRecipes(batchSize: number = 10) {
     console.log(`✅ 학술 연구소: ${academicBatch.length}건 수집`);
   } catch (error) {
     console.error('❌ 학술 연구소 수집 실패:', error.message);
+  }
+  
+  try {
+    // 5. 추가 소스 수집 (배치 크기 제한)
+    console.log(`🌐 추가 소스 수집 시작 (최대 ${batchSize}건)...`);
+    const additionalRecipes = await fetchAdditionalRecipes();
+    const additionalBatch = additionalRecipes.slice(0, Math.min(batchSize, additionalRecipes.length));
+    allRecipes.push(...additionalBatch);
+    console.log(`✅ 추가 소스: ${additionalBatch.length}건 수집`);
+  } catch (error) {
+    console.error('❌ 추가 소스 수집 실패:', error.message);
   }
   
   // 전체 배치 크기 제한
