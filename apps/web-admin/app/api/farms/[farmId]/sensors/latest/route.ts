@@ -8,65 +8,44 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     console.log('센서 데이터 조회 요청', { farmId, deviceId });
 
-    // 임시 데이터 반환 (Supabase 연결 문제 해결 전까지)
-    const mockData = [
-      {
-        deviceId: 'sensor-001',
-        deviceName: '온도센서',
-        deviceType: 'sensor',
-        sensorKey: 'temperature',
-        value: 25.5,
-        unit: '°C',
-        timestamp: new Date().toISOString(),
-        quality: 'good'
-      },
-      {
-        deviceId: 'sensor-002',
-        deviceName: '습도센서',
-        deviceType: 'sensor',
-        sensorKey: 'humidity',
-        value: 65.2,
-        unit: '%',
-        timestamp: new Date().toISOString(),
-        quality: 'good'
-      },
-      {
-        deviceId: 'sensor-003',
-        deviceName: 'EC센서',
-        deviceType: 'sensor',
-        sensorKey: 'ec',
-        value: 1.8,
-        unit: 'mS/cm',
-        timestamp: new Date().toISOString(),
-        quality: 'good'
-      },
-      {
-        deviceId: 'sensor-004',
-        deviceName: 'pH센서',
-        deviceType: 'sensor',
-        sensorKey: 'ph',
-        value: 6.2,
-        unit: 'pH',
-        timestamp: new Date().toISOString(),
-        quality: 'good'
+    // 실제 유니버셜 브릿지에서 센서 데이터 조회
+    const bridgeUrl = process.env.BRIDGE_INTERNAL_URL || 'http://localhost:3001';
+    
+    try {
+      const response = await fetch(`${bridgeUrl}/api/farms/${farmId}/sensors/latest`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.BRIDGE_API_TOKEN || 'dev-bridge-token-123'}`
+        }
+      });
+
+      if (response.ok) {
+        const bridgeData = await response.json();
+        console.log('유니버셜 브릿지에서 센서 데이터 조회 성공', {
+          farmId,
+          deviceId,
+          sensorCount: bridgeData.data?.length || 0
+        });
+
+        return NextResponse.json({ 
+          data: bridgeData.data || [],
+          message: '센서 데이터 조회 성공'
+        });
+      } else {
+        console.warn('유니버셜 브릿지 연결 실패, 빈 데이터 반환');
+        return NextResponse.json({ 
+          data: [],
+          message: '연결된 센서가 없습니다. 유니버셜 브릿지를 확인해주세요.'
+        });
       }
-    ];
-
-    // deviceId 필터링
-    const filteredData = deviceId 
-      ? mockData.filter(sensor => sensor.deviceId === deviceId)
-      : mockData;
-
-    console.log('센서 데이터 조회 완료', {
-      farmId,
-      deviceId,
-      sensorCount: filteredData.length
-    });
-
-    return NextResponse.json({ 
-      data: filteredData,
-      message: '센서 데이터 조회 성공 (임시 데이터)'
-    });
+    } catch (error) {
+      console.error('유니버셜 브릿지 연결 오류:', error);
+      return NextResponse.json({ 
+        data: [],
+        message: '유니버셜 브릿지 연결 실패. 디바이스 연결을 확인해주세요.'
+      });
+    }
   } catch (error) {
     console.error('센서 데이터 조회 오류', error);
     return NextResponse.json({ 

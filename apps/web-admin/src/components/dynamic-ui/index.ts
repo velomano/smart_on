@@ -12,5 +12,6 @@ export type { DeviceInfo, SensorInfo, ActuatorInfo } from './DynamicDevicePanel'
 export { 
   createMockSensorData, 
   createMockActuatorData, 
-  createMockDevice 
+  createMockDevice,
+  createDynamicDevice
 } from './DynamicDevicePanel';

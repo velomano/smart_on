@@ -16,6 +16,7 @@ import { authenticateDevice } from '../../security/middleware.js';
 import * as authRoutes from './routes/auth.js';
 import * as mqttRoutes from './routes/mqtt.js';
 import * as routes from './routes.js';
+import * as webAdminRoutes from './routes/web-admin.js';
 import { logger, generateRequestId } from '../../utils/logger.js';
 // import rpcRouter from '../rpc'; // TODO: RPC 라우터 구현 필요
 
@@ -219,6 +220,11 @@ export function createHttpServer() {
   app.post('/api/bridge/telemetry', routes.handleTelemetry);
   app.get('/api/bridge/commands/:deviceId', routes.handleCommandPoll);
   app.post('/api/bridge/commands/:commandId/ack', routes.handleCommandAck);
+
+  // Web Admin API 엔드포인트
+  app.get('/api/farms/:farmId/sensors/latest', webAdminRoutes.getLatestSensorData);
+  app.get('/api/farms/:farmId/actuators/status', webAdminRoutes.getActuatorStatus);
+  app.post('/api/farms/:farmId/actuators/control', webAdminRoutes.controlActuator);
 
   // 404 핸들러
   app.use((req, res) => {

@@ -18,6 +18,7 @@ interface BedTierShelfVisualizationProps {
   }>;
   waterLevelStatus?: 'high' | 'low' | 'normal' | 'disconnected';
   onTierClick?: (tierNumber: number) => void;
+  onCropClick?: (tierNumber: number) => void; // 등록된 작물 클릭 시
   compact?: boolean;
 }
 
@@ -26,6 +27,7 @@ export default function BedTierShelfVisualization({
   tierStatuses,
   waterLevelStatus = 'normal',
   onTierClick,
+  onCropClick,
   compact = false
 }: BedTierShelfVisualizationProps) {
   
@@ -346,7 +348,14 @@ export default function BedTierShelfVisualization({
               
               if (tier?.hasPlants && tier.cropName) {
                 return (
-                  <g>
+                  <g 
+                    className={onCropClick ? 'cursor-pointer' : ''}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('🌱 1단 작물 클릭됨');
+                      onCropClick?.(1);
+                    }}
+                  >
                     {/* 작물 이름 (중앙) */}
                     <text 
                       x="120" 
@@ -475,7 +484,14 @@ export default function BedTierShelfVisualization({
               
               if (tier?.hasPlants && tier.cropName) {
                 return (
-                  <g>
+                  <g 
+                    className={onCropClick ? 'cursor-pointer' : ''}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('🌱 2단 작물 클릭됨');
+                      onCropClick?.(2);
+                    }}
+                  >
                     {/* 작물 이름 (중앙) */}
                     <text 
                       x="120" 
@@ -518,6 +534,17 @@ export default function BedTierShelfVisualization({
                         textAnchor="end"
                       >
                         {tier.startDate}
+                      </text>
+                    )}
+                    {/* 클릭 안내 (작물 정보가 있을 때만) */}
+                    {onCropClick && (
+                      <text 
+                        x="120" 
+                        y={15 + shelfHeight + shelfSpacing + shelfHeight - 8} 
+                        fontSize="10" 
+                        fill="#9CA3AF"
+                        textAnchor="middle"
+                      >
                       </text>
                     )}
                   </g>
@@ -604,7 +631,14 @@ export default function BedTierShelfVisualization({
               
               if (tier?.hasPlants && tier.cropName) {
                 return (
-                  <g>
+                  <g 
+                    className={onCropClick ? 'cursor-pointer' : ''}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      console.log('🌱 3단 작물 클릭됨');
+                      onCropClick?.(3);
+                    }}
+                  >
                     {/* 작물 이름 (중앙) */}
                     <text 
                       x="120" 
@@ -647,6 +681,17 @@ export default function BedTierShelfVisualization({
                         textAnchor="end"
                       >
                         {tier.startDate}
+                      </text>
+                    )}
+                    {/* 클릭 안내 (작물 정보가 있을 때만) */}
+                    {onCropClick && (
+                      <text 
+                        x="120" 
+                        y={15 + (2 * shelfHeight) + (2 * shelfSpacing) + shelfHeight - 8} 
+                        fontSize="10" 
+                        fill="#9CA3AF"
+                        textAnchor="middle"
+                      >
                       </text>
                     )}
                   </g>

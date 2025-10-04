@@ -86,11 +86,176 @@ export default function DynamicDevicePanel({
     }
   };
 
+  // 센서 타입 추론 함수
+  const inferSensorConfig = (sensor: SensorInfo): SensorConfig => {
+    const type = sensor.type.toLowerCase();
+    const name = sensor.name.toLowerCase();
+    
+    // 온도 관련
+    if (type.includes('temp') || name.includes('온도') || name.includes('temperature')) {
+      return {
+        type: 'temperature',
+        icon: '🌡️',
+        color: 'red',
+        unit: '°C',
+        gaugeType: 'circular',
+        targetRange: { min: 20, max: 30 },
+        displayName: '온도'
+      };
+    }
+    
+    // 습도 관련
+    if (type.includes('humid') || name.includes('습도') || name.includes('humidity')) {
+      return {
+        type: 'humidity',
+        icon: '💧',
+        color: 'blue',
+        unit: '%',
+        gaugeType: 'circular',
+        targetRange: { min: 50, max: 80 },
+        displayName: '습도'
+      };
+    }
+    
+    // EC 관련
+    if (type.includes('ec') || name.includes('ec') || name.includes('전기전도도')) {
+      return {
+        type: 'ec',
+        icon: '⚡',
+        color: 'green',
+        unit: 'mS/cm',
+        gaugeType: 'linear',
+        targetRange: { min: 1.0, max: 2.5 },
+        displayName: 'EC'
+      };
+    }
+    
+    // pH 관련
+    if (type.includes('ph') || name.includes('ph') || name.includes('산성도')) {
+      return {
+        type: 'ph',
+        icon: '🧪',
+        color: 'purple',
+        unit: 'pH',
+        gaugeType: 'circular',
+        targetRange: { min: 5.5, max: 7.0 },
+        displayName: 'pH'
+      };
+    }
+    
+    // 조도 관련
+    if (type.includes('lux') || type.includes('light') || name.includes('조도') || name.includes('빛')) {
+      return {
+        type: 'lux',
+        icon: '☀️',
+        color: 'yellow',
+        unit: 'lux',
+        gaugeType: 'linear',
+        targetRange: { min: 10000, max: 50000 },
+        displayName: '조도'
+      };
+    }
+    
+    // CO2 관련
+    if (type.includes('co2') || name.includes('co2') || name.includes('이산화탄소')) {
+      return {
+        type: 'co2',
+        icon: '🌫️',
+        color: 'gray',
+        unit: 'ppm',
+        gaugeType: 'circular',
+        targetRange: { min: 400, max: 1200 },
+        displayName: 'CO₂'
+      };
+    }
+    
+    // 수위 관련
+    if (type.includes('water') || type.includes('level') || name.includes('수위') || name.includes('물')) {
+      return {
+        type: 'water_level',
+        icon: '🌊',
+        color: 'cyan',
+        unit: '%',
+        gaugeType: 'circular',
+        targetRange: { min: 70, max: 90 },
+        displayName: '수위'
+      };
+    }
+    
+    // 토양 수분
+    if (type.includes('soil') || type.includes('moisture') || name.includes('토양') || name.includes('수분')) {
+      return {
+        type: 'water_level', // 재사용
+        icon: '🌱',
+        color: 'green',
+        unit: '%',
+        gaugeType: 'circular',
+        targetRange: { min: 30, max: 70 },
+        displayName: '토양 수분'
+      };
+    }
+    
+    // 공기질
+    if (type.includes('air') || type.includes('quality') || name.includes('공기') || name.includes('질')) {
+      return {
+        type: 'co2', // 재사용
+        icon: '🌬️',
+        color: 'blue',
+        unit: 'ppm',
+        gaugeType: 'circular',
+        targetRange: { min: 0, max: 1000 },
+        displayName: '공기질'
+      };
+    }
+    
+    // 풍속
+    if (type.includes('wind') || type.includes('speed') || name.includes('풍속') || name.includes('바람')) {
+      return {
+        type: 'temperature', // 재사용
+        icon: '💨',
+        color: 'sky',
+        unit: 'm/s',
+        gaugeType: 'linear',
+        targetRange: { min: 0, max: 20 },
+        displayName: '풍속'
+      };
+    }
+    
+    // 기본 fallback
+    return {
+      type: 'temperature',
+      icon: '❓',
+      color: 'gray',
+      unit: 'unit',
+      gaugeType: 'circular',
+      targetRange: { min: 0, max: 100 },
+      displayName: sensor.name || sensor.type || '알 수 없는 센서'
+    };
+  };
+
   const renderSensorCard = (sensor: SensorInfo) => {
     const config = SENSOR_CONFIGS[sensor.type];
     if (!config) {
-      console.warn(`Unknown sensor type: ${sensor.type}`);
-      return null;
+      console.warn(`Unknown sensor type: ${sensor.type}, inferring from name: ${sensor.name}`);
+      // 센서 타입 추론을 통한 설정 생성
+      const fallbackConfig = inferSensorConfig(sensor);
+      
+      const data = sensorData[sensor.id] || {
+        value: 0,
+        timestamp: new Date().toISOString(),
+        status: 'offline' as const
+      };
+
+      return (
+        <SensorCard
+          key={sensor.id}
+          config={fallbackConfig}
+          data={data}
+          deviceId={device.id}
+          onTargetChange={onSensorTargetChange}
+          onChartClick={onSensorChartClick}
+        />
+      );
     }
 
     const data = sensorData[sensor.id] || {
@@ -116,11 +281,162 @@ export default function DynamicDevicePanel({
     );
   };
 
+  // 액추에이터 타입 추론 함수
+  const inferActuatorConfig = (actuator: ActuatorInfo): ActuatorConfig => {
+    const type = actuator.type.toLowerCase();
+    const name = actuator.name.toLowerCase();
+    
+    // LED 관련
+    if (type.includes('led') || type.includes('light') || name.includes('led') || name.includes('조명') || name.includes('빛')) {
+      return {
+        type: 'led',
+        icon: '💡',
+        color: 'yellow',
+        displayName: 'LED 조명',
+        hasBrightness: true,
+        hasSpeed: false,
+        hasSchedule: true,
+        hasDualTime: true
+      };
+    }
+    
+    // 펌프 관련
+    if (type.includes('pump') || name.includes('펌프') || name.includes('물') || name.includes('급수')) {
+      return {
+        type: 'pump',
+        icon: '💧',
+        color: 'blue',
+        displayName: '펌프',
+        hasBrightness: false,
+        hasSpeed: true,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // 팬 관련
+    if (type.includes('fan') || name.includes('팬') || name.includes('환기') || name.includes('공기')) {
+      return {
+        type: 'fan',
+        icon: '🌀',
+        color: 'cyan',
+        displayName: '팬',
+        hasBrightness: false,
+        hasSpeed: true,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // 히터 관련
+    if (type.includes('heater') || type.includes('heat') || name.includes('히터') || name.includes('난방')) {
+      return {
+        type: 'heater',
+        icon: '🔥',
+        color: 'red',
+        displayName: '히터',
+        hasBrightness: false,
+        hasSpeed: false,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // 영양액 디스펜서
+    if (type.includes('nutrient') || type.includes('dispenser') || name.includes('영양액') || name.includes('디스펜서')) {
+      return {
+        type: 'nutrient_dispenser',
+        icon: '🧪',
+        color: 'green',
+        displayName: '영양액 디스펜서',
+        hasBrightness: false,
+        hasSpeed: true,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // CO2 인젝터
+    if (type.includes('co2') || name.includes('co2') || name.includes('이산화탄소')) {
+      return {
+        type: 'co2_injector',
+        icon: '🌫️',
+        color: 'gray',
+        displayName: 'CO₂ 인젝터',
+        hasBrightness: false,
+        hasSpeed: true,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // 스프링클러
+    if (type.includes('sprinkler') || name.includes('스프링클러') || name.includes('분무')) {
+      return {
+        type: 'pump', // 재사용
+        icon: '💦',
+        color: 'blue',
+        displayName: '스프링클러',
+        hasBrightness: false,
+        hasSpeed: true,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // 환기팬
+    if (type.includes('ventilation') || name.includes('환기팬') || name.includes('환기')) {
+      return {
+        type: 'fan', // 재사용
+        icon: '🌪️',
+        color: 'cyan',
+        displayName: '환기팬',
+        hasBrightness: false,
+        hasSpeed: true,
+        hasSchedule: true,
+        hasDualTime: false
+      };
+    }
+    
+    // 기본 fallback
+    return {
+      type: 'led',
+      icon: '❓',
+      color: 'gray',
+      displayName: actuator.name || actuator.type || '알 수 없는 액추에이터',
+      hasBrightness: true,
+      hasSpeed: false,
+      hasSchedule: true,
+      hasDualTime: false
+    };
+  };
+
   const renderActuatorCard = (actuator: ActuatorInfo) => {
     const config = ACTUATOR_CONFIGS[actuator.type];
     if (!config) {
-      console.warn(`Unknown actuator type: ${actuator.type}`);
-      return null;
+      console.warn(`Unknown actuator type: ${actuator.type}, inferring from name: ${actuator.name}`);
+      // 액추에이터 타입 추론을 통한 설정 생성
+      const fallbackConfig = inferActuatorConfig(actuator);
+      
+      const data = actuatorData[actuator.id] || {
+        status: 'off' as const,
+        mode: 'manual' as const,
+        value: 0
+      };
+
+      return (
+        <ActuatorCard
+          key={actuator.id}
+          config={fallbackConfig}
+          data={data}
+          deviceId={device.id}
+          onStatusChange={onActuatorStatusChange}
+          onModeChange={onActuatorModeChange}
+          onValueChange={onActuatorValueChange}
+          onScheduleChange={onActuatorScheduleChange}
+          onDualTimeChange={onActuatorDualTimeChange}
+        />
+      );
     }
 
     const data = actuatorData[actuator.id] || {
@@ -302,5 +618,45 @@ export const createMockDevice = (id: string, name: string, type: DeviceInfo['typ
     status: 'online',
     sensors,
     actuators
+  };
+};
+
+// 알 수 없는 디바이스 타입을 위한 동적 디바이스 생성 함수
+export const createDynamicDevice = (
+  id: string, 
+  name: string, 
+  deviceType: string,
+  sensors: Array<{type: string, unit?: string, name?: string}> = [],
+  actuators: Array<{type: string, name?: string}> = []
+): DeviceInfo => {
+  const sensorInfos: SensorInfo[] = sensors.map((sensor, index) => ({
+    id: `${id}_sensor_${index}`,
+    type: sensor.type,
+    deviceId: id,
+    name: sensor.name || `${name} ${sensor.type}`
+  }));
+
+  const actuatorInfos: ActuatorInfo[] = actuators.map((actuator, index) => ({
+    id: `${id}_actuator_${index}`,
+    type: actuator.type,
+    deviceId: id,
+    name: actuator.name || `${name} ${actuator.type}`
+  }));
+
+  // 디바이스 타입 결정
+  let type: DeviceInfo['type'] = 'mixed';
+  if (sensorInfos.length > 0 && actuatorInfos.length === 0) {
+    type = 'sensor_gateway';
+  } else if (sensorInfos.length === 0 && actuatorInfos.length > 0) {
+    type = 'actuator_controller';
+  }
+
+  return {
+    id,
+    name,
+    type,
+    status: 'online',
+    sensors: sensorInfos,
+    actuators: actuatorInfos
   };
 };

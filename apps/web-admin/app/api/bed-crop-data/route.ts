@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSbServer } from '@/lib/db';
-import { withTimeout } from '../_lib/withTimeout';
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -18,10 +17,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // 작물 정보 저장 (upsert 사용)
-    const { data, error } = await withTimeout(
-      sb
-        .from('bed_crop_data')
-        .upsert({
+    const { data, error } = await sb
+      .from('bed_crop_data')
+      .upsert({
         device_id: body.deviceId,
         tier_number: body.tierNumber,
         crop_name: body.cropData.cropName,
@@ -34,9 +32,7 @@ export async function POST(request: NextRequest) {
       }, {
         onConflict: 'device_id,tier_number'
       })
-      .select(),
-      8_000
-    );
+      .select();
 
     if (error) {
       console.error('작물 정보 저장 실패:', error);
@@ -53,7 +49,7 @@ export async function POST(request: NextRequest) {
       recordId: data?.[0]?.id
     });
 
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ success: true, ok: true, data });
   } catch (error) {
     console.error('작물 정보 저장 API 오류:', error);
     return NextResponse.json({ 
@@ -87,7 +83,7 @@ export async function GET(request: NextRequest) {
       query = query.eq('device_id', deviceId);
     }
 
-    const { data, error } = await withTimeout(query, 8_000);
+    const { data, error } = await query;
 
     if (error) {
       console.error('작물 정보 조회 실패:', error);
@@ -102,7 +98,7 @@ export async function GET(request: NextRequest) {
       recordCount: data?.length || 0
     });
 
-    return NextResponse.json({ ok: true, data });
+    return NextResponse.json({ success: true, ok: true, data });
   } catch (error) {
     console.error('작물 정보 조회 API 오류:', error);
     return NextResponse.json({ 

@@ -78,6 +78,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
       seedling: [40, 80]  // 생식생장 끝, 영양생장 끝 (%)
     }
   });
+
+  // 작물 상세 정보 모달 상태
+  const [selectedCropData, setSelectedCropData] = useState<any>(null);
+  const [isEditingCrop, setIsEditingCrop] = useState(false);
+  const [editCropData, setEditCropData] = useState({
+    cropName: '',
+    growingMethod: '담액식',
+    plantType: 'seed' as 'seed' | 'seedling',
+    startDate: '',
+    harvestDate: '',
+    stageBoundaries: {
+      seed: [15, 45, 85],
+      seedling: [40, 80]
+    }
+  });
   
   // 베드 관련 상태
   const [showAddBedModal, setShowAddBedModal] = useState(false);
@@ -119,7 +134,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
     waterLevel: { min: 70, max: 90 }
   });
   
-  // 액추에이터 상태 관리
+  // 액추에이터 상태 관리 (목 데이터 제거 - 실제 API에서 가져옴)
   const [actuatorStates, setActuatorStates] = useState<{[key: string]: {
     status: 'on' | 'off';
     value: number;
@@ -132,32 +147,33 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
         period2: { start: string; end: string };
       };
     };
-  }}>({
-    led: { status: 'on', value: 75, mode: 'auto' },
-    pump: { status: 'off', value: 0, mode: 'schedule' },
-    fan: { status: 'on', value: 60, mode: 'auto' },
-    heater: { status: 'off', value: 25, mode: 'schedule' }
-  });
+  }}>({});
   
   // 베드 삭제 관련 상태
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   const [deletingBed, setDeletingBed] = useState<Bed | null>(null);
 
-  // 액추에이터 제어 함수
-  const handleActuatorControl = async (actuatorType: string, action: string, value?: number) => {
+  // 액추에이터 제어 함수 (실제 디바이스 ID 사용)
+  const handleActuatorControl = async (actuatorType: string, action: string, value?: number, deviceId?: string) => {
     try {
-      console.log(`🎛️ 액추에이터 제어: ${actuatorType} - ${action}`, value);
+      console.log(`🎛️ 액추에이터 제어: ${actuatorType} - ${action}`, { value, deviceId });
       
+      // 실제 디바이스 ID가 있는 경우에만 제어
+      if (!deviceId) {
+        console.warn('디바이스 ID가 없어서 액추에이터 제어를 건너뜁니다.');
+        return;
+      }
+
       // 로컬 상태 업데이트
       setActuatorStates(prev => ({
         ...prev,
         [actuatorType]: {
           ...prev[actuatorType],
           status: action === 'toggle' 
-            ? (prev[actuatorType].status === 'on' ? 'off' : 'on')
-            : prev[actuatorType].status,
-          value: value !== undefined ? value : prev[actuatorType].value,
-          mode: action === 'toggle' ? 'manual' : prev[actuatorType].mode
+            ? (prev[actuatorType]?.status === 'on' ? 'off' : 'on')
+            : (action as 'on' | 'off'),
+          value: value !== undefined ? value : (prev[actuatorType]?.value || 0),
+          mode: action === 'toggle' ? 'manual' : (prev[actuatorType]?.mode || 'manual')
         }
       }));
 
@@ -168,10 +184,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          deviceId: `device_${actuatorType}_${Date.now()}`, // 임시 디바이스 ID
+          deviceId,
           actuatorType,
           action: action === 'toggle' 
-            ? (actuatorStates[actuatorType].status === 'on' ? 'off' : 'on')
+            ? (actuatorStates[actuatorType]?.status === 'on' ? 'off' : 'on')
             : action,
           value
         }),
@@ -179,11 +195,14 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
 
       const result = await response.json();
       
-      if (!response.ok || !result.success) {
+      if (!response.ok) {
         throw new Error(result.error || '액추에이터 제어에 실패했습니다.');
       }
 
       console.log(`✅ 액추에이터 제어 성공: ${actuatorType} - ${action}`);
+      
+      // 성공 시 액추에이터 데이터 새로고침
+      await fetchActuatorData();
     } catch (error: any) {
       console.error('액추에이터 제어 오류:', error);
       alert(`액추에이터 제어에 실패했습니다: ${error.message || '알 수 없는 오류'}`);
@@ -194,8 +213,8 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
         [actuatorType]: {
           ...prev[actuatorType],
           status: action === 'toggle' 
-            ? (prev[actuatorType].status === 'on' ? 'off' : 'on')
-            : prev[actuatorType].status
+            ? (prev[actuatorType]?.status === 'on' ? 'off' : 'on')
+            : prev[actuatorType]?.status || 'off'
         }
       }));
     }
@@ -259,12 +278,19 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
     fetchUserData();
   }, [farmId]);
 
-  // 실시간 데이터 업데이트 (30초마다)
+  // 실시간 데이터 업데이트 (5초마다 - 실제 디바이스 연동)
   useEffect(() => {
+    if (!farmId) return;
+    
+    // 초기 데이터 로드
+    fetchSensorData();
+    fetchActuatorData();
+    
+    // 주기적 업데이트
     const interval = setInterval(() => {
       fetchSensorData();
       fetchActuatorData();
-    }, 30000);
+    }, 5000); // 5초마다 업데이트
 
     return () => clearInterval(interval);
   }, [farmId]);
@@ -403,7 +429,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
     }
   };
 
-  // 센서 데이터 가져오기
+  // 센서 데이터 가져오기 (실제 디바이스에서)
   const fetchSensorData = async () => {
     try {
       if (!farmId) {
@@ -413,25 +439,28 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
       const response = await fetch(`/api/farms/${farmId}/sensors/latest`);
       const result = await response.json();
       
-      if (response.ok && result.success) {
-        setSensorData(result.data || []);
+      if (response.ok) {
+        const sensorData = result.data || [];
+        setSensorData(sensorData);
         
         // 디바이스 상태 업데이트
-        const sensorCount = result.data?.length || 0;
-        const onlineSensors = result.data?.filter((s: any) => s.quality === 'good').length || 0;
+        const sensorCount = sensorData.length;
+        const onlineSensors = sensorData.filter((s: any) => s.quality === 'good').length;
         
         setDeviceStatus(prev => ({
           ...prev,
           sensors: { active: onlineSensors, total: sensorCount },
           online: sensorCount > 0
         }));
+        
+        console.log('센서 데이터 업데이트:', { sensorCount, onlineSensors });
       }
     } catch (error) {
       console.error('센서 데이터 조회 오류:', error);
     }
   };
 
-  // 액추에이터 데이터 가져오기
+  // 액추에이터 데이터 가져오기 (실제 디바이스에서)
   const fetchActuatorData = async () => {
     try {
       if (!farmId) {
@@ -441,17 +470,31 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
       const response = await fetch(`/api/farms/${farmId}/actuators/control`);
       const result = await response.json();
       
-      if (response.ok && result.success) {
-        setActuatorData(result.data || []);
+      if (response.ok) {
+        const actuatorData = result.data || [];
+        setActuatorData(actuatorData);
+        
+        // 액추에이터 상태를 실제 데이터로 업데이트
+        const newActuatorStates: typeof actuatorStates = {};
+        actuatorData.forEach((actuator: any) => {
+          newActuatorStates[actuator.deviceType] = {
+            status: actuator.status === 'on' ? 'on' : 'off',
+            value: actuator.meta?.brightness || actuator.meta?.flowRate || actuator.meta?.speed || 0,
+            mode: 'manual' // 기본값, 실제로는 디바이스에서 가져와야 함
+          };
+        });
+        setActuatorStates(newActuatorStates);
         
         // 디바이스 상태 업데이트
-        const actuatorCount = result.data?.length || 0;
-        const onlineActuators = result.data?.filter((a: any) => a.isOnline).length || 0;
+        const actuatorCount = actuatorData.length;
+        const onlineActuators = actuatorData.filter((a: any) => a.isOnline).length;
         
         setDeviceStatus(prev => ({
           ...prev,
           actuators: { active: onlineActuators, total: actuatorCount }
         }));
+        
+        console.log('액추에이터 데이터 업데이트:', { actuatorCount, onlineActuators, newActuatorStates });
       }
     } catch (error) {
       console.error('액추에이터 데이터 조회 오류:', error);
@@ -489,6 +532,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
 
   // 베드별 작물 정보 로드 함수
   const fetchBedCropData = async (bedIds: string[]) => {
+    console.log('🌱 작물 정보 로드 시작:', bedIds);
     try {
       const cropDataPromises = bedIds.map(async (bedId) => {
         const response = await fetch(`/api/bed-crop-data?deviceId=${bedId}`);
@@ -503,6 +547,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
         cropDataMap[bedId] = data;
       });
 
+      console.log('🌱 작물 정보 로드 완료:', cropDataMap);
       setBedCropData(cropDataMap);
     } catch (error) {
       console.error('베드 작물 정보 로드 실패:', error);
@@ -529,11 +574,17 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
         })
       });
 
+      console.log('작물 정보 저장 응답 상태:', { 
+        status: response.status, 
+        ok: response.ok, 
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
       const result = await response.json();
       
       console.log('작물 정보 저장 응답:', { response: response.ok, result });
 
-      if (response.ok && result.success) {
+      if (response.ok && (result.success || result.ok)) {
         alert(`${selectedTier}단에 "${cropInputData.cropName}" 작물이 등록되었습니다!`);
         
         // 모달 닫기 및 상태 초기화
@@ -567,6 +618,109 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
     } catch (error) {
       console.error('작물 정보 저장 오류:', error);
       alert(`작물 정보 저장에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  };
+
+  // 작물 클릭 시 상세 정보 표시
+  const handleCropClick = (tierNumber: number) => {
+    console.log('🌱 작물 클릭:', { tierNumber, selectedBed, bedCropData });
+    if (!selectedBed) {
+      console.log('🌱 selectedBed 없음');
+      return;
+    }
+    
+    const cropData = bedCropData[selectedBed.id]?.find(crop => crop.tier_number === tierNumber);
+    console.log('🌱 찾은 작물 데이터:', cropData);
+    if (cropData) {
+      setSelectedCropData(cropData);
+      setShowCropInputModal(true); // 기존 작물 등록 모달 사용
+      console.log('🌱 모달 열기:', { selectedCropData: cropData, showCropInputModal: true });
+    } else {
+      console.log('🌱 작물 데이터 없음');
+    }
+  };
+
+  // 작물 정보 업데이트 함수
+  const handleUpdateCrop = async () => {
+    if (!selectedBed || !selectedCropData || !editCropData.cropName.trim()) {
+      alert('작물 이름을 입력해주세요.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/bed-crop-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId: selectedBed.id,
+          tierNumber: selectedCropData.tier_number,
+          cropData: editCropData
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && (result.success || result.ok)) {
+        alert(`${selectedCropData.tier_number}단의 "${editCropData.cropName}" 작물 정보가 수정되었습니다.`);
+        
+        // 편집 모드 종료
+        setIsEditingCrop(false);
+
+        // 농장 데이터 다시 로드
+        await fetchFarmData();
+        
+        // 작물 정보 다시 로드
+        await fetchBedCropData([selectedBed.id]);
+      } else {
+        throw new Error(result.error || result.message || '작물 정보 수정에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('작물 정보 수정 오류:', error);
+      alert(`작물 정보 수정에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    }
+  };
+
+  // 작물 삭제 함수
+  const handleDeleteCrop = async () => {
+    if (!selectedBed || !selectedCropData) return;
+
+    const confirmDelete = confirm(`정말로 "${selectedCropData.crop_name}" 작물을 삭제하시겠습니까?`);
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch('/api/bed-crop-data', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId: selectedBed.id,
+          tier: selectedCropData.tier_number
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && (result.success || result.ok)) {
+        alert(`${selectedCropData.tier_number}단의 "${selectedCropData.crop_name}" 작물이 삭제되었습니다.`);
+        
+        // 모달 닫기
+        setShowCropInputModal(false);
+        setSelectedCropData(null);
+
+        // 농장 데이터 다시 로드
+        await fetchFarmData();
+        
+        // 작물 정보 다시 로드
+        await fetchBedCropData([selectedBed.id]);
+      } else {
+        throw new Error(result.error || result.message || '작물 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('작물 삭제 오류:', error);
+      alert(`작물 삭제에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     }
   };
 
@@ -941,6 +1095,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                           activeTiers={3}
                           tierStatuses={[1, 2, 3].map(tierNumber => {
                             const cropData = bedCropData[bed.id]?.find(crop => crop.tier_number === tierNumber);
+                            console.log('🌱 베드 렌더링:', { bedId: bed.id, tierNumber, cropData, bedCropData });
                             return {
                             tierNumber,
                               hasPlants: !!cropData,
@@ -957,6 +1112,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                             setSelectedBed({ id: bed.id, name: bed.name });
                             setSelectedTier(tierNumber);
                             setShowCropInputModal(true);
+                          }}
+                          onCropClick={(tierNumber) => {
+                            setSelectedBed({ id: bed.id, name: bed.name });
+                            handleCropClick(tierNumber);
                           }}
                           compact={true}
                         />
@@ -1019,7 +1178,8 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                             </h6>
                             
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                            {/* 온도 센서 - 모바일 최적화 */}
+                            {/* 온도 센서 - 모바일 최적화 - 센서가 연결된 경우에만 표시 */}
+                            {sensorData.find(s => s.sensorKey === 'temperature')?.value && (
                             <div className="bg-gradient-to-br from-white to-blue-50 border border-blue-200 rounded-xl p-3 md:p-4 hover:shadow-md transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
@@ -1033,8 +1193,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-sm md:text-lg font-bold text-blue-600">24.5°C</div>
-                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                    <div className="text-sm md:text-lg font-bold text-gray-500">
+                                      {sensorData.find(s => s.sensorKey === 'temperature')?.value?.toFixed(1) || '연결 없음'}
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-medium">
+                                      {sensorData.find(s => s.sensorKey === 'temperature')?.value ? '정상' : '센서 미연결'}
+                                    </div>
                                   </div>
               <button
                                     onClick={() => setShowSensorTargetModal({sensor: 'temperature', type: 'temperature'})}
@@ -1090,8 +1254,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                               </div>
                             </div>
+                            )}
 
-                            {/* 습도 센서 - 개선된 디자인 */}
+                            {/* 습도 센서 - 개선된 디자인 - 센서가 연결된 경우에만 표시 */}
+                            {sensorData.find(s => s.sensorKey === 'humidity')?.value && (
                             <div className="bg-gradient-to-br from-white to-cyan-50 border border-cyan-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
@@ -1105,8 +1271,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-cyan-600">65%</div>
-                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                    <div className="text-lg font-bold text-gray-500">
+                                      {sensorData.find(s => s.sensorKey === 'humidity')?.value?.toFixed(0) || '연결 없음'}%
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-medium">
+                                      {sensorData.find(s => s.sensorKey === 'humidity')?.value ? '정상' : '센서 미연결'}
+                                    </div>
                                   </div>
                 <button
                                     onClick={() => setShowSensorTargetModal({sensor: 'humidity', type: 'humidity'})}
@@ -1135,7 +1305,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                       fill="none"
                                       stroke="url(#humidityGradient)"
                                       strokeWidth="2.5"
-                                      strokeDasharray="65, 100"
+                                      strokeDasharray={`${sensorData.find(s => s.sensorKey === 'humidity')?.value || 0}, 100`}
                                       strokeLinecap="round"
                                       className="drop-shadow-sm"
                                     />
@@ -1148,7 +1318,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                 </svg>
                                   <div className="absolute inset-0 flex items-center justify-center">
                                     <div className="text-center">
-                                      <div className="text-xs font-bold text-gray-700">65%</div>
+                                      <div className="text-xs font-bold text-gray-700">
+                                        {sensorData.find(s => s.sensorKey === 'humidity')?.value?.toFixed(0) || '--'}%
+                                      </div>
                                       <div className="text-xs text-gray-500">습도</div>
               </div>
                                   </div>
@@ -1162,8 +1334,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                               </div>
                             </div>
+                            )}
 
-                            {/* EC 센서 - 수평 바 */}
+                            {/* EC 센서 - 수평 바 - 센서가 연결된 경우에만 표시 */}
+                            {sensorData.find(s => s.sensorKey === 'ec')?.value && (
                             <div className="bg-gradient-to-br from-white to-green-50 border border-green-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
@@ -1177,8 +1351,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-green-600">1.8 mS/cm</div>
-                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                    <div className="text-lg font-bold text-gray-500">
+                                      {sensorData.find(s => s.sensorKey === 'ec')?.value?.toFixed(1) || '연결 없음'} mS/cm
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-medium">
+                                      {sensorData.find(s => s.sensorKey === 'ec')?.value ? '정상' : '센서 미연결'}
+                                    </div>
                                   </div>
                                   <button
                                     onClick={() => setShowSensorTargetModal({sensor: 'ec', type: 'ec'})}
@@ -1204,7 +1382,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-600">
                                   <span>0.0</span>
-                                  <span className="font-medium">1.8 / 3.0</span>
+                                  <span className="font-medium">
+                                    {sensorData.find(s => s.sensorKey === 'ec')?.value?.toFixed(1) || '--'} / 3.0
+                                  </span>
                                   <span>3.0 mS/cm</span>
                                 </div>
                               </div>
@@ -1216,8 +1396,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                               </div>
                             </div>
+                            )}
 
-                            {/* pH 센서 - 원형 게이지 */}
+                            {/* pH 센서 - 원형 게이지 - 센서가 연결된 경우에만 표시 */}
+                            {sensorData.find(s => s.sensorKey === 'ph')?.value && (
                             <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
@@ -1231,8 +1413,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-purple-600">6.2</div>
-                                    <div className="text-xs text-green-600 font-medium">정상</div>
+                                    <div className="text-lg font-bold text-gray-500">
+                                      {sensorData.find(s => s.sensorKey === 'ph')?.value?.toFixed(1) || '연결 없음'}
+                                    </div>
+                                    <div className="text-xs text-gray-500 font-medium">
+                                      {sensorData.find(s => s.sensorKey === 'ph')?.value ? '정상' : '센서 미연결'}
+                                    </div>
                                   </div>
                                   <button
                                     onClick={() => setShowSensorTargetModal({sensor: 'ph', type: 'ph'})}
@@ -1288,8 +1474,10 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                               </div>
                             </div>
+                            )}
 
-                            {/* 수위 센서 - 개선된 디자인 */}
+                            {/* 수위 센서 - 개선된 디자인 - 센서가 연결된 경우에만 표시 */}
+                            {sensorData.find(s => s.sensorKey === 'water_level')?.value && (
                             <div className="bg-gradient-to-br from-white to-cyan-50 border border-cyan-200 rounded-xl p-4 hover:shadow-md transition-all duration-300">
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center space-x-2">
@@ -1303,7 +1491,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-cyan-600">85%</div>
+                                    <div className="text-lg font-bold text-cyan-600">
+                                      {sensorData.find(s => s.sensorKey === 'water_level')?.value?.toFixed(0) || '--'}%
+                                    </div>
                                     <div className="text-xs text-green-600 font-medium">정상</div>
                                   </div>
                                   <button
@@ -1321,10 +1511,12 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 <div className="relative w-8 h-16 bg-gray-200 rounded-full overflow-hidden shadow-inner">
                                   <div 
                                     className="absolute bottom-0 w-full bg-gradient-to-t from-cyan-500 via-cyan-400 to-cyan-300 rounded-full transition-all duration-700 ease-out shadow-sm" 
-                                    style={{ height: '85%' }}
+                                    style={{ height: `${sensorData.find(s => s.sensorKey === 'water_level')?.value || 0}%` }}
                                   >
                                     <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
-                                      <span className="text-xs font-bold text-white drop-shadow-sm">85%</span>
+                                      <span className="text-xs font-bold text-white drop-shadow-sm">
+                                        {sensorData.find(s => s.sensorKey === 'water_level')?.value?.toFixed(0) || '--'}%
+                                      </span>
                                     </div>
                                     {/* 물결 효과 */}
                                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse"></div>
@@ -1339,6 +1531,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                               </div>
                             </div>
+                            )}
                           </div>
                           </div>
 
@@ -1363,18 +1556,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                 <div className="text-right">
-                                  <div className="text-xs font-medium text-gray-700">{actuatorStates.led.status.toUpperCase()}</div>
-                                  <div className="text-xs text-green-600">{actuatorStates.led.mode === 'auto' ? '자동' : actuatorStates.led.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                  <div className="text-xs font-medium text-gray-700">{actuatorStates.led?.status?.toUpperCase() || 'OFF'}</div>
+                                  <div className="text-xs text-green-600">{actuatorStates.led?.mode === 'auto' ? '자동' : actuatorStates.led?.mode === 'manual' ? '수동' : '스케줄'}</div>
                                 </div>
-                <button
-                                    onClick={() => handleActuatorControl('led', 'toggle')}
+                                <button
+                                    onClick={() => {
+                                      const ledActuator = actuatorData.find(a => a.deviceType === 'led');
+                                      handleActuatorControl('led', 'toggle', undefined, ledActuator?.deviceId);
+                                    }}
                                     className={`w-8 h-6 text-white text-xs rounded transition-colors ${
-                                      actuatorStates.led.status === 'on' 
+                                      actuatorStates.led?.status === 'on' 
                                         ? 'bg-green-600 hover:bg-green-700' 
                                         : 'bg-gray-400 hover:bg-gray-500'
                                     }`}
                                   >
-                                    {actuatorStates.led.status === 'on' ? 'ON' : 'OFF'}
+                                    {actuatorStates.led?.status === 'on' ? 'ON' : 'OFF'}
                 </button>
                                 </div>
                               </div>
@@ -1383,18 +1579,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs text-gray-600">
                                   <span>밝기</span>
-                                  <span className="font-medium">{actuatorStates.led.value}%</span>
+                                  <span className="font-medium">{actuatorStates.led?.value || 0}%</span>
                                 </div>
                                 <input
                                   type="range"
                                   min="0"
                                   max="100"
-                                  value={actuatorStates.led.value}
+                                  value={actuatorStates.led?.value || 0}
                                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                                   style={{
-                                    background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${actuatorStates.led.value}%, #e5e7eb ${actuatorStates.led.value}%, #e5e7eb 100%)`
+                                    background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${actuatorStates.led?.value || 0}%, #e5e7eb ${actuatorStates.led?.value || 0}%, #e5e7eb 100%)`
                                   }}
-                                  onChange={(e) => handleActuatorControl('led', 'brightness', parseInt(e.target.value))}
+                                  onChange={(e) => {
+                                    const ledActuator = actuatorData.find(a => a.deviceType === 'led');
+                                    handleActuatorControl('led', 'brightness', parseInt(e.target.value), ledActuator?.deviceId);
+                                  }}
                                 />
                               </div>
 
@@ -1410,7 +1609,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                 </button>
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {actuatorStates.led.schedule ? `켜기: ${actuatorStates.led.schedule.onTime} | 끄기: ${actuatorStates.led.schedule.offTime}` : '스케줄 미설정'}
+                                  {actuatorStates.led?.schedule ? `켜기: ${actuatorStates.led.schedule.onTime} | 끄기: ${actuatorStates.led.schedule.offTime}` : '스케줄 미설정'}
                                 </div>
                               </div>
                             </div>
@@ -1428,18 +1627,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.pump.status.toUpperCase()}</div>
-                                    <div className="text-xs text-gray-500">{actuatorStates.pump.mode === 'auto' ? '자동' : actuatorStates.pump.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.pump?.status?.toUpperCase() || 'OFF'}</div>
+                                    <div className="text-xs text-gray-500">{actuatorStates.pump?.mode === 'auto' ? '자동' : actuatorStates.pump?.mode === 'manual' ? '수동' : '스케줄'}</div>
                                   </div>
                                   <button
-                                    onClick={() => handleActuatorControl('pump', 'toggle')}
+                                    onClick={() => {
+                                      const pumpActuator = actuatorData.find(a => a.deviceType === 'pump');
+                                      handleActuatorControl('pump', 'toggle', undefined, pumpActuator?.deviceId);
+                                    }}
                                     className={`w-8 h-6 text-white text-xs rounded transition-colors ${
-                                      actuatorStates.pump.status === 'on' 
+                                      actuatorStates.pump?.status === 'on' 
                                         ? 'bg-blue-600 hover:bg-blue-700' 
                                         : 'bg-gray-400 hover:bg-gray-500'
                                     }`}
                                   >
-                                    {actuatorStates.pump.status === 'on' ? 'ON' : 'OFF'}
+                                    {actuatorStates.pump?.status === 'on' ? 'ON' : 'OFF'}
                                   </button>
                                 </div>
                               </div>
@@ -1448,18 +1650,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs text-gray-600">
                                   <span>속도</span>
-                                  <span className="font-medium">{actuatorStates.pump.value}%</span>
+                                  <span className="font-medium">{actuatorStates.pump?.value || 0}%</span>
                                 </div>
                                 <input
                                   type="range"
                                   min="0"
                                   max="100"
-                                  value={actuatorStates.pump.value}
+                                  value={actuatorStates.pump?.value || 0}
                                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                                   style={{
-                                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${actuatorStates.pump.value}%, #e5e7eb ${actuatorStates.pump.value}%, #e5e7eb 100%)`
+                                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${actuatorStates.pump?.value || 0}%, #e5e7eb ${actuatorStates.pump?.value || 0}%, #e5e7eb 100%)`
                                   }}
-                                  onChange={(e) => handleActuatorControl('pump', 'speed', parseInt(e.target.value))}
+                                  onChange={(e) => {
+                                    const pumpActuator = actuatorData.find(a => a.deviceType === 'pump');
+                                    handleActuatorControl('pump', 'speed', parseInt(e.target.value), pumpActuator?.deviceId);
+                                  }}
                                 />
                               </div>
 
@@ -1475,7 +1680,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                   </button>
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {actuatorStates.pump.schedule?.dualTime ? 
+                                  {actuatorStates.pump?.schedule?.dualTime ? 
                                     `작동: 10분 → 휴지: 5분 (08:00-18:00)` : 
                                     '듀얼타임 미설정'
                                   }
@@ -1496,18 +1701,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.fan.status.toUpperCase()}</div>
-                                    <div className="text-xs text-blue-600">{actuatorStates.fan.mode === 'auto' ? '자동' : actuatorStates.fan.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.fan?.status?.toUpperCase() || 'OFF'}</div>
+                                    <div className="text-xs text-blue-600">{actuatorStates.fan?.mode === 'auto' ? '자동' : actuatorStates.fan?.mode === 'manual' ? '수동' : '스케줄'}</div>
                                   </div>
                                   <button
-                                    onClick={() => handleActuatorControl('fan', 'toggle')}
+                                    onClick={() => {
+                                      const fanActuator = actuatorData.find(a => a.deviceType === 'fan');
+                                      handleActuatorControl('fan', 'toggle', undefined, fanActuator?.deviceId);
+                                    }}
                                     className={`w-8 h-6 text-white text-xs rounded transition-colors ${
-                                      actuatorStates.fan.status === 'on' 
+                                      actuatorStates.fan?.status === 'on' 
                                         ? 'bg-blue-600 hover:bg-blue-700' 
                                         : 'bg-gray-400 hover:bg-gray-500'
                                     }`}
                                   >
-                                    {actuatorStates.fan.status === 'on' ? 'ON' : 'OFF'}
+                                    {actuatorStates.fan?.status === 'on' ? 'ON' : 'OFF'}
                                   </button>
                                 </div>
                               </div>
@@ -1516,18 +1724,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs text-gray-600">
                                   <span>속도</span>
-                                  <span className="font-medium">{actuatorStates.fan.value}%</span>
+                                  <span className="font-medium">{actuatorStates.fan?.value || 0}%</span>
                                 </div>
                                 <input
                                   type="range"
                                   min="0"
                                   max="100"
-                                  value={actuatorStates.fan.value}
+                                  value={actuatorStates.fan?.value || 0}
                                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                                   style={{
-                                    background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${actuatorStates.fan.value}%, #e5e7eb ${actuatorStates.fan.value}%, #e5e7eb 100%)`
+                                    background: `linear-gradient(to right, #6b7280 0%, #6b7280 ${actuatorStates.fan?.value || 0}%, #e5e7eb ${actuatorStates.fan?.value || 0}%, #e5e7eb 100%)`
                                   }}
-                                  onChange={(e) => handleActuatorControl('fan', 'speed', parseInt(e.target.value))}
+                                  onChange={(e) => {
+                                    const fanActuator = actuatorData.find(a => a.deviceType === 'fan');
+                                    handleActuatorControl('fan', 'speed', parseInt(e.target.value), fanActuator?.deviceId);
+                                  }}
                                 />
                               </div>
 
@@ -1543,7 +1754,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                   </button>
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {actuatorStates.fan.schedule ? `켜기: ${actuatorStates.fan.schedule.onTime} | 끄기: ${actuatorStates.fan.schedule.offTime}` : '스케줄 미설정'}
+                                  {actuatorStates.fan?.schedule ? `켜기: ${actuatorStates.fan.schedule.onTime} | 끄기: ${actuatorStates.fan.schedule.offTime}` : '스케줄 미설정'}
                                 </div>
                               </div>
                             </div>
@@ -1561,18 +1772,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <div className="text-right">
-                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.heater.status.toUpperCase()}</div>
-                                    <div className="text-xs text-gray-500">{actuatorStates.heater.mode === 'auto' ? '자동' : actuatorStates.heater.mode === 'manual' ? '수동' : '스케줄'}</div>
+                                    <div className="text-xs font-medium text-gray-700">{actuatorStates.heater?.status?.toUpperCase() || 'OFF'}</div>
+                                    <div className="text-xs text-gray-500">{actuatorStates.heater?.mode === 'auto' ? '자동' : actuatorStates.heater?.mode === 'manual' ? '수동' : '스케줄'}</div>
                                   </div>
                                   <button
-                                    onClick={() => handleActuatorControl('heater', 'toggle')}
+                                    onClick={() => {
+                                      const heaterActuator = actuatorData.find(a => a.deviceType === 'heater');
+                                      handleActuatorControl('heater', 'toggle', undefined, heaterActuator?.deviceId);
+                                    }}
                                     className={`w-8 h-6 text-white text-xs rounded transition-colors ${
-                                      actuatorStates.heater.status === 'on' 
+                                      actuatorStates.heater?.status === 'on' 
                                         ? 'bg-orange-600 hover:bg-orange-700' 
                                         : 'bg-gray-400 hover:bg-gray-500'
                                     }`}
                                   >
-                                    {actuatorStates.heater.status === 'on' ? 'ON' : 'OFF'}
+                                    {actuatorStates.heater?.status === 'on' ? 'ON' : 'OFF'}
                                   </button>
                                 </div>
                               </div>
@@ -1581,18 +1795,21 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs text-gray-600">
                                   <span>목표 온도</span>
-                                  <span className="font-medium">{actuatorStates.heater.value}°C</span>
+                                  <span className="font-medium">{actuatorStates.heater?.value || 25}°C</span>
                                 </div>
                                 <input
                                   type="range"
                                   min="15"
                                   max="35"
-                                  value={actuatorStates.heater.value}
+                                  value={actuatorStates.heater?.value || 25}
                                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
                                   style={{
-                                    background: `linear-gradient(to right, #f97316 0%, #f97316 ${((actuatorStates.heater.value - 15) / 20) * 100}%, #e5e7eb ${((actuatorStates.heater.value - 15) / 20) * 100}%, #e5e7eb 100%)`
+                                    background: `linear-gradient(to right, #f97316 0%, #f97316 ${(((actuatorStates.heater?.value || 25) - 15) / 20) * 100}%, #e5e7eb ${(((actuatorStates.heater?.value || 25) - 15) / 20) * 100}%, #e5e7eb 100%)`
                                   }}
-                                  onChange={(e) => handleActuatorControl('heater', 'temperature', parseInt(e.target.value))}
+                                  onChange={(e) => {
+                                    const heaterActuator = actuatorData.find(a => a.deviceType === 'heater');
+                                    handleActuatorControl('heater', 'temperature', parseInt(e.target.value), heaterActuator?.deviceId);
+                                  }}
                                 />
                               </div>
 
@@ -1608,7 +1825,7 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                                   </button>
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {actuatorStates.heater.schedule?.dualTime ? 
+                                  {actuatorStates.heater?.schedule?.dualTime ? 
                                     `작동: 15분 → 휴지: 10분 (18:00-06:00)` : 
                                     '듀얼타임 미설정'
                                   }
@@ -1901,26 +2118,30 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
           </div>
         )}
 
-        {/* 작물 등록 모달 */}
-        {showCropInputModal && selectedBed && selectedTier && (
+        {/* 작물 등록/편집 모달 */}
+        {showCropInputModal && selectedBed && (selectedTier || selectedCropData) && (
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             {/* 배경 오버레이 */}
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => {
               setShowCropInputModal(false);
               setSelectedBed(null);
               setSelectedTier(null);
+              setSelectedCropData(null);
+              setIsEditingCrop(false);
             }} />
             <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               {/* 모달 헤더 */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h3 className="text-xl font-bold text-gray-800">
-                  {selectedTier}단 작물 정보 입력
+                  {selectedCropData ? `${selectedCropData.tier_number}단 작물 정보` : `${selectedTier}단 작물 정보 입력`}
                 </h3>
                 <button
                   onClick={() => {
                     setShowCropInputModal(false);
                     setSelectedBed(null);
                     setSelectedTier(null);
+                    setSelectedCropData(null);
+                    setIsEditingCrop(false);
                   }}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
@@ -1938,13 +2159,19 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       작물 이름 *
                     </label>
-                    <input
-                      type="text"
-                      value={cropInputData.cropName}
-                      onChange={(e) => setCropInputData(prev => ({ ...prev, cropName: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
-                      placeholder="예: 토마토"
-                    />
+                    {selectedCropData ? (
+                      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800">
+                        {selectedCropData.crop_name}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={cropInputData.cropName}
+                        onChange={(e) => setCropInputData(prev => ({ ...prev, cropName: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                        placeholder="예: 토마토"
+                      />
+                    )}
                   </div>
 
                   {/* 재배 방법 */}
@@ -1952,16 +2179,22 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       재배 방법
                     </label>
-                    <select
-                      value={cropInputData.growingMethod}
-                      onChange={(e) => setCropInputData(prev => ({ ...prev, growingMethod: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
-                    >
-                      <option value="담액식">담액식</option>
-                      <option value="NFT">NFT</option>
-                      <option value="DWC">DWC</option>
-                      <option value="토경재배">토경재배</option>
-                    </select>
+                    {selectedCropData ? (
+                      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800">
+                        {selectedCropData.growing_method}
+                      </div>
+                    ) : (
+                      <select
+                        value={cropInputData.growingMethod}
+                        onChange={(e) => setCropInputData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                      >
+                        <option value="담액식">담액식</option>
+                        <option value="NFT">NFT</option>
+                        <option value="DWC">DWC</option>
+                        <option value="토경재배">토경재배</option>
+                      </select>
+                    )}
                   </div>
 
                   {/* 작물 유형 */}
@@ -1969,30 +2202,36 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       작물 유형
                     </label>
-                    <div className="flex gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seed' }))}
-                        className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                          cropInputData.plantType === 'seed'
-                            ? 'bg-green-500 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        파종
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seedling' }))}
-                        className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                          cropInputData.plantType === 'seedling'
-                            ? 'bg-green-500 text-white shadow-lg'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        육묘
-                      </button>
-                    </div>
+                    {selectedCropData ? (
+                      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800">
+                        {selectedCropData.plant_type === 'seed' ? '파종' : '육묘'}
+                      </div>
+                    ) : (
+                      <div className="flex gap-4">
+                        <button
+                          type="button"
+                          onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seed' }))}
+                          className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                            cropInputData.plantType === 'seed'
+                              ? 'bg-green-500 text-white shadow-lg'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          파종
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCropInputData(prev => ({ ...prev, plantType: 'seedling' }))}
+                          className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                            cropInputData.plantType === 'seedling'
+                              ? 'bg-green-500 text-white shadow-lg'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          육묘
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* 정식 시작일자 */}
@@ -2000,12 +2239,18 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       정식 시작일자
                     </label>
-                    <input
-                      type="date"
-                      value={cropInputData.startDate}
-                      onChange={(e) => setCropInputData(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
-                    />
+                    {selectedCropData ? (
+                      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800">
+                        {selectedCropData.start_date || '미설정'}
+                      </div>
+                    ) : (
+                      <input
+                        type="date"
+                        value={cropInputData.startDate}
+                        onChange={(e) => setCropInputData(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                      />
+                    )}
                   </div>
 
                   {/* 수확 예정일자 */}
@@ -2013,12 +2258,18 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       수확 예정일자
                     </label>
-                    <input
-                      type="date"
-                      value={cropInputData.harvestDate}
-                      onChange={(e) => setCropInputData(prev => ({ ...prev, harvestDate: e.target.value }))}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
-                    />
+                    {selectedCropData ? (
+                      <div className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800">
+                        {selectedCropData.harvest_date || '미설정'}
+                      </div>
+                    ) : (
+                      <input
+                        type="date"
+                        value={cropInputData.harvestDate}
+                        onChange={(e) => setCropInputData(prev => ({ ...prev, harvestDate: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-600"
+                      />
+                    )}
                   </div>
 
                   {/* 생육 단계 기간 설정 */}
@@ -2330,22 +2581,34 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
 
               {/* 모달 푸터 */}
               <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+                {selectedCropData && (
+                  <button
+                    onClick={handleDeleteCrop}
+                    className="px-6 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-colors"
+                  >
+                    삭제
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setShowCropInputModal(false);
                     setSelectedBed(null);
                     setSelectedTier(null);
+                    setSelectedCropData(null);
+                    setIsEditingCrop(false);
                   }}
                   className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  취소
+                  {selectedCropData ? '닫기' : '취소'}
                 </button>
-                <button
-                  onClick={handleSaveCropData}
-                  className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg"
-                >
-                  저장
-                </button>
+                {!selectedCropData && (
+                  <button
+                    onClick={handleSaveCropData}
+                    className="px-6 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all shadow-lg"
+                  >
+                    저장
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -2912,6 +3175,244 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
                   >
                     저장
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 작물 상세 정보 모달 */}
+        {false && selectedCropData && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            {/* 배경 오버레이 */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => {
+              setShowCropInputModal(false);
+              setSelectedCropData(null);
+              setIsEditingCrop(false);
+            }} />
+            <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              {/* 모달 헤더 */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h3 className="text-xl font-bold text-gray-800">
+                  🌱 {isEditingCrop ? '작물 정보 수정' : `${selectedCropData.crop_name} 상세 정보`}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowCropInputModal(false);
+                    setSelectedCropData(null);
+                    setIsEditingCrop(false);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round"
+                      strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* 작물 정보 내용 */}
+              <div className="p-6 space-y-6">
+                {/* 기본 정보 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                    <h4 className="font-semibold text-green-800 mb-2">📋 기본 정보</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">작물명:</span>
+                        {isEditingCrop ? (
+                          <input
+                            type="text"
+                            value={editCropData.cropName}
+                            onChange={(e) => setEditCropData(prev => ({ ...prev, cropName: e.target.value }))}
+                            className="px-2 py-1 border border-gray-300 rounded text-gray-800 text-sm w-32"
+                          />
+                        ) : (
+                          <span className="font-medium text-gray-800">{selectedCropData.crop_name}</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">재배 방법:</span>
+                        {isEditingCrop ? (
+                          <select
+                            value={editCropData.growingMethod}
+                            onChange={(e) => setEditCropData(prev => ({ ...prev, growingMethod: e.target.value }))}
+                            className="px-2 py-1 border border-gray-300 rounded text-gray-800 text-sm w-32"
+                          >
+                            <option value="담액식">담액식</option>
+                            <option value="토경재배">토경재배</option>
+                            <option value="수경재배">수경재배</option>
+                          </select>
+                        ) : (
+                          <span className="font-medium text-gray-800">{selectedCropData.growing_method}</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">작물 유형:</span>
+                        {isEditingCrop ? (
+                          <select
+                            value={editCropData.plantType}
+                            onChange={(e) => setEditCropData(prev => ({ ...prev, plantType: e.target.value as 'seed' | 'seedling' }))}
+                            className="px-2 py-1 border border-gray-300 rounded text-gray-800 text-sm w-32"
+                          >
+                            <option value="seed">🌱 파종</option>
+                            <option value="seedling">🌿 육묘</option>
+                          </select>
+                        ) : (
+                          <span className="font-medium text-gray-800">
+                            {selectedCropData.plant_type === 'seed' ? '🌱 파종' : '🌿 육묘'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">단 번호:</span>
+                        <span className="font-medium text-gray-800">{selectedCropData.tier_number}단</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
+                    <h4 className="font-semibold text-blue-800 mb-2">📅 일정 정보</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">시작일:</span>
+                        {isEditingCrop ? (
+                          <input
+                            type="date"
+                            value={editCropData.startDate}
+                            onChange={(e) => setEditCropData(prev => ({ ...prev, startDate: e.target.value }))}
+                            className="px-2 py-1 border border-gray-300 rounded text-gray-800 text-sm w-32"
+                          />
+                        ) : (
+                          <span className="font-medium text-gray-800">{selectedCropData.start_date || '미설정'}</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">수확일:</span>
+                        {isEditingCrop ? (
+                          <input
+                            type="date"
+                            value={editCropData.harvestDate}
+                            onChange={(e) => setEditCropData(prev => ({ ...prev, harvestDate: e.target.value }))}
+                            className="px-2 py-1 border border-gray-300 rounded text-gray-800 text-sm w-32"
+                          />
+                        ) : (
+                          <span className="font-medium text-gray-800">{selectedCropData.harvest_date || '미설정'}</span>
+                        )}
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">등록일:</span>
+                        <span className="font-medium text-gray-800">
+                          {new Date(selectedCropData.created_at).toLocaleDateString('ko-KR')}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 생육 단계 정보 */}
+                {selectedCropData.stage_boundaries && (
+                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
+                    <h4 className="font-semibold text-purple-800 mb-3">🌿 생육 단계 설정</h4>
+                    <div className="space-y-3">
+                      {selectedCropData.plant_type === 'seed' ? (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">파종 작물 단계:</h5>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-white p-2 rounded border">
+                              <span className="text-gray-600">발아 완료:</span>
+                              <span className="ml-1 font-medium">{selectedCropData.stage_boundaries.seed[0]}일</span>
+                            </div>
+                            <div className="bg-white p-2 rounded border">
+                              <span className="text-gray-600">생식생장 완료:</span>
+                              <span className="ml-1 font-medium">{selectedCropData.stage_boundaries.seed[1]}일</span>
+                            </div>
+                            <div className="bg-white p-2 rounded border">
+                              <span className="text-gray-600">영양생장 완료:</span>
+                              <span className="ml-1 font-medium">{selectedCropData.stage_boundaries.seed[2]}일</span>
+                            </div>
+                            <div className="bg-white p-2 rounded border">
+                              <span className="text-gray-600">수확 준비:</span>
+                              <span className="ml-1 font-medium">{selectedCropData.stage_boundaries.seed[3]}일</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">육묘 작물 단계:</h5>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="bg-white p-2 rounded border">
+                              <span className="text-gray-600">생식생장 완료:</span>
+                              <span className="ml-1 font-medium">{selectedCropData.stage_boundaries.seedling[0]}일</span>
+                            </div>
+                            <div className="bg-white p-2 rounded border">
+                              <span className="text-gray-600">영양생장 완료:</span>
+                              <span className="ml-1 font-medium">{selectedCropData.stage_boundaries.seedling[1]}일</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 액션 버튼 */}
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={() => {
+                      setShowCropInputModal(false);
+                      setSelectedCropData(null);
+                      setIsEditingCrop(false);
+                    }}
+                    className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  >
+                    닫기
+                  </button>
+                  {isEditingCrop ? (
+                    <>
+                      <button
+                        onClick={() => setIsEditingCrop(false)}
+                        className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        취소
+                      </button>
+                      <button
+                        onClick={handleUpdateCrop}
+                        className="px-4 py-2 text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                      >
+                        💾 저장
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          // 편집 모드 진입 시 현재 선택된 작물 데이터로 편집 데이터 초기화
+                          setEditCropData({
+                            cropName: selectedCropData.crop_name || '',
+                            growingMethod: selectedCropData.growing_method || '담액식',
+                            plantType: selectedCropData.plant_type || 'seed',
+                            startDate: selectedCropData.start_date || '',
+                            harvestDate: selectedCropData.harvest_date || '',
+                            stageBoundaries: selectedCropData.stage_boundaries || {
+                              seed: [15, 45, 85],
+                              seedling: [40, 80]
+                            }
+                          });
+                          setIsEditingCrop(true);
+                        }}
+                        className="px-4 py-2 text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+                      >
+                        ✏️ 수정
+                      </button>
+                      <button
+                        onClick={handleDeleteCrop}
+                        className="px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                      >
+                        🗑️ 삭제
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
