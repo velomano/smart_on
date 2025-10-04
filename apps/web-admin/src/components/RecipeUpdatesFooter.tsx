@@ -107,6 +107,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
             last_updated: recipe.last_updated
           }));
           
+          // UTC 기준으로 오늘 날짜 계산 (GitHub Actions는 UTC로 실행)
           const today = new Date().toISOString().split('T')[0];
           const todayRecipes = recentRecipes.filter((recipe: any) => 
             recipe.created_at && recipe.created_at.startsWith(today)

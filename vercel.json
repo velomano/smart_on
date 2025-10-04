@@ -12,10 +12,6 @@
   "routes": [
     { "src": "/bridge", "dest": "/api/bridge" },
     { "src": "/ws", "dest": "/api/bridge/ws" },
-    { "src": "/bridge/(.*)", "dest": "/api/bridge/$1" },
-    {
-      "src": "/(.*)",
-      "dest": "apps/web-admin/$1"
-    }
+    { "src": "/bridge/(.*)", "dest": "/api/bridge/$1" }
   ]
 }

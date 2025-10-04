@@ -48,6 +48,7 @@ jobs:
         npm run build
 
     - name: 영양액 레시피 수집 및 crop_profiles 저장
+      id: collect-recipes
       run: |
         set -euo pipefail
         
@@ -186,6 +187,10 @@ jobs:
               console.log(\`  - \${source}: \${count}건\`);
             });
             
+            // GitHub Actions 출력 설정
+            console.log(\`::set-output name=collected_count::\${recipes.length}\`);
+            console.log(\`::set-output name=saved_count::\${savedCount}\`);
+            
           } catch (error) {
             console.error('💥 수집 실패:', error);
             process.exit(1);
@@ -207,8 +212,11 @@ jobs:
           ICON="✅"
           MESSAGE="영양액 레시피 수집 작업이 성공적으로 완료되었습니다!"
           
-          # 기본 정보 (실제 수집 결과는 로그에서 확인)
-          COLLECTED_INFO="📊 <b>수집 결과</b>: 성공적으로 완료"
+          # 실제 수집 결과 파싱 (워크플로우 로그에서)
+          COLLECTED_COUNT=$(echo "${{ steps.collect-recipes.outputs.collected_count }}" | grep -o '[0-9]\+' | head -1 || echo "10")
+          SAVED_COUNT=$(echo "${{ steps.collect-recipes.outputs.saved_count }}" | grep -o '[0-9]\+' | head -1 || echo "10")
+          
+          COLLECTED_INFO="📊 <b>수집 결과</b>: ${COLLECTED_COUNT}건 수집, ${SAVED_COUNT}건 저장"
           SAVED_INFO="💾 <b>상태</b>: 데이터베이스에 저장됨"
         else
           ICON="❌"

@@ -130,12 +130,13 @@ export default function UserDashboard({
         const allResponse = await fetch('/api/nutrients/browse?limit=1000');
         const allResult = await allResponse.json();
         
-        // 오늘 날짜 계산
+        // 오늘 날짜 계산 (UTC 기준)
         const today = new Date().toISOString().split('T')[0];
         
-        // 오늘 생성된 레시피 개수 계산
+        // 오늘 생성된 레시피 개수 계산 (UTC 기준)
         const todayCount = allResult.recipes?.filter((recipe: any) => {
           if (!recipe.created_at) return false;
+          // UTC 기준으로 날짜 비교 (GitHub Actions는 UTC로 실행)
           const recipeDate = new Date(recipe.created_at).toISOString().split('T')[0];
           return recipeDate === today;
         }).length || 0;
