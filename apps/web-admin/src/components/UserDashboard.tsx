@@ -316,13 +316,6 @@ export default function UserDashboard({
   // 상단 지표
   const totalFarms = farms?.length || 0;
   const totalBeds = devices?.filter((d) => d.type === 'sensor_gateway').length || 0;
-  const activeBeds =
-    devices?.filter((d) => {
-      if (d.type !== 'sensor_gateway') return false;
-      if (typeof d.status === 'object' && d.status !== null) return d.status.online === true;
-      return true;
-    }).length || 0;
-  const bedActivationRate = totalBeds > 0 ? Math.round((activeBeds / totalBeds) * 100) : 0;
 
   const activeMembers =
     approvedUsers?.filter(
@@ -439,11 +432,11 @@ export default function UserDashboard({
                       </div>
                     </div>
 
-                    {/* 농장 관리 버튼 */}
+                    {/* 농장 관리 버튼 - 시스템 관리자만 표시 */}
                     <div className="flex items-center space-x-2">
-                      {canManageFarms && (
+                      {user.role === 'system_admin' && (
                         <button
-                          onClick={() => router.push(`/beds?farm=${farm.id}`)}
+                          onClick={() => router.push(`/farms/${farm.id}`)}
                           className="bg-white/20 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-white/30 transition-all duration-200 whitespace-nowrap border border-white/30"
                         >
                           농장 관리
@@ -693,21 +686,21 @@ export default function UserDashboard({
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
+            <div className="bg-white/80 backdrop-blur-sm overflow-hidden shadow-2xl rounded-2xl border border-gray-200 hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
               <div className="p-2 sm:p-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="ml-4">
                     <dt className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                      베드 활성률
+                      총 베드 수
                     </dt>
-                    <dd className="text-lg sm:text-2xl font-black text-gray-600">{bedActivationRate}%</dd>
+                    <dd className="text-lg sm:text-2xl font-black text-gray-600">{totalBeds}개</dd>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600">
-                    {activeBeds}/{totalBeds}
+                  <div className="text-2xl font-bold text-blue-600">
+                    🏭
                   </div>
-                  <div className="text-sm text-gray-600 font-medium">활성/전체</div>
+                  <div className="text-sm text-gray-600 font-medium">베드 현황</div>
                 </div>
               </div>
             </div>

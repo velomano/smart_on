@@ -849,22 +849,30 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <AppHeader 
         user={user || undefined} 
         title="농장관리" 
         subtitle={farm ? `${farm.name} 농장 관리` : "농장 관리"}
       />
-      <div className="container mx-auto px-4 py-8">
-        {/* 농장 카드 */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          {/* 농장 헤더 */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{farm?.name}</h1>
-            {farm?.description && (
-            <p className="text-gray-600">{farm.description}</p>
-          )}
-        </div>
+      
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="bg-gradient-to-r from-green-500 to-blue-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
+                  <span className="text-lg sm:text-2xl lg:text-3xl">🏭</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">{farm?.name || "농장 관리"}</h1>
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">{farm?.description || "농장 관리 및 베드 현황 모니터링"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-2 sm:p-4 lg:p-6">
 
         {/* 베드 관리 섹션 */}
           <div className="mb-6">
@@ -2909,8 +2917,9 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
             </div>
           </div>
         )}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

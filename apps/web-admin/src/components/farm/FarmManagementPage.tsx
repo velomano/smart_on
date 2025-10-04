@@ -259,7 +259,7 @@ export default function FarmManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">로딩 중...</p>
@@ -273,23 +273,48 @@ export default function FarmManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader user={user} />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <AppHeader 
+        user={user} 
+        title="농장 관리"
+        subtitle="농장 생성, 관리 및 베드 현황 모니터링"
+      />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">농장 관리</h1>
-          {user.role === 'system_admin' && (
-            <button
-              onClick={() => setShowAddFarmModal(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200 flex items-center space-x-2"
-            >
-              <span>+</span>
-              <span>새 농장 추가</span>
-            </button>
-          )}
-        </div>
+      <main className="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-4 lg:py-8">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl rounded-2xl border border-gray-300 overflow-hidden mb-2 sm:mb-4 lg:mb-8">
+          <div className="bg-gradient-to-r from-green-500 to-blue-600 px-2 sm:px-4 lg:px-8 py-2 sm:py-3 lg:py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-xl flex items-center justify-center mr-2 sm:mr-3 lg:mr-4">
+                  <span className="text-lg sm:text-2xl lg:text-3xl">🏭</span>
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">농장 관리 시스템</h1>
+                  <p className="text-white/90 text-sm sm:text-base lg:text-lg">농장 생성, 관리 및 베드 현황 모니터링</p>
+                </div>
+              </div>
+              
+              {/* 새 농장 추가 버튼 */}
+              {user.role === 'system_admin' && (
+                <button
+                  onClick={() => setShowAddFarmModal(true)}
+                  className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2"
+                >
+                  <span>+</span>
+                  <span className="hidden sm:inline">새 농장 추가</span>
+                </button>
+              )}
+            </div>
+          </div>
+          
+          <div className="p-4 sm:p-6 lg:p-8">
+            {/* 헤더 */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">농장 현황</h2>
+                <p className="text-gray-600 mt-1">등록된 농장 목록 및 관리</p>
+              </div>
+            </div>
 
         {/* 탭 네비게이션 (시스템 관리자만) */}
         {user.role === 'system_admin' && farms.length > 0 && (
@@ -326,15 +351,13 @@ export default function FarmManagementPage() {
           </div>
         )}
 
-        {/* 농장장/팀원: 바로 상세 페이지로 리다이렉트 */}
-        {user.role !== 'system_admin' && farms.length > 0 && (
-          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-              <p className="text-gray-600">농장 관리 페이지로 이동 중...</p>
-            </div>
-          </div>
-        )}
+            {/* 농장장/팀원: 바로 상세 페이지로 리다이렉트 */}
+            {user.role !== 'system_admin' && farms.length > 0 && (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">농장 관리 페이지로 이동 중...</p>
+              </div>
+            )}
 
         {/* 시스템 관리자: 전체농장 보기 (카드 형태) */}
         {user.role === 'system_admin' && selectedFarmId === null && (
@@ -422,27 +445,29 @@ export default function FarmManagementPage() {
           </div>
         )}
 
-        {/* 농장이 없는 경우 */}
-        {farms.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-lg">
-            <div className="text-6xl mb-4">🏭</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">농장이 없습니다</h3>
-            <p className="text-gray-600 mb-6">
-              {user.role === 'system_admin' 
-                ? '새 농장을 생성하여 시작하세요.' 
-                : '시스템 관리자에게 농장 배정을 요청하세요.'}
-            </p>
-            {user.role === 'system_admin' && (
-              <button
-                onClick={() => setShowAddFarmModal(true)}
-                className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
-              >
-                첫 번째 농장 생성
-              </button>
+            {/* 농장이 없는 경우 */}
+            {farms.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🏭</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">농장이 없습니다</h3>
+                <p className="text-gray-600 mb-6">
+                  {user.role === 'system_admin' 
+                    ? '새 농장을 생성하여 시작하세요.' 
+                    : '시스템 관리자에게 농장 배정을 요청하세요.'}
+                </p>
+                {user.role === 'system_admin' && (
+                  <button
+                    onClick={() => setShowAddFarmModal(true)}
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+                  >
+                    첫 번째 농장 생성
+                  </button>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      </main>
 
       {/* 새 농장 추가 모달 */}
       {showAddFarmModal && (

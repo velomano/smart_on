@@ -79,8 +79,17 @@ export default function AppHeader({
       
       const data = await response.json();
       if (data.ok && data.notices) {
-        setNotices(data.notices);
-        const hasNew = data.notices.some((notice: any) => notice.isNew);
+        // localStorage에서 읽음 상태 가져오기
+        const readNotices = JSON.parse(localStorage.getItem('read_notices') || '[]');
+        
+        // 읽음 상태에 따라 isNew 업데이트
+        const updatedNotices = data.notices.map((notice: any) => ({
+          ...notice,
+          isNew: !readNotices.includes(notice.id) && notice.isNew
+        }));
+        
+        setNotices(updatedNotices);
+        const hasNew = updatedNotices.some((notice: any) => notice.isNew);
         setHasNewNotice(hasNew);
       }
     } catch (error) {
@@ -106,6 +115,10 @@ export default function AppHeader({
           prevNotices.map(notice => ({ ...notice, isNew: false }))
         );
         setHasNewNotice(false);
+        
+        // localStorage에 읽음 상태 저장
+        const allNoticeIds = notices.map(notice => notice.id);
+        localStorage.setItem('read_notices', JSON.stringify(allNoticeIds));
         
         // 성공 메시지 표시
         alert('모든 공지사항을 읽음 처리했습니다.');

@@ -1,19 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getCurrentUser();
+    const supabase = createClient();
     
-    if (!user) {
+    // 서버 사이드에서 사용자 인증 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
       return NextResponse.json({ 
         success: false, 
         error: '인증이 필요합니다.' 
       }, { status: 401 });
     }
 
-    const supabase = createClient();
+    // 사용자 정보 조회
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !userData) {
+      return NextResponse.json({ 
+        success: false, 
+        error: '사용자 정보를 찾을 수 없습니다.' 
+      }, { status: 404 });
+    }
     
     // 권한별 농장 조회
     let farmsQuery = supabase
@@ -21,7 +35,7 @@ export async function GET(request: NextRequest) {
       .select('*')
       .order('created_at', { ascending: false });
     
-    if (user.role === 'system_admin') {
+    if (userData.role === 'system_admin') {
       // 시스템 관리자: 모든 농장
       // 추가 필터 없음
     } else {
@@ -29,7 +43,7 @@ export async function GET(request: NextRequest) {
       const { data: memberships } = await supabase
         .from('farm_memberships')
         .select('farm_id')
-        .eq('user_id', user.id);
+        .eq('user_id', userData.id);
       
       if (memberships && memberships.length > 0) {
         const farmIds = memberships.map(m => m.farm_id);
