@@ -850,7 +850,11 @@ export default function FarmAutoDashboard({ farmId }: { farmId?: string }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <AppHeader user={user || undefined} />
+      <AppHeader 
+        user={user || undefined} 
+        title="농장관리" 
+        subtitle={farm ? `${farm.name} 농장 관리` : "농장 관리"}
+      />
       <div className="container mx-auto px-4 py-8">
         {/* 농장 카드 */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">

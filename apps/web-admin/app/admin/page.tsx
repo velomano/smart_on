@@ -71,7 +71,8 @@ export default function AdminPage() {
         getPendingUsers(),
         getApprovedUsers(),
         getTeams(),
-        getFarms(),
+        // 새로운 농장관리 페이지에서 생성된 농장들만 조회
+        supabase.from('farms').select('*').order('created_at', { ascending: false }),
         (supabase as any).from('farm_memberships').select('*'),
       ]);
 
@@ -99,7 +100,7 @@ export default function AdminPage() {
         filteredApprovedUsers.map((u) => ({ ...u, role: (u.role as Role) ?? 'team_member' }))
       );
       setTeams(teamsResult.success ? teamsResult.teams : []);
-      setFarms(asArray(farmsResult));
+      setFarms(asArray(farmsResult.data));
       setFarmMemberships(asArray(farmMembershipsResult?.data));
     } catch (e) {
       console.error('admin loadData error:', e);

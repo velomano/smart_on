@@ -34,21 +34,51 @@ export default function WebAdminDashboard() {
 
     const loadData = async () => {
       try {
-        console.log('📊 대시보드 - 농장관리 페이지 데이터 읽기 전용 로드');
+        console.log('📊 대시보드 - 농장관리 페이지 연동 데이터 로드');
         
-        // 분리 쿼리로 데이터 로드
         const supabase = getSupabaseClient();
-        const [farmsResult, devicesRes, sensorsRes, readingsRes] = await Promise.all([
-          getFarms(),
+        
+        // 농장관리 페이지에서 생성된 농장들만 조회 (is_dashboard_visible = true)
+        let farmsQuery = supabase
+          .from('farms')
+          .select('*')
+          .eq('is_dashboard_visible', true);
+        
+        // 권한별 필터링
+        if (user.role === 'system_admin') {
+          // 시스템 관리자: 모든 노출된 농장
+          // 추가 필터 없음
+        } else {
+          // 농장장/팀원: 자신의 농장만
+          const { data: memberships } = await supabase
+            .from('farm_memberships')
+            .select('farm_id')
+            .eq('user_id', user.id);
+          
+          if (memberships && memberships.length > 0) {
+            const farmIds = memberships.map(m => m.farm_id);
+            farmsQuery = farmsQuery.in('id', farmIds);
+          } else {
+            // 멤버십이 없으면 빈 배열 반환
+            setFarms([]);
+            setDevices([]);
+            setSensors([]);
+            setSensorReadings([]);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        const [farmsRes, devicesRes, sensorsRes, readingsRes] = await Promise.all([
+          farmsQuery,
           supabase.from('devices').select('*').eq('type', 'sensor_gateway'),
           supabase.from('sensors').select('*'),
           supabase.from('sensor_readings').select('*').order('ts', { ascending: false }).limit(1000)
         ]);
         
-        if (farmsResult && Array.isArray(farmsResult)) {
-          // 분리 쿼리 결과를 안전하게 꺼냅니다.
+        if (farmsRes.data) {
           const asArray = <T,>(v: T[] | null | undefined) => Array.isArray(v) ? v : [];
-          const farmsList = asArray(farmsResult);
+          const farmsList = asArray(farmsRes.data);
           const devicesList = asArray(devicesRes?.data);
           const sensorsList = asArray(sensorsRes?.data);
           const readingsList = asArray(readingsRes?.data);
@@ -58,13 +88,13 @@ export default function WebAdminDashboard() {
           setSensors(sensorsList as Sensor[]);
           setSensorReadings(readingsList as SensorReading[]);
           
-          console.log('✅ 대시보드 - 농장관리 데이터 동기화 완료:');
-          console.log('  - 농장:', farmsList.length, '개');
+          console.log('✅ 대시보드 - 농장관리 페이지 연동 완료:');
+          console.log('  - 노출된 농장:', farmsList.length, '개');
           console.log('  - 베드:', devicesList.filter(d => (d as any)?.type === 'sensor_gateway').length, '개');
           console.log('  - 센서:', sensorsList.length, '개');
           console.log('  - 센서값:', readingsList.length, '개');
         } else {
-          console.error('농장 데이터 로드 실패');
+          console.error('농장 데이터 로드 실패:', farmsRes.error);
         }
       } catch (error) {
         console.error('Error loading dashboard data:', error);

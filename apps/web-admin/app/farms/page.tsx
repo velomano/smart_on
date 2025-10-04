@@ -1,7 +1,7 @@
 'use client';
 
-import FarmAutoDashboard from '../../src/components/farm/FarmAutoDashboard';
+import FarmManagementPage from '../../src/components/farm/FarmManagementPage';
 
 export default function FarmsPage() {
-  return <FarmAutoDashboard />;
+  return <FarmManagementPage />;
 }

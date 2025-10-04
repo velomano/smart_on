@@ -80,10 +80,19 @@ export default function TeamPage() {
 
   const loadFarms = async () => {
     try {
-      const farmsResult = await getTeams();
-      setFarms(farmsResult?.teams || []);
+      // 새로운 농장관리 페이지에서 생성된 농장들만 조회
+      const response = await fetch('/api/farms');
+      const result = await response.json();
+      
+      if (result.success) {
+        setFarms(result.farms || []);
+      } else {
+        console.error('농장 목록 로드 오류:', result.error);
+        setFarms([]);
+      }
     } catch (error) {
       console.error('Error loading farms:', error);
+      setFarms([]);
     }
   };
 
