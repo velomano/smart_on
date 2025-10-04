@@ -20,7 +20,7 @@ export async function GET(
       .from('devices')
       .select('*')
       .eq('farm_id', farmId)
-      .eq('is_active', true);
+      .eq('status', 'active');
 
     if (universalError) {
       console.error('Universal Bridge 디바이스 조회 오류:', universalError);
