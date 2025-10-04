@@ -1,10 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd apps/web-admin && npm run build",
+  "buildCommand": "cd apps/web-admin && npm install && npm run build",
   "outputDirectory": "apps/web-admin/.next",
-  "routes": [
-    { "src": "/bridge", "dest": "/api/bridge" },
-    { "src": "/ws", "dest": "/api/bridge/ws" },
-    { "src": "/bridge/(.*)", "dest": "/api/bridge/$1" }
-  ]
+  "installCommand": "cd apps/web-admin && npm install",
+  "framework": "nextjs"
 }
