@@ -115,25 +115,31 @@ export async function GET(req: NextRequest) {
     
     console.log('✅ 쿼리 성공, 레시피 개수:', profiles?.length || 0);
 
-    // 전체 개수 조회 (페이지네이션을 위해)
-    const countQuery = sb
-      .from('crop_profiles')
-      .select('id', { count: 'exact', head: true });
-    
-    // 필터링 적용 (카운트용)
-    if (crop) {
-      countQuery.eq('crop_key', crop);
-    }
-    if (stage) {
-      const englishStage = translateStageToEnglish(stage);
-      countQuery.eq('stage', englishStage);
-    }
-    if (search) {
-      countQuery.or(`crop_key.ilike.%${search}%,stage.ilike.%${search}%`);
-    }
+    // 성능 최적화: 전체 개수 조회를 제한하여 타임아웃 방지
+    let totalCount = 0;
+    try {
+      const countQuery = sb
+        .from('crop_profiles')
+        .select('id', { count: 'exact', head: true });
+      
+      // 필터링 적용 (카운트용)
+      if (crop) {
+        countQuery.eq('crop_key', crop);
+      }
+      if (stage) {
+        const englishStage = translateStageToEnglish(stage);
+        countQuery.eq('stage', englishStage);
+      }
+      if (search) {
+        countQuery.or(`crop_key.ilike.%${search}%,stage.ilike.%${search}%`);
+      }
 
-    const { count } = await countQuery;
-    const totalCount = count || 0;
+      const { count } = await countQuery;
+      totalCount = count || 0;
+    } catch (countError) {
+      console.warn('⚠️ 전체 개수 조회 실패, 기본값 사용:', countError);
+      totalCount = profiles?.length || 0;
+    }
 
     console.log(`📊 전체: ${totalCount}개, 현재 페이지: ${profiles?.length || 0}개`);
 

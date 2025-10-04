@@ -3,5 +3,10 @@
   "buildCommand": "cd apps/web-admin && npm install && npm run build",
   "outputDirectory": "apps/web-admin/.next",
   "installCommand": "cd apps/web-admin && npm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "apps/web-admin/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
 }
