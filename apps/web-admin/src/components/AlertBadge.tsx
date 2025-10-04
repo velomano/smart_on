@@ -46,7 +46,8 @@ export default function AlertBadge({ className = '' }: AlertBadgeProps) {
           });
         }
       } catch (error) {
-        console.error('🔔 AlertBadge - getCurrentUser 오류:', error);
+        console.log('🔔 AlertBadge - getCurrentUser 오류 (정상):', error);
+        // 인증되지 않은 상태에서는 오류가 정상이므로 무시
       }
     };
     

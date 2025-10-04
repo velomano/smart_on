@@ -205,7 +205,20 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
   try {
     const supabase = getSupabaseClient();
     
-    const { data: { user: authUser }, error: authError } = await (supabase as any).auth.getUser();
+    // 먼저 세션 확인
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.warn('세션 조회 오류:', sessionError.message);
+      return null;
+    }
+    
+    if (!session) {
+      console.log('세션이 없습니다. 로그인이 필요합니다.');
+      return null;
+    }
+    
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
     
     // Refresh Token 관련 오류 처리
     if (authError) {
@@ -213,8 +226,9 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       
       // Refresh Token 오류인 경우 세션 정리 후 null 반환
       if (authError.message.includes('Refresh Token') || 
-          authError.message.includes('Invalid refresh token')) {
-        console.log('Refresh Token 오류 감지, 세션 정리 중...');
+          authError.message.includes('Invalid refresh token') ||
+          authError.message.includes('Auth session missing')) {
+        console.log('세션 오류 감지, 세션 정리 중...');
         await supabase.auth.signOut();
         return null;
       }

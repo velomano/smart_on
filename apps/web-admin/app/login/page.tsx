@@ -28,11 +28,17 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const currentUser = await getCurrentUser();
-      if (currentUser && currentUser.is_approved && currentUser.is_active) {
-        setIsAuthenticated(true);
-        router.push('/');
-      } else {
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser && currentUser.is_approved && currentUser.is_active) {
+          setIsAuthenticated(true);
+          router.push('/');
+        } else {
+          setIsAuthenticated(false);
+          setAuthLoading(false);
+        }
+      } catch (error) {
+        console.log('로그인 페이지 - 인증 확인 중 오류 (정상):', error);
         setIsAuthenticated(false);
         setAuthLoading(false);
       }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSbServer } from '@/lib/db';
-import { withTimeout } from '../_lib/withTimeout';
+import { withTimeout } from '../../_lib/withTimeout';
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
