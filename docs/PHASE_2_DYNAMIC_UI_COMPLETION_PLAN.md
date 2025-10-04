@@ -1,8 +1,8 @@
 # Phase 2: Dynamic UI 시스템 완성 계획서
 
-**날짜**: 2025-01-15  
+**날짜**: 2025-10-04  
 **목표**: Dynamic UI 시스템 완성도 85% → 100%  
-**예상 시간**: 8-12시간 (1-2일)  
+**예상 시간**: 4-6시간 (1일)  
 
 ---
 
@@ -12,10 +12,12 @@
 - ✅ **Device Profile 기반 UI 자동 생성** (100%)
 - ✅ **디바이스 연결 및 모니터링** (100%)
 - ✅ **제어 명령 전송** (100%)
+- ✅ **센서 카드 컴포넌트** (100% - SensorCard, WaterLevelSensorCard)
+- ✅ **실시간 차트** (100% - SensorChart 컴포넌트)
+- ✅ **통합 데이터 레이어** (100% - Unified IoT Data)
 - ⚠️ **Gauge 실시간 데이터** (0% - "--" 표시)
 - ⚠️ **Line Chart** (0% - Placeholder)
 - ⚠️ **Event Log** (0% - Placeholder)
-- ⚠️ **Unified Data Layer** (60% - MQTT/Tuya 통합 필요)
 
 ### **목표 상태**
 - 🎯 **모든 UI 컴포넌트에 실제 데이터 표시**
@@ -97,27 +99,16 @@ function GaugeCard({ metric, thresholds, deviceId, model, farmId }: any) {
 
 ---
 
-### **Step 2: Unified Data Layer 완성** (우선순위: 높음)
+### **Step 2: Unified Data Layer 완성** (우선순위: 높음) ✅ **완료됨**
 **예상 시간**: 3-4시간  
 **파일**: `apps/web-admin/src/lib/data/unified-iot-data.ts`
 
-#### **현재 문제점**
-```typescript
-// Line 130-135
-// TODO: 기존 MQTT Bridge 데이터 조회 로직 통합
-// const mqttSensors = await getMqttSensors(farmId);
-// sensors.push(...mqttSensors);
-
-// TODO: 기존 Tuya 데이터 통합
-// const tuyaSensors = await getTuyaSensors(farmId);
-// sensors.push(...tuyaSensors);
-```
-
-#### **해결 방안**
-1. **MQTT Bridge 데이터 조회 함수 구현**
-2. **Tuya API 데이터 조회 함수 구현**
-3. **데이터 정규화 로직 구현**
-4. **우선순위 적용 (universal > mqtt > tuya)**
+#### **현재 상태**
+- ✅ **Unified Data Layer 구현 완료**
+- ✅ **Universal Bridge 데이터 조회**
+- ✅ **MQTT Bridge 데이터 조회**
+- ✅ **데이터 정규화 로직**
+- ✅ **우선순위 적용 (universal > mqtt > tuya)**
 
 #### **구현 계획**
 ```typescript

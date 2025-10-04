@@ -143,6 +143,12 @@ export async function GET(req: NextRequest) {
       const metadata = profile.metadata || {};
       const source_url = metadata.source_url || null;
       
+      // target_ppm에서 NPK 비율 계산
+      const target_ppm = profile.target_ppm || {};
+      const npk_ratio = target_ppm.N && target_ppm.P && target_ppm.K 
+        ? `${target_ppm.N}:${target_ppm.P}:${target_ppm.K}` 
+        : '0-0-0';
+      
       return {
         id: profile.id,
         crop: profile.crop_name,
@@ -150,7 +156,7 @@ export async function GET(req: NextRequest) {
         volume_l: profile.volume_l || 1000,
         ec_target: profile.target_ec || profile.ec_target,
         ph_target: profile.target_ph || profile.ph_target,
-        npk_ratio: profile.npk_ratio || '0-0-0',
+        npk_ratio: npk_ratio,
         created_at: profile.created_at || new Date().toISOString(),
         source_title: profile.source_title || '스마트팜 데이터베이스',
         source_year: profile.source_year || 2025,
@@ -164,11 +170,11 @@ export async function GET(req: NextRequest) {
           co2_level: getCO2Level(profile.crop_name)
         },
         nutrients_detail: profile.nutrients_detail || {
-          nitrogen: 0,
-          phosphorus: 0,
-          potassium: 0,
-          calcium: 0,
-          magnesium: 0,
+          nitrogen: target_ppm.N || 0,
+          phosphorus: target_ppm.P || 0,
+          potassium: target_ppm.K || 0,
+          calcium: target_ppm.Ca || 0,
+          magnesium: target_ppm.Mg || 0,
           trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
         },
         usage_notes: getUsageNotes(profile.crop_name, profile.stage),

@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createClient();
+    // 클라이언트에서 전달된 Authorization 헤더 확인
+    const authHeader = request.headers.get('authorization');
     
-    // 서버 사이드에서 사용자 인증 확인
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ 
+        success: false, 
+        error: '인증이 필요합니다.' 
+      }, { status: 401 });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    // Supabase 클라이언트 생성 (서비스 키 사용)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    // 토큰으로 사용자 정보 확인
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
       return NextResponse.json({ 

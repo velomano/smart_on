@@ -80,8 +80,18 @@ export default function TeamPage() {
 
   const loadFarms = async () => {
     try {
+      if (!user?.session?.access_token) {
+        console.log('사용자 토큰이 없습니다.');
+        setFarms([]);
+        return;
+      }
+
       // 새로운 농장관리 페이지에서 생성된 농장들만 조회
-      const response = await fetch('/api/farms');
+      const response = await fetch('/api/farms', {
+        headers: {
+          'Authorization': `Bearer ${user.session.access_token}`
+        }
+      });
       const result = await response.json();
       
       if (result.success) {

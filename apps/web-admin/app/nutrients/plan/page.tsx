@@ -790,22 +790,50 @@ export default function NutrientPlanPage() {
               <div className="space-y-2 sm:space-y-3 lg:space-y-6">
                 <div className="text-center">
                   <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600 mb-1 sm:mb-2">배양액 계산</h2>
-                  <p className="text-gray-600 text-sm sm:text-base">작물과 용량을 입력하면 최적의 배양액 조성을 계산해드립니다.</p>
+                  <p className="text-gray-600 text-sm sm:text-base">레시피 브라우징에서 선택한 레시피를 바탕으로 배양액을 계산합니다.</p>
                 </div>
 
-                {/* 검색 및 필터 */}
-                <div className="bg-white rounded-lg shadow-md p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-600 mb-2">작물명</label>
-                      <input
-                        type="text"
-                        value={crop}
-                        onChange={(e) => setCrop(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-600 font-medium"
-                        placeholder="예: 상추, 토마토, 오이, 딸기, 고추, 바질"
-                      />
+                {/* 선택된 레시피 정보 */}
+                {crop && selectedStage ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold text-blue-800">선택된 레시피</h3>
+                        <p className="text-blue-700">
+                          {crop} ({selectedStage}) • 기준 용량: {volume}L
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCrop('');
+                          setSelectedStage('');
+                          setVolume(100);
+                          setRes(null);
+                          setError(null);
+                        }}
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                      >
+                        레시피 변경
+                      </button>
                     </div>
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <span className="text-yellow-600 text-lg mr-3">⚠️</span>
+                      <div>
+                        <h3 className="text-yellow-800 font-semibold">레시피를 먼저 선택해주세요</h3>
+                        <p className="text-yellow-700 text-sm mt-1">
+                          레시피 브라우징 탭에서 원하는 레시피의 "계산에 사용" 버튼을 눌러주세요.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 용량 설정 및 계산 */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
                     <div>
                       <label className="block text-sm font-semibold text-gray-600 mb-2">용량 (L)</label>
                       <input 
@@ -815,31 +843,33 @@ export default function NutrientPlanPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-600 font-medium"
                         min="1"
                         max="1000"
+                        disabled={!crop || !selectedStage}
                       />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-600 mb-2">성장 단계</label>
-                      <select
-                        value={selectedStage}
-                        onChange={(e) => setSelectedStage(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-600 font-medium"
-                      >
-                        <option value="">전체</option>
-                        {stages.map(stage => (
-                          <option key={stage} value={stage}>{stage}</option>
-                        ))}
-                      </select>
                     </div>
                     <div>
                       <button
                         onClick={plan}
-                        disabled={loading}
+                        disabled={loading || !crop || !selectedStage}
                         className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         {loading ? '계산 중...' : '계산하기'}
                       </button>
                     </div>
                   </div>
+                  
+                  {!crop || !selectedStage ? (
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-center">
+                        <span className="text-yellow-600 text-lg mr-3">📋</span>
+                        <div>
+                          <h3 className="text-yellow-800 font-semibold">레시피를 먼저 선택해주세요</h3>
+                          <p className="text-yellow-700 text-sm mt-1">
+                            레시피 브라우징 탭에서 원하는 레시피의 "계산에 사용" 버튼을 눌러주세요.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* 계산 결과 */}
@@ -1349,6 +1379,10 @@ export default function NutrientPlanPage() {
       {/* 레시피 업데이트 푸터 */}
       <RecipeUpdatesFooter 
         onViewAllRecipes={() => setActiveTab('recipes')}
+        onSaveRecipe={(recipe, recipeName) => {
+          setRecipeName(recipeName);
+          setShowSaveModal(true);
+        }}
       />
 
       {/* 법적 고지 */}

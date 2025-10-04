@@ -66,9 +66,10 @@ interface RecipeUpdatesData {
 
 interface RecipeUpdatesFooterProps {
   onViewAllRecipes?: () => void;
+  onSaveRecipe?: (recipe: RecipeUpdate, recipeName: string) => void;
 }
 
-export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesFooterProps) {
+export default function RecipeUpdatesFooter({ onViewAllRecipes, onSaveRecipe }: RecipeUpdatesFooterProps) {
   const [data, setData] = useState<RecipeUpdatesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -516,7 +517,21 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    // 저장하기 기능 - 레시피 이름 설정 후 저장 모달 열기
+                    const recipeName = `${selectedRecipe.crop} - ${selectedRecipe.stage} (${selectedRecipe.volume_l.toLocaleString()}L)`;
+                    // 부모 컴포넌트에 저장 요청 전달 (props로 받아야 함)
+                    if (onSaveRecipe) {
+                      onSaveRecipe(selectedRecipe, recipeName);
+                    }
+                    closeDetailModal();
+                  }}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                >
+                  저장하기
+                </button>
                 <button
                   onClick={closeDetailModal}
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
