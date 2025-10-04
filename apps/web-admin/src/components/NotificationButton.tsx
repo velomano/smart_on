@@ -125,7 +125,7 @@ export default function NotificationButton({ className = '' }: NotificationButto
           telegramChatId: telegramChatId
         });
 
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
         const response = await fetch(`${baseUrl}/api/notifications/telegram`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -45,7 +45,7 @@ export function LiveLog({ setupToken, deviceId }: LiveLogProps) {
 
   const connectWebSocket = () => {
     try {
-      const bridgeUrl = 'http://localhost:8080';  // Universal Bridge 서버 주소
+      const bridgeUrl = process.env.NEXT_PUBLIC_BRIDGE_URL || 'http://localhost:8080';  // Universal Bridge 서버 주소
       const wsUrl = bridgeUrl.replace('http', 'ws') + `/monitor/${setupToken}`;
       const ws = new WebSocket(wsUrl);
       
@@ -91,7 +91,7 @@ export function LiveLog({ setupToken, deviceId }: LiveLogProps) {
     // 5초마다 폴링
     const interval = setInterval(async () => {
       try {
-        const bridgeUrl = 'http://localhost:3001';  // 하드코딩으로 임시 수정
+        const bridgeUrl = process.env.NEXT_PUBLIC_BRIDGE_URL || 'http://localhost:3001';  // 환경변수 사용
         const response = await fetch(`${bridgeUrl}/api/provisioning/status/${setupToken}`);
         if (response.ok) {
           const data = await response.json();

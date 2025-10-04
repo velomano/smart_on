@@ -253,7 +253,7 @@ function CodeGenerateStep({ config, onBack, onNext }: { config: DeviceConfig; on
   };
 
   const generateDeviceCode = (cfg: DeviceConfig, token: string): string => {
-    const serverUrl = 'http://localhost:3000';
+    const serverUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
     if (cfg.device === 'arduino' || cfg.device === 'esp32') {
       if (cfg.protocol === 'http') {

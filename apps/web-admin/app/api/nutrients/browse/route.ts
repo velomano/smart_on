@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createSbServer } from '@/lib/db';
+import { withTimeout } from '../_lib/withTimeout';
+
+export const runtime = "nodejs";
+export const maxDuration = 30;
 
 // 생장 단계 한글 번역 함수
 function translateStage(stage: string): string {
@@ -99,10 +103,13 @@ export async function GET(req: NextRequest) {
     console.log(`📊 페이지네이션: 페이지 ${page}, 제한 ${limit}, 오프셋 ${offset}`);
     
     console.log('🔍 쿼리 실행 중...');
-    const { data: profiles, error } = await query
-      .order('crop_name', { ascending: true })
-      .order('stage', { ascending: true })
-      .range(offset, offset + limit - 1);  // 데이터베이스 레벨 페이지네이션
+    const { data: profiles, error } = await withTimeout(
+      query
+        .order('crop_name', { ascending: true })
+        .order('stage', { ascending: true })
+        .range(offset, offset + limit - 1),  // 데이터베이스 레벨 페이지네이션
+      8_000
+    );
 
     if (error) {
       console.error('❌ 작물 프로필 조회 에러:', error);
@@ -134,7 +141,7 @@ export async function GET(req: NextRequest) {
         countQuery.or(`crop_key.ilike.%${search}%,stage.ilike.%${search}%`);
       }
 
-      const { count } = await countQuery;
+      const { count } = await withTimeout(countQuery, 3_000);
       totalCount = count || 0;
     } catch (countError) {
       console.warn('⚠️ 전체 개수 조회 실패, 기본값 사용:', countError);
