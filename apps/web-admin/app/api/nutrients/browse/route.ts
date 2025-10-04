@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
       return {
         id: profile.id,
         crop: profile.crop_name,
+        crop_key: profile.crop_key, // crop_key 필드 추가
         stage: translateStage(profile.stage),
         volume_l: profile.volume_l || 1000,
         ec_target: profile.target_ec || profile.ec_target,

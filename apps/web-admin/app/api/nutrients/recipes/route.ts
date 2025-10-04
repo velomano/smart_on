@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
       .from('recipes')
       .select(`
         id,
+        name,
         target_volume_l,
         target_ec,
         target_ph,

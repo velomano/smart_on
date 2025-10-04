@@ -9,6 +9,7 @@ import LegalNotice from '@/components/LegalNotice';
 interface Recipe {
   id: string;
   crop: string;
+  crop_key?: string; // crop_profiles 테이블의 crop_key 필드
   stage: string;
   volume_l: number;
   ec_target: number;
@@ -82,6 +83,9 @@ export default function NutrientPlanPage() {
   const [res, setRes] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   
+  // 선택된 레시피 전체 정보 (계산에 사용할 때)
+  const [selectedRecipeForCalculation, setSelectedRecipeForCalculation] = useState<Recipe | null>(null);
+  
   // 레시피 저장 관련 상태
   const [saving, setSaving] = useState(false);
   const [recipeName, setRecipeName] = useState('');
@@ -105,10 +109,39 @@ export default function NutrientPlanPage() {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   
   // 탭 상태
-  const [activeTab, setActiveTab] = useState<'recipes' | 'calculate' | 'saved'>('recipes');
+  const [activeTab, setActiveTab] = useState<'recipes' | 'calculate' | 'saved' | 'custom'>('recipes');
   
   // 레시피 통계 상태
   const [recipeStats, setRecipeStats] = useState({ total: 0, today: 0, lastUpdate: '' });
+
+  // 커스텀 레시피 관련 상태
+  const [customRecipes, setCustomRecipes] = useState<any[]>([]);
+  const [customRecipe, setCustomRecipe] = useState({
+    crop: '',
+    stage: '',
+    volume_l: 1000,
+    ec_target: 1.5,
+    ph_target: 6.0,
+    npk_ratio: '3-1-2',
+    description: '',
+    growing_conditions: {
+      temperature: '20-25°C',
+      humidity: '60-70%',
+      light_hours: '12-16시간',
+      co2_level: '400-600ppm'
+    },
+    nutrients_detail: {
+      nitrogen: 150,
+      phosphorus: 50,
+      potassium: 100,
+      calcium: 100,
+      magnesium: 50,
+      trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
+    },
+    usage_notes: ['정기적인 pH 조절이 필요합니다.', 'EC 값은 주 1회 측정하세요.'],
+    warnings: ['과도한 영양소 공급은 식물에 해로울 수 있습니다.']
+  });
+  const [savingCustom, setSavingCustom] = useState(false);
 
   // 인증 확인
   useEffect(() => {
@@ -185,6 +218,7 @@ export default function NutrientPlanPage() {
     if (user) {
       loadSavedRecipes();
       loadRecipes();
+      loadCustomRecipes();
     }
   }, [user]);
 
@@ -322,14 +356,23 @@ export default function NutrientPlanPage() {
         magnesium: nutrients.magnesium ? Math.round(nutrients.magnesium * volumeRatio) : 0
       };
 
+      // EC와 pH 계산 (영양소 농도 기반)
+      const calculatedEC = matchingRecipe.ec_target ? 
+        Number((matchingRecipe.ec_target * volumeRatio).toFixed(2)) : 
+        Number(((calculatedNutrients.nitrogen + calculatedNutrients.potassium + calculatedNutrients.calcium) / 1000 * 0.7).toFixed(2));
+      
+      const calculatedPH = matchingRecipe.ph_target ? 
+        Number((matchingRecipe.ph_target).toFixed(2)) : 
+        6.0; // 기본 pH 값
+
       // 4. 결과 구성
       const result = {
         cropKey: crop,
         stage: selectedStage || '생장기',
         target: {
           volume: Number(volume),
-          ec: matchingRecipe.ec_target,
-          ph: matchingRecipe.ph_target,
+          ec: calculatedEC,
+          ph: calculatedPH,
           nutrients: calculatedNutrients
         },
         source: {
@@ -371,7 +414,12 @@ export default function NutrientPlanPage() {
           stage: res.stage,
           targetVolumeL: res.target.volume,
           waterProfileName: 'RO_Default',
-          recipeName: recipeName.trim()
+          recipeName: recipeName.trim(),
+          qc: {
+            ec_est: res.target.ec,
+            ph_est: res.target.ph,
+            warnings: ['계산 결과를 기반으로 저장된 레시피입니다.']
+          }
         };
       } 
       // 선택된 레시피가 있는 경우 (상세보기에서 저장)
@@ -383,7 +431,29 @@ export default function NutrientPlanPage() {
           stage: selectedRecipe.stage,
           targetVolumeL: selectedRecipe.volume_l,
           waterProfileName: 'RO_Default',
-          recipeName: recipeName.trim()
+          recipeName: recipeName.trim(),
+          qc: {
+            ec_est: selectedRecipe.ec_target,
+            ph_est: selectedRecipe.ph_target,
+            warnings: ['레시피 브라우징에서 저장된 레시피입니다.']
+          }
+        };
+      } 
+      // 계산에 사용된 레시피가 있는 경우
+      else if (selectedRecipeForCalculation) {
+        // crop_key가 없으면 crop_name을 crop_key로 사용
+        const cropKey = selectedRecipeForCalculation.crop_key || selectedRecipeForCalculation.crop;
+        requestBody = {
+          cropKey: cropKey,
+          stage: selectedRecipeForCalculation.stage,
+          targetVolumeL: selectedRecipeForCalculation.volume_l,
+          waterProfileName: 'RO_Default',
+          recipeName: recipeName.trim(),
+          qc: {
+            ec_est: selectedRecipeForCalculation.ec_target,
+            ph_est: selectedRecipeForCalculation.ph_target,
+            warnings: ['계산에 사용된 레시피에서 저장된 레시피입니다.']
+          }
         };
       } else {
         throw new Error('저장할 레시피 정보가 없습니다.');
@@ -396,6 +466,7 @@ export default function NutrientPlanPage() {
       });
       
       const j = await r.json();
+      
       if (j.ok) {
         alert('레시피가 저장되었습니다.');
         setShowSaveModal(false);
@@ -429,6 +500,120 @@ export default function NutrientPlanPage() {
       }
     } catch (e: any) {
       alert('삭제 실패: ' + e.message);
+    }
+  }
+
+  // 커스텀 레시피 저장
+  async function saveCustomRecipe() {
+    if (!customRecipe.crop || !customRecipe.stage) {
+      alert('작물명과 성장 단계를 입력해주세요.');
+      return;
+    }
+
+    setSavingCustom(true);
+    try {
+      const requestData = {
+        ...customRecipe,
+        author: user?.email || 'Unknown',
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('📤 커스텀 레시피 저장 요청:', requestData);
+      
+      const response = await fetch('/api/nutrients/custom-recipes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.access_token}`
+        },
+        body: JSON.stringify(requestData),
+      });
+      
+      console.log('📥 커스텀 레시피 저장 응답 상태:', response.status);
+
+      const result = await response.json();
+      console.log('📥 커스텀 레시피 저장 응답:', result);
+      
+      if (response.ok) {
+        alert('커스텀 레시피가 저장되었습니다.');
+        // 폼 초기화
+        setCustomRecipe({
+          crop: '',
+          stage: '',
+          volume_l: 1000,
+          ec_target: 1.5,
+          ph_target: 6.0,
+          npk_ratio: '3-1-2',
+          description: '',
+          growing_conditions: {
+            temperature: '20-25°C',
+            humidity: '60-70%',
+            light_hours: '12-16시간',
+            co2_level: '400-600ppm'
+          },
+          nutrients_detail: {
+            nitrogen: 150,
+            phosphorus: 50,
+            potassium: 100,
+            calcium: 100,
+            magnesium: 50,
+            trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
+          },
+          usage_notes: ['정기적인 pH 조절이 필요합니다.', 'EC 값은 주 1회 측정하세요.'],
+          warnings: ['과도한 영양소 공급은 식물에 해로울 수 있습니다.']
+        });
+        loadCustomRecipes();
+      } else {
+        alert(`저장 실패: ${result.error || result.message}`);
+      }
+    } catch (error) {
+      console.error('커스텀 레시피 저장 오류:', error);
+      alert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setSavingCustom(false);
+    }
+  }
+
+  // 커스텀 레시피 목록 로드
+  async function loadCustomRecipes() {
+    try {
+      const response = await fetch('/api/nutrients/custom-recipes', {
+        headers: {
+          'Authorization': `Bearer ${user?.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setCustomRecipes(result.recipes || []);
+      }
+    } catch (error) {
+      console.error('커스텀 레시피 로드 오류:', error);
+    }
+  }
+
+  // 커스텀 레시피 삭제
+  async function deleteCustomRecipe(recipeId: string) {
+    if (!confirm('정말로 이 레시피를 삭제하시겠습니까?')) return;
+    
+    try {
+      const response = await fetch(`/api/nutrients/custom-recipes?id=${recipeId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${user?.access_token}`
+        }
+      });
+
+      if (response.ok) {
+        alert('커스텀 레시피가 삭제되었습니다.');
+        loadCustomRecipes();
+      } else {
+        const error = await response.json();
+        alert(`삭제 실패: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('커스텀 레시피 삭제 오류:', error);
+      alert('삭제 중 오류가 발생했습니다.');
     }
   }
 
@@ -506,6 +691,16 @@ export default function NutrientPlanPage() {
                   🧪 배양액 계산
                 </button>
                 <button
+                  onClick={() => setActiveTab('custom')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'custom'
+                      ? 'border-green-500 text-green-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                  }`}
+                >
+                  ✏️ 나만의 레시피
+                </button>
+                <button
                   onClick={() => setActiveTab('saved')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     activeTab === 'saved'
@@ -514,7 +709,7 @@ export default function NutrientPlanPage() {
                   }`}
                 >
                   💾 저장된 레시피
-              </button>
+                </button>
             </nav>
           </div>
 
@@ -581,7 +776,7 @@ export default function NutrientPlanPage() {
                             {recipe.crop}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            {recipe.stage} • {recipe.volume_l.toLocaleString()} L
+                            {recipe.stage} • {Number(recipe.volume_l).toFixed(2)} L
                           </p>
                         </div>
                         {recipe.license && (
@@ -644,6 +839,7 @@ export default function NutrientPlanPage() {
                             setCrop(recipe.crop);
                             setVolume(recipe.volume_l);
                             setSelectedStage(recipe.stage);
+                            setSelectedRecipeForCalculation(recipe);
                             setActiveTab('calculate');
                           }}
                           className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
@@ -794,13 +990,13 @@ export default function NutrientPlanPage() {
                 </div>
 
                 {/* 선택된 레시피 정보 */}
-                {crop && selectedStage ? (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
+                {selectedRecipeForCalculation ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-blue-800">선택된 레시피</h3>
                         <p className="text-blue-700">
-                          {crop} ({selectedStage}) • 기준 용량: {volume}L
+                          {selectedRecipeForCalculation.crop} ({selectedRecipeForCalculation.stage}) • 기준 용량: {Number(selectedRecipeForCalculation.volume_l).toFixed(2)}L
                         </p>
                       </div>
                       <button
@@ -808,6 +1004,7 @@ export default function NutrientPlanPage() {
                           setCrop('');
                           setSelectedStage('');
                           setVolume(100);
+                          setSelectedRecipeForCalculation(null);
                           setRes(null);
                           setError(null);
                         }}
@@ -815,6 +1012,57 @@ export default function NutrientPlanPage() {
                       >
                         레시피 변경
                       </button>
+                    </div>
+
+                    {/* 레시피 상세 정보 */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                      <div className="bg-white rounded-lg p-3">
+                        <div className="text-blue-600 font-medium mb-1">EC 목표값</div>
+                        <div className="text-gray-700">{Number(selectedRecipeForCalculation.ec_target).toFixed(2)} mS/cm</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3">
+                        <div className="text-blue-600 font-medium mb-1">pH 목표값</div>
+                        <div className="text-gray-700">{Number(selectedRecipeForCalculation.ph_target).toFixed(2)} pH</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3">
+                        <div className="text-blue-600 font-medium mb-1">NPK 비율</div>
+                        <div className="text-gray-700">{selectedRecipeForCalculation.npk_ratio}</div>
+                      </div>
+                      {selectedRecipeForCalculation.description && (
+                        <div className="bg-white rounded-lg p-3 md:col-span-2 lg:col-span-3">
+                          <div className="text-blue-600 font-medium mb-1">설명</div>
+                          <div className="text-gray-700 text-xs">{selectedRecipeForCalculation.description}</div>
+                        </div>
+                      )}
+                      {selectedRecipeForCalculation.nutrients_detail && (
+                        <div className="bg-white rounded-lg p-3 md:col-span-2 lg:col-span-3">
+                          <div className="text-blue-600 font-medium mb-2">영양소 상세</div>
+                          <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div>N: {Number(selectedRecipeForCalculation.nutrients_detail.nitrogen).toFixed(0)} ppm</div>
+                            <div>P: {Number(selectedRecipeForCalculation.nutrients_detail.phosphorus).toFixed(0)} ppm</div>
+                            <div>K: {Number(selectedRecipeForCalculation.nutrients_detail.potassium).toFixed(0)} ppm</div>
+                            {selectedRecipeForCalculation.nutrients_detail.calcium && (
+                              <div>Ca: {Number(selectedRecipeForCalculation.nutrients_detail.calcium).toFixed(0)} ppm</div>
+                            )}
+                            {selectedRecipeForCalculation.nutrients_detail.magnesium && (
+                              <div>Mg: {Number(selectedRecipeForCalculation.nutrients_detail.magnesium).toFixed(0)} ppm</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {selectedRecipeForCalculation.growing_conditions && (
+                        <div className="bg-white rounded-lg p-3 md:col-span-2 lg:col-span-3">
+                          <div className="text-blue-600 font-medium mb-2">재배 환경</div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                            <div>온도: {selectedRecipeForCalculation.growing_conditions.temperature}</div>
+                            <div>습도: {selectedRecipeForCalculation.growing_conditions.humidity}</div>
+                            <div>조명: {selectedRecipeForCalculation.growing_conditions.light_hours}</div>
+                            {selectedRecipeForCalculation.growing_conditions.co2_level && (
+                              <div>CO₂: {selectedRecipeForCalculation.growing_conditions.co2_level}</div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -901,15 +1149,15 @@ export default function NutrientPlanPage() {
                       </div>
                       <div>
                         <span className="text-gray-600">용량:</span>
-                        <span className="ml-2 font-medium text-gray-600">{res.target.volume.toLocaleString()} L</span>
+                        <span className="ml-2 font-medium text-gray-600">{Number(res.target.volume).toFixed(2)} L</span>
                       </div>
                       <div>
                         <span className="text-gray-600">EC 목표:</span>
-                        <span className="ml-2 font-medium text-gray-600">{res.target.ec} mS/cm</span>
+                        <span className="ml-2 font-medium text-gray-600">{Number(res.target.ec).toFixed(2)} mS/cm</span>
                       </div>
                       <div>
                         <span className="text-gray-600">pH 목표:</span>
-                        <span className="ml-2 font-medium text-gray-600">{res.target.ph} pH</span>
+                        <span className="ml-2 font-medium text-gray-600">{Number(res.target.ph).toFixed(2)} pH</span>
                       </div>
                       <div>
                         <span className="text-gray-600">계산 방법:</span>
@@ -921,8 +1169,8 @@ export default function NutrientPlanPage() {
                     <div className="bg-blue-50 rounded-lg p-4">
                       <div className="font-semibold text-blue-800 mb-2">📈 계산 정보</div>
                       <div className="text-sm text-blue-700 space-y-1">
-                        <div>기준 용량: <span className="font-medium">{res.calculation.baseVolume.toLocaleString()} L</span></div>
-                        <div>목표 용량: <span className="font-medium">{res.calculation.targetVolume.toLocaleString()} L</span></div>
+                        <div>기준 용량: <span className="font-medium">{Number(res.calculation.baseVolume).toFixed(2)} L</span></div>
+                        <div>목표 용량: <span className="font-medium">{Number(res.calculation.targetVolume).toFixed(2)} L</span></div>
                         <div>계산 비율: <span className="font-medium">{res.calculation.ratio.toFixed(2)}배</span></div>
                         <div>출처: <span className="font-medium">{res.source.recipe.source_title}</span></div>
                       </div>
@@ -933,22 +1181,22 @@ export default function NutrientPlanPage() {
                       <div className="font-semibold text-purple-800 mb-2">🧪 영양소 목표 (ppm/g)</div>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                         <div className="text-purple-700">
-                          <span className="font-medium">질소 (N):</span> <span className="font-bold text-purple-900">{res.target.nutrients.nitrogen.toLocaleString()} ppm / {Math.round(res.target.nutrients.nitrogen * res.target.volume / 1000).toLocaleString()}g</span>
+                          <span className="font-medium">질소 (N):</span> <span className="font-bold text-purple-900">{Number(res.target.nutrients.nitrogen).toFixed(2)} ppm / {Number(res.target.nutrients.nitrogen * res.target.volume / 1000).toFixed(2)}g</span>
                         </div>
                         <div className="text-purple-700">
-                          <span className="font-medium">인산 (P):</span> <span className="font-bold text-purple-900">{res.target.nutrients.phosphorus.toLocaleString()} ppm / {Math.round(res.target.nutrients.phosphorus * res.target.volume / 1000).toLocaleString()}g</span>
+                          <span className="font-medium">인산 (P):</span> <span className="font-bold text-purple-900">{Number(res.target.nutrients.phosphorus).toFixed(2)} ppm / {Number(res.target.nutrients.phosphorus * res.target.volume / 1000).toFixed(2)}g</span>
                         </div>
                         <div className="text-purple-700">
-                          <span className="font-medium">칼륨 (K):</span> <span className="font-bold text-purple-900">{res.target.nutrients.potassium.toLocaleString()} ppm / {Math.round(res.target.nutrients.potassium * res.target.volume / 1000).toLocaleString()}g</span>
+                          <span className="font-medium">칼륨 (K):</span> <span className="font-bold text-purple-900">{Number(res.target.nutrients.potassium).toFixed(2)} ppm / {Number(res.target.nutrients.potassium * res.target.volume / 1000).toFixed(2)}g</span>
                         </div>
                         {res.target.nutrients.calcium > 0 && (
                           <div className="text-purple-700">
-                            <span className="font-medium">칼슘 (Ca):</span> <span className="font-bold text-purple-900">{res.target.nutrients.calcium.toLocaleString()} ppm / {Math.round(res.target.nutrients.calcium * res.target.volume / 1000).toLocaleString()}g</span>
+                            <span className="font-medium">칼슘 (Ca):</span> <span className="font-bold text-purple-900">{Number(res.target.nutrients.calcium).toFixed(2)} ppm / {Number(res.target.nutrients.calcium * res.target.volume / 1000).toFixed(2)}g</span>
                           </div>
                         )}
                         {res.target.nutrients.magnesium > 0 && (
                           <div className="text-purple-700">
-                            <span className="font-medium">마그네슘 (Mg):</span> <span className="font-bold text-purple-900">{res.target.nutrients.magnesium.toLocaleString()} ppm / {Math.round(res.target.nutrients.magnesium * res.target.volume / 1000).toLocaleString()}g</span>
+                            <span className="font-medium">마그네슘 (Mg):</span> <span className="font-bold text-purple-900">{Number(res.target.nutrients.magnesium).toFixed(2)} ppm / {Number(res.target.nutrients.magnesium * res.target.volume / 1000).toFixed(2)}g</span>
                           </div>
                         )}
                       </div>
@@ -958,8 +1206,8 @@ export default function NutrientPlanPage() {
                     <div className="bg-green-50 rounded-lg p-4">
                       <div className="font-semibold text-green-800 mb-2">💡 사용법 안내</div>
                       <div className="text-sm text-green-700 space-y-1">
-                        <div>• 위 영양소 농도를 목표로 <span className="font-medium">{res.target.volume.toLocaleString()}L</span> 배양액을 제조하세요</div>
-                        <div>• EC <span className="font-medium">{res.target.ec} mS/cm</span>와 pH <span className="font-medium">{res.target.ph} pH</span>를 정기적으로 측정하여 조절하세요</div>
+                        <div>• 위 영양소 농도를 목표로 <span className="font-medium">{Number(res.target.volume).toFixed(2)}L</span> 배양액을 제조하세요</div>
+                        <div>• EC <span className="font-medium">{Number(res.target.ec).toFixed(2)} mS/cm</span>와 pH <span className="font-medium">{Number(res.target.ph).toFixed(2)} pH</span>를 정기적으로 측정하여 조절하세요</div>
                         <div>• 주 1회 배양액을 교체하는 것을 권장합니다</div>
                         <div>• 기준 레시피 대비 <span className="font-medium">{res.calculation.ratio.toFixed(2)}배</span> 농도로 계산되었습니다</div>
                       </div>
@@ -1011,10 +1259,10 @@ export default function NutrientPlanPage() {
                         <div className="flex items-start justify-between mb-4">
                         <div>
                             <h3 className="text-xl font-semibold text-gray-600 mb-1">
-                            {recipe.crop_profiles.crop_name} ({recipe.crop_profiles.stage})
+                            {recipe.name || `${recipe.crop_profiles.crop_name} (${recipe.crop_profiles.stage})`}
                           </h3>
                             <p className="text-sm text-gray-600">
-                            {recipe.target_volume_l.toLocaleString()} L • {recipe.water_profiles.name}
+                            {Number(recipe.target_volume_l).toFixed(2)} L • {recipe.water_profiles.name}
                           </p>
                         </div>
                         <button
@@ -1028,11 +1276,15 @@ export default function NutrientPlanPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600">추정 EC:</span>
-                          <span className="font-medium text-gray-600">{recipe.ec_est || '-'} mS/cm</span>
+                          <span className="font-medium text-gray-600">
+                            {recipe.ec_est ? `${Number(recipe.ec_est).toFixed(2)} mS/cm` : '-'}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">추정 pH:</span>
-                          <span className="font-medium text-gray-600">{recipe.ph_est || '-'}</span>
+                          <span className="font-medium text-gray-600">
+                            {recipe.ph_est ? `${Number(recipe.ph_est).toFixed(2)}` : '-'}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600">생성일:</span>
@@ -1043,19 +1295,104 @@ export default function NutrientPlanPage() {
                       </div>
 
                       <div className="mt-3 pt-3 border-t border-gray-100">
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-gray-600 mb-3">
                           <div className="font-medium mb-1 text-gray-600">사용 염류:</div>
                           <div className="space-y-1">
-                            {recipe.lines.slice(0, 2).map((line: any, i: number) => (
-                              <div key={i} className="flex justify-between">
-                                <span className="text-gray-600">{line.salt}:</span>
-                                <span className="text-gray-600 font-medium">{line.grams}g</span>
-                              </div>
-                            ))}
-                            {recipe.lines.length > 2 && (
-                              <div className="text-gray-600">+{recipe.lines.length - 2}개 더...</div>
+                            {recipe.lines && recipe.lines.length > 0 ? (
+                              <>
+                                {recipe.lines.slice(0, 2).map((line: any, i: number) => (
+                                  <div key={i} className="flex justify-between">
+                                    <span className="text-gray-600">{line.salt}:</span>
+                                    <span className="text-gray-600 font-medium">{line.grams}g</span>
+                                  </div>
+                                ))}
+                                {recipe.lines.length > 2 && (
+                                  <div className="text-gray-600">+{recipe.lines.length - 2}개 더...</div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="text-gray-500 italic">염류 정보 없음</div>
                             )}
                           </div>
+                        </div>
+
+                        {/* 버튼들 */}
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => {
+                              // 저장된 레시피를 Recipe 형태로 변환
+                              const recipeForCalculation: Recipe = {
+                                id: recipe.id,
+                                crop: recipe.crop_profiles.crop_name,
+                                crop_key: recipe.crop_profiles.crop_key,
+                                stage: recipe.crop_profiles.stage,
+                                volume_l: recipe.target_volume_l,
+                                ec_target: recipe.ec_est || 1.5,
+                                ph_target: recipe.ph_est || 6.0,
+                                npk_ratio: '3-1-2', // 기본값
+                                created_at: recipe.created_at,
+                                description: `저장된 레시피: ${recipe.crop_profiles.crop_name} ${recipe.crop_profiles.stage}`,
+                                growing_conditions: {
+                                  temperature: '20-25°C',
+                                  humidity: '60-70%',
+                                  light_hours: '12-16시간',
+                                  co2_level: '400-600ppm'
+                                },
+                                nutrients_detail: {
+                                  nitrogen: 150,
+                                  phosphorus: 50,
+                                  potassium: 100,
+                                  calcium: 100,
+                                  magnesium: 50
+                                }
+                              };
+                              
+                              setCrop(recipe.crop_profiles.crop_name);
+                              setVolume(recipe.target_volume_l);
+                              setSelectedStage(recipe.crop_profiles.stage);
+                              setSelectedRecipeForCalculation(recipeForCalculation);
+                              setActiveTab('calculate');
+                            }}
+                            className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            계산하기
+                          </button>
+                          <button
+                            onClick={() => {
+                              // 저장된 레시피를 Recipe 형태로 변환
+                              const recipeForDetail: Recipe = {
+                                id: recipe.id,
+                                crop: recipe.crop_profiles.crop_name,
+                                crop_key: recipe.crop_profiles.crop_key,
+                                stage: recipe.crop_profiles.stage,
+                                volume_l: recipe.target_volume_l,
+                                ec_target: recipe.ec_est || 1.5,
+                                ph_target: recipe.ph_est || 6.0,
+                                npk_ratio: '3-1-2', // 기본값
+                                created_at: recipe.created_at,
+                                description: `저장된 레시피: ${recipe.crop_profiles.crop_name} ${recipe.crop_profiles.stage}`,
+                                growing_conditions: {
+                                  temperature: '20-25°C',
+                                  humidity: '60-70%',
+                                  light_hours: '12-16시간',
+                                  co2_level: '400-600ppm'
+                                },
+                                nutrients_detail: {
+                                  nitrogen: 150,
+                                  phosphorus: 50,
+                                  potassium: 100,
+                                  calcium: 100,
+                                  magnesium: 50
+                                }
+                              };
+                              
+                              setSelectedRecipe(recipeForDetail);
+                              setShowDetailModal(true);
+                            }}
+                            className="flex-1 px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                          >
+                            상세보기
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1063,8 +1400,338 @@ export default function NutrientPlanPage() {
                 </div>
               )}
             </div>
-          )}
-        </div>
+            )}
+
+            {/* 나만의 레시피 탭 */}
+            {activeTab === 'custom' && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-600 mb-1 sm:mb-2">나만의 레시피 만들기</h2>
+                  <p className="text-gray-600 text-sm sm:text-base">직접 배양액 제조 레시피를 입력하고 관리할 수 있습니다.</p>
+                </div>
+
+                {/* 레시피 입력 폼 */}
+                <div className="bg-white rounded-lg shadow-md p-6">
+                  <h3 className="text-lg font-semibold text-gray-600 mb-4">새 레시피 등록</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* 기본 정보 */}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">작물명 *</label>
+                        <input
+                          type="text"
+                          value={customRecipe.crop}
+                          onChange={(e) => setCustomRecipe({...customRecipe, crop: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="예: 상추, 토마토, 오이"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">성장 단계 *</label>
+                        <select
+                          value={customRecipe.stage}
+                          onChange={(e) => setCustomRecipe({...customRecipe, stage: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="">선택하세요</option>
+                          <option value="발아기">발아기</option>
+                          <option value="유묘기">유묘기</option>
+                          <option value="생장기">생장기</option>
+                          <option value="개화기">개화기</option>
+                          <option value="결실기">결실기</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">용량 (L)</label>
+                        <input
+                          type="number"
+                          value={customRecipe.volume_l}
+                          onChange={(e) => setCustomRecipe({...customRecipe, volume_l: Number(e.target.value)})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          min="1"
+                          max="10000"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 목표값 */}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">EC 목표값 (mS/cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={customRecipe.ec_target}
+                          onChange={(e) => setCustomRecipe({...customRecipe, ec_target: Number(e.target.value)})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          min="0"
+                          max="10"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">pH 목표값</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={customRecipe.ph_target}
+                          onChange={(e) => setCustomRecipe({...customRecipe, ph_target: Number(e.target.value)})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          min="0"
+                          max="14"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">NPK 비율</label>
+                        <input
+                          type="text"
+                          value={customRecipe.npk_ratio}
+                          onChange={(e) => setCustomRecipe({...customRecipe, npk_ratio: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="예: 3-1-2"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 상세 정보 */}
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-2">레시피 설명</label>
+                      <textarea
+                        value={customRecipe.description}
+                        onChange={(e) => setCustomRecipe({...customRecipe, description: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        rows={3}
+                        placeholder="레시피에 대한 설명을 입력하세요"
+                      />
+                    </div>
+
+                    {/* 영양소 상세 정보 */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">질소 (N) ppm</label>
+                        <input
+                          type="number"
+                          value={customRecipe.nutrients_detail.nitrogen}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            nutrients_detail: {...customRecipe.nutrients_detail, nitrogen: Number(e.target.value)}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">인산 (P) ppm</label>
+                        <input
+                          type="number"
+                          value={customRecipe.nutrients_detail.phosphorus}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            nutrients_detail: {...customRecipe.nutrients_detail, phosphorus: Number(e.target.value)}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">칼륨 (K) ppm</label>
+                        <input
+                          type="number"
+                          value={customRecipe.nutrients_detail.potassium}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            nutrients_detail: {...customRecipe.nutrients_detail, potassium: Number(e.target.value)}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">칼슘 (Ca) ppm</label>
+                        <input
+                          type="number"
+                          value={customRecipe.nutrients_detail.calcium}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            nutrients_detail: {...customRecipe.nutrients_detail, calcium: Number(e.target.value)}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">마그네슘 (Mg) ppm</label>
+                        <input
+                          type="number"
+                          value={customRecipe.nutrients_detail.magnesium}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            nutrients_detail: {...customRecipe.nutrients_detail, magnesium: Number(e.target.value)}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 재배 환경 조건 */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">온도</label>
+                        <input
+                          type="text"
+                          value={customRecipe.growing_conditions.temperature}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            growing_conditions: {...customRecipe.growing_conditions, temperature: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="예: 20-25°C"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">습도</label>
+                        <input
+                          type="text"
+                          value={customRecipe.growing_conditions.humidity}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            growing_conditions: {...customRecipe.growing_conditions, humidity: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="예: 60-70%"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">조명 시간</label>
+                        <input
+                          type="text"
+                          value={customRecipe.growing_conditions.light_hours}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            growing_conditions: {...customRecipe.growing_conditions, light_hours: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="예: 12-16시간"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">CO₂ 농도</label>
+                        <input
+                          type="text"
+                          value={customRecipe.growing_conditions.co2_level}
+                          onChange={(e) => setCustomRecipe({
+                            ...customRecipe, 
+                            growing_conditions: {...customRecipe.growing_conditions, co2_level: e.target.value}
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                          placeholder="예: 400-600ppm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 저장 버튼 */}
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={saveCustomRecipe}
+                      disabled={savingCustom || !customRecipe.crop || !customRecipe.stage}
+                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {savingCustom ? '저장 중...' : '레시피 저장'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 저장된 커스텀 레시피 목록 */}
+                {customRecipes.length > 0 && (
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="text-lg font-semibold text-gray-600 mb-4">내가 만든 레시피</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {customRecipes.map((recipe) => (
+                        <div key={recipe.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border border-gray-200">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h4 className="text-xl font-semibold text-gray-600 mb-1">
+                                {recipe.crop}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                {recipe.stage} • {Number(recipe.volume_l).toFixed(2)} L
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                                내 레시피
+                              </span>
+                              <button
+                                onClick={() => deleteCustomRecipe(recipe.id)}
+                                className="text-red-500 hover:text-red-700 text-sm"
+                                title="레시피 삭제"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-gray-600">EC 목표값:</span>
+                              <span className="text-sm text-gray-600">{Number(recipe.ec_target).toFixed(2)} mS/cm</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-gray-600">pH 목표값:</span>
+                              <span className="text-sm text-gray-600">{Number(recipe.ph_target).toFixed(2)} pH</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm font-medium text-gray-600">NPK 비율:</span>
+                              <span className="text-sm text-gray-600">{recipe.npk_ratio} (N:P:K)</span>
+                            </div>
+                          </div>
+
+                          {recipe.description && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <p className="text-xs text-gray-500 mb-1">설명:</p>
+                              <p className="text-xs text-gray-600 line-clamp-2">
+                                {recipe.description}
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-xs text-gray-500 mb-2">생성일:</p>
+                            <p className="text-xs text-gray-600">
+                              {new Date(recipe.created_at).toLocaleDateString('ko-KR')}
+                            </p>
+                          </div>
+
+                          <div className="mt-4 flex space-x-2">
+                            <button
+                              onClick={() => {
+                                setCrop(recipe.crop);
+                                setVolume(recipe.volume_l);
+                                setSelectedStage(recipe.stage);
+                                setSelectedRecipeForCalculation(recipe);
+                                setActiveTab('calculate');
+                              }}
+                              className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              계산에 사용
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedRecipe(recipe);
+                                setShowDetailModal(true);
+                              }}
+                              className="flex-1 px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors"
+                            >
+                              상세 보기
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
@@ -1093,7 +1760,7 @@ export default function NutrientPlanPage() {
                     <div className="font-medium text-gray-600 mb-2">저장할 레시피:</div>
                     <div className="text-gray-600">
                       <div>{res.cropKey} ({res.stage}) • {res.target.volume}L</div>
-                      <div>EC: {res.target.ec} mS/cm • pH: {res.target.ph}</div>
+                      <div>EC: {Number(res.target.ec).toFixed(2)} mS/cm • pH: {Number(res.target.ph).toFixed(2)}</div>
                       <div>계산 방법: {res.calculation.method}</div>
                     </div>
                   </div>
@@ -1135,7 +1802,7 @@ export default function NutrientPlanPage() {
                       {selectedRecipe.crop} - {selectedRecipe.stage}
                     </h2>
                     <p className="text-white/90">
-                      {selectedRecipe.volume_l.toLocaleString()}L • EC: {selectedRecipe.ec_target} mS/cm • pH: {selectedRecipe.ph_target} pH
+                      {Number(selectedRecipe.volume_l).toFixed(2)}L • EC: {Number(selectedRecipe.ec_target).toFixed(2)} mS/cm • pH: {Number(selectedRecipe.ph_target).toFixed(2)} pH
                     </p>
                   </div>
                 </div>
@@ -1164,7 +1831,7 @@ export default function NutrientPlanPage() {
                   </div>
                   <div>
                     <span className="text-gray-600">용량:</span>
-                    <span className="ml-2 font-medium text-gray-600">{selectedRecipe.volume_l.toLocaleString()} L</span>
+                    <span className="ml-2 font-medium text-gray-600">{Number(selectedRecipe.volume_l).toFixed(2)} L</span>
                   </div>
                   <div>
                     <span className="text-gray-600">NPK 비율:</span>
@@ -1172,11 +1839,11 @@ export default function NutrientPlanPage() {
                   </div>
                   <div>
                     <span className="text-gray-600">EC 목표:</span>
-                    <span className="ml-2 font-medium text-gray-600">{selectedRecipe.ec_target} mS/cm</span>
+                    <span className="ml-2 font-medium text-gray-600">{Number(selectedRecipe.ec_target).toFixed(2)} mS/cm</span>
                   </div>
                   <div>
                     <span className="text-gray-600">pH 목표:</span>
-                    <span className="ml-2 font-medium text-gray-600">{selectedRecipe.ph_target} pH</span>
+                    <span className="ml-2 font-medium text-gray-600">{Number(selectedRecipe.ph_target).toFixed(2)} pH</span>
                   </div>
                 </div>
               </div>
@@ -1224,26 +1891,26 @@ export default function NutrientPlanPage() {
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <span className="text-purple-700">질소 (N):</span>
-                      <span className="ml-2 font-bold text-purple-900">{selectedRecipe.nutrients_detail.nitrogen.toLocaleString()} ppm / {Math.round(selectedRecipe.nutrients_detail.nitrogen * selectedRecipe.volume_l / 1000).toLocaleString()}g</span>
+                      <span className="ml-2 font-bold text-purple-900">{Number(selectedRecipe.nutrients_detail.nitrogen).toFixed(2)} ppm / {Number(selectedRecipe.nutrients_detail.nitrogen * selectedRecipe.volume_l / 1000).toFixed(2)}g</span>
                     </div>
                     <div>
                       <span className="text-purple-700">인산 (P):</span>
-                      <span className="ml-2 font-bold text-purple-900">{selectedRecipe.nutrients_detail.phosphorus.toLocaleString()} ppm / {Math.round(selectedRecipe.nutrients_detail.phosphorus * selectedRecipe.volume_l / 1000).toLocaleString()}g</span>
+                      <span className="ml-2 font-bold text-purple-900">{Number(selectedRecipe.nutrients_detail.phosphorus).toFixed(2)} ppm / {Number(selectedRecipe.nutrients_detail.phosphorus * selectedRecipe.volume_l / 1000).toFixed(2)}g</span>
                     </div>
                     <div>
                       <span className="text-purple-700">칼륨 (K):</span>
-                      <span className="ml-2 font-bold text-purple-900">{selectedRecipe.nutrients_detail.potassium.toLocaleString()} ppm / {Math.round(selectedRecipe.nutrients_detail.potassium * selectedRecipe.volume_l / 1000).toLocaleString()}g</span>
+                      <span className="ml-2 font-bold text-purple-900">{Number(selectedRecipe.nutrients_detail.potassium).toFixed(2)} ppm / {Number(selectedRecipe.nutrients_detail.potassium * selectedRecipe.volume_l / 1000).toFixed(2)}g</span>
                     </div>
                     {selectedRecipe.nutrients_detail.calcium && (
                       <div>
                         <span className="text-purple-700">칼슘 (Ca):</span>
-                        <span className="ml-2 font-bold text-purple-900">{selectedRecipe.nutrients_detail.calcium.toLocaleString()} ppm / {Math.round(selectedRecipe.nutrients_detail.calcium * selectedRecipe.volume_l / 1000).toLocaleString()}g</span>
+                        <span className="ml-2 font-bold text-purple-900">{Number(selectedRecipe.nutrients_detail.calcium).toFixed(2)} ppm / {Number(selectedRecipe.nutrients_detail.calcium * selectedRecipe.volume_l / 1000).toFixed(2)}g</span>
                       </div>
                     )}
                     {selectedRecipe.nutrients_detail.magnesium && (
                       <div>
                         <span className="text-purple-700">마그네슘 (Mg):</span>
-                        <span className="ml-2 font-bold text-purple-900">{selectedRecipe.nutrients_detail.magnesium.toLocaleString()} ppm / {Math.round(selectedRecipe.nutrients_detail.magnesium * selectedRecipe.volume_l / 1000).toLocaleString()}g</span>
+                        <span className="ml-2 font-bold text-purple-900">{Number(selectedRecipe.nutrients_detail.magnesium).toFixed(2)} ppm / {Number(selectedRecipe.nutrients_detail.magnesium * selectedRecipe.volume_l / 1000).toFixed(2)}g</span>
                       </div>
                     )}
                   </div>
@@ -1348,6 +2015,7 @@ export default function NutrientPlanPage() {
                   setCrop(selectedRecipe.crop);
                   setVolume(selectedRecipe.volume_l);
                   setSelectedStage(selectedRecipe.stage);
+                  setSelectedRecipeForCalculation(selectedRecipe);
                   setActiveTab('calculate');
                   setShowDetailModal(false);
                 }}
@@ -1357,7 +2025,7 @@ export default function NutrientPlanPage() {
               </button>
               <button
                 onClick={() => {
-                  setRecipeName(`${selectedRecipe.crop} - ${selectedRecipe.stage} (${selectedRecipe.volume_l.toLocaleString()}L)`);
+                  setRecipeName(`${selectedRecipe.crop} - ${selectedRecipe.stage} (${Number(selectedRecipe.volume_l).toFixed(2)}L)`);
                   setShowSaveModal(true);
                   setShowDetailModal(false);
                 }}
@@ -1380,6 +2048,7 @@ export default function NutrientPlanPage() {
       <RecipeUpdatesFooter 
         onViewAllRecipes={() => setActiveTab('recipes')}
         onSaveRecipe={(recipe, recipeName) => {
+          setSelectedRecipe(recipe);
           setRecipeName(recipeName);
           setShowSaveModal(true);
         }}

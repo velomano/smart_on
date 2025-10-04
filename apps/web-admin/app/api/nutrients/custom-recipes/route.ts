@@ -98,3 +98,40 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
+
+// 나만의 레시피 삭제
+export async function DELETE(request: NextRequest) {
+  try {
+    console.log('🗑️ 나만의 레시피 삭제 시작');
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ 
+        ok: false, 
+        error: '레시피 ID가 필요합니다.' 
+      }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('custom_nutrient_recipes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('❌ 나만의 레시피 삭제 실패:', error);
+      return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    }
+
+    console.log('✅ 나만의 레시피 삭제 성공:', id);
+
+    return NextResponse.json({
+      ok: true,
+      message: '레시피가 삭제되었습니다.'
+    });
+  } catch (error: any) {
+    console.error('❌ 나만의 레시피 삭제 오류:', error);
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+}

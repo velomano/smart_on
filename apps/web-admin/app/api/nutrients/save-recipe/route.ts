@@ -27,13 +27,26 @@ export async function POST(req: NextRequest) {
 
     console.log('✅ Supabase 연결 성공');
 
+    // 한글 stage를 영어로 변환하는 함수
+    function translateStageToEnglish(stage: string): string {
+      const stageMap: { [key: string]: string } = {
+        '생장기': 'vegetative',
+        '개화기': 'fruiting',
+        '성숙기': 'mature',
+        '수확기': 'harvest'
+      };
+      return stageMap[stage] || stage;
+    }
+
     // 1. 작물 프로파일 찾기
-    console.log('작물 프로파일 조회:', { cropKey: body.cropKey, stage: body.stage });
+    const englishStage = translateStageToEnglish(body.stage);
+    console.log('작물 프로파일 조회:', { cropKey: body.cropKey, stage: body.stage, englishStage });
+    
     const { data: crops, error: cropError } = await sb
       .from('crop_profiles')
       .select('id, crop_key, crop_name, stage')
       .eq('crop_key', body.cropKey)
-      .eq('stage', body.stage);
+      .eq('stage', englishStage);
 
     if (cropError) {
       console.error('작물 프로파일 조회 에러:', cropError);
@@ -43,16 +56,53 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
+    let cropProfile;
+    
     if (!crops || crops.length === 0) {
-      console.error('작물 프로파일 없음:', { cropKey: body.cropKey, stage: body.stage });
-      return NextResponse.json({ 
-        ok: false, 
-        error: `작물 프로파일을 찾을 수 없습니다: ${body.cropKey} (${body.stage})` 
-      }, { status: 404 });
-    }
+      console.log('작물 프로파일이 없어서 새로 생성합니다:', { cropKey: body.cropKey, stage: body.stage, englishStage });
+      
+      // 새로운 작물 프로파일 생성
+      const newCropData = {
+        crop_key: body.cropKey,
+        crop_name: body.cropKey, // crop_key를 crop_name으로도 사용
+        stage: englishStage,
+        volume_l: body.targetVolumeL || 100,
+        target_ec: 1.5, // 기본값
+        target_ph: 6.0, // 기본값
+        target_ppm: {
+          N: 150,
+          P: 50,
+          K: 200,
+          Ca: 100,
+          Mg: 50
+        },
+        description: `${body.cropKey} ${body.stage}에 최적화된 배양액 레시피입니다.`,
+        author: '사용자 생성',
+        source_title: '사용자 저장 레시피',
+        source_year: new Date().getFullYear(),
+        license: 'CC BY 4.0'
+      };
 
-    const cropProfile = crops[0];
-    console.log('✅ 작물 프로파일 찾음:', cropProfile);
+      const { data: newCrop, error: createError } = await sb
+        .from('crop_profiles')
+        .insert([newCropData])
+        .select('id, crop_key, crop_name, stage')
+        .single();
+
+      if (createError) {
+        console.error('새 작물 프로파일 생성 실패:', createError);
+        return NextResponse.json({ 
+          ok: false, 
+          error: `작물 프로파일 생성 실패: ${createError.message}` 
+        }, { status: 500 });
+      }
+
+      cropProfile = newCrop;
+      console.log('✅ 새 작물 프로파일 생성됨:', cropProfile);
+    } else {
+      cropProfile = crops[0];
+      console.log('✅ 기존 작물 프로파일 찾음:', cropProfile);
+    }
 
     // 2. 물 프로파일 찾기
     console.log('물 프로파일 조회:', { waterProfileName: body.waterProfileName });

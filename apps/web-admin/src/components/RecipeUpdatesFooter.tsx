@@ -521,7 +521,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes, onSaveRecipe }: 
                 <button
                   onClick={() => {
                     // 저장하기 기능 - 레시피 이름 설정 후 저장 모달 열기
-                    const recipeName = `${selectedRecipe.crop} - ${selectedRecipe.stage} (${selectedRecipe.volume_l.toLocaleString()}L)`;
+                    const recipeName = `${selectedRecipe.crop} - ${selectedRecipe.stage} (${Number(selectedRecipe.volume_l).toFixed(2)}L)`;
                     // 부모 컴포넌트에 저장 요청 전달 (props로 받아야 함)
                     if (onSaveRecipe) {
                       onSaveRecipe(selectedRecipe, recipeName);
