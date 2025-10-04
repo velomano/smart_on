@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ farmId: string }> }) {
+export async function GET(request: NextRequest) {
   try {
-    const { farmId } = await params;
     const { searchParams } = new URL(request.url);
+    const farmId = searchParams.get('farmId');
     const deviceId = searchParams.get('deviceId');
 
-    console.log('센서 데이터 조회 요청', { farmId, deviceId });
+    console.log('센서 데이터 조회 요청 (정적 라우트)', { farmId, deviceId });
 
-    // 임시 데이터 반환 (Supabase 연결 문제 해결 전까지)
+    // 임시 데이터 반환
     const mockData = [
       {
         deviceId: 'sensor-001',
@@ -72,23 +72,5 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ 
       error: '센서 데이터 조회 중 오류가 발생했습니다.' 
     }, { status: 500 });
-  }
-}
-
-// 센서 품질 평가 함수
-function getSensorQuality(sensorKey: string, value: number): 'good' | 'warning' | 'error' {
-  switch (sensorKey) {
-    case 'temperature':
-      return value >= 18 && value <= 35 ? 'good' : value >= 10 && value <= 45 ? 'warning' : 'error';
-    case 'humidity':
-      return value >= 40 && value <= 80 ? 'good' : value >= 20 && value <= 95 ? 'warning' : 'error';
-    case 'ec':
-      return value >= 1.0 && value <= 3.0 ? 'good' : value >= 0.5 && value <= 4.0 ? 'warning' : 'error';
-    case 'ph':
-      return value >= 5.5 && value <= 7.5 ? 'good' : value >= 4.0 && value <= 9.0 ? 'warning' : 'error';
-    case 'water_level':
-      return value >= 20 ? 'good' : value >= 10 ? 'warning' : 'error';
-    default:
-      return 'good';
   }
 }
