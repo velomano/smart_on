@@ -26,7 +26,7 @@ export default function TeamPage() {
     is_active: boolean;
     company?: string;
     phone?: string;
-    team_id?: string;
+    farm_id?: string;
   }>({
     name: '',
     email: '',
@@ -34,7 +34,7 @@ export default function TeamPage() {
     is_active: true,
     company: '',
     phone: '',
-    team_id: ''
+    farm_id: ''
   });
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -255,7 +255,7 @@ export default function TeamPage() {
       is_active: true,
       company: '',
       phone: '',
-      team_id: ''
+      farm_id: ''
     });
   };
 
@@ -617,8 +617,8 @@ export default function TeamPage() {
                       농장
                     </label>
                     <select
-                      value={editFormData.team_id}
-                      onChange={(e) => setEditFormData(prev => ({ ...prev, team_id: e.target.value }))}
+                      value={editFormData.farm_id}
+                      onChange={(e) => setEditFormData(prev => ({ ...prev, farm_id: e.target.value }))}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-600 bg-white"
                     >
                       <option value="">농장 미배정</option>

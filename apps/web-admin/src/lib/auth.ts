@@ -384,13 +384,8 @@ export const getCurrentUser = async (): Promise<AuthUser | null> => {
       is_active: finalUser.is_active
     });
 
-    // team_id가 없는 경우 경고 로그만 출력
-    if (!finalUser.team_id) {
-      console.warn('⚠️ 사용자에게 team_id가 설정되지 않았습니다:', {
-        email: finalUser.email,
-        role: finalUser.role
-      });
-    }
+    // team_id는 더 이상 사용하지 않음 (farm_memberships로 대체됨)
+    // 경고 로그 제거
 
     return finalUser;
   } catch (error: any) {

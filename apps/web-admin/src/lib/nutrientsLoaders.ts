@@ -29,7 +29,36 @@ export const loaders = {
       if (cp2) { cp = cp2; cropKey = cp2.crop_key; }
     }
 
-    if (!cp) throw new Error(`작물 프로파일을 찾을 수 없습니다: ${keyOrName} (${stage})`);
+    if (!cp) {
+      // 해당 단계가 없으면 vegetative 단계로 폴백 시도
+      console.log(`⚠️ ${keyOrName} (${stage}) 프로파일이 없습니다. vegetative 단계로 폴백 시도...`);
+      
+      const { data:fallbackCp } = await sb.from('crop_profiles')
+        .select('*')
+        .eq('crop_key', cropKey)
+        .eq('stage', 'vegetative')
+        .maybeSingle();
+        
+      if (!fallbackCp) {
+        const { data:fallbackCp2 } = await sb.from('crop_profiles')
+          .select('*')
+          .eq('crop_name', keyOrName)
+          .eq('stage', 'vegetative')
+          .maybeSingle();
+        if (fallbackCp2) {
+          cp = fallbackCp2;
+          cropKey = fallbackCp2.crop_key;
+          console.log(`✅ ${keyOrName} (vegetative) 프로파일로 폴백 성공`);
+        }
+      } else {
+        cp = fallbackCp;
+        console.log(`✅ ${keyOrName} (vegetative) 프로파일로 폴백 성공`);
+      }
+      
+      if (!cp) {
+        throw new Error(`작물 프로파일을 찾을 수 없습니다: ${keyOrName} (${stage}). vegetative 단계도 없습니다.`);
+      }
+    }
 
     const target = cp.target_ppm as Record<IonKey, number>;
     return { cropKey, target, targetEC: cp.target_ec, targetPH: cp.target_ph };

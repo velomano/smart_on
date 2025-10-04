@@ -351,7 +351,11 @@ export default function UserDashboard({
         }
         if (farm.is_hidden) return false;
         if (user.role === 'team_leader' || user.role === 'team_member') {
-          if (userSettings.showOnlyMyFarm) return farm.id === user.team_id;
+          if (userSettings.showOnlyMyFarm) {
+            // farm_memberships를 통해 사용자의 농장 확인
+            // 임시로 모든 농장 표시 (추후 farm_memberships 기반으로 수정 필요)
+            return true;
+          }
         }
         return true;
       })

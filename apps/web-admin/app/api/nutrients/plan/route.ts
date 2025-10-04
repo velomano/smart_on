@@ -20,11 +20,32 @@ export async function POST(req: Request) {
     const cropNameOrKey = (body.cropNameOrKey || body.crop || '').trim();
     if (!cropNameOrKey) throw new Error('cropNameOrKey 는 필수입니다.');
 
-    console.log('🧮 계산 시작:', { cropNameOrKey, stage: body.stage, targetVolumeL: body.targetVolumeL });
+    // 성장 단계 매핑 (한국어 → 영어)
+    const stageMapping: { [key: string]: string } = {
+      '결실기': 'fruiting',
+      '생장기': 'vegetative',
+      '개화기': 'flowering',
+      '성숙기': 'ripening',
+      '육묘기': 'seedling'
+    };
+    
+    let mappedStage = body.stage;
+    if (stageMapping[body.stage]) {
+      mappedStage = stageMapping[body.stage];
+      console.log(`🔄 성장 단계 매핑: "${body.stage}" → "${mappedStage}"`);
+    }
+
+    // 지원되는 작물 목록 확인
+    const supportedCrops = ['상추', '토마토', '오이', '딸기', '고추', '바질'];
+    if (!supportedCrops.includes(cropNameOrKey)) {
+      throw new Error(`등록되지 않은 작물: ${cropNameOrKey}. 지원 작물: ${supportedCrops.join(', ')}`);
+    }
+
+    console.log('🧮 계산 시작:', { cropNameOrKey, stage: mappedStage, targetVolumeL: body.targetVolumeL });
 
     const result = await solveNutrients({
       cropNameOrKey,
-      stage: body.stage,
+      stage: mappedStage,
       targetVolumeL: body.targetVolumeL,
       targetEC: body.targetEC,
       targetPH: body.targetPH,

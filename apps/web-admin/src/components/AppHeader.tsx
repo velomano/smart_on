@@ -572,7 +572,7 @@ export default function AppHeader({
                 }}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50"
               >
-                🧪 양액계산
+                🧪 배양액계산
               </button>
 
               <button

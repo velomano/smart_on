@@ -47,9 +47,9 @@ export default function AdminPage() {
   // 승인 모달
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [approvingUser, setApprovingUser] = useState<AuthUser | null>(null);
-  const [approveFormData, setApproveFormData] = useState<{ role: string; team_id: string }>({
+  const [approveFormData, setApproveFormData] = useState<{ role: string; farm_id: string }>({
     role: 'team_member',
-    team_id: '',
+    farm_id: '',
   });
   const [approveLoading, setApproveLoading] = useState(false);
 
@@ -864,8 +864,8 @@ export default function AdminPage() {
                     <div>
                       <label className="block text-sm font-semibold text-gray-600 mb-2">농장 배정 *</label>
                       <select
-                        value={approveFormData.team_id}
-                        onChange={(e) => setApproveFormData((prev) => ({ ...prev, team_id: e.target.value }))}
+                        value={approveFormData.farm_id}
+                        onChange={(e) => setApproveFormData((prev) => ({ ...prev, farm_id: e.target.value }))}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-600 bg-white"
                       >
                         <option value="">농장을 선택하세요</option>

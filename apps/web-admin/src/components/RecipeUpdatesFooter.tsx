@@ -218,7 +218,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
     <div className="bg-gradient-to-r from-blue-50 to-green-50 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* 헤더 */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
               <span className="text-white text-sm font-bold">🌱</span>
@@ -230,7 +230,7 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
               <p className="text-sm text-gray-600">
                 {todayLog ? `오늘 추가 ${todayLog.added_count}건` : '오늘 추가 없음'}
                 {lastUpdate && (
-                  <span className="ml-2">
+                  <span className="block sm:inline sm:ml-2">
                     • 마지막 갱신 {formatKoreanTime(lastUpdate)} (한국시간)
                   </span>
                 )}
@@ -479,6 +479,19 @@ export default function RecipeUpdatesFooter({ onViewAllRecipes }: RecipeUpdatesF
                           {selectedRecipe.source_title}
                           {selectedRecipe.source_year && ` (${selectedRecipe.source_year})`}
                         </span>
+                      </div>
+                    )}
+                    {selectedRecipe.source_url && isValidUrl(selectedRecipe.source_url) && (
+                      <div>
+                        <span className="font-medium text-yellow-700">원문 링크:</span>
+                        <a 
+                          href={selectedRecipe.source_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="ml-2 text-blue-600 hover:text-blue-800 underline break-all"
+                        >
+                          {selectedRecipe.source_url}
+                        </a>
                       </div>
                     )}
                     {selectedRecipe.author && (
