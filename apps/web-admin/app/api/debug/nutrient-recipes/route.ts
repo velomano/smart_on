@@ -12,11 +12,24 @@ export async function GET(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // nutrient_recipes 테이블의 모든 데이터 조회 (처음 5개만)
+    // nutrient_recipes 테이블의 전체 개수 조회
+    const { count: totalCount, error: countError } = await sb
+      .from('nutrient_recipes')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      console.error('❌ 카운트 쿼리 오류:', countError);
+      return NextResponse.json({ 
+        error: countError.message,
+        details: countError
+      }, { status: 500 });
+    }
+
+    // nutrient_recipes 테이블의 모든 데이터 조회 (처음 10개만)
     const { data: recipes, error } = await sb
       .from('nutrient_recipes')
       .select('*')
-      .limit(5);
+      .limit(10);
 
     if (error) {
       console.error('❌ 쿼리 오류:', error);
@@ -26,12 +39,13 @@ export async function GET(req: NextRequest) {
       }, { status: 500 });
     }
 
-    console.log('✅ 쿼리 성공, 레시피 개수:', recipes?.length || 0);
+    console.log('✅ 쿼리 성공, 전체 레시피 개수:', totalCount);
     console.log('📊 첫 번째 레시피 샘플:', recipes?.[0]);
 
     return NextResponse.json({
       ok: true,
-      count: recipes?.length || 0,
+      totalCount: totalCount,
+      sampleCount: recipes?.length || 0,
       recipes: recipes,
       sample_metadata: recipes?.[0] || null
     });

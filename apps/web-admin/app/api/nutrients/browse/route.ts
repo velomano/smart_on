@@ -63,25 +63,27 @@ export async function GET(req: NextRequest) {
         crop_key,
         crop_name,
         stage,
-        target_ppm,
         target_ec,
         target_ph,
+        target_ppm,
+        npk_ratio,
+        nutrients_detail,
+        growing_conditions,
+        volume_l,
+        ec_target,
+        ph_target,
         source_title,
         source_year,
+        author,
         license,
         description,
-        growing_conditions,
-        nutrients_detail,
-        usage_notes,
-        warnings,
-        author,
-        last_updated,
+        metadata,
         created_at
       `);
 
     // 필터링 적용
     if (crop) {
-      query = query.eq('crop_name', crop);
+      query = query.eq('crop_key', crop);
     }
     if (stage) {
       // 한글 단계명을 영어로 변환하여 필터링
@@ -89,7 +91,7 @@ export async function GET(req: NextRequest) {
       query = query.eq('stage', englishStage);
     }
     if (search) {
-      query = query.or(`crop_name.ilike.%${search}%,stage.ilike.%${search}%`);
+      query = query.or(`crop_key.ilike.%${search}%,stage.ilike.%${search}%`);
     }
 
     // 페이지네이션 적용 (데이터베이스 레벨)
@@ -120,14 +122,14 @@ export async function GET(req: NextRequest) {
     
     // 필터링 적용 (카운트용)
     if (crop) {
-      countQuery.eq('crop_name', crop);
+      countQuery.eq('crop_key', crop);
     }
     if (stage) {
       const englishStage = translateStageToEnglish(stage);
       countQuery.eq('stage', englishStage);
     }
     if (search) {
-      countQuery.or(`crop_name.ilike.%${search}%,stage.ilike.%${search}%`);
+      countQuery.or(`crop_key.ilike.%${search}%,stage.ilike.%${search}%`);
     }
 
     const { count } = await countQuery;
@@ -137,22 +139,22 @@ export async function GET(req: NextRequest) {
 
     // 프론트엔드에서 사용할 수 있도록 실제 DB 데이터 반환
     const recipes = profiles?.map(profile => {
-      // target_ppm JSON에서 영양소 정보 추출
-      const ppm = profile.target_ppm || {};
-      const npk_ratio = `${ppm.N_NO3 || ppm.N || 0}:${ppm.P || 0}:${ppm.K || 0}`;
+      // metadata에서 source_url 추출
+      const metadata = profile.metadata || {};
+      const source_url = metadata.source_url || null;
       
       return {
         id: profile.id,
         crop: profile.crop_name,
         stage: translateStage(profile.stage),
-        volume_l: profile.volume_l || 100,
+        volume_l: profile.volume_l || 1000,
         ec_target: profile.target_ec || profile.ec_target,
         ph_target: profile.target_ph || profile.ph_target,
-        npk_ratio: profile.npk_ratio || npk_ratio,
+        npk_ratio: profile.npk_ratio || '0-0-0',
         created_at: profile.created_at || new Date().toISOString(),
         source_title: profile.source_title || '스마트팜 데이터베이스',
         source_year: profile.source_year || 2025,
-        source_url: null, // DB에 없으므로 null
+        source_url: source_url,
         license: profile.license || 'CC BY 4.0',
         description: profile.description || `${profile.crop_name} ${translateStage(profile.stage)}에 최적화된 배양액 레시피입니다.`,
         growing_conditions: profile.growing_conditions || {
@@ -162,17 +164,17 @@ export async function GET(req: NextRequest) {
           co2_level: getCO2Level(profile.crop_name)
         },
         nutrients_detail: profile.nutrients_detail || {
-          nitrogen: ppm.N_NO3 || ppm.N || 0,
-          phosphorus: ppm.P || 0,
-          potassium: ppm.K || 0,
-          calcium: ppm.Ca || 0,
-          magnesium: ppm.Mg || 0,
+          nitrogen: 0,
+          phosphorus: 0,
+          potassium: 0,
+          calcium: 0,
+          magnesium: 0,
           trace_elements: ['Fe', 'Mn', 'Zn', 'B', 'Cu', 'Mo']
         },
-        usage_notes: profile.usage_notes || getUsageNotes(profile.crop_name, profile.stage),
-        warnings: profile.warnings || getWarnings(profile.crop_name, profile.stage),
+        usage_notes: getUsageNotes(profile.crop_name, profile.stage),
+        warnings: getWarnings(profile.crop_name, profile.stage),
         author: profile.author || '스마트팜 시스템',
-        last_updated: profile.last_updated || new Date().toISOString()
+        last_updated: profile.created_at || new Date().toISOString()
       };
     }) || [];
 
